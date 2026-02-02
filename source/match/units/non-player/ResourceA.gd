@@ -16,11 +16,6 @@ var color = Constants.Match.Resources.A.COLOR:
 
 func _ready():
 	_setup_mesh_colors()
-	print(self.visible)
-	
-func _process(_delta: float):
-	print(self.visible)
-	
 
 
 func _setup_mesh_colors():
