@@ -1,10 +1,10 @@
-[gd_scene load_steps=4 format=3 uid="uid://ctyd01bv020i8"]
+[gd_scene format=3 uid="uid://ctyd01bv020i8"]
 
-[ext_resource type="Script" path="res://source/main-menu/Main.gd" id="1_2uj2d"]
+[ext_resource type="Script" uid="uid://cdqy3r1ks0o4m" path="res://source/main-menu/Main.gd" id="1_2uj2d"]
 [ext_resource type="Theme" uid="uid://c2kgsk4ffhbwo" path="res://source/resources/main_menu.theme" id="1_sc713"]
 [ext_resource type="PackedScene" uid="uid://dij5xr8swlfdx" path="res://source/main-menu/Background.tscn" id="2_depxw"]
 
-[node name="Main" type="Control"]
+[node name="Main" type="Control" unique_id=37074703]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -14,10 +14,10 @@ grow_vertical = 2
 theme = ExtResource("1_sc713")
 script = ExtResource("1_2uj2d")
 
-[node name="Background" parent="." instance=ExtResource("2_depxw")]
+[node name="Background" parent="." unique_id=1068481783 instance=ExtResource("2_depxw")]
 layout_mode = 1
 
-[node name="PanelContainer" type="PanelContainer" parent="."]
+[node name="PanelContainer" type="PanelContainer" parent="." unique_id=1992469450]
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
@@ -31,36 +31,41 @@ offset_bottom = 97.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="MarginContainer" type="MarginContainer" parent="PanelContainer"]
+[node name="MarginContainer" type="MarginContainer" parent="PanelContainer" unique_id=1304278361]
 layout_mode = 2
 theme_override_constants/margin_left = 20
 theme_override_constants/margin_top = 20
 theme_override_constants/margin_right = 20
 theme_override_constants/margin_bottom = 20
 
-[node name="VBoxContainer" type="VBoxContainer" parent="PanelContainer/MarginContainer"]
+[node name="VBoxContainer" type="VBoxContainer" parent="PanelContainer/MarginContainer" unique_id=845872030]
 custom_minimum_size = Vector2(400, 0)
 layout_mode = 2
 theme_override_constants/separation = 10
 alignment = 1
 
-[node name="Button" type="Button" parent="PanelContainer/MarginContainer/VBoxContainer"]
+[node name="PlayButton" type="Button" parent="PanelContainer/MarginContainer/VBoxContainer" unique_id=1084495488]
 layout_mode = 2
-text = "PLAY"
+text = "Play"
 
-[node name="Button2" type="Button" parent="PanelContainer/MarginContainer/VBoxContainer"]
+[node name="ReplayButton" type="Button" parent="PanelContainer/MarginContainer/VBoxContainer" unique_id=1256572013]
 layout_mode = 2
-text = "OPTIONS"
+text = "Replays"
 
-[node name="Button3" type="Button" parent="PanelContainer/MarginContainer/VBoxContainer"]
+[node name="OptionsButton" type="Button" parent="PanelContainer/MarginContainer/VBoxContainer" unique_id=1810888099]
 layout_mode = 2
-text = "CREDITS"
+text = "Options"
 
-[node name="Button4" type="Button" parent="PanelContainer/MarginContainer/VBoxContainer"]
+[node name="CreditsButton" type="Button" parent="PanelContainer/MarginContainer/VBoxContainer" unique_id=481827181]
 layout_mode = 2
-text = "QUIT"
+text = "Credits"
 
-[connection signal="pressed" from="PanelContainer/MarginContainer/VBoxContainer/Button" to="." method="_on_play_button_pressed"]
-[connection signal="pressed" from="PanelContainer/MarginContainer/VBoxContainer/Button2" to="." method="_on_options_button_pressed"]
-[connection signal="pressed" from="PanelContainer/MarginContainer/VBoxContainer/Button3" to="." method="_on_credits_button_pressed"]
-[connection signal="pressed" from="PanelContainer/MarginContainer/VBoxContainer/Button4" to="." method="_on_quit_button_pressed"]
+[node name="QuitButton" type="Button" parent="PanelContainer/MarginContainer/VBoxContainer" unique_id=1010400717]
+layout_mode = 2
+text = "Quit"
+
+[connection signal="pressed" from="PanelContainer/MarginContainer/VBoxContainer/PlayButton" to="." method="_on_play_button_pressed"]
+[connection signal="pressed" from="PanelContainer/MarginContainer/VBoxContainer/ReplayButton" to="." method="_on_replay_button_pressed"]
+[connection signal="pressed" from="PanelContainer/MarginContainer/VBoxContainer/OptionsButton" to="." method="_on_options_button_pressed"]
+[connection signal="pressed" from="PanelContainer/MarginContainer/VBoxContainer/CreditsButton" to="." method="_on_credits_button_pressed"]
+[connection signal="pressed" from="PanelContainer/MarginContainer/VBoxContainer/QuitButton" to="." method="_on_quit_button_pressed"]
