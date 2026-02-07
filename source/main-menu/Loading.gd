@@ -37,7 +37,7 @@ func _ready():
 	_label.text = tr("LOADING_STEP_STARTING_MATCH")
 	await get_tree().physics_frame
 	get_parent().add_child(a_match)
-	get_tree().current_scene = a_match
+	get_tree().change_scene_to_node(a_match)
 	queue_free()
 
 
