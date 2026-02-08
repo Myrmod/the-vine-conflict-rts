@@ -19,6 +19,8 @@ var attack_damage = null
 var attack_interval = null
 var attack_range = null
 var attack_domains = []
+var _player_ref
+
 var radius:
 	get = _get_radius
 var movement_domain:
@@ -29,7 +31,7 @@ var sight_range = null
 ## Player or AI
 var player:
 	get:
-		return get_parent()
+		return _player_ref
 var color:
 	get:
 		return player.color
@@ -51,6 +53,7 @@ var _action_locked = false
 func _ready():
 	if not _match.is_node_ready():
 		await _match.ready
+	_player_ref = get_parent()
 	_setup_color()
 	_setup_default_properties_from_constants()
 	assert(_safety_checks())
