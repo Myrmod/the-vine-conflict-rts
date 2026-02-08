@@ -26,6 +26,7 @@ var movement_domain:
 var movement_speed:
 	get = _get_movement_speed
 var sight_range = null
+## Player or AI
 var player:
 	get:
 		return get_parent()

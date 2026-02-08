@@ -36,6 +36,9 @@ func stop_recording():
 
 ## replay_2026-02-05T19-00-22.save
 func save_to_file():
+	if not Utils._detect_potential_recursion(replay, {}, "replay"):
+		push_error("Replay validation failed — not saving")
+		return
 	var path = get_replay_path()
 	
 	# Create directory if it doesn't exist
