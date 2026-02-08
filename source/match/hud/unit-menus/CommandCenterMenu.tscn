@@ -1,66 +1,50 @@
-[gd_scene load_steps=3 format=3 uid="uid://d4iqf0mjt5ub3"]
+[gd_scene format=3 uid="uid://d4iqf0mjt5ub3"]
 
-[ext_resource type="Script" path="res://source/match/hud/unit-menus/CommandCenterMenu.gd" id="1_88cbv"]
+[ext_resource type="Script" uid="uid://vgknbheasayb" path="res://source/match/hud/unit-menus/CommandCenterMenu.gd" id="1_88cbv"]
 [ext_resource type="Texture2D" uid="uid://qw08xoss4lj0" path="res://assets/ui/icons/Worker.png" id="2_jkjj1"]
 
-[node name="CommandCenterMenu" type="GridContainer"]
+[node name="CommandCenterMenu" type="GridContainer" unique_id=1828532022]
 columns = 4
 script = ExtResource("1_88cbv")
 
-[node name="Padding" type="Control" parent="."]
+[node name="Padding" type="Control" parent="." unique_id=469969349]
 custom_minimum_size = Vector2(48, 48)
 layout_mode = 2
 
-[node name="Padding2" type="Control" parent="."]
+[node name="Padding2" type="Control" parent="." unique_id=1655457489]
 custom_minimum_size = Vector2(48, 48)
 layout_mode = 2
 
-[node name="Padding3" type="Control" parent="."]
+[node name="Padding3" type="Control" parent="." unique_id=103222516]
 custom_minimum_size = Vector2(48, 48)
 layout_mode = 2
 
-[node name="Padding5" type="Control" parent="."]
+[node name="Padding5" type="Control" parent="." unique_id=1651538803]
 custom_minimum_size = Vector2(48, 48)
 layout_mode = 2
 
-[node name="Padding6" type="Control" parent="."]
+[node name="Padding10" type="Control" parent="." unique_id=647241313]
 custom_minimum_size = Vector2(48, 48)
 layout_mode = 2
 
-[node name="Padding7" type="Control" parent="."]
+[node name="Padding11" type="Control" parent="." unique_id=129582700]
 custom_minimum_size = Vector2(48, 48)
 layout_mode = 2
 
-[node name="Padding8" type="Control" parent="."]
+[node name="Padding12" type="Control" parent="." unique_id=32314349]
 custom_minimum_size = Vector2(48, 48)
 layout_mode = 2
 
-[node name="Padding9" type="Control" parent="."]
+[node name="Padding13" type="Control" parent="." unique_id=1037275609]
 custom_minimum_size = Vector2(48, 48)
 layout_mode = 2
 
-[node name="Padding10" type="Control" parent="."]
-custom_minimum_size = Vector2(48, 48)
-layout_mode = 2
-
-[node name="Padding11" type="Control" parent="."]
-custom_minimum_size = Vector2(48, 48)
-layout_mode = 2
-
-[node name="Padding12" type="Control" parent="."]
-custom_minimum_size = Vector2(48, 48)
-layout_mode = 2
-
-[node name="Padding13" type="Control" parent="."]
-custom_minimum_size = Vector2(48, 48)
-layout_mode = 2
-
-[node name="ProduceWorkerButton" type="Button" parent="."]
+[node name="ProduceWorkerButton" type="Button" parent="." unique_id=694045050]
 layout_mode = 2
 focus_mode = 0
 text = "W"
 
-[node name="TextureRect" type="TextureRect" parent="ProduceWorkerButton"]
+[node name="TextureRect" type="TextureRect" parent="ProduceWorkerButton" unique_id=696562563]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -71,15 +55,15 @@ mouse_filter = 2
 texture = ExtResource("2_jkjj1")
 expand_mode = 1
 
-[node name="Padding14" type="Control" parent="."]
+[node name="Padding14" type="Control" parent="." unique_id=1238214104]
 custom_minimum_size = Vector2(48, 48)
 layout_mode = 2
 
-[node name="Padding15" type="Control" parent="."]
+[node name="Padding15" type="Control" parent="." unique_id=141675319]
 custom_minimum_size = Vector2(48, 48)
 layout_mode = 2
 
-[node name="Padding16" type="Control" parent="."]
+[node name="Padding16" type="Control" parent="." unique_id=1492346042]
 custom_minimum_size = Vector2(48, 48)
 layout_mode = 2
 

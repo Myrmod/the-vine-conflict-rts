@@ -1,74 +1,58 @@
-[gd_scene load_steps=2 format=3 uid="uid://pawymiv0p8ab"]
+[gd_scene format=3 uid="uid://pawymiv0p8ab"]
 
-[ext_resource type="Script" path="res://source/match/hud/unit-menus/GenericMenu.gd" id="1_i7s8m"]
+[ext_resource type="Script" uid="uid://dnrpee02x4ntk" path="res://source/match/hud/unit-menus/GenericMenu.gd" id="1_i7s8m"]
 
-[node name="GenericMenu" type="GridContainer"]
+[node name="GenericMenu" type="GridContainer" unique_id=2074280242]
 columns = 4
 script = ExtResource("1_i7s8m")
 
-[node name="Padding" type="Control" parent="."]
+[node name="Padding" type="Control" parent="." unique_id=487757046]
 custom_minimum_size = Vector2(48, 48)
 layout_mode = 2
 
-[node name="Padding2" type="Control" parent="."]
+[node name="Padding2" type="Control" parent="." unique_id=1504976247]
 custom_minimum_size = Vector2(48, 48)
 layout_mode = 2
 
-[node name="Padding3" type="Control" parent="."]
+[node name="Padding3" type="Control" parent="." unique_id=716747069]
 custom_minimum_size = Vector2(48, 48)
 layout_mode = 2
 
-[node name="CancelActionButton" type="Button" parent="."]
+[node name="CancelActionButton" type="Button" parent="." unique_id=1057627372]
 layout_mode = 2
 tooltip_text = "CANCEL_CURRENT_ACTION"
 focus_mode = 0
 text = "X"
 
-[node name="Padding5" type="Control" parent="."]
+[node name="Padding9" type="Control" parent="." unique_id=1834650002]
 custom_minimum_size = Vector2(48, 48)
 layout_mode = 2
 
-[node name="Padding6" type="Control" parent="."]
+[node name="Padding10" type="Control" parent="." unique_id=293452811]
 custom_minimum_size = Vector2(48, 48)
 layout_mode = 2
 
-[node name="Padding7" type="Control" parent="."]
+[node name="Padding11" type="Control" parent="." unique_id=2137685095]
 custom_minimum_size = Vector2(48, 48)
 layout_mode = 2
 
-[node name="Padding8" type="Control" parent="."]
+[node name="Padding12" type="Control" parent="." unique_id=1914463678]
 custom_minimum_size = Vector2(48, 48)
 layout_mode = 2
 
-[node name="Padding9" type="Control" parent="."]
+[node name="Padding13" type="Control" parent="." unique_id=1723440047]
 custom_minimum_size = Vector2(48, 48)
 layout_mode = 2
 
-[node name="Padding10" type="Control" parent="."]
+[node name="Padding14" type="Control" parent="." unique_id=1116487185]
 custom_minimum_size = Vector2(48, 48)
 layout_mode = 2
 
-[node name="Padding11" type="Control" parent="."]
+[node name="Padding15" type="Control" parent="." unique_id=2107939879]
 custom_minimum_size = Vector2(48, 48)
 layout_mode = 2
 
-[node name="Padding12" type="Control" parent="."]
-custom_minimum_size = Vector2(48, 48)
-layout_mode = 2
-
-[node name="Padding13" type="Control" parent="."]
-custom_minimum_size = Vector2(48, 48)
-layout_mode = 2
-
-[node name="Padding14" type="Control" parent="."]
-custom_minimum_size = Vector2(48, 48)
-layout_mode = 2
-
-[node name="Padding15" type="Control" parent="."]
-custom_minimum_size = Vector2(48, 48)
-layout_mode = 2
-
-[node name="Padding16" type="Control" parent="."]
+[node name="Padding16" type="Control" parent="." unique_id=1077869528]
 custom_minimum_size = Vector2(48, 48)
 layout_mode = 2
 

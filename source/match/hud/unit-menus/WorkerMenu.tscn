@@ -1,63 +1,43 @@
-[gd_scene load_steps=7 format=3 uid="uid://btvii654eytjr"]
+[gd_scene format=3 uid="uid://btvii654eytjr"]
 
-[ext_resource type="Script" path="res://source/match/hud/unit-menus/WorkerMenu.gd" id="1_jbs0a"]
+[ext_resource type="Script" uid="uid://cp533lk7qmta1" path="res://source/match/hud/unit-menus/WorkerMenu.gd" id="1_jbs0a"]
 [ext_resource type="Texture2D" uid="uid://sc5cu0dm3sgn" path="res://assets/ui/icons/CommandCenter.png" id="2_1d2t8"]
 [ext_resource type="Texture2D" uid="uid://bhrw5rae6vmw8" path="res://assets/ui/icons/AntiGroundTurret.png" id="2_72g55"]
 [ext_resource type="Texture2D" uid="uid://cv0qk8bjjc1eo" path="res://assets/ui/icons/AntiAirTurret.png" id="3_wyfuf"]
 [ext_resource type="Texture2D" uid="uid://dvdd6mno4d5da" path="res://assets/ui/icons/AircraftFactory.png" id="4_44m4x"]
 [ext_resource type="Texture2D" uid="uid://djmjxf3ikfrri" path="res://assets/ui/icons/VehicleFactory.png" id="4_f8mve"]
 
-[node name="WorkerMenu" type="GridContainer"]
+[node name="WorkerMenu" type="GridContainer" unique_id=1640157481]
 mouse_filter = 2
 columns = 4
 script = ExtResource("1_jbs0a")
 
-[node name="Padding" type="Control" parent="."]
+[node name="Padding" type="Control" parent="." unique_id=1713052682]
 custom_minimum_size = Vector2(48, 48)
 layout_mode = 2
 mouse_filter = 2
 
-[node name="Padding2" type="Control" parent="."]
+[node name="Padding2" type="Control" parent="." unique_id=111367604]
 custom_minimum_size = Vector2(48, 48)
 layout_mode = 2
 mouse_filter = 2
 
-[node name="Padding3" type="Control" parent="."]
+[node name="Padding3" type="Control" parent="." unique_id=1952978412]
 custom_minimum_size = Vector2(48, 48)
 layout_mode = 2
 mouse_filter = 2
 
-[node name="Padding5" type="Control" parent="."]
+[node name="Padding5" type="Control" parent="." unique_id=1743283696]
 custom_minimum_size = Vector2(48, 48)
 layout_mode = 2
 mouse_filter = 2
 
-[node name="Padding6" type="Control" parent="."]
-custom_minimum_size = Vector2(48, 48)
-layout_mode = 2
-mouse_filter = 2
-
-[node name="Padding7" type="Control" parent="."]
-custom_minimum_size = Vector2(48, 48)
-layout_mode = 2
-mouse_filter = 2
-
-[node name="Padding8" type="Control" parent="."]
-custom_minimum_size = Vector2(48, 48)
-layout_mode = 2
-mouse_filter = 2
-
-[node name="Padding9" type="Control" parent="."]
-custom_minimum_size = Vector2(48, 48)
-layout_mode = 2
-mouse_filter = 2
-
-[node name="PlaceAntiGroundTurretButton" type="Button" parent="."]
+[node name="PlaceAntiGroundTurretButton" type="Button" parent="." unique_id=407356793]
 layout_mode = 2
 focus_mode = 0
 text = "AG"
 
-[node name="TextureRect" type="TextureRect" parent="PlaceAntiGroundTurretButton"]
+[node name="TextureRect" type="TextureRect" parent="PlaceAntiGroundTurretButton" unique_id=744183004]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -68,12 +48,12 @@ mouse_filter = 2
 texture = ExtResource("2_72g55")
 expand_mode = 1
 
-[node name="PlaceAntiAirTurretButton" type="Button" parent="."]
+[node name="PlaceAntiAirTurretButton" type="Button" parent="." unique_id=199740314]
 layout_mode = 2
 focus_mode = 0
 text = "AA"
 
-[node name="TextureRect" type="TextureRect" parent="PlaceAntiAirTurretButton"]
+[node name="TextureRect" type="TextureRect" parent="PlaceAntiAirTurretButton" unique_id=255380801]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -84,23 +64,23 @@ mouse_filter = 2
 texture = ExtResource("3_wyfuf")
 expand_mode = 1
 
-[node name="Padding12" type="Control" parent="."]
+[node name="Padding12" type="Control" parent="." unique_id=224132669]
 custom_minimum_size = Vector2(48, 48)
 layout_mode = 2
 mouse_filter = 2
 
-[node name="Padding13" type="Control" parent="."]
+[node name="Padding13" type="Control" parent="." unique_id=314246455]
 custom_minimum_size = Vector2(48, 48)
 layout_mode = 2
 mouse_filter = 2
 
-[node name="PlaceCommandCenterButton" type="Button" parent="."]
+[node name="PlaceCommandCenterButton" type="Button" parent="." unique_id=1361223484]
 auto_translate_mode = 2
 layout_mode = 2
 focus_mode = 0
 text = "CC"
 
-[node name="TextureRect" type="TextureRect" parent="PlaceCommandCenterButton"]
+[node name="TextureRect" type="TextureRect" parent="PlaceCommandCenterButton" unique_id=301117427]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -111,12 +91,12 @@ mouse_filter = 2
 texture = ExtResource("2_1d2t8")
 expand_mode = 1
 
-[node name="PlaceVehicleFactoryButton" type="Button" parent="."]
+[node name="PlaceVehicleFactoryButton" type="Button" parent="." unique_id=1180277768]
 layout_mode = 2
 focus_mode = 0
 text = "VF"
 
-[node name="TextureRect" type="TextureRect" parent="PlaceVehicleFactoryButton"]
+[node name="TextureRect" type="TextureRect" parent="PlaceVehicleFactoryButton" unique_id=945728257]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -127,12 +107,12 @@ mouse_filter = 2
 texture = ExtResource("4_f8mve")
 expand_mode = 1
 
-[node name="PlaceAircraftFactoryButton" type="Button" parent="."]
+[node name="PlaceAircraftFactoryButton" type="Button" parent="." unique_id=140791198]
 layout_mode = 2
 focus_mode = 0
 text = "AF"
 
-[node name="TextureRect" type="TextureRect" parent="PlaceAircraftFactoryButton"]
+[node name="TextureRect" type="TextureRect" parent="PlaceAircraftFactoryButton" unique_id=1318600042]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -143,7 +123,7 @@ mouse_filter = 2
 texture = ExtResource("4_44m4x")
 expand_mode = 1
 
-[node name="Padding16" type="Control" parent="."]
+[node name="Padding16" type="Control" parent="." unique_id=109551543]
 custom_minimum_size = Vector2(48, 48)
 layout_mode = 2
 mouse_filter = 2
