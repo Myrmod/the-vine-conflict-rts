@@ -12,22 +12,22 @@ mouse_filter = 2
 columns = 4
 script = ExtResource("1_jbs0a")
 
-[node name="Padding" type="Control" parent="." unique_id=1713052682]
+[node name="Padding" type="Button" parent="." unique_id=1757183686]
 custom_minimum_size = Vector2(48, 48)
 layout_mode = 2
 mouse_filter = 2
 
-[node name="Padding2" type="Control" parent="." unique_id=111367604]
+[node name="Padding2" type="Button" parent="." unique_id=629039144]
 custom_minimum_size = Vector2(48, 48)
 layout_mode = 2
 mouse_filter = 2
 
-[node name="Padding3" type="Control" parent="." unique_id=1952978412]
+[node name="Padding3" type="Button" parent="." unique_id=1743854209]
 custom_minimum_size = Vector2(48, 48)
 layout_mode = 2
 mouse_filter = 2
 
-[node name="Padding5" type="Control" parent="." unique_id=1743283696]
+[node name="Padding5" type="Button" parent="." unique_id=2001407737]
 custom_minimum_size = Vector2(48, 48)
 layout_mode = 2
 mouse_filter = 2
@@ -64,12 +64,12 @@ mouse_filter = 2
 texture = ExtResource("3_wyfuf")
 expand_mode = 1
 
-[node name="Padding12" type="Control" parent="." unique_id=224132669]
+[node name="Padding12" type="Button" parent="." unique_id=774408177]
 custom_minimum_size = Vector2(48, 48)
 layout_mode = 2
 mouse_filter = 2
 
-[node name="Padding13" type="Control" parent="." unique_id=314246455]
+[node name="Padding13" type="Button" parent="." unique_id=2031651215]
 custom_minimum_size = Vector2(48, 48)
 layout_mode = 2
 mouse_filter = 2
@@ -123,7 +123,7 @@ mouse_filter = 2
 texture = ExtResource("4_44m4x")
 expand_mode = 1
 
-[node name="Padding16" type="Control" parent="." unique_id=109551543]
+[node name="Padding16" type="Button" parent="." unique_id=194991093]
 custom_minimum_size = Vector2(48, 48)
 layout_mode = 2
 mouse_filter = 2

@@ -6,15 +6,15 @@
 columns = 4
 script = ExtResource("1_i7s8m")
 
-[node name="Padding" type="Control" parent="." unique_id=487757046]
+[node name="Padding" type="Button" parent="." unique_id=1892668279]
 custom_minimum_size = Vector2(48, 48)
 layout_mode = 2
 
-[node name="Padding2" type="Control" parent="." unique_id=1504976247]
+[node name="Padding2" type="Button" parent="." unique_id=1046022929]
 custom_minimum_size = Vector2(48, 48)
 layout_mode = 2
 
-[node name="Padding3" type="Control" parent="." unique_id=716747069]
+[node name="Padding3" type="Button" parent="." unique_id=640796572]
 custom_minimum_size = Vector2(48, 48)
 layout_mode = 2
 
@@ -24,35 +24,35 @@ tooltip_text = "CANCEL_CURRENT_ACTION"
 focus_mode = 0
 text = "X"
 
-[node name="Padding9" type="Control" parent="." unique_id=1834650002]
+[node name="Padding9" type="Button" parent="." unique_id=784596493]
 custom_minimum_size = Vector2(48, 48)
 layout_mode = 2
 
-[node name="Padding10" type="Control" parent="." unique_id=293452811]
+[node name="Padding10" type="Button" parent="." unique_id=1735623367]
 custom_minimum_size = Vector2(48, 48)
 layout_mode = 2
 
-[node name="Padding11" type="Control" parent="." unique_id=2137685095]
+[node name="Padding11" type="Button" parent="." unique_id=1822964362]
 custom_minimum_size = Vector2(48, 48)
 layout_mode = 2
 
-[node name="Padding12" type="Control" parent="." unique_id=1914463678]
+[node name="Padding12" type="Button" parent="." unique_id=1042059189]
 custom_minimum_size = Vector2(48, 48)
 layout_mode = 2
 
-[node name="Padding13" type="Control" parent="." unique_id=1723440047]
+[node name="Padding13" type="Button" parent="." unique_id=356106044]
 custom_minimum_size = Vector2(48, 48)
 layout_mode = 2
 
-[node name="Padding14" type="Control" parent="." unique_id=1116487185]
+[node name="Padding14" type="Button" parent="." unique_id=398428187]
 custom_minimum_size = Vector2(48, 48)
 layout_mode = 2
 
-[node name="Padding15" type="Control" parent="." unique_id=2107939879]
+[node name="Padding15" type="Button" parent="." unique_id=1870191357]
 custom_minimum_size = Vector2(48, 48)
 layout_mode = 2
 
-[node name="Padding16" type="Control" parent="." unique_id=1077869528]
+[node name="Padding16" type="Button" parent="." unique_id=145710382]
 custom_minimum_size = Vector2(48, 48)
 layout_mode = 2
 
