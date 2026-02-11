@@ -8,6 +8,7 @@ extends Control
 
 const MatchSettings = preload("res://source/data-model/MatchSettings.gd")
 const PlayerSettings = preload("res://source/data-model/PlayerSettings.gd")
+const PlayerSettingsScene = preload("res://source/main-menu/PlayerSettings.tscn")
 const LoadingScene = preload("res://source/main-menu/Loading.tscn")
 
 var _map_paths = []
@@ -19,16 +20,12 @@ var replay_resource = null
 
 
 func _ready():
-	print('Play Scene')
 	if replay_resource != null:
 		_start_from_replay()
 		return
 
 	_setup_map_list()
 	_on_map_list_item_selected(0)
-	var option_nodes = find_child("GridContainer").find_children("OptionButton*")
-	for option_node_id in range(option_nodes.size()):
-		option_nodes[option_node_id].item_selected.connect(_on_player_selected.bind(option_node_id))
 
 
 func _setup_map_list():
@@ -41,17 +38,29 @@ func _setup_map_list():
 	_map_list.select(0)
 
 
+func _configure_team_options(team_select: OptionButton, num_teams: int):
+	# Remove all items except the first num_teams
+	while team_select.item_count > num_teams:
+		team_select.remove_item(team_select.item_count - 1)
+
+
 func _create_match_settings():
 	var match_settings = MatchSettings.new()
 
-	var option_nodes = find_child("GridContainer").find_children("OptionButton*")
+	var player_settings_nodes = find_child("GridContainer").get_children()
 	var spawn_index_offset = 0
-	for option_node_id in range(option_nodes.size()):
-		var player_controller = option_nodes[option_node_id].selected
+	for player_index in range(player_settings_nodes.size()):
+		var player_container = player_settings_nodes[player_index]
+		var play_select = player_container.find_child("PlaySelect")
+		var color_picker = player_container.find_child("ColorPickerButton")
+		var team_select = player_container.find_child("TeamSelect")
+
+		var player_controller = play_select.selected
 		if player_controller != Constants.PlayerType.NONE:
 			var player_settings = PlayerSettings.new()
 			player_settings.controller = player_controller
-			player_settings.color = Constants.COLORS[option_node_id]
+			player_settings.color = color_picker.color
+			player_settings.team = team_select.selected
 			player_settings.spawn_index_offset = spawn_index_offset
 			match_settings.players.append(player_settings)
 			spawn_index_offset = 0
@@ -87,39 +96,73 @@ func _on_back_button_pressed():
 
 
 func _align_player_controls_visibility_to_map(map):
-	var option_nodes = find_child("GridContainer").find_children("OptionButton*")
-	var label_nodes = find_child("GridContainer").find_children("Label*")
-	assert(option_nodes.size() == label_nodes.size())
-	for node_id in range(option_nodes.size()):
-		option_nodes[node_id].visible = node_id < map["players"]
-		label_nodes[node_id].visible = node_id < map["players"]
+	var grid_container = find_child("GridContainer")
+	var num_players = map["players"]
+	
+	# Clear existing player settings
+	for child in grid_container.get_children():
+		child.queue_free()
+	
+	# Create new player settings for each spawn point
+	for player_index in range(num_players):
+		var player_settings_instance = PlayerSettingsScene.instantiate()
+		grid_container.add_child(player_settings_instance)
+		
+		# Set the player number label
+		var number_label = player_settings_instance.find_child("Number")
+		number_label.text = str(player_index + 1) + "."
+		
+		# Configure team select to only show teams matching spawn points
+		var team_select = player_settings_instance.find_child("TeamSelect")
+		_configure_team_options(team_select, num_players)
+		team_select.selected = player_index
+		
+		# Set default color
+		var color_picker = player_settings_instance.find_child("ColorPickerButton")
+		color_picker.color = Constants.COLORS[player_index % Constants.COLORS.size()]
+		
+		# Set default controller type
+		var play_select = player_settings_instance.find_child("PlaySelect")
+		if player_index == 0:
+			play_select.selected = Constants.PlayerType.HUMAN
+		elif player_index == 1:
+			play_select.selected = Constants.PlayerType.SIMPLE_CLAIRVOYANT_AI
+		play_select.item_selected.connect(_on_player_selected.bind(player_index))
 
 
 func _on_player_selected(selected_option_id, selected_player_id):
 	_start_button.disabled = false
 	if selected_option_id == Constants.PlayerType.HUMAN:
-		var option_nodes = find_child("GridContainer").find_children("OptionButton*")
-		for option_node_id in range(option_nodes.size()):
-			if (
-				option_node_id != selected_player_id
-				and option_nodes[option_node_id].selected == Constants.PlayerType.HUMAN
-			):
-				option_nodes[option_node_id].selected = (Constants.PlayerType.SIMPLE_CLAIRVOYANT_AI)
+		var player_settings_nodes = find_child("GridContainer").get_children()
+		for player_index in range(player_settings_nodes.size()):
+			if player_index != selected_player_id:
+				var play_select = player_settings_nodes[player_index].find_child("PlaySelect")
+				if play_select.selected == Constants.PlayerType.HUMAN:
+					play_select.selected = Constants.PlayerType.SIMPLE_CLAIRVOYANT_AI
 	elif selected_option_id == Constants.PlayerType.NONE:
-		var option_buttons = find_child("GridContainer").find_children("OptionButton*")
-		var option_nodes_with_player_controllers = option_buttons.filter(
-			func(option_node): return option_node.selected != Constants.PlayerType.NONE
-		)
-		if option_nodes_with_player_controllers.size() < 2:
+		var player_settings_nodes = find_child("GridContainer").get_children()
+		var human_count = 0
+		for player_container in player_settings_nodes:
+			var play_select = player_container.find_child("PlaySelect")
+			if play_select.selected != Constants.PlayerType.NONE:
+				human_count += 1
+		if human_count < 2:
 			_start_button.disabled = true
 
 
 func _on_map_list_item_selected(index):
 	var map = MatchConstants.MAPS[_map_paths[index]]
+
+	# set the map description text
 	_map_details.text = "[u]Players:[/u] {0}\n[u]Size:[/u] {1}x{2}".format(
 		[map["players"], map["size"].x, map["size"].y]
 	)
+
+	# Generate player settings for each spawn point
 	_align_player_controls_visibility_to_map(map)
+	
+	# Reset start button state
+	_start_button.disabled = false
 
 func _start_from_replay():
 	hide()
