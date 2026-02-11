@@ -61,7 +61,7 @@ Adaptive.
 
 - Now the Vines don’t belong to The Amuns anymore.
 They belong to themselves.
-So your plant faction isn’t just defending territory.
+So your the plant faction isn’t just defending territory.
 They’re defending their right to exist.
 
 # The Conflict:
