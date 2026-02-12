@@ -31,6 +31,7 @@ func _get_units_to_attack():
 		func(unit):
 			return (
 				unit.player != _unit.player
+				and unit.player.team != _unit.player.team
 				and unit.movement_domain in _unit.attack_domains
 				and (
 					_unit.global_position_yless.distance_to(unit.global_position_yless)

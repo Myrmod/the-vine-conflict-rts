@@ -1,0 +1,62 @@
+[gd_scene format=3 uid="uid://cthifdk1pc3wd"]
+
+[node name="PlayerSettings1" type="HBoxContainer" unique_id=597234648]
+
+[node name="Number" type="Label" parent="." unique_id=600383265]
+layout_mode = 2
+text = "1."
+
+[node name="PlaySelect" type="OptionButton" parent="." unique_id=378761022]
+layout_mode = 2
+size_flags_horizontal = 3
+focus_mode = 0
+selected = 0
+item_count = 3
+popup/item_0/text = "None"
+popup/item_0/id = 0
+popup/item_1/text = "Human"
+popup/item_1/id = 1
+popup/item_2/text = "Simple AI"
+popup/item_2/id = 2
+
+[node name="ColorPickerButton" type="ColorPickerButton" parent="." unique_id=1183704115]
+layout_mode = 2
+text = "color"
+color = Color(0.36101916, 0.45518267, 0.021557475, 1)
+
+[node name="TeamSelect" type="OptionButton" parent="." unique_id=1258547993]
+layout_mode = 2
+selected = 0
+item_count = 16
+popup/item_0/text = "Team 1"
+popup/item_0/id = 0
+popup/item_1/text = "Team  2"
+popup/item_1/id = 1
+popup/item_2/text = "Team  3"
+popup/item_2/id = 2
+popup/item_3/text = "Team  4"
+popup/item_3/id = 3
+popup/item_4/text = "Team  5"
+popup/item_4/id = 4
+popup/item_5/text = "Team  6"
+popup/item_5/id = 5
+popup/item_6/text = "Team  7"
+popup/item_6/id = 6
+popup/item_7/text = "Team  8"
+popup/item_7/id = 7
+popup/item_8/text = "Team  9"
+popup/item_8/id = 8
+popup/item_9/text = "Team  10"
+popup/item_9/id = 9
+popup/item_10/text = "Team  11"
+popup/item_10/id = 10
+popup/item_11/text = "Team  12"
+popup/item_11/id = 11
+popup/item_12/text = "Team  13"
+popup/item_12/id = 12
+popup/item_13/text = "Team  14"
+popup/item_13/id = 13
+popup/item_14/text = "Team  15"
+popup/item_14/id = 14
+popup/item_15/text = "Team  16"
+popup/item_15/id = 15

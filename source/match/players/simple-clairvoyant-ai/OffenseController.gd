@@ -115,7 +115,7 @@ func _try_creating_new_battlegroup():
 		_battlegroup_under_forming = null
 		return false
 	var adversary_players = get_tree().get_nodes_in_group("players").filter(
-		func(player): return player != _player
+		func(player): return player != _player and player.team != _player.team
 	)
 	adversary_players.shuffle()
 	var battlegroup = AutoAttackingBattlegroup.new(

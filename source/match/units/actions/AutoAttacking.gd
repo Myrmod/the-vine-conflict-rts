@@ -15,6 +15,7 @@ static func is_applicable(source_unit, target_unit):
 		source_unit.attack_range != null
 		and "player" in target_unit
 		and source_unit.player != target_unit.player
+		and source_unit.player.team != target_unit.player.team
 		and target_unit.movement_domain in source_unit.attack_domains
 	)
 

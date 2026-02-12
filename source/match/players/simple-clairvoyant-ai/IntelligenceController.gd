@@ -39,7 +39,7 @@ func _attach_drone(drone):
 
 func _navigate_to_random_unit(drone):
 	var players_in_random_order = get_tree().get_nodes_in_group("players").filter(
-		func(player): return player != _player
+		func(player): return player != _player and player.team != _player.team
 	)
 	players_in_random_order.shuffle()
 	var random_player_to_visit = players_in_random_order.front()
@@ -57,7 +57,7 @@ func _navigate_to_random_unit(drone):
 		drone.action = MovingToUnitAction.new(target_unit)
 	else:
 		var units_in_random_order = get_tree().get_nodes_in_group("units").filter(
-			func(unit): return unit.player != _player
+			func(unit): return unit.player != _player and unit.player.team != _player.team
 		)
 		units_in_random_order.shuffle()
 		units_in_random_order = units_in_random_order.filter(

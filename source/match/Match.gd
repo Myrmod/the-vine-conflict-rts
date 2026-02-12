@@ -251,6 +251,7 @@ func _create_players_from_settings():
 		var player_scene = Constants.CONTROLLER_SCENES[player_settings.controller]
 		var player = player_scene.instantiate()
 		player.color = player_settings.color
+		player.team = player_settings.team
 		if player_settings.spawn_index_offset > 0:
 			for _i in range(player_settings.spawn_index_offset):
 				_players.add_child(Node.new())
@@ -299,8 +300,15 @@ func _setup_unit_groups(unit, player):
 		unit.add_to_group("controlled_units")
 	else:
 		unit.add_to_group("adversary_units")
+	# Add to revealed_units if player is visible, or if on same team as a visible player
 	if player in visible_players:
 		unit.add_to_group("revealed_units")
+	else:
+		# Check if any visible player is on the same team
+		for visible_player in visible_players:
+			if visible_player != null and visible_player.team == player.team:
+				unit.add_to_group("revealed_units")
+				break
 
 
 func _get_human_player():

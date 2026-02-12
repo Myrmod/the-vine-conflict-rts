@@ -16,6 +16,7 @@ signal changed
 
 var _color_material = null
 var id: int
+var team: int = 0  # Team number for team-based gameplay
 
 func _ready():
 	id = PlayerManager.add_player()

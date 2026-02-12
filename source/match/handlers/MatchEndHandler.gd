@@ -50,18 +50,34 @@ func _on_new_unit(unit, _transform, _player):
 func _on_unit_tree_exited():
 	if visible or not is_inside_tree():
 		return
-	var players = Utils.Set.new()
+	var units_by_team = {}
 	for unit in get_tree().get_nodes_in_group("units"):
-		players.add(unit.player)
+		var team = unit.player.team
+		if not team in units_by_team:
+			units_by_team[team] = []
+		units_by_team[team].append(unit)
+	
 	var human_players = get_tree().get_nodes_in_group("players").filter(
 		func(player): return player is Human
 	)
-	if not human_players.is_empty() and not players.has(human_players[0]):
+	
+	if human_players.is_empty():
+		# No human player, just check if one team remains
+		if units_by_team.size() == 1:
+			_handle_finish()
+		return
+	
+	var human_player = human_players[0]
+	var human_team = human_player.team
+	var human_team_has_units = human_team in units_by_team and not units_by_team[human_team].is_empty()
+	
+	if not human_team_has_units:
 		_handle_defeat()
-	elif not human_players.is_empty() and players.has(human_players[0]) and players.size() == 1:
+	elif units_by_team.size() == 1:
 		_handle_victory()
-	elif players.size() == 1:
-		_handle_finish()
+	elif units_by_team.size() > 1:
+		# Multiple teams still exist, no end condition yet
+		pass
 
 
 func _on_exit_button_pressed():
