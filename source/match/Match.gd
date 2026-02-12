@@ -90,7 +90,7 @@ func _execute_command(cmd: Dictionary):
 	match cmd.type:
 		Enums.CommandType.MOVE:
 			for entry in cmd.data.targets:
-				var unit: Unit = EntityRegistry.get_unit(entry.unit)
+				var unit = EntityRegistry.get_unit(entry.unit)
 				if unit == null or not is_instance_valid(unit):
 					continue
 				if unit.is_queued_for_deletion():
@@ -98,7 +98,7 @@ func _execute_command(cmd: Dictionary):
 				unit.action = Actions.Moving.new(entry.pos)
 		Enums.CommandType.MOVING_TO_UNIT:
 			for entry in cmd.data.targets:
-				var unit: Unit = EntityRegistry.get_unit(entry)
+				var unit = EntityRegistry.get_unit(entry)
 				var target_unit = EntityRegistry.get_unit(cmd.data.target_unit)
 				if unit == null or not is_instance_valid(unit) or target_unit == null or not is_instance_valid(target_unit):
 					continue
@@ -107,7 +107,7 @@ func _execute_command(cmd: Dictionary):
 				unit.action = Actions.MovingToUnit.new(target_unit)
 		Enums.CommandType.FOLLOWING:
 			for entry in cmd.data.targets:
-				var unit: Unit = EntityRegistry.get_unit(entry)
+				var unit = EntityRegistry.get_unit(entry)
 				var target_unit = EntityRegistry.get_unit(cmd.data.target_unit)
 				if unit == null or not is_instance_valid(unit) or target_unit == null or not is_instance_valid(target_unit):
 					continue
@@ -116,7 +116,7 @@ func _execute_command(cmd: Dictionary):
 				unit.action = Actions.Following.new(target_unit)
 		Enums.CommandType.COLLECTING_RESOURCES_SEQUENTIALLY:
 			for entry in cmd.data.targets:
-				var unit: Unit = EntityRegistry.get_unit(entry)
+				var unit = EntityRegistry.get_unit(entry)
 				var target_unit = EntityRegistry.get_unit(cmd.data.target_unit)
 				if unit == null or not is_instance_valid(unit) or target_unit == null or not is_instance_valid(target_unit):
 					continue
@@ -125,7 +125,7 @@ func _execute_command(cmd: Dictionary):
 				unit.action = Actions.CollectingResourcesSequentially.new(target_unit)
 		Enums.CommandType.AUTO_ATTACKING:
 			for entry in cmd.data.targets:
-				var unit: Unit = EntityRegistry.get_unit(entry)
+				var unit = EntityRegistry.get_unit(entry)
 				var target_unit = EntityRegistry.get_unit(cmd.data.target_unit)
 				if unit == null or not is_instance_valid(unit) or target_unit == null or not is_instance_valid(target_unit):
 					continue
@@ -139,7 +139,7 @@ func _execute_command(cmd: Dictionary):
 			if structure.is_queued_for_deletion():
 				return
 			for entry in cmd.data.selected_constructors:
-				var unit: Unit = EntityRegistry.get_unit(entry)
+				var unit = EntityRegistry.get_unit(entry)
 				if unit == null or not is_instance_valid(unit):
 					continue
 				if unit.is_queued_for_deletion():

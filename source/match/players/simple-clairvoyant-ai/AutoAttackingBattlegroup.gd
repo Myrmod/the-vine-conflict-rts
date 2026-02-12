@@ -75,6 +75,9 @@ func _attack_next_adversary_unit():
 
 
 func _attack_next_player():
+	if _players_to_attack.is_empty():
+		queue_free()
+		return
 	var player_to_attack_index = _players_to_attack.find(_player_to_attack)
 	var next_player_to_attack_index = (player_to_attack_index + 1) % _players_to_attack.size()
 	_player_to_attack = _players_to_attack[next_player_to_attack_index]
