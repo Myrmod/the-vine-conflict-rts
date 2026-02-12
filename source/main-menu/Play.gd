@@ -45,6 +45,8 @@ func _configure_team_options(team_select: OptionButton, num_teams: int):
 
 
 func _create_match_settings():
+	# Build MatchSettings from UI selections (controller type, color, team, spawn position).
+	# This is called when user clicks \"Play\" in the main menu.
 	var match_settings = MatchSettings.new()
 
 	var player_settings_nodes = find_child("GridContainer").get_children()
@@ -61,6 +63,8 @@ func _create_match_settings():
 			var player_settings = PlayerSettings.new()
 			player_settings.controller = player_controller
 			player_settings.color = color_picker.color
+			# TEAM ASSIGNMENT: Read from UI selection. If 0 (default), users can override team memberships for alliances.
+			# Match.gd will use these team values when creating Player nodes.
 			player_settings.team = team_select.selected
 			player_settings.spawn_index_offset = spawn_index_offset
 			match_settings.players.append(player_settings)

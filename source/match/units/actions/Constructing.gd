@@ -1,3 +1,7 @@
+# Constructing action: Worker unit builds a structure until it's complete.
+# The worker must be of type Worker, target must be uncompleted Structure, and both must belong
+# to the same player. Manages two sub-actions: moving into construction range if needed,
+# then ConstructingWhileInRange performs the actual work.
 extends "res://source/match/units/actions/Action.gd"
 
 const Worker = preload("res://source/match/units/Worker.gd")
@@ -13,6 +17,7 @@ var _sub_action = null
 @onready var _unit = Utils.NodeEx.find_parent_with_group(self , "units")
 
 
+# Validate construction is legal: must be Worker → uncompleted Structure, same player
 static func is_applicable(source_unit, target_unit):
 	return (
 		source_unit is Worker
@@ -23,15 +28,18 @@ static func is_applicable(source_unit, target_unit):
 
 
 func _init(target_unit):
+	# Constructor stores target structure and listens for completion signal
 	_target_unit = target_unit
 	_target_unit.constructed.connect(_on_target_unit_constructed)
 
 
 func _ready():
+	# Start either moving to structure or constructing it
 	_construct_or_move_closer()
 
 
 func _construct_or_move_closer():
+	# If within range of target structure, start constructing. Otherwise move closer first.
 	_sub_action = (
 		MovingToUnit.new(_target_unit)
 		if not Utils.MatchUtils.Movement.units_adhere(_unit, _target_unit)

@@ -1,3 +1,7 @@
+# WaitingForTargets action: Idle action state where a unit waits for enemies to come in range.
+# Periodically scans for valid attack targets and transitions to attacking when found.
+# This is the \"holding ground\" behavior - unit stands still, scans, and reacts to threats.
+# TEAM CHECK: Filters out same-team units from consideration, implementing team protection.
 extends "res://source/match/units/actions/Action.gd"
 
 const AttackingWhileInRange = preload("res://source/match/units/actions/AttackingWhileInRange.gd")
@@ -12,14 +16,11 @@ var _sub_action = null
 
 
 func _ready():
+	# Start periodic scanning for enemies in sight range
 	_timer = Timer.new()
 	_timer.timeout.connect(_on_timer_timeout)
 	add_child(_timer)
 	_timer.start(REFRESH_INTERVAL)
-
-
-func _to_string():
-	return "{0}({1})".format([super(), str(_sub_action) if _sub_action != null else ""])
 
 
 func is_idle():
@@ -27,21 +28,24 @@ func is_idle():
 
 
 func _get_units_to_attack():
+	# Scan for valid attack targets: enemy units in sight range that can be attacked.
+	# TEAM FILTER: unit.player.team != _unit.player.team ensures we only see enemy teams.
 	return get_tree().get_nodes_in_group("units").filter(
 		func(unit):
 			return (
-				unit.player != _unit.player
-				and unit.player.team != _unit.player.team
-				and unit.movement_domain in _unit.attack_domains
+				unit.player != _unit.player  # Different player
+				and unit.player.team != _unit.player.team  # Different TEAM (core protection)
+				and unit.movement_domain in _unit.attack_domains  # Attackable domain
 				and (
 					_unit.global_position_yless.distance_to(unit.global_position_yless)
-					<= _unit.sight_range
+					<= _unit.sight_range  # In vision range
 				)
 			)
 	)
 
 
 func _attack_unit(unit):
+	# Found a target! Stop scanning and start attacking.
 	_timer.timeout.disconnect(_on_timer_timeout)
 	_sub_action = (
 		AutoAttacking.new(unit) if _unit.movement_speed > 0.0 else AttackingWhileInRange.new(unit)

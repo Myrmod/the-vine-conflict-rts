@@ -16,7 +16,12 @@ signal changed
 
 var _color_material = null
 var id: int
-var team: int = 0  # Team number for team-based gameplay
+# TEAM SYSTEM: Integer team identifier for team-based gameplay.
+# Units with the same team ID cannot attack each other. Teams also share vision - all units
+# of teammates are automatically revealed to a player (see Match._setup_unit_groups()).
+# Default (0) is assigned by Play.gd: first player=team 0, second player=team 1, etc.
+# Custom team values can be set to create alliances or custom match configurations.
+var team: int = 0
 
 func _ready():
 	id = PlayerManager.add_player()

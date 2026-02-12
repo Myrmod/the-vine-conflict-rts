@@ -1,3 +1,18 @@
+# REPLAY SYSTEM: Records all game-changing commands and settings so matches can be perfectly replayed.
+# The core idea: every action a player or AI takes becomes a command queued through CommandBus.
+# These commands are recorded by ReplayRecorder, which saves them along with match settings.
+# During replay: the same commands execute in the same tick order → deterministic identical outcome.
+#
+# REPLAY FLOW:
+# 1. Match starts: ReplayRecorder.start_recording() initializes
+# 2. During gameplay: CommandBus.push_command() calls ReplayRecorder.record_command()
+# 3. Human/AI generates commands, they're stored in replay.commands array
+# 4. Match ends: ReplayRecorder saves to file (ReplayResource)
+# 5. User selects replay: Play.gd loads replay → CommandBus.load_from_replay_array()
+# 6. Replay playback: CommandBus returns commands from loaded replay instead of queue
+# 7. Match executes: identical ticks and commands = identical game (deterministic)
+#
+# See CommandBus.get_commands_for_tick() for how it switches between live queue and replay playback.
 extends Node
 
 enum Mode {OFF, RECORD, PLAY}
@@ -11,6 +26,8 @@ func _ready():
 	MatchSignals.connect("match_aborted", _on_match_aborted)
 
 func start_recording(match: Match):
+	# Initialize replay recording with match metadata and settings.
+	# All subsequent commands will be recorded via record_command().
 	mode = Mode.RECORD
 	replay = ReplayResource.new()  # Reset to a fresh replay
 	replay.tick_rate = match.TICK_RATE
@@ -23,6 +40,8 @@ func start_recording(match: Match):
 
 ## Record command for replay playback
 func record_command(cmd: Dictionary):
+	# Called by CommandBus.push_command() every time a command is queued.
+	# Stores a copy so we can save it to disk and replay it later.
 	if mode != Mode.RECORD:
 		return
 	replay.commands.append(cmd.duplicate())

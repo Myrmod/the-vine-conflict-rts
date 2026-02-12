@@ -1,3 +1,7 @@
+# AI DECISION SYSTEM: Manages individual unit AI behavior for the Clairvoyant AI player type.
+# Handles scouting drones and their movement targets. While AutoAttackingBattlegroup handles
+# coordinated attack formations, IntelligenceController handles exploratory/scouting behaviors.
+# TEAM AWARENESS: Only targets enemy teams (player.team != _player.team) preventing friendly fire.
 extends Node
 
 const TARGET_SWITICHING_TIME_MIN_S = 0.5
@@ -12,32 +16,39 @@ var _blacklisted_drone_target_paths = {}
 
 
 func setup(player):
+	# Initialize the intelligence system for a player. Called by AI player setup.
 	_player = player
 	_attach_current_drones()
 	_initialize_movement_of_current_drones()
 
 
 func _attach_current_drones():
+	# Register signal handlers for all existing drones belonging to this player
 	for drone in _get_current_drones():
 		_attach_drone(drone)
 
 
 func _initialize_movement_of_current_drones():
+	# Give each drone an initial target to scout
 	for drone in _get_current_drones():
 		_navigate_to_random_unit(drone)
 
 
 func _get_current_drones():
+	# Find all drone units belonging to this AI player
 	return get_tree().get_nodes_in_group("units").filter(
 		func(unit): return unit is Drone and unit.player == _player
 	)
 
 
 func _attach_drone(drone):
+	# Listen for when drone finishes an action, so we can assign a new target
 	drone.action_changed.connect(_on_drone_action_changed.bind(drone))
 
 
 func _navigate_to_random_unit(drone):
+	# Select a random enemy unit (from enemy team) as scouting target.
+	# TEAM FILTER: player.team != _player.team ensures we only scout enemies, not allies.
 	var players_in_random_order = get_tree().get_nodes_in_group("players").filter(
 		func(player): return player != _player and player.team != _player.team
 	)

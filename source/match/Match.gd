@@ -70,13 +70,21 @@ func _ready():
 	if !is_replay_mode:
 		ReplayRecorder.start_recording(self )
 
-# required for replays
+# Called every frame by the main game loop timer. This is where all game state updates happen.
+# The tick counter drives deterministic execution: commands reference specific ticks, and we execute
+# them exactly when those ticks arrive. This is how replays work - same ticks, same commands = identical game.
+# For a 10 ticks/second rate, each tick is ~100ms of game time.
 func _on_tick():
 	tick += 1
 	print('tick:', tick)
 	_process_commands_for_tick()
 
-# required for replays
+# Retrieves all commands queued for the current tick from CommandBus and executes them sequentially.
+# CommandBus handles two modes: live gameplay (retrieving from queue) and replay playback (extracting from loaded commands).
+# By executing all commands for a tick before moving to the next tick, we ensure synchronized, deterministic execution:
+# - Human player inputs (queued via UnitActionsController) get executed in tick order
+# - AI decisions (queued via AutoAttackingBattlegroup) get executed identically during replay
+# - No race conditions or frame-timing issues - everything is tick-based
 func _process_commands_for_tick():
 	var commands_for_tick = CommandBus.get_commands_for_tick(tick)
 	if commands_for_tick.is_empty():
@@ -85,6 +93,20 @@ func _process_commands_for_tick():
 	for cmd in commands_for_tick:
 		_execute_command(cmd)
 
+# This is the SINGLE POINT OF AUTHORITY for all game state changes in a match.
+# Every action a player takes or an AI makes becomes a command that flows through here:
+# Human input -> CommandBus.push_command() -> ReplayRecorder.record() -> stored in queue
+# AI decision -> CommandBus.push_command() -> ReplayRecorder.record() -> stored in queue
+# During replay -> CommandBus.load_from_replay_array() -> extracted back into queue
+# Then when the right tick arrives, this function executes the command exactly.
+#
+# Why here and not in action constructors? Separation of concerns:
+# - Action constructors just store data (can't fail)
+# - This function applies actions to real units (can fail - unit deleted, wrong type, etc.)
+# - We validate and log errors here so we catch corruption early
+#
+# The command.type determines which game system processes it. Each handler assigns an Action
+# to the unit(s), which then executes the action during the regular Unit._process() frame loop.
 func _execute_command(cmd: Dictionary):
 	print('_execute_command', cmd)
 	match cmd.type:
@@ -124,6 +146,7 @@ func _execute_command(cmd: Dictionary):
 					continue
 				unit.action = Actions.CollectingResourcesSequentially.new(target_unit)
 		Enums.CommandType.AUTO_ATTACKING:
+			# Assign attack actions to multiple units targeting the same enemy
 			for entry in cmd.data.targets:
 				var unit = EntityRegistry.get_unit(entry)
 				var target_unit = EntityRegistry.get_unit(cmd.data.target_unit)
@@ -131,18 +154,34 @@ func _execute_command(cmd: Dictionary):
 					continue
 				if unit.is_queued_for_deletion() or target_unit.is_queued_for_deletion():
 					continue
+				# Note: Team checking happens in AutoAttacking.is_applicable(), same-team attacks are rejected there
 				unit.action = Actions.AutoAttacking.new(target_unit)
 		Enums.CommandType.CONSTRUCTING:
+			# Validate that the target is a real, valid Structure before assigning construction actions
 			var structure = EntityRegistry.get_unit(cmd.data.structure)
 			if structure == null or not is_instance_valid(structure):
+				push_error("Constructing command: structure entity_id %s is null or invalid" % cmd.data.structure)
 				return
 			if structure.is_queued_for_deletion():
+				push_error("Constructing command: structure entity_id %s is queued for deletion" % cmd.data.structure)
 				return
+			# Check that structure is actually a Structure type (not a Worker or other unit that got" " corrupted)
+			if not structure.is_in_group("Structures"):
+				push_error("Constructing command: entity_id %s is not a Structure, it's a %s" % [cmd.data.structure, structure.get_class()])
+				return
+			
+			# Validate each constructor unit exists and is valid
 			for entry in cmd.data.selected_constructors:
 				var unit = EntityRegistry.get_unit(entry)
 				if unit == null or not is_instance_valid(unit):
+					push_error("Constructing command: constructor entity_id %s is null or invalid" % entry)
 					continue
 				if unit.is_queued_for_deletion():
+					push_error("Constructing command: constructor entity_id %s is queued for deletion" % entry)
+					continue
+				# Check that unit is actually a Worker type capable of construction
+				if not unit.is_in_group("Workers"):
+					push_error("Constructing command: entity_id %s is not a Worker, it's a %s" % [entry, unit.get_class()])
 					continue
 				unit.action = Actions.Constructing.new(structure)
 		Enums.CommandType.ENTITY_IS_QUEUED:
@@ -247,10 +286,14 @@ func _setup_players():
 
 
 func _create_players_from_settings():
+	# Instantiate each player (Human or AI controller) from their configured controller scene
 	for player_settings in settings.players:
 		var player_scene = Constants.CONTROLLER_SCENES[player_settings.controller]
 		var player = player_scene.instantiate()
 		player.color = player_settings.color
+		# TEAM ASSIGNMENT: Each player has a team ID. Units with same team cannot attack each other.
+		# Teams are typically auto-assigned by Play.gd (player_index 0 -> team 0, player_index 1 -> team 1, etc.)
+		# to ensure playable matches. Custom team assignments override this (for alliances, etc.)
 		player.team = player_settings.team
 		if player_settings.spawn_index_offset > 0:
 			for _i in range(player_settings.spawn_index_offset):
@@ -295,16 +338,21 @@ func _setup_and_spawn_unit(unit, a_transform, player, mark_structure_under_const
 
 
 func _setup_unit_groups(unit, player):
+	# Categorize units into groups that the UI and game systems use for visibility/filtering
 	unit.add_to_group("units")
 	if player == _get_human_player():
 		unit.add_to_group("controlled_units")
 	else:
 		unit.add_to_group("adversary_units")
-	# Add to revealed_units if player is visible, or if on same team as a visible player
+	
+	# TEAM-BASED VISION SHARING: Units are visible if their player is visible OR on same team.
+	# This is how team vision works: all units controlled by your team are automatically revealed.
+	# The UI systems (like FogOfWar) check for \"revealed_units\" group membership to decide what to show.
+	# If a teammate's unit is visible, it goes into revealed_units and the UI renders it.
 	if player in visible_players:
 		unit.add_to_group("revealed_units")
 	else:
-		# Check if any visible player is on the same team
+		# Check if any visible player is on the same team - if so, include their units too
 		for visible_player in visible_players:
 			if visible_player != null and visible_player.team == player.team:
 				unit.add_to_group("revealed_units")

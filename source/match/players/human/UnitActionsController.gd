@@ -1,3 +1,15 @@
+# This is the HUMAN PLAYER INPUT HANDLER that bridges the UI with the unified command system.
+# When a human player clicks a target or presses a button, UI signals (terrain_targeted, unit_targeted, etc.)
+# fire from MatchSignals. This controller responds by determining:
+# 1. Which units are selected and can perform the action
+# 2. What action they should perform and on what target
+# 3. Converting that to a Command object with correct data format
+# 4. Queuing the command through CommandBus.push_command()
+#
+# Critical: Commands are queued for (current_tick + 1) to allow the command to execute
+# in the next game tick. Both human and AI decisions go through this exact same pipeline,
+# which ensures deterministic replays: same commands in same order = identical game outcome.
+# See CommandBus.gd and Match._execute_command() for how commands become actual game changes.
 extends Node
 
 class_name UnitActionsController
@@ -13,6 +25,8 @@ func _ready():
 
 
 func _try_navigating_selected_units_towards_position(target_point):
+	# Filter selected units to find which ones can move to the target terrain position.
+	# Checks: unit belongs to human player, unit supports terrain movement, Moving action is applicable
 	var terrain_units_to_move = get_tree().get_nodes_in_group("selected_units").filter(
 		func(unit):
 			return (
@@ -29,6 +43,7 @@ func _try_navigating_selected_units_towards_position(target_point):
 				and Actions.Moving.is_applicable(unit)
 			)
 	)
+	# Calculate new positions for units to move to (handles unit grouping and collision avoidance)
 	var new_unit_targets = Utils.MatchUtils.Movement.crowd_moved_to_new_pivot(
 		terrain_units_to_move, target_point
 	)
@@ -36,6 +51,11 @@ func _try_navigating_selected_units_towards_position(target_point):
 		air_units_to_move, target_point
 	)
 
+	# Queue a MOVE command through CommandBus. This will:
+	# 1. Be recorded by ReplayRecorder for replay capability
+	# 2. Execute in next tick when Match._process_commands_for_tick() runs
+	# 3. Assign Actions.Moving to each selected unit
+	# 4. Be deterministically replayed with identical behavior (same tick, same command data)
 	CommandBus.push_command({
 		"tick": Match.tick + 1,
 		"type": Enums.CommandType.MOVE,
