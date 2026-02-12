@@ -54,6 +54,7 @@ func _create_match_settings():
 		var play_select = player_container.find_child("PlaySelect")
 		var color_picker = player_container.find_child("ColorPickerButton")
 		var team_select = player_container.find_child("TeamSelect")
+		# TODO: the spawn settings should be added as soon as we have proper map visuals, since currently nothing can be decided
 
 		var player_controller = play_select.selected
 		if player_controller != Constants.PlayerType.NONE:
