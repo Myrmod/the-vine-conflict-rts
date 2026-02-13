@@ -119,6 +119,8 @@ func _on_tick_advanced():
 	for drone in _pending_drone_retargets:
 		if Match.tick >= _pending_drone_retargets[drone]:
 			drones_to_retarget.append(drone)
+	# Sort by entity ID so RNG consumption order is deterministic across runs/replays.
+	drones_to_retarget.sort_custom(func(a, b): return a.id < b.id)
 	for drone in drones_to_retarget:
 		_pending_drone_retargets.erase(drone)
 		if is_instance_valid(drone) and not drone.is_queued_for_deletion():
