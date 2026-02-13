@@ -2,10 +2,43 @@
 
 [ext_resource type="Script" uid="uid://b6xqbqn22170h" path="res://source/match/hud/unit-menus/VehicleFactoryMenu.gd" id="1_hxrij"]
 [ext_resource type="Texture2D" uid="uid://bqp6cemj1sw4" path="res://assets/ui/icons/Tank.png" id="2_m80mi"]
+[ext_resource type="Texture2D" uid="uid://qw08xoss4lj0" path="res://assets/ui/icons/Worker.png" id="2_y044d"]
 
 [node name="VehicleFactoryMenu" type="GridContainer" unique_id=1972008825]
 columns = 4
 script = ExtResource("1_hxrij")
+
+[node name="ProduceWorkerButton" type="Button" parent="." unique_id=757788076]
+layout_mode = 2
+focus_mode = 0
+text = "W"
+
+[node name="TextureRect" type="TextureRect" parent="ProduceWorkerButton" unique_id=1972135908]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("2_y044d")
+expand_mode = 1
+
+[node name="ProduceTankButton" type="Button" parent="." unique_id=1453218026]
+layout_mode = 2
+focus_mode = 0
+text = "T"
+
+[node name="TextureRect" type="TextureRect" parent="ProduceTankButton" unique_id=1047477306]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("2_m80mi")
+expand_mode = 1
 
 [node name="Padding" type="Button" parent="." unique_id=1868917789]
 custom_minimum_size = Vector2(48, 48)
@@ -39,22 +72,6 @@ layout_mode = 2
 custom_minimum_size = Vector2(48, 48)
 layout_mode = 2
 
-[node name="ProduceTankButton" type="Button" parent="." unique_id=1453218026]
-layout_mode = 2
-focus_mode = 0
-text = "T"
-
-[node name="TextureRect" type="TextureRect" parent="ProduceTankButton" unique_id=1047477306]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-mouse_filter = 2
-texture = ExtResource("2_m80mi")
-expand_mode = 1
-
 [node name="Padding14" type="Button" parent="." unique_id=869052860]
 custom_minimum_size = Vector2(48, 48)
 layout_mode = 2
@@ -63,8 +80,5 @@ layout_mode = 2
 custom_minimum_size = Vector2(48, 48)
 layout_mode = 2
 
-[node name="Padding16" type="Button" parent="." unique_id=1741622514]
-custom_minimum_size = Vector2(48, 48)
-layout_mode = 2
-
+[connection signal="pressed" from="ProduceWorkerButton" to="." method="_on_produce_worker_button_pressed"]
 [connection signal="pressed" from="ProduceTankButton" to="." method="_on_produce_tank_button_pressed"]

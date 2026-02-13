@@ -1,11 +1,99 @@
 [gd_scene format=3 uid="uid://d4iqf0mjt5ub3"]
 
 [ext_resource type="Script" uid="uid://vgknbheasayb" path="res://source/match/hud/unit-menus/CommandCenterMenu.gd" id="1_88cbv"]
-[ext_resource type="Texture2D" uid="uid://qw08xoss4lj0" path="res://assets/ui/icons/Worker.png" id="2_jkjj1"]
+[ext_resource type="Texture2D" uid="uid://bhrw5rae6vmw8" path="res://assets/ui/icons/AntiGroundTurret.png" id="2_u87ix"]
+[ext_resource type="Texture2D" uid="uid://cv0qk8bjjc1eo" path="res://assets/ui/icons/AntiAirTurret.png" id="3_cdvgo"]
+[ext_resource type="Texture2D" uid="uid://sc5cu0dm3sgn" path="res://assets/ui/icons/CommandCenter.png" id="4_h68ct"]
+[ext_resource type="Texture2D" uid="uid://djmjxf3ikfrri" path="res://assets/ui/icons/VehicleFactory.png" id="5_kr1ye"]
+[ext_resource type="Texture2D" uid="uid://dvdd6mno4d5da" path="res://assets/ui/icons/AircraftFactory.png" id="6_ogyqs"]
 
 [node name="CommandCenterMenu" type="GridContainer" unique_id=1828532022]
+offset_right = 204.0
+offset_bottom = 152.0
 columns = 4
 script = ExtResource("1_88cbv")
+
+[node name="PlaceAntiGroundTurretButton" type="Button" parent="." unique_id=108580713]
+layout_mode = 2
+focus_mode = 0
+text = "AG"
+
+[node name="TextureRect" type="TextureRect" parent="PlaceAntiGroundTurretButton" unique_id=1567180174]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("2_u87ix")
+expand_mode = 1
+
+[node name="PlaceAntiAirTurretButton" type="Button" parent="." unique_id=789624717]
+layout_mode = 2
+size_flags_vertical = 3
+focus_mode = 0
+text = "AA"
+
+[node name="TextureRect" type="TextureRect" parent="PlaceAntiAirTurretButton" unique_id=190666623]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("3_cdvgo")
+expand_mode = 1
+
+[node name="PlaceCommandCenterButton" type="Button" parent="." unique_id=1984129607]
+auto_translate_mode = 2
+layout_mode = 2
+focus_mode = 0
+text = "CC"
+
+[node name="TextureRect" type="TextureRect" parent="PlaceCommandCenterButton" unique_id=1195857364]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("4_h68ct")
+expand_mode = 1
+
+[node name="PlaceVehicleFactoryButton" type="Button" parent="." unique_id=1687348453]
+layout_mode = 2
+focus_mode = 0
+text = "VF"
+
+[node name="TextureRect" type="TextureRect" parent="PlaceVehicleFactoryButton" unique_id=1441868283]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("5_kr1ye")
+expand_mode = 1
+
+[node name="PlaceAircraftFactoryButton" type="Button" parent="." unique_id=1417255343]
+layout_mode = 2
+focus_mode = 0
+text = "AF"
+
+[node name="TextureRect" type="TextureRect" parent="PlaceAircraftFactoryButton" unique_id=2085675616]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("6_ogyqs")
+expand_mode = 1
 
 [node name="Padding" type="Button" parent="." unique_id=636270567]
 custom_minimum_size = Vector2(48, 48)
@@ -31,40 +119,12 @@ layout_mode = 2
 custom_minimum_size = Vector2(48, 48)
 layout_mode = 2
 
-[node name="Padding12" type="Button" parent="." unique_id=736166442]
+[node name="Padding12" type="Button" parent="." unique_id=1127333641]
 custom_minimum_size = Vector2(48, 48)
 layout_mode = 2
 
-[node name="Padding13" type="Button" parent="." unique_id=949639027]
-custom_minimum_size = Vector2(48, 48)
-layout_mode = 2
-
-[node name="ProduceWorkerButton" type="Button" parent="." unique_id=694045050]
-layout_mode = 2
-focus_mode = 0
-text = "W"
-
-[node name="TextureRect" type="TextureRect" parent="ProduceWorkerButton" unique_id=696562563]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-mouse_filter = 2
-texture = ExtResource("2_jkjj1")
-expand_mode = 1
-
-[node name="Padding14" type="Button" parent="." unique_id=618025198]
-custom_minimum_size = Vector2(48, 48)
-layout_mode = 2
-
-[node name="Padding15" type="Button" parent="." unique_id=2121866391]
-custom_minimum_size = Vector2(48, 48)
-layout_mode = 2
-
-[node name="Padding16" type="Button" parent="." unique_id=1710537035]
-custom_minimum_size = Vector2(48, 48)
-layout_mode = 2
-
-[connection signal="pressed" from="ProduceWorkerButton" to="." method="_on_produce_worker_button_pressed"]
+[connection signal="pressed" from="PlaceAntiGroundTurretButton" to="." method="_on_place_anti_ground_turret_button_pressed"]
+[connection signal="pressed" from="PlaceAntiAirTurretButton" to="." method="_on_place_anti_air_turret_button_pressed"]
+[connection signal="pressed" from="PlaceCommandCenterButton" to="." method="_on_place_command_center_button_pressed"]
+[connection signal="pressed" from="PlaceVehicleFactoryButton" to="." method="_on_place_vehicle_factory_button_pressed"]
+[connection signal="pressed" from="PlaceAircraftFactoryButton" to="." method="_on_place_aircraft_factory_button_pressed"]
