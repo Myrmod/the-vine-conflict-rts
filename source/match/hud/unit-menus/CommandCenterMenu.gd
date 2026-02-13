@@ -1,4 +1,4 @@
-extends GridHotkeys
+extends Hotkeys
 
 const WorkerUnit = preload("res://source/match/units/Worker.tscn")
 

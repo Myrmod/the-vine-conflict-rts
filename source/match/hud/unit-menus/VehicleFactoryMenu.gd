@@ -1,14 +1,14 @@
-extends GridHotkeys
+extends Hotkeys
 
 const TankUnit = preload("res://source/match/units/Tank.tscn")
 
 var unit = null
 
-@onready var _tank_button = find_child("ProduceTankButton")
-
+@onready var _tank_button: Button = find_child("ProduceTankButton")
 
 func _ready():
-	super._ready()
+	register_button("build:tank", _tank_button)
+	
 	var tank_properties = UnitConstants.DEFAULT_PROPERTIES[TankUnit.resource_path]
 	_tank_button.tooltip_text = ("{0} - {1}\n{2} HP, {3} DPS\n{4}: {5}, {6}: {7}".format(
 		[
@@ -22,6 +22,8 @@ func _ready():
 			UnitConstants.PRODUCTION_COSTS[TankUnit.resource_path]["resource_b"]
 		]
 	))
+	
+	super._ready()
 
 
 func _on_produce_tank_button_pressed():

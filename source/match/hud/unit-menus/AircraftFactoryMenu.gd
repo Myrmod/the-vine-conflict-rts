@@ -1,4 +1,4 @@
-extends GridHotkeys
+extends Hotkeys
 
 const HelicopterUnit = preload("res://source/match/units/Helicopter.tscn")
 const DroneUnit = preload("res://source/match/units/Drone.tscn")
@@ -7,7 +7,6 @@ var unit = null
 
 @onready var _helicopter_button = find_child("ProduceHelicopterButton")
 @onready var _drone_button = find_child("ProduceDroneButton")
-
 
 func _ready():
 	super._ready()

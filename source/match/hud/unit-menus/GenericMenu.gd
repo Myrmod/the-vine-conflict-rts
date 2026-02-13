@@ -1,4 +1,4 @@
-extends GridHotkeys
+extends Hotkeys
 
 const Structure = preload("res://source/match/units/Structure.gd")
 
