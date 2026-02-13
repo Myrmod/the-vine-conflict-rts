@@ -159,8 +159,8 @@ func _validate_command_schema(cmd: Dictionary) -> bool:
 			if not cmd.data.has("structure_prototype") or typeof(cmd.data.structure_prototype) != TYPE_STRING:
 				push_error("CommandBus: STRUCTURE_PLACED requires String data.structure_prototype")
 				return false
-			if not cmd.data.has("transform"):
-				push_error("CommandBus: STRUCTURE_PLACED requires data.transform")
+			if not cmd.data.has("transform") or typeof(cmd.data.transform) != TYPE_TRANSFORM3D:
+				push_error("CommandBus: STRUCTURE_PLACED requires Transform3D data.transform")
 				return false
 		Enums.CommandType.ENTITY_PRODUCTION_CANCELED:
 			if not cmd.data.has("entity_id") or typeof(cmd.data.entity_id) != TYPE_INT:
