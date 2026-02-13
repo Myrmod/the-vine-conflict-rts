@@ -205,10 +205,12 @@ func _execute_command(cmd: Dictionary):
 				return
 			if player.is_queued_for_deletion():
 				return
+			var self_constructing = cmd.data.get("self_constructing", false)
 			MatchSignals.setup_and_spawn_unit.emit(
 				load(cmd.data.structure_prototype).instantiate(),
 				cmd.data.transform,
-				player
+				player,
+				self_constructing
 			)
 		Enums.CommandType.ENTITY_PRODUCTION_CANCELED:
 			var structure = EntityRegistry.get_unit(cmd.data.entity_id)
@@ -328,10 +330,10 @@ func _spawn_player_units(player, spawn_transform):
 	)
 
 
-func _setup_and_spawn_unit(unit, a_transform, player, mark_structure_under_construction = true):
+func _setup_and_spawn_unit(unit, a_transform, player, self_constructing = false):
 	unit.global_transform = a_transform
-	if unit is Structure and mark_structure_under_construction:
-		unit.mark_as_under_construction()
+	if unit is Structure and self_constructing:
+		unit.mark_as_under_construction(true)
 	_setup_unit_groups(unit, player)
 	player.add_child(unit)
 	MatchSignals.unit_spawned.emit(unit)

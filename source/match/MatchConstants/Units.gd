@@ -1,33 +1,5 @@
 class_name UnitConstants
 
-const PRODUCTION_COSTS = {
-    "res://source/match/units/Worker.tscn":
-    {
-        "resource_a": 2,
-        "resource_b": 0,
-    },
-    "res://source/match/units/Helicopter.tscn":
-    {
-        "resource_a": 1,
-        "resource_b": 3,
-    },
-    "res://source/match/units/Drone.tscn":
-    {
-        "resource_a": 2,
-        "resource_b": 0,
-    },
-    "res://source/match/units/Tank.tscn":
-    {
-        "resource_a": 3,
-        "resource_b": 1,
-    },
-}
-const PRODUCTION_TIMES = {
-    "res://source/match/units/Worker.tscn": 3.0,
-    "res://source/match/units/Helicopter.tscn": 6.0,
-    "res://source/match/units/Drone.tscn": 3.0,
-    "res://source/match/units/Tank.tscn": 6.0,
-}
 const PRODUCTION_QUEUE_LIMIT = 5
 const STRUCTURE_BLUEPRINTS = {
     "res://source/match/units/CommandCenter.tscn":
@@ -41,39 +13,14 @@ const STRUCTURE_BLUEPRINTS = {
     "res://source/match/units/AntiAirTurret.tscn":
     "res://source/match/units/structure-geometries/AntiAirTurret.tscn",
 }
-const CONSTRUCTION_COSTS = {
-    "res://source/match/units/CommandCenter.tscn":
-    {
-        "resource_a": 8,
-        "resource_b": 8,
-    },
-    "res://source/match/units/VehicleFactory.tscn":
-    {
-        "resource_a": 6,
-        "resource_b": 0,
-    },
-    "res://source/match/units/AircraftFactory.tscn":
-    {
-        "resource_a": 4,
-        "resource_b": 4,
-    },
-    "res://source/match/units/AntiGroundTurret.tscn":
-    {
-        "resource_a": 2,
-        "resource_b": 2,
-    },
-    "res://source/match/units/AntiAirTurret.tscn":
-    {
-        "resource_a": 2,
-        "resource_b": 2,
-    },
-}
 const DEFAULT_PROPERTIES = {
     "res://source/match/units/Drone.tscn":
     {
         "sight_range": 10.0,
         "hp": 6,
         "hp_max": 6,
+        "costs": {"resource_a": 2, "resource_b": 0},
+        "build_time": 3.0,
     },
     "res://source/match/units/Worker.tscn":
     {
@@ -81,6 +28,8 @@ const DEFAULT_PROPERTIES = {
         "hp": 6,
         "hp_max": 6,
         "resources_max": 2,
+        "costs": {"resource_a": 2, "resource_b": 0},
+        "build_time": 3.0,
     },
     "res://source/match/units/Helicopter.tscn":
     {
@@ -94,6 +43,8 @@ const DEFAULT_PROPERTIES = {
             NavigationConstants.Domain.TERRAIN,
             NavigationConstants.Domain.AIR,
         ],
+        "costs": {"resource_a": 1, "resource_b": 3},
+        "build_time": 6.0,
     },
     "res://source/match/units/Tank.tscn":
     {
@@ -106,24 +57,32 @@ const DEFAULT_PROPERTIES = {
         "attack_domains": [
             NavigationConstants.Domain.TERRAIN,
         ],
+        "costs": {"resource_a": 3, "resource_b": 1},
+        "build_time": 6.0,
     },
     "res://source/match/units/CommandCenter.tscn":
     {
         "sight_range": 10.0,
         "hp": 20,
         "hp_max": 20,
+        "costs": {"resource_a": 8, "resource_b": 8},
+        "build_time": 10.0,
     },
     "res://source/match/units/VehicleFactory.tscn":
     {
         "sight_range": 8.0,
         "hp": 16,
         "hp_max": 16,
+        "costs": {"resource_a": 6, "resource_b": 0},
+        "build_time": 8.0,
     },
     "res://source/match/units/AircraftFactory.tscn":
     {
         "sight_range": 8.0,
         "hp": 16,
         "hp_max": 16,
+        "costs": {"resource_a": 4, "resource_b": 4},
+        "build_time": 8.0,
     },
     "res://source/match/units/AntiGroundTurret.tscn":
     {
@@ -136,6 +95,8 @@ const DEFAULT_PROPERTIES = {
         "attack_domains": [
             NavigationConstants.Domain.TERRAIN,
         ],
+        "costs": {"resource_a": 2, "resource_b": 2},
+        "build_time": 5.0,
     },
     "res://source/match/units/AntiAirTurret.tscn":
     {
@@ -148,6 +109,8 @@ const DEFAULT_PROPERTIES = {
         "attack_domains": [
             NavigationConstants.Domain.AIR,
         ],
+        "costs": {"resource_a": 2, "resource_b": 2},
+        "build_time": 5.0,
     },
 }
 const PROJECTILES = {

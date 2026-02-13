@@ -17,9 +17,9 @@ func _ready():
 			tr("WORKER_DESCRIPTION"),
 			UnitConstants.DEFAULT_PROPERTIES[WorkerUnit.resource_path]["hp_max"],
 			tr("RESOURCE_A"),
-			UnitConstants.PRODUCTION_COSTS[WorkerUnit.resource_path]["resource_a"],
+			UnitConstants.DEFAULT_PROPERTIES[WorkerUnit.resource_path]["costs"]["resource_a"],
 			tr("RESOURCE_B"),
-			UnitConstants.PRODUCTION_COSTS[WorkerUnit.resource_path]["resource_b"]
+			UnitConstants.DEFAULT_PROPERTIES[WorkerUnit.resource_path]["costs"]["resource_b"]
 		]
 	))
 	var tank_properties = UnitConstants.DEFAULT_PROPERTIES[TankUnit.resource_path]
@@ -30,9 +30,9 @@ func _ready():
 			tank_properties["hp_max"],
 			tank_properties["attack_damage"] * tank_properties["attack_interval"],
 			tr("RESOURCE_A"),
-			UnitConstants.PRODUCTION_COSTS[TankUnit.resource_path]["resource_a"],
+			UnitConstants.DEFAULT_PROPERTIES[TankUnit.resource_path]["costs"]["resource_a"],
 			tr("RESOURCE_B"),
-			UnitConstants.PRODUCTION_COSTS[TankUnit.resource_path]["resource_b"]
+			UnitConstants.DEFAULT_PROPERTIES[TankUnit.resource_path]["costs"]["resource_b"]
 		]
 	))
 

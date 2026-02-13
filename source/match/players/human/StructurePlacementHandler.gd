@@ -115,9 +115,9 @@ func _calculate_blueprint_position_validity():
 
 
 func _player_has_enough_resources():
-	var construction_cost = UnitConstants.CONSTRUCTION_COSTS[
+	var construction_cost = UnitConstants.DEFAULT_PROPERTIES[
 		_pending_structure_prototype.resource_path
-	]
+	]["costs"]
 	return _player.has_resources(construction_cost)
 
 
@@ -210,9 +210,9 @@ func _cancel_structure_placement():
 
 func _finish_structure_placement():
 	if _player_has_enough_resources():
-		var construction_cost = UnitConstants.CONSTRUCTION_COSTS[
+		var construction_cost = UnitConstants.DEFAULT_PROPERTIES[
 			_pending_structure_prototype.resource_path
-		]
+		]["costs"]
 		_player.subtract_resources(construction_cost)
 		CommandBus.push_command({
 			"tick": Match.tick + 1,
@@ -221,6 +221,7 @@ func _finish_structure_placement():
 				"structure_prototype": _pending_structure_prototype.resource_path,
 				"transform": _active_blueprint_node.global_transform,
 				"player_id": _player.id,
+				"self_constructing": true,
 			}
 		})
 	_cancel_structure_placement()

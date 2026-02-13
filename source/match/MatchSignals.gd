@@ -2,7 +2,7 @@ extends Node
 
 # requests
 signal deselect_all_units
-signal setup_and_spawn_unit(unit, transform, player)
+signal setup_and_spawn_unit(unit, transform, player, self_constructing)
 signal place_structure(structure_prototype)
 signal schedule_navigation_rebake(domain)
 signal navigate_unit_to_rally_point(unit, rally_point) # currently, only for human players

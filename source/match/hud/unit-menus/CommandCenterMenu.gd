@@ -29,12 +29,12 @@ func _ready():
 			tr("RESOURCE_A"),
 			(
 				UnitConstants
-				.CONSTRUCTION_COSTS[AntiGroundTurretUnit.resource_path]["resource_a"]
+				.DEFAULT_PROPERTIES[AntiGroundTurretUnit.resource_path]["costs"]["resource_a"]
 			),
 			tr("RESOURCE_B"),
 			(
 				UnitConstants
-				.CONSTRUCTION_COSTS[AntiGroundTurretUnit.resource_path]["resource_b"]
+				.DEFAULT_PROPERTIES[AntiGroundTurretUnit.resource_path]["costs"]["resource_b"]
 			)
 		]
 	))
@@ -48,9 +48,9 @@ func _ready():
 			aa_turret_properties["hp_max"],
 			aa_turret_properties["attack_damage"] * aa_turret_properties["attack_interval"],
 			tr("RESOURCE_A"),
-			UnitConstants.CONSTRUCTION_COSTS[AntiAirTurretUnit.resource_path]["resource_a"],
+			UnitConstants.DEFAULT_PROPERTIES[AntiAirTurretUnit.resource_path]["costs"]["resource_a"],
 			tr("RESOURCE_B"),
-			UnitConstants.CONSTRUCTION_COSTS[AntiAirTurretUnit.resource_path]["resource_b"]
+			UnitConstants.DEFAULT_PROPERTIES[AntiAirTurretUnit.resource_path]["costs"]["resource_b"]
 		]
 	))
 	_cc_button.tooltip_text = ("{0} - {1}\n{2} HP\n{3}: {4}, {5}: {6}".format(
@@ -59,9 +59,9 @@ func _ready():
 			tr("CC_DESCRIPTION"),
 			UnitConstants.DEFAULT_PROPERTIES[CommandCenterUnit.resource_path]["hp_max"],
 			tr("RESOURCE_A"),
-			UnitConstants.CONSTRUCTION_COSTS[CommandCenterUnit.resource_path]["resource_a"],
+			UnitConstants.DEFAULT_PROPERTIES[CommandCenterUnit.resource_path]["costs"]["resource_a"],
 			tr("RESOURCE_B"),
-			UnitConstants.CONSTRUCTION_COSTS[CommandCenterUnit.resource_path]["resource_b"]
+			UnitConstants.DEFAULT_PROPERTIES[CommandCenterUnit.resource_path]["costs"]["resource_b"]
 		]
 	))
 	_vehicle_factory_button.tooltip_text = ("{0} - {1}\n{2} HP\n{3}: {4}, {5}: {6}".format(
@@ -72,10 +72,10 @@ func _ready():
 			tr("RESOURCE_A"),
 			(
 				UnitConstants
-				.CONSTRUCTION_COSTS[VehicleFactoryUnit.resource_path]["resource_a"]
+				.DEFAULT_PROPERTIES[VehicleFactoryUnit.resource_path]["costs"]["resource_a"]
 			),
 			tr("RESOURCE_B"),
-			UnitConstants.CONSTRUCTION_COSTS[VehicleFactoryUnit.resource_path]["resource_b"]
+			UnitConstants.DEFAULT_PROPERTIES[VehicleFactoryUnit.resource_path]["costs"]["resource_b"]
 		]
 	))
 	_aircraft_factory_button.tooltip_text = ("{0} - {1}\n{2} HP\n{3}: {4}, {5}: {6}".format(
@@ -86,12 +86,12 @@ func _ready():
 			tr("RESOURCE_A"),
 			(
 				UnitConstants
-				.CONSTRUCTION_COSTS[AircraftFactoryUnit.resource_path]["resource_a"]
+				.DEFAULT_PROPERTIES[AircraftFactoryUnit.resource_path]["costs"]["resource_a"]
 			),
 			tr("RESOURCE_B"),
 			(
 				UnitConstants
-				.CONSTRUCTION_COSTS[AircraftFactoryUnit.resource_path]["resource_b"]
+				.DEFAULT_PROPERTIES[AircraftFactoryUnit.resource_path]["costs"]["resource_b"]
 			)
 		]
 	))

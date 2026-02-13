@@ -36,7 +36,7 @@ func provision(resources, metadata):
 	)
 	if metadata == "ag_turret":
 		assert(
-			resources == UnitConstants.CONSTRUCTION_COSTS[AGTurretScene.resource_path],
+			resources == UnitConstants.DEFAULT_PROPERTIES[AGTurretScene.resource_path]["costs"],
 			"unexpected amount of resources"
 		)
 		_number_of_pending_ag_turret_resource_requests -= 1
@@ -45,7 +45,7 @@ func provision(resources, metadata):
 		_construct_turret(AGTurretScene)
 	elif metadata == "aa_turret":
 		assert(
-			resources == UnitConstants.CONSTRUCTION_COSTS[AATurretScene.resource_path],
+			resources == UnitConstants.DEFAULT_PROPERTIES[AATurretScene.resource_path]["costs"],
 			"unexpected amount of resources"
 		)
 		_number_of_pending_aa_turret_resource_requests -= 1
@@ -90,7 +90,7 @@ func _enforce_number_of_ag_turrets():
 	)
 	for _i in range(number_of_extra_ag_turrets_required):
 		resources_required.emit(
-			UnitConstants.CONSTRUCTION_COSTS[AGTurretScene.resource_path], "ag_turret"
+			UnitConstants.DEFAULT_PROPERTIES[AGTurretScene.resource_path]["costs"], "ag_turret"
 		)
 		_number_of_pending_ag_turret_resource_requests += 1
 
@@ -110,13 +110,13 @@ func _enforce_number_of_aa_turrets():
 	)
 	for _i in range(number_of_extra_aa_turrets_required):
 		resources_required.emit(
-			UnitConstants.CONSTRUCTION_COSTS[AATurretScene.resource_path], "aa_turret"
+			UnitConstants.DEFAULT_PROPERTIES[AATurretScene.resource_path]["costs"], "aa_turret"
 		)
 		_number_of_pending_aa_turret_resource_requests += 1
 
 
 func _construct_turret(turret_scene):
-	var construction_cost = UnitConstants.CONSTRUCTION_COSTS[turret_scene.resource_path]
+	var construction_cost = UnitConstants.DEFAULT_PROPERTIES[turret_scene.resource_path]["costs"]
 	assert(
 		_player.has_resources(construction_cost),
 		"player should have enough resources at this point"
@@ -138,7 +138,7 @@ func _construct_turret(turret_scene):
 		placement_position + Vector3(0, 0, 1), Vector3.UP
 	)
 	_player.subtract_resources(construction_cost)
-	MatchSignals.setup_and_spawn_unit.emit(unit_to_spawn, target_transform, _player)
+	MatchSignals.setup_and_spawn_unit.emit(unit_to_spawn, target_transform, _player, true)
 
 
 func _on_unit_died(unit):

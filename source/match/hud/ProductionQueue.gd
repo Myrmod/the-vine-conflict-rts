@@ -95,6 +95,6 @@ static func _generate_unit_production_command(entity_id, unit_type):
 		"data": {
 			"entity_id": entity_id,
 			"unit_type": unit_type,
-			"time_total": UnitConstants.PRODUCTION_TIMES[unit_type],
+			"time_total": UnitConstants.DEFAULT_PROPERTIES[unit_type]["build_time"],
 		}
 	})

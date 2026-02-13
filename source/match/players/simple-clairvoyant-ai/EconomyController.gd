@@ -33,7 +33,7 @@ func setup(player):
 func provision(resources, metadata):
 	if metadata == "worker":
 		assert(
-			resources == UnitConstants.PRODUCTION_COSTS[WorkerScene.resource_path],
+			resources == UnitConstants.DEFAULT_PROPERTIES[WorkerScene.resource_path]["costs"],
 			"unexpected amount of resources"
 		)
 		_number_of_pending_worker_resource_requests -= 1
@@ -43,7 +43,7 @@ func provision(resources, metadata):
 			_number_of_pending_workers += 1
 	elif metadata == "cc":
 		assert(
-			resources == UnitConstants.CONSTRUCTION_COSTS[CommandCenterScene.resource_path],
+			resources == UnitConstants.DEFAULT_PROPERTIES[CommandCenterScene.resource_path]["costs"],
 			"unexpected amount of resources"
 		)
 		_number_of_pending_cc_resource_requests -= 1
@@ -100,7 +100,7 @@ func _enforce_number_of_ccs():
 	)
 	for _i in range(number_of_extra_ccs_required):
 		resources_required.emit(
-			UnitConstants.CONSTRUCTION_COSTS[CommandCenterScene.resource_path], "cc"
+			UnitConstants.DEFAULT_PROPERTIES[CommandCenterScene.resource_path]["costs"], "cc"
 		)
 		_number_of_pending_cc_resource_requests += 1
 
@@ -117,15 +117,15 @@ func _enforce_number_of_workers():
 	)
 	for _i in range(number_of_extra_workers_required):
 		resources_required.emit(
-			UnitConstants.PRODUCTION_COSTS[WorkerScene.resource_path], "worker"
+			UnitConstants.DEFAULT_PROPERTIES[WorkerScene.resource_path]["costs"], "worker"
 		)
 		_number_of_pending_worker_resource_requests += 1
 
 
 func _construct_cc():
-	var construction_cost = UnitConstants.CONSTRUCTION_COSTS[
+	var construction_cost = UnitConstants.DEFAULT_PROPERTIES[
 		CommandCenterScene.resource_path
-	]
+	]["costs"]
 	assert(
 		_player.has_resources(construction_cost),
 		"player should have enough resources at this point"
@@ -143,7 +143,7 @@ func _construct_cc():
 		placement_position + Vector3(0, 0, 1), Vector3.UP
 	)
 	_player.subtract_resources(construction_cost)
-	MatchSignals.setup_and_spawn_unit.emit(unit_to_spawn, target_transform, _player)
+	MatchSignals.setup_and_spawn_unit.emit(unit_to_spawn, target_transform, _player, true)
 
 
 func _calculate_resource_collecting_statistics():
