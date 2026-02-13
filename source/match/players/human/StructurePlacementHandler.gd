@@ -8,7 +8,8 @@ enum BlueprintPositionValidity {
 	OUT_OF_MAP,
 }
 
-const ROTATION_BY_KEY_STEP = 90.0
+const ROTATION_BY_KEY_STEP_GRID = 90.0
+const ROTATION_BY_KEY_STEP_FREE = 45.0
 const ROTATION_DEAD_ZONE_DISTANCE = 0.1
 
 const MATERIALS_ROOT = "res://source/match/resources/materials/"
@@ -38,7 +39,8 @@ func _unhandled_input(event):
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
 		_handle_lmb_down_event(event)
 	if event.is_action_pressed("rotate_structure"):
-		_try_rotating_blueprint_by(ROTATION_BY_KEY_STEP)
+		var rotation_step = ROTATION_BY_KEY_STEP_FREE if _free_placement_mode else ROTATION_BY_KEY_STEP_GRID
+		_try_rotating_blueprint_by(rotation_step)
 	if event.is_action_pressed("toggle_free_placement"):
 		_toggle_free_placement_mode()
 	if (
@@ -202,6 +204,8 @@ func _cancel_structure_placement():
 		_feedback_label.hide()
 		_active_blueprint_node.queue_free()
 		_active_blueprint_node = null
+		# Reset to grid mode for next placement
+		_free_placement_mode = false
 
 
 func _finish_structure_placement():
@@ -265,7 +269,8 @@ func _finish_blueprint_rotation():
 func _toggle_free_placement_mode():
 	_free_placement_mode = not _free_placement_mode
 	# Update blueprint position to snap/unsnap from grid
-	_set_blueprint_position_based_on_mouse_pos()
+	if _structure_placement_started():
+		_set_blueprint_position_based_on_mouse_pos()
 
 
 func _snap_to_grid(position: Vector3) -> Vector3:
@@ -278,6 +283,10 @@ func _snap_to_grid(position: Vector3) -> Vector3:
 
 
 func _snap_rotation_to_90_degrees():
+	# Defensive check - although callers should ensure blueprint exists, 
+	# this prevents potential issues if called incorrectly
+	if not _structure_placement_started():
+		return
 	# Get current Y rotation in degrees
 	var current_rotation = _active_blueprint_node.rotation.y
 	var current_degrees = rad_to_deg(current_rotation)
