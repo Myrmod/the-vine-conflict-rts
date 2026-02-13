@@ -167,6 +167,9 @@ func _safety_checks():
 
 
 func _handle_unit_death():
+	# Unregister from EntityRegistry so get_unit() returns null for dead units
+	# and the entities dict doesn't grow unbounded during a match.
+	EntityRegistry.unregister(self)
 	tree_exited.connect(func(): MatchSignals.unit_died.emit(self ))
 	queue_free()
 

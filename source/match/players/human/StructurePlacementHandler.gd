@@ -196,17 +196,16 @@ func _cancel_structure_placement():
 
 func _finish_structure_placement():
 	if _player_has_enough_resources():
-		var construction_cost = UnitConstants.CONSTRUCTION_COSTS[
-			_pending_structure_prototype.resource_path
-		]
-		_player.subtract_resources(construction_cost)
+		# Resources are NOT deducted here — Match._execute_command() handles that
+		# when STRUCTURE_PLACED executes. This ensures replay determinism: the same
+		# resource deduction happens at the exact same tick during playback.
 		CommandBus.push_command({
 			"tick": Match.tick + 1,
 			"type": Enums.CommandType.STRUCTURE_PLACED,
+			"player_id": _player.id,
 			"data": {
 				"structure_prototype": _pending_structure_prototype.resource_path,
 				"transform": _active_blueprint_node.global_transform,
-				"player_id": _player.id,
 			}
 		})
 	_cancel_structure_placement()

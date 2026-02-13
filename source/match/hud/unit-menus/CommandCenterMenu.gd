@@ -26,4 +26,5 @@ func _on_produce_worker_button_pressed():
 	ProductionQueue._generate_unit_production_command(
 		unit.id,
 		WorkerUnit.resource_path,
+		unit.player.id,
 	)

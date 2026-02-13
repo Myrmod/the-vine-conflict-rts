@@ -17,6 +17,8 @@ class_name UnitActionsController
 const Structure = preload("res://source/match/units/Structure.gd")
 const ResourceUnit = preload("res://source/match/units/non-player/ResourceUnit.gd")
 
+@onready var _player = get_parent()
+
 func _ready():
 	MatchSignals.terrain_targeted.connect(_on_terrain_targeted)
 	MatchSignals.unit_targeted.connect(_on_unit_targeted)
@@ -59,6 +61,7 @@ func _try_navigating_selected_units_towards_position(target_point):
 	CommandBus.push_command({
 		"tick": Match.tick + 1,
 		"type": Enums.CommandType.MOVE,
+		"player_id": _player.id,
 		"data": {
 			"targets": new_unit_targets.map(
 				func(t): return {"unit": t[0].id, "pos": t[1]}
@@ -68,15 +71,21 @@ func _try_navigating_selected_units_towards_position(target_point):
 
 
 func _try_setting_rally_points(target_point: Vector3):
+	# Set rally points through CommandBus so the action is recorded for replay determinism
 	var controlled_structures = get_tree().get_nodes_in_group("selected_units").filter(
 		func(unit):
 			return unit.is_in_group("controlled_units") and unit.find_child("RallyPoint") != null
 	)
 	for structure in controlled_structures:
-		var rally_point = structure.find_child("RallyPoint")
-		if rally_point != null:
-			rally_point.target_unit = null
-			rally_point.global_position = target_point
+		CommandBus.push_command({
+			"tick": Match.tick + 1,
+			"type": Enums.CommandType.SET_RALLY_POINT,
+			"player_id": _player.id,
+			"data": {
+				"entity_id": structure.id,
+				"position": target_point,
+			}
+		})
 
 
 func _try_ordering_selected_workers_to_construct_structure(potential_structure):
@@ -94,6 +103,7 @@ func _try_ordering_selected_workers_to_construct_structure(potential_structure):
 	CommandBus.push_command({
 		"tick": Match.tick + 1,
 		"type": Enums.CommandType.CONSTRUCTING,
+		"player_id": _player.id,
 		"data": {
 			"selected_constructors": selected_constructors.map(func(unit): return {
 					"unit": unit.id,
@@ -123,6 +133,7 @@ func _navigate_unit_towards_unit(unit, target_unit):
 		CommandBus.push_command({
 			"tick": Match.tick + 1,
 			"type": Enums.CommandType.COLLECTING_RESOURCES_SEQUENTIALLY,
+			"player_id": _player.id,
 			"data": {
 				"targets": [{"unit": unit.id, "pos": unit.global_position, "rot": unit.global_rotation}],
 				"target_unit": target_unit.id,
@@ -134,6 +145,7 @@ func _navigate_unit_towards_unit(unit, target_unit):
 		CommandBus.push_command({
 			"tick": Match.tick + 1,
 			"type": Enums.CommandType.AUTO_ATTACKING,
+			"player_id": _player.id,
 			"data": {
 				"targets": [{"unit": unit.id, "pos": unit.global_position, "rot": unit.global_rotation}],
 				"target_unit": target_unit.id,
@@ -144,6 +156,7 @@ func _navigate_unit_towards_unit(unit, target_unit):
 		CommandBus.push_command({
 			"tick": Match.tick + 1,
 			"type": Enums.CommandType.CONSTRUCTING,
+			"player_id": _player.id,
 			"data": {
 				"selected_constructors": [{"unit": unit.id, "pos": unit.global_position, "rot": unit.global_rotation}],
 				"structure": target_unit.id,
@@ -159,6 +172,7 @@ func _navigate_unit_towards_unit(unit, target_unit):
 		CommandBus.push_command({
 			"tick": Match.tick + 1,
 			"type": Enums.CommandType.FOLLOWING,
+			"player_id": _player.id,
 			"data": {
 				"targets": [{"unit": unit.id, "pos": unit.global_position, "rot": unit.global_rotation}],
 				"target_unit": target_unit.id,
@@ -169,6 +183,7 @@ func _navigate_unit_towards_unit(unit, target_unit):
 		CommandBus.push_command({
 			"tick": Match.tick + 1,
 			"type": Enums.CommandType.MOVING_TO_UNIT,
+			"player_id": _player.id,
 			"data": {
 				"targets": [{"unit": unit.id, "pos": unit.global_position, "rot": unit.global_rotation}],
 				"target_unit": target_unit.id,
@@ -190,7 +205,16 @@ func _try_setting_rally_point_to_unit(unit, target_unit):
 	var rally_point = unit.find_child("RallyPoint")
 	if rally_point == null:
 		return false
-	rally_point.target_unit = target_unit
+	# Set rally point to unit through CommandBus for replay determinism
+	CommandBus.push_command({
+		"tick": Match.tick + 1,
+		"type": Enums.CommandType.SET_RALLY_POINT_TO_UNIT,
+		"player_id": _player.id,
+		"data": {
+			"entity_id": unit.id,
+			"target_unit": target_unit.id,
+		}
+	})
 	return true
 
 
@@ -217,6 +241,7 @@ func _on_navigate_unit_to_rally_point(unit, rally_point):
 		CommandBus.push_command({
 			"tick": Match.tick + 1,
 			"type": Enums.CommandType.MOVE,
+			"player_id": _player.id,
 			"data": {
 				"targets": [{"unit": unit.id, "pos": rally_point.global_position, "rot": unit.global_rotation}]
 			}

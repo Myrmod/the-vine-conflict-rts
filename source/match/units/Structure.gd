@@ -42,6 +42,8 @@ func cancel_construction():
 	var scene_path = get_script().resource_path.replace(".gd", ".tscn")
 	var construction_cost = UnitConstants.CONSTRUCTION_COSTS[scene_path]
 	player.add_resources(construction_cost)
+	# Unregister before freeing so EntityRegistry doesn't hold stale references
+	EntityRegistry.unregister(self)
 	queue_free()
 
 

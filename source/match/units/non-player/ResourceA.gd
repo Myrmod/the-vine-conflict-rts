@@ -7,6 +7,8 @@ const MATERIAL_ALBEDO_TO_REPLACE_EPSILON = 0.05
 	set(value):
 		resource_a = max(0, value)
 		if resource_a == 0:
+			# Unregister from EntityRegistry before freeing depleted resource
+			EntityRegistry.unregister(self)
 			queue_free()
 
 var color = Resources.A.COLOR:

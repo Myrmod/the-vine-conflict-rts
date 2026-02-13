@@ -71,6 +71,7 @@ func _add_queue_element_node(queue_element):
 	queue_element_node.queue = _production_queue
 	queue_element_node.queue_element = queue_element
 	queue_element_node.entity_id = _production_queue.get_parent().id
+	queue_element_node.player_id = _production_queue.get_parent().player.id
 	_queue_elements.add_child(queue_element_node)
 	_queue_elements.move_child(queue_element_node, 0)
 
@@ -88,10 +89,11 @@ func _on_production_queue_element_removed(element):
 	)
 
 
-static func _generate_unit_production_command(entity_id, unit_type):
+static func _generate_unit_production_command(entity_id, unit_type, player_id):
 	CommandBus.push_command({
 		"tick": Match.tick + 1,
 		"type": Enums.CommandType.ENTITY_IS_QUEUED,
+		"player_id": player_id,
 		"data": {
 			"entity_id": entity_id,
 			"unit_type": unit_type,

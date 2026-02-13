@@ -28,4 +28,5 @@ func _on_produce_tank_button_pressed():
 	ProductionQueue._generate_unit_production_command(
 		unit.id,
 		TankUnit.resource_path,
+		unit.player.id,
 	)

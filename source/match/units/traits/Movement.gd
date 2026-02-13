@@ -60,7 +60,7 @@ func _ready():
 	move(
 		(
 			_unit.global_position
-			+ Vector3(randf(), 0, randf()).normalized() * INITIAL_DISPERSION_FACTOR
+			+ Vector3(Match.rng.randf(), 0, Match.rng.randf()).normalized() * INITIAL_DISPERSION_FACTOR
 		)
 	)
 

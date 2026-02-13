@@ -1,37 +1,45 @@
-# ENTITY REGISTRY: Maps stable unit IDs to unit objects.
-# This solves a critical problem for commands and replays: unit references change every frame
-# (objects destroyed/created), but we need a way to identify "the same unit" across time.
+# ENTITY REGISTRY: Maps stable integer IDs to unit objects for the command system.
 #
-# How it works:
-# 1. When a unit spawns: EntityRegistry.register(unit) assigns a unique stable ID
-# 2. That ID is stored in unit.id and never changes
-# 3. Commands reference units by ID, not by reference (e.g., {"unit": 5} not {unit: <obj>})
-# 4. When executing commands: Match._execute_command() converts IDs to objects via EntityRegistry.get_unit(id)
-# 5. When unit dies: EntityRegistry.unregister(unit) cleans up the mapping
+# Problem: Commands and replays cannot store object references (they get serialized to disk
+# and replayed in a different scene tree). We need a stable way to identify units.
 #
-# This allows commands to be:
-# - Recorded and serialized to disk (can't serialize object references)
-# - Replayed perfectly (same IDs in replay file = same units every time)
-# - Sent over network (for future multiplayer)
+# Solution: Every unit gets a unique integer ID on spawn. Commands reference units by ID.
+# Match._execute_command() resolves IDs back to objects via get_unit().
+#
+# Lifecycle:
+#   1. Unit spawns → register(unit) → assigns next available ID, stores mapping
+#   2. Commands use unit.id (int) in their data dictionaries
+#   3. Match._execute_command() → EntityRegistry.get_unit(id) → resolves to object
+#   4. Unit dies → unregister(unit) → removes mapping
+#   5. New match → reset() → clears all mappings, restarts IDs from 1
+#
+# Determinism guarantee: IDs are assigned sequentially (1, 2, 3...) in spawn order.
+# Same spawn order during replay = same IDs = commands resolve to same units.
 extends Node
 
 var _next_id := 1
-var entities := {} # int -> Unit
-var entity_id: int
+var entities := {} # int → Unit
+
+func reset():
+	## Called by Loading.gd before each match to clear stale mappings from previous matches.
+	## Resets ID counter to 1 so replay IDs line up with freshly spawned units.
+	entities.clear()
+	_next_id = 1
 
 func register(unit) -> int:
-	# Assign a unique stable ID to a newly spawned unit.
-	# This ID persists throughout the unit's lifetime and is used in commands.
+	## Assign a unique stable ID to a newly spawned unit.
+	## This ID persists throughout the unit's lifetime and is referenced in commands.
 	var id := _next_id
 	_next_id += 1
 	entities[id] = unit
 	return id
 
 func get_unit(id: int):
-	# Look up a unit by its ID. Used by Match._execute_command() to convert
-	# command data (which references units by ID) into actual unit objects.
+	## Look up a unit by its stable ID. Returns null if the unit was never registered
+	## or has already been unregistered (died). Used by Match._execute_command().
 	return entities.get(id, null)
 
-## Called when a unit dies to clean up the mapping
-func unregister(_unit):
-	entities.erase(_unit.id)
+func unregister(unit):
+	## Remove a unit's mapping when it dies or is freed.
+	## After this, get_unit(unit.id) will return null.
+	entities.erase(unit.id)

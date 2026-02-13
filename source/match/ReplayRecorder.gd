@@ -33,7 +33,7 @@ func start_recording(match: Match):
 	replay.tick_rate = match.TICK_RATE
 	replay.settings = match.settings
 	replay.map = match.map.scene_file_path
-	#replay.seed = match.seed
+	replay.match_seed = match.match_seed
 	replay.commands.clear()
 	# Store serialized player data separately to avoid Resource reference issues
 	replay.players_data = _serialize_players(match.settings.players)

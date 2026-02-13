@@ -12,6 +12,7 @@ signal match_started
 signal match_aborted
 signal match_finished_with_victory
 signal match_finished_with_defeat
+signal tick_advanced  # emitted after each deterministic tick is processed (use instead of wall-clock timers)
 signal terrain_targeted(position)
 signal unit_spawned(unit)
 signal unit_targeted(unit)

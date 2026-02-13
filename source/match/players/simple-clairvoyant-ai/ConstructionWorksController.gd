@@ -4,24 +4,27 @@ const Structure = preload("res://source/match/units/Structure.gd")
 const Worker = preload("res://source/match/units/Worker.gd")
 const Constructing = preload("res://source/match/units/actions/Constructing.gd")
 
-const REFRESH_INTERVAL_S = 1.0 / 60.0 * 30.0
+# Tick-based refresh interval. At TICK_RATE 10, 5 ticks = 0.5 s.
+const REFRESH_INTERVAL_TICKS = 5
 
 var _player = null
+var _ticks_until_refresh = REFRESH_INTERVAL_TICKS
 
 
 func setup(player):
 	_player = player
-	_setup_refresh_timer()
+	MatchSignals.tick_advanced.connect(_on_tick_advanced)
 
 
-func _setup_refresh_timer():
-	var timer = Timer.new()
-	add_child(timer)
-	timer.timeout.connect(_on_refresh_timer_timeout)
-	timer.start(REFRESH_INTERVAL_S)
+func _on_tick_advanced():
+	_ticks_until_refresh -= 1
+	if _ticks_until_refresh > 0:
+		return
+	_ticks_until_refresh = REFRESH_INTERVAL_TICKS
+	_on_refresh()
 
 
-func _on_refresh_timer_timeout():
+func _on_refresh():
 	var workers = get_tree().get_nodes_in_group("units").filter(
 		func(unit): return unit is Worker and unit.player == _player
 	)
@@ -33,11 +36,12 @@ func _on_refresh_timer_timeout():
 	)
 	if not structures_to_construct.is_empty() and not workers.is_empty():
 		# TODO: introduce some algortihm based on distances
-		workers.shuffle()
-		structures_to_construct.shuffle()
+		Utils.MatchUtils.rng_shuffle(workers)
+		Utils.MatchUtils.rng_shuffle(structures_to_construct)
 		CommandBus.push_command({
 			"tick": Match.tick + 1,
 			"type": Enums.CommandType.CONSTRUCTING,
+			"player_id": _player.id,
 			"data": {
 				"structure": structures_to_construct[0].id,
 				"selected_constructors": [{
