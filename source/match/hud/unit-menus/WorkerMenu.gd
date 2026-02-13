@@ -1,4 +1,4 @@
-extends GridHotkeys
+extends Hotkeys
 
 const CommandCenterUnit = preload("res://source/match/units/CommandCenter.tscn")
 const VehicleFactoryUnit = preload("res://source/match/units/VehicleFactory.tscn")

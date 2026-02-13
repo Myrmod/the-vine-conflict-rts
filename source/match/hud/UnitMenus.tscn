@@ -2,7 +2,7 @@
 
 [ext_resource type="PackedScene" uid="uid://pawymiv0p8ab" path="res://source/match/hud/unit-menus/GenericMenu.tscn" id="1_4ci70"]
 [ext_resource type="Script" uid="uid://dfo4odh8nba6r" path="res://source/match/hud/UnitMenus.gd" id="1_hugbq"]
-[ext_resource type="Script" uid="uid://bfgtn3cqfj5a8" path="res://source/match/hud/GridHotkeys.gd" id="2_prtf2"]
+[ext_resource type="Script" uid="uid://bfgtn3cqfj5a8" path="res://source/match/hud/Hotkeys.gd" id="2_prtf2"]
 [ext_resource type="PackedScene" uid="uid://d4iqf0mjt5ub3" path="res://source/match/hud/unit-menus/CommandCenterMenu.tscn" id="3_hqirh"]
 [ext_resource type="PackedScene" uid="uid://btvii654eytjr" path="res://source/match/hud/unit-menus/WorkerMenu.tscn" id="4_1s3pp"]
 [ext_resource type="PackedScene" uid="uid://d1b3uq81171lf" path="res://source/match/hud/unit-menus/VehicleFactoryMenu.tscn" id="4_ngnkq"]

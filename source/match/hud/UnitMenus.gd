@@ -5,18 +5,22 @@ const AircraftFactory = preload("res://source/match/units/AircraftFactory.gd")
 const CommandCenter = preload("res://source/match/units/CommandCenter.gd")
 const Worker = preload("res://source/match/units/Worker.gd")
 
+var hotkeys_name
+var hotkeys_scheme
+
 @onready var _generic_menu = find_child("GenericMenu")
 @onready var _command_center_menu = find_child("CommandCenterMenu")
 @onready var _vehicle_factory_menu = find_child("VehicleFactoryMenu")
 @onready var _aircraft_factory_menu = find_child("AircraftFactoryMenu")
 @onready var _worker_menu = find_child("WorkerMenu")
 
+
 func _ready():
 	_reset_menus()
 	MatchSignals.unit_selected.connect(func(_unit): _reset_menus())
 	MatchSignals.unit_deselected.connect(func(_unit): _reset_menus())
 	MatchSignals.unit_died.connect(func(_unit): _reset_menus())
-
+	
 func _reset_menus():
 	_hide_all_menus()
 	if _try_showing_any_menu():
