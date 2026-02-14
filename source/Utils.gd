@@ -153,3 +153,28 @@ func _format_command_context(context: Dictionary) -> String:
 		return ""
 	
 	return " (Command: " + ", ".join(parts) + ")"
+
+class FileIO:
+	## Save a Resource to disk, creating directories as needed.
+	## Returns OK on success, or the error code on failure.
+	static func save_resource(resource: Resource, path: String) -> Error:
+		var dir_path = path.get_base_dir()
+		if not DirAccess.dir_exists_absolute(dir_path):
+			var dir_err = DirAccess.make_dir_recursive_absolute(dir_path)
+			if dir_err != OK:
+				push_error("FileIO: failed to create directory '%s' (error %s)" % [dir_path, dir_err])
+				return dir_err
+		var err = ResourceSaver.save(resource, path)
+		if err != OK:
+			push_error("FileIO: failed to save resource to '%s' (error %s)" % [path, err])
+		return err
+
+	## Load a Resource from disk. Returns null on failure.
+	static func load_resource(path: String) -> Resource:
+		if not ResourceLoader.exists(path):
+			push_error("FileIO: resource not found at '%s'" % path)
+			return null
+		var resource = ResourceLoader.load(path)
+		if resource == null:
+			push_error("FileIO: failed to load resource from '%s'" % path)
+		return resource

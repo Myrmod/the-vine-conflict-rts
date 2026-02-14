@@ -11,6 +11,7 @@ extends Node
 @export var allow_navigation_rebaking = true
 @export var use_grid_based_placement = true
 @export var grid_cell_size = 1.0
+@export var allow_placement_in_allied_build_radius = true
 
 @export_group("Match/Debug")
 @export var frame_incrementer = false

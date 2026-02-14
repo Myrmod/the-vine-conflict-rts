@@ -67,6 +67,7 @@ const DEFAULT_PROPERTIES = {
         "hp_max": 20,
         "costs": {"resource_a": 8, "resource_b": 8},
         "build_time": 10.0,
+        "build_radius": 12.0,
     },
     "res://source/match/units/VehicleFactory.tscn":
     {
@@ -75,6 +76,7 @@ const DEFAULT_PROPERTIES = {
         "hp_max": 16,
         "costs": {"resource_a": 6, "resource_b": 0},
         "build_time": 8.0,
+        "build_radius": 8.0,
     },
     "res://source/match/units/AircraftFactory.tscn":
     {
@@ -83,6 +85,7 @@ const DEFAULT_PROPERTIES = {
         "hp_max": 16,
         "costs": {"resource_a": 4, "resource_b": 4},
         "build_time": 8.0,
+        "build_radius": 8.0,
     },
     "res://source/match/units/AntiGroundTurret.tscn":
     {
@@ -97,6 +100,7 @@ const DEFAULT_PROPERTIES = {
         ],
         "costs": {"resource_a": 2, "resource_b": 2},
         "build_time": 5.0,
+        "build_radius": 6.0,
     },
     "res://source/match/units/AntiAirTurret.tscn":
     {
@@ -111,6 +115,7 @@ const DEFAULT_PROPERTIES = {
         ],
         "costs": {"resource_a": 2, "resource_b": 2},
         "build_time": 5.0,
+        "build_radius": 6.0,
     },
 }
 const PROJECTILES = {

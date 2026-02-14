@@ -59,22 +59,12 @@ func save_to_file():
 		push_error("Replay validation failed — not saving")
 		return
 	var path = get_replay_path()
-	
-	# Create directory if it doesn't exist
-	var dir_path = path.get_base_dir()
-	if not DirAccess.dir_exists_absolute(dir_path):
-		var error = DirAccess.make_dir_recursive_absolute(dir_path)
-		if error != OK:
-			printerr("Failed to create directory: ", dir_path)
-			return
-
-	# Save the file
-	var err = ResourceSaver.save(replay, path)
+	var err = Utils.FileIO.save_resource(replay, path)
 	if err != OK:
 		printerr("Replay save failed:", err)
 
 func load_from_file(path: String) -> ReplayResource:
-	replay = ResourceLoader.load(path)
+	replay = Utils.FileIO.load_resource(path)
 	return replay
 
 func start_replay():
