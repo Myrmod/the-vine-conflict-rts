@@ -101,15 +101,15 @@ func _calculate_blueprint_position_validity():
 		return BlueprintPositionValidity.OUT_OF_MAP
 	if not _player_has_enough_resources():
 		return BlueprintPositionValidity.NOT_ENOUGH_RESOURCES
-	var placement_validity = Utils.MatchUtils.Placement.validate_agent_placement_position(
+	var placement_validity = MatchUtils.Placement.validate_agent_placement_position(
 		_active_blueprint_node.global_position,
 		_pending_structure_radius,
 		get_tree().get_nodes_in_group("units") + get_tree().get_nodes_in_group("resource_units"),
 		_pending_structure_navmap_rid
 	)
-	if placement_validity == Utils.MatchUtils.Placement.COLLIDES_WITH_AGENT:
+	if placement_validity == MatchUtils.Placement.COLLIDES_WITH_AGENT:
 		return BlueprintPositionValidity.COLLIDES_WITH_OBJECT
-	if placement_validity == Utils.MatchUtils.Placement.NOT_NAVIGABLE:
+	if placement_validity == MatchUtils.Placement.NOT_NAVIGABLE:
 		return BlueprintPositionValidity.NOT_NAVIGABLE
 	return BlueprintPositionValidity.VALID
 
@@ -210,17 +210,16 @@ func _cancel_structure_placement():
 
 func _finish_structure_placement():
 	if _player_has_enough_resources():
-		var construction_cost = UnitConstants.DEFAULT_PROPERTIES[
-			_pending_structure_prototype.resource_path
-		]["costs"]
-		_player.subtract_resources(construction_cost)
+		# Resources are NOT deducted here — Match._execute_command() handles that
+		# when STRUCTURE_PLACED executes. This ensures replay determinism: the same
+		# resource deduction happens at the exact same tick during playback.
 		CommandBus.push_command({
 			"tick": Match.tick + 1,
 			"type": Enums.CommandType.STRUCTURE_PLACED,
+			"player_id": _player.id,
 			"data": {
 				"structure_prototype": _pending_structure_prototype.resource_path,
 				"transform": _active_blueprint_node.global_transform,
-				"player_id": _player.id,
 				"self_constructing": true,
 			}
 		})

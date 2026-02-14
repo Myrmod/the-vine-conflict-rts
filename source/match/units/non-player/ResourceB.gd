@@ -7,6 +7,8 @@ const MATERIAL_ALBEDO_TO_REPLACE_EPSILON = 0.05
 	set(value):
 		resource_b = max(0, value)
 		if resource_b == 0:
+			# Unregister from EntityRegistry before freeing depleted resource
+			EntityRegistry.unregister(self)
 			queue_free()
 
 var color = Resources.B.COLOR:
@@ -22,6 +24,6 @@ func _ready():
 func _setup_mesh_colors():
 	# gdlint: ignore = function-preload-variable-name
 	var material = preload(Resources.B.MATERIAL_PATH)
-	Utils.MatchUtils.traverse_node_tree_and_replace_materials_matching_albedo(
+	MatchUtils.traverse_node_tree_and_replace_materials_matching_albedo(
 		self , MATERIAL_ALBEDO_TO_REPLACE, MATERIAL_ALBEDO_TO_REPLACE_EPSILON, material
 	)

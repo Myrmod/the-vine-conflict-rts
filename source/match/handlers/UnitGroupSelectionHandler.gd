@@ -26,7 +26,7 @@ func access_group(group_id: int):
 	var units_in_group = Utils.Set.from_array(
 		get_tree().get_nodes_in_group(_unit_group_names[group_id])
 	)
-	Utils.MatchUtils.select_units(units_in_group)
+	MatchUtils.select_units(units_in_group)
 
 
 func set_group(group_id: int):

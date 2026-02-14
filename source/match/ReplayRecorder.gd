@@ -33,7 +33,7 @@ func start_recording(match: Match):
 	replay.tick_rate = match.TICK_RATE
 	replay.settings = match.settings
 	replay.map = match.map.scene_file_path
-	#replay.seed = match.seed
+	replay.match_seed = Match.rng.seed
 	replay.commands.clear()
 	# Store serialized player data separately to avoid Resource reference issues
 	replay.players_data = _serialize_players(match.settings.players)
@@ -44,7 +44,7 @@ func record_command(cmd: Dictionary):
 	# Stores a copy so we can save it to disk and replay it later.
 	if mode != Mode.RECORD:
 		return
-	replay.commands.append(cmd.duplicate())
+	replay.commands.append(cmd.duplicate(true))
 
 func stop_recording():
 	mode = Mode.OFF
@@ -121,6 +121,7 @@ func _serialize_players(players: Array[Resource]) -> Array:
 		var player_dict = {
 			"color": player_settings.color,
 			"controller": player_settings.controller,
+			"team": player_settings.team,
 			"spawn_index_offset": player_settings.spawn_index_offset,
 		}
 		serialized.append(player_dict)
@@ -130,14 +131,20 @@ func _serialize_players(players: Array[Resource]) -> Array:
 func _restore_players(players_data: Array) -> Array[Resource]:
 	# Convert player dictionaries back to PlayerSettings Resource objects
 	var restored_players: Array[Resource] = []
-	for player_data in players_data:
+	for index in range(players_data.size()):
+		var player_data = players_data[index]
 		var player_settings = PlayerSettings.new()
 		var data_variant: Variant = player_data
 		if data_variant is Dictionary:
 			player_settings.color = data_variant.get("color") if data_variant.has("color") else Color.BLUE
 			player_settings.controller = data_variant.get("controller") if data_variant.has("controller") else Constants.PlayerType.SIMPLE_CLAIRVOYANT_AI
+			# Backward compatibility: old replays might not include team.
+			# Use unique team per player index to preserve expected combat behavior.
+			player_settings.team = data_variant.get("team") if data_variant.has("team") else index
 			player_settings.spawn_index_offset = data_variant.get("spawn_index_offset") if data_variant.has("spawn_index_offset") else 0
 		else:
 			player_settings = player_data as PlayerSettings
+			if player_settings != null and player_settings.team == null:
+				player_settings.team = index
 		restored_players.append(player_settings)
 	return restored_players

@@ -165,7 +165,7 @@ func _handle_sub_action_finished_while_collecting():
 	if (
 		_resource_unit != null
 		and not _unit.is_full()
-		and not Utils.MatchUtils.Movement.units_adhere(_unit, _resource_unit)
+		and not MatchUtils.Movement.units_adhere(_unit, _resource_unit)
 	):
 		_change_state_to(State.MOVING_TO_RESOURCE)
 		return

@@ -6,8 +6,6 @@ extends Control
 # Mode B — replay:
 # ReplayMenu → Play (replay mode) → Loading → Match
 
-const MatchSettings = preload("res://source/data-model/MatchSettings.gd")
-const PlayerSettings = preload("res://source/data-model/PlayerSettings.gd")
 const PlayerSettingsScene = preload("res://source/main-menu/PlayerSettings.tscn")
 const LoadingScene = preload("res://source/main-menu/Loading.tscn")
 
@@ -175,7 +173,5 @@ func _start_from_replay():
 	loading.match_settings = replay_resource.settings
 	loading.map_path = replay_resource.map
 	loading.replay_resource = replay_resource
-
-	get_parent().add_child(loading)
+	# change_scene_to_node() expects a fresh node that is NOT inside the tree yet.
 	get_tree().change_scene_to_node(loading)
-	queue_free()

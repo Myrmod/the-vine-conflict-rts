@@ -1,8 +1,5 @@
 extends Node
 
-const MatchUtils = preload("res://source/match/MatchUtils.gd")
-
-
 class Set:
 	extends "res://source/utils/Set.gd"
 

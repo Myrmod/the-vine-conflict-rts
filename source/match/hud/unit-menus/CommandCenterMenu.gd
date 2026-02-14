@@ -115,3 +115,11 @@ func _on_place_anti_ground_turret_button_pressed():
 
 func _on_place_anti_air_turret_button_pressed():
 	MatchSignals.place_structure.emit(AntiAirTurretUnit)
+
+
+func _on_produce_worker_button_pressed():
+	ProductionQueue._generate_unit_production_command(
+		unit.id,
+		WorkerUnit.resource_path,
+		unit.player.id,
+	)

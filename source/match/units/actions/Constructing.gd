@@ -42,7 +42,7 @@ func _construct_or_move_closer():
 	# If within range of target structure, start constructing. Otherwise move closer first.
 	_sub_action = (
 		MovingToUnit.new(_target_unit)
-		if not Utils.MatchUtils.Movement.units_adhere(_unit, _target_unit)
+		if not MatchUtils.Movement.units_adhere(_unit, _target_unit)
 		else ConstructingWhileInRange.new(_target_unit)
 	)
 	_sub_action.tree_exited.connect(_on_sub_action_finished)

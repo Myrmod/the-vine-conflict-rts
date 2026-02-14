@@ -9,7 +9,8 @@ const AGTurretScene = preload("res://source/match/units/AntiGroundTurret.tscn")
 const AATurret = preload("res://source/match/units/AntiAirTurret.gd")
 const AATurretScene = preload("res://source/match/units/AntiAirTurret.tscn")
 
-const REFRESH_INTERVAL_S = 1.0 / 60.0 * 30.0
+# Tick-based refresh interval. At TICK_RATE 10, 5 ticks = 0.5 s.
+const REFRESH_INTERVAL_TICKS = 5
 
 var _player = null
 var _number_of_pending_ag_turret_resource_requests = 0
@@ -18,9 +19,12 @@ var _number_of_pending_aa_turret_resource_requests = 0
 @onready var _ai = get_parent()
 
 
+var _ticks_until_refresh = REFRESH_INTERVAL_TICKS
+
+
 func setup(player):
-	_setup_refresh_timer()
 	_player = player
+	_setup_tick_refresh()
 	_attach_current_turrets()
 	MatchSignals.unit_spawned.connect(_on_unit_spawned)
 	_enforce_number_of_ag_turrets()
@@ -56,11 +60,16 @@ func provision(resources, metadata):
 		assert(false, "unexpected flow")
 
 
-func _setup_refresh_timer():
-	var timer = Timer.new()
-	add_child(timer)
-	timer.timeout.connect(_on_refresh_timer_timeout)
-	timer.start(REFRESH_INTERVAL_S)
+func _setup_tick_refresh():
+	MatchSignals.tick_advanced.connect(_on_tick_advanced)
+
+
+func _on_tick_advanced():
+	_ticks_until_refresh -= 1
+	if _ticks_until_refresh > 0:
+		return
+	_ticks_until_refresh = REFRESH_INTERVAL_TICKS
+	_on_refresh_timer_timeout()
 
 
 func _attach_current_turrets():
@@ -116,17 +125,17 @@ func _enforce_number_of_aa_turrets():
 
 
 func _construct_turret(turret_scene):
-	var construction_cost = UnitConstants.DEFAULT_PROPERTIES[turret_scene.resource_path]["costs"]
-	assert(
-		_player.has_resources(construction_cost),
-		"player should have enough resources at this point"
-	)
+	var construction_cost = UnitConstants.CONSTRUCTION_COSTS[turret_scene.resource_path]
+	# Pre-check resources as an optimistic filter. The authoritative check happens in
+	# Match._execute_command() — another command may spend the resources before execution.
+	if not _player.has_resources(construction_cost):
+		return
 	var ccs = get_tree().get_nodes_in_group("units").filter(
 		func(unit): return unit is CommandCenter and unit.player == _player
 	)
 	var unit_to_spawn = turret_scene.instantiate()
 	# TODO: introduce actual algorithm which takes enemy positions into account
-	var placement_position = Utils.MatchUtils.Placement.find_valid_position_radially(
+	var placement_position = MatchUtils.Placement.find_valid_position_radially(
 		ccs[0].global_position,
 		unit_to_spawn.radius + UnitConstants.EMPTY_SPACE_RADIUS_SURROUNDING_STRUCTURE_M,
 		find_parent("Match").navigation.get_navigation_map_rid_by_domain(
@@ -137,8 +146,19 @@ func _construct_turret(turret_scene):
 	var target_transform = Transform3D(Basis(), placement_position).looking_at(
 		placement_position + Vector3(0, 0, 1), Vector3.UP
 	)
-	_player.subtract_resources(construction_cost)
-	MatchSignals.setup_and_spawn_unit.emit(unit_to_spawn, target_transform, _player, true)
+	# Free the temporary instance used for radius/domain calculation
+	unit_to_spawn.free()
+	# Place structure through CommandBus — resources deducted by Match._execute_command()
+	CommandBus.push_command({
+		"tick": Match.tick + 1,
+		"type": Enums.CommandType.STRUCTURE_PLACED,
+		"player_id": _player.id,
+		"data": {
+			"structure_prototype": turret_scene.resource_path,
+			"transform": target_transform,
+			"self_constructing": true,
+		}
+	})
 
 
 func _on_unit_died(unit):

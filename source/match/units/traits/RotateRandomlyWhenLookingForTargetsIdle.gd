@@ -1,3 +1,7 @@
+# Visual-only idle rotation for turrets/units waiting for targets.
+# Uses a LOCAL RandomNumberGenerator so it does NOT consume the global seeded RNG.
+# This is purely cosmetic — it must never affect gameplay state or the global RNG sequence,
+# which would break replay determinism.
 extends Node
 
 const WaitingForTargets = preload("res://source/match/units/actions/WaitingForTargets.gd")
@@ -10,15 +14,19 @@ const ROTATION_MULTIPLIER_CHANGE_INTERVAL_UB_S = 0.8
 @export var rotation_speed = 120.0  # degrees/s
 
 var _current_rotation_multiplier = 0
+# Local RNG isolates visual randomness from the global seeded RNG used by gameplay.
+var _local_rng = RandomNumberGenerator.new()
 
 @onready var _unit = get_parent()
 @onready var _timer = find_child("Timer")
 
 
 func _ready():
+	# Seed local RNG from OS entropy so it varies per session (visual-only, no determinism needed)
+	_local_rng.randomize()
 	_timer.timeout.connect(_on_rotation_multiplier_change_timer_timeout)
 	_timer.start(
-		randf_range(
+		_local_rng.randf_range(
 			ROTATION_MULTIPLIER_CHANGE_INTERVAL_LB_S, ROTATION_MULTIPLIER_CHANGE_INTERVAL_UB_S
 		)
 	)
@@ -38,9 +46,9 @@ func _physics_process(delta):
 
 
 func _on_rotation_multiplier_change_timer_timeout():
-	_current_rotation_multiplier = randi_range(-1, 1)
+	_current_rotation_multiplier = _local_rng.randi_range(-1, 1)
 	_timer.start(
-		randf_range(
+		_local_rng.randf_range(
 			ROTATION_MULTIPLIER_CHANGE_INTERVAL_LB_S, ROTATION_MULTIPLIER_CHANGE_INTERVAL_UB_S
 		)
 	)

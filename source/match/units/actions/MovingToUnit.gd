@@ -16,7 +16,7 @@ func _init(target_unit):
 func _process(_delta):
 	# Every frame, check if we've reached the target unit.
 	# If we're adjacent (units_adhere), end the action immediately.
-	if Utils.MatchUtils.Movement.units_adhere(_unit, _target_unit):
+	if MatchUtils.Movement.units_adhere(_unit, _target_unit):
 		queue_free()
 
 
@@ -36,7 +36,7 @@ func _ready():
 
 func _on_movement_finished():
 	# Movement to one position complete. Check if we've reached the target unit.
-	if Utils.MatchUtils.Movement.units_adhere(_unit, _target_unit):
+	if MatchUtils.Movement.units_adhere(_unit, _target_unit):
 		queue_free()
 	else:
 		# Target has moved. Recalculate position and resume movement.

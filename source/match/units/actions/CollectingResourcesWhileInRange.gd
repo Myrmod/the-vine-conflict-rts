@@ -15,7 +15,7 @@ static func is_applicable(source_unit, target_unit):
 		source_unit is Worker
 		and target_unit is ResourceUnit
 		and not source_unit.is_full()
-		and Utils.MatchUtils.Movement.units_adhere(source_unit, target_unit)
+		and MatchUtils.Movement.units_adhere(source_unit, target_unit)
 	)
 
 
@@ -46,7 +46,7 @@ func _setup_timer():
 
 
 func _transfer_single_resource_unit_from_resource_to_worker():
-	if not Utils.MatchUtils.Movement.units_adhere(_unit, _resource_unit):
+	if not MatchUtils.Movement.units_adhere(_unit, _resource_unit):
 		queue_free()
 		return
 	if "resource_a" in _resource_unit:

@@ -35,6 +35,26 @@ func _ready():
 	a_match.settings = match_settings
 	a_match.map = map
 	a_match.is_replay_mode = !!replay_resource
+
+	# ── DETERMINISTIC SEED ──────────────────────────────────────────
+	# Generate a match seed (or restore from replay) so all RNG (shuffle, randf, etc.)
+	# reproduces identically. This is essential for replay determinism.
+	if replay_resource != null and replay_resource.get("match_seed") != null:
+		Match.rng.seed = replay_resource.match_seed
+	else:
+		Match.rng.seed = randi()
+
+	# ── COMMAND BUS LIFECYCLE ───────────────────────────────────────
+	# Clear before loading: ensures no stale commands from previous match
+	CommandBus.clear()
+	EntityRegistry.reset()
+	PlayerManager.reset()
+
+	# Load replay commands BEFORE adding Match to the tree, so they're available
+	# when Match._ready() starts the tick timer
+	if replay_resource != null:
+		CommandBus.load_from_replay_array(replay_resource.commands)
+
 	_progress_bar.value = 0.9
 
 	_label.text = tr("LOADING_STEP_STARTING_MATCH")

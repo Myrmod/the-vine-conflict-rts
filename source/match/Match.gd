@@ -2,6 +2,29 @@ extends Node3D
 
 class_name Match
 
+# ──────────────────────────────────────────────────────────────────────
+# Match: The SINGLE POINT OF AUTHORITY for all game state changes.
+#
+# ARCHITECTURE:
+#   CommandBus holds all queued commands (from human, AI, and replay).
+#   Match._execute_command() is the ONLY place that mutates game state.
+#   No controller, UI, or AI may modify units/resources directly.
+#
+# DETERMINISM:
+#   - Tick-based: a Timer fires TICK_RATE times/sec, advancing tick counter
+#   - Each tick: all commands for that tick are fetched and executed in order
+#   - RNG is a match-local RandomNumberGenerator seeded via Match.rng.seed
+#   - All gameplay random calls go through Match.rng / MatchUtils.rng_shuffle()
+#   - Replay = same seed + same commands in same tick order → identical game
+#
+# COMMAND FLOW:
+#   Human/AI → CommandBus.push_command({tick, type, player_id, data}) → queued by tick
+#   _on_tick() → CommandBus.get_commands_for_tick(tick)   → _execute_command()
+#
+# See Enums.CommandType for the full list of command types.
+# See CommandBus.gd for validation and queuing.
+# ──────────────────────────────────────────────────────────────────────
+
 const Structure = preload("res://source/match/units/Structure.gd")
 const Human = preload("res://source/match/players/human/Human.gd")
 
@@ -29,8 +52,14 @@ var is_replay_mode = false
 @onready var _players = $Players
 @onready var _terrain = $Terrain
 
-# required for replays
+# Tick counter — drives deterministic command execution. Static so producers can read it.
 static var tick := 0
+
+# Match-local RNG. ALL gameplay randomness MUST go through this — never use global
+# randi()/randf()/shuffle(). Seeded via Match.rng.seed by Loading.gd (or test harness)
+# before the match enters the tree. Replays reproduce identically because the same seed
+# produces the same sequence. Static so controllers and utils can access it directly.
+static var rng := RandomNumberGenerator.new()
 
 const TICK_RATE := 10 # RTS logic ticks per second
 
@@ -49,184 +78,356 @@ func _ready():
 	_setup_player_units()
 	visible_player = get_tree().get_nodes_in_group("players")[settings.visible_player]
 	_move_camera_to_initial_position()
-	
-	# Clear command bus for new match
-	CommandBus.clear()
-	
-	# clear ticks
+
+	# Reset tick counter for this match
 	tick = 0
-	
-	# required for replays
+
+	# Start the deterministic tick timer (10 ticks/sec = 100ms per tick)
 	var timer := Timer.new()
 	timer.wait_time = 1.0 / TICK_RATE
 	timer.autostart = true
 	timer.timeout.connect(_on_tick)
 	add_child(timer)
-	
+
 	if settings.visibility == settings.Visibility.FULL:
 		fog_of_war.reveal()
 	MatchSignals.match_started.emit()
 
 	if !is_replay_mode:
-		ReplayRecorder.start_recording(self )
+		ReplayRecorder.start_recording(self)
 
-# Called every frame by the main game loop timer. This is where all game state updates happen.
-# The tick counter drives deterministic execution: commands reference specific ticks, and we execute
-# them exactly when those ticks arrive. This is how replays work - same ticks, same commands = identical game.
-# For a 10 ticks/second rate, each tick is ~100ms of game time.
+
+# ──────────────────────────────────────────────────────────────────────
+# COMMAND INFRASTRUCTURE
+# ──────────────────────────────────────────────────────────────────────
+
+# Parse a target entry from command data into a normalised dictionary.
+# Target entries use the deterministic schema: { "unit": int, "pos": Vector3?, "rot": Vector3? }
+# No object references — only IDs and positions. This is what makes replay serialisation work.
+func _parse_target_entry(entry: Variant, command_name: String) -> Dictionary:
+	if typeof(entry) != TYPE_DICTIONARY:
+		push_error("%s command: target entry must be Dictionary, got %s" % [command_name, typeof(entry)])
+		return {}
+	var unit_id = entry.get("unit", null)
+	if unit_id == null:
+		push_error("%s command: target entry missing 'unit' id (%s)" % [command_name, str(entry)])
+		return {}
+	return {
+		"unit_id": unit_id,
+		"pos": entry.get("pos", null),
+		"rot": entry.get("rot", null),
+	}
+
+
+# Resolve an entity ID to a valid, living unit. Returns null on failure.
+# Uses push_warning (not push_error) because commands may legitimately reference
+# units that died between the tick the command was queued and the tick it executes.
+func _resolve_unit(entity_id: int, context: String):
+	var unit = EntityRegistry.get_unit(entity_id)
+	if unit == null or not is_instance_valid(unit):
+		push_warning("%s: entity_id %s is null or invalid" % [context, entity_id])
+		return null
+	if unit.is_queued_for_deletion():
+		push_warning("%s: entity_id %s is queued for deletion" % [context, entity_id])
+		return null
+	return unit
+
+
+# Resolve an entity ID specifically to a player. Returns null on failure.
+func _resolve_player(player_id: int, context: String):
+	for p in get_tree().get_nodes_in_group("players"):
+		if p.id == player_id:
+			if not is_instance_valid(p) or p.is_queued_for_deletion():
+				push_warning("%s: player_id %s is invalid" % [context, player_id])
+				return null
+			return p
+	push_warning("%s: player_id %s not found" % [context, player_id])
+	return null
+
+
+# Verify that a unit belongs to the commanding player. Returns true if valid.
+func _verify_unit_ownership(unit, player_id: int, context: String) -> bool:
+	if unit.player.id != player_id:
+		push_warning("%s: unit %s belongs to player %s, not commanding player %s" % [
+			context, unit.id, unit.player.id, player_id
+		])
+		return false
+	return true
+
+
+# ──────────────────────────────────────────────────────────────────────
+# TICK LOOP
+# ──────────────────────────────────────────────────────────────────────
+
+# Called by the Timer at TICK_RATE Hz. Advances the deterministic tick counter
+# and executes all commands queued for this tick. This is the heartbeat of the
+# game simulation — identical ticks + identical commands = identical game state.
 func _on_tick():
 	tick += 1
-	print('tick:', tick)
 	_process_commands_for_tick()
+	# Notify AI controllers and other tick-driven systems.
+	# This fires AFTER commands are executed, so listeners see up-to-date game state.
+	MatchSignals.tick_advanced.emit()
 
-# Retrieves all commands queued for the current tick from CommandBus and executes them sequentially.
-# CommandBus handles two modes: live gameplay (retrieving from queue) and replay playback (extracting from loaded commands).
-# By executing all commands for a tick before moving to the next tick, we ensure synchronized, deterministic execution:
-# - Human player inputs (queued via UnitActionsController) get executed in tick order
-# - AI decisions (queued via AutoAttackingBattlegroup) get executed identically during replay
-# - No race conditions or frame-timing issues - everything is tick-based
+# Fetch and execute every command for the current tick.
+# CommandBus decides the source: live queue during gameplay, replay data during playback.
 func _process_commands_for_tick():
 	var commands_for_tick = CommandBus.get_commands_for_tick(tick)
 	if commands_for_tick.is_empty():
 		return
-
 	for cmd in commands_for_tick:
 		_execute_command(cmd)
 
-# This is the SINGLE POINT OF AUTHORITY for all game state changes in a match.
-# Every action a player takes or an AI makes becomes a command that flows through here:
-# Human input -> CommandBus.push_command() -> ReplayRecorder.record() -> stored in queue
-# AI decision -> CommandBus.push_command() -> ReplayRecorder.record() -> stored in queue
-# During replay -> CommandBus.load_from_replay_array() -> extracted back into queue
-# Then when the right tick arrives, this function executes the command exactly.
+
+# ──────────────────────────────────────────────────────────────────────
+# COMMAND EXECUTION — THE SINGLE POINT OF AUTHORITY
+# ──────────────────────────────────────────────────────────────────────
 #
-# Why here and not in action constructors? Separation of concerns:
-# - Action constructors just store data (can't fail)
-# - This function applies actions to real units (can fail - unit deleted, wrong type, etc.)
-# - We validate and log errors here so we catch corruption early
+# ALL game state mutations happen here. No other code may:
+#   - Set unit.action directly
+#   - Call production_queue.produce() / cancel() / cancel_all()
+#   - Call MatchSignals.setup_and_spawn_unit.emit()
+#   - Call player.subtract_resources() / add_resources()
+#   - Call structure.cancel_construction()
+#   - Set rally_point.target_unit or rally_point.global_position
 #
-# The command.type determines which game system processes it. Each handler assigns an Action
-# to the unit(s), which then executes the action during the regular Unit._process() frame loop.
+# If it changes game state, it MUST be a command type handled here.
+# ──────────────────────────────────────────────────────────────────────
+
 func _execute_command(cmd: Dictionary):
-	print('_execute_command', cmd)
 	match cmd.type:
+		# ── MOVEMENT ──────────────────────────────────────────────────
 		Enums.CommandType.MOVE:
 			for entry in cmd.data.targets:
-				var unit = EntityRegistry.get_unit(entry.unit)
-				if unit == null or not is_instance_valid(unit):
+				var parsed = _parse_target_entry(entry, "MOVE")
+				if parsed.is_empty():
 					continue
-				if unit.is_queued_for_deletion():
+				var unit = _resolve_unit(parsed["unit_id"], "MOVE")
+				if unit == null:
 					continue
-				unit.action = Actions.Moving.new(entry.pos)
+				if not _verify_unit_ownership(unit, cmd.player_id, "MOVE"):
+					continue
+				if parsed["pos"] == null:
+					push_error("MOVE command: target entry missing 'pos' (%s)" % str(entry))
+					continue
+				unit.action = Actions.Moving.new(parsed["pos"])
+
 		Enums.CommandType.MOVING_TO_UNIT:
+			var target_unit = _resolve_unit(cmd.data.target_unit, "MOVING_TO_UNIT.target")
+			if target_unit == null:
+				return
 			for entry in cmd.data.targets:
-				var unit = EntityRegistry.get_unit(entry)
-				var target_unit = EntityRegistry.get_unit(cmd.data.target_unit)
-				if unit == null or not is_instance_valid(unit) or target_unit == null or not is_instance_valid(target_unit):
+				var parsed = _parse_target_entry(entry, "MOVING_TO_UNIT")
+				if parsed.is_empty():
 					continue
-				if unit.is_queued_for_deletion() or target_unit.is_queued_for_deletion():
+				var unit = _resolve_unit(parsed["unit_id"], "MOVING_TO_UNIT")
+				if unit == null:
+					continue
+				if not _verify_unit_ownership(unit, cmd.player_id, "MOVING_TO_UNIT"):
 					continue
 				unit.action = Actions.MovingToUnit.new(target_unit)
+
 		Enums.CommandType.FOLLOWING:
+			var target_unit = _resolve_unit(cmd.data.target_unit, "FOLLOWING.target")
+			if target_unit == null:
+				return
 			for entry in cmd.data.targets:
-				var unit = EntityRegistry.get_unit(entry)
-				var target_unit = EntityRegistry.get_unit(cmd.data.target_unit)
-				if unit == null or not is_instance_valid(unit) or target_unit == null or not is_instance_valid(target_unit):
+				var parsed = _parse_target_entry(entry, "FOLLOWING")
+				if parsed.is_empty():
 					continue
-				if unit.is_queued_for_deletion() or target_unit.is_queued_for_deletion():
+				var unit = _resolve_unit(parsed["unit_id"], "FOLLOWING")
+				if unit == null:
+					continue
+				if not _verify_unit_ownership(unit, cmd.player_id, "FOLLOWING"):
 					continue
 				unit.action = Actions.Following.new(target_unit)
+
+		# ── ECONOMY ───────────────────────────────────────────────────
 		Enums.CommandType.COLLECTING_RESOURCES_SEQUENTIALLY:
+			var target_unit = _resolve_unit(cmd.data.target_unit, "COLLECTING.target")
+			if target_unit == null:
+				return
 			for entry in cmd.data.targets:
-				var unit = EntityRegistry.get_unit(entry)
-				var target_unit = EntityRegistry.get_unit(cmd.data.target_unit)
-				if unit == null or not is_instance_valid(unit) or target_unit == null or not is_instance_valid(target_unit):
+				var parsed = _parse_target_entry(entry, "COLLECTING")
+				if parsed.is_empty():
 					continue
-				if unit.is_queued_for_deletion() or target_unit.is_queued_for_deletion():
+				var unit = _resolve_unit(parsed["unit_id"], "COLLECTING")
+				if unit == null:
+					continue
+				if not _verify_unit_ownership(unit, cmd.player_id, "COLLECTING"):
 					continue
 				unit.action = Actions.CollectingResourcesSequentially.new(target_unit)
+
+		# ── COMBAT ────────────────────────────────────────────────────
 		Enums.CommandType.AUTO_ATTACKING:
-			# Assign attack actions to multiple units targeting the same enemy
+			var target_unit = _resolve_unit(cmd.data.target_unit, "AUTO_ATTACKING.target")
+			if target_unit == null:
+				return
 			for entry in cmd.data.targets:
-				var unit = EntityRegistry.get_unit(entry)
-				var target_unit = EntityRegistry.get_unit(cmd.data.target_unit)
-				if unit == null or not is_instance_valid(unit) or target_unit == null or not is_instance_valid(target_unit):
+				var parsed = _parse_target_entry(entry, "AUTO_ATTACKING")
+				if parsed.is_empty():
 					continue
-				if unit.is_queued_for_deletion() or target_unit.is_queued_for_deletion():
+				var unit = _resolve_unit(parsed["unit_id"], "AUTO_ATTACKING")
+				if unit == null:
 					continue
-				# Note: Team checking happens in AutoAttacking.is_applicable(), same-team attacks are rejected there
+				if not _verify_unit_ownership(unit, cmd.player_id, "AUTO_ATTACKING"):
+					continue
+				if not Actions.AutoAttacking.is_applicable(unit, target_unit):
+					push_warning("AUTO_ATTACKING: unit %s cannot attack target %s (no attack_range or wrong domain)" % [parsed["unit_id"], cmd.data.target_unit])
+					continue
 				unit.action = Actions.AutoAttacking.new(target_unit)
+
+		# ── CONSTRUCTION ──────────────────────────────────────────────
 		Enums.CommandType.CONSTRUCTING:
-			# Validate that the target is a real, valid Structure before assigning construction actions
-			var structure = EntityRegistry.get_unit(cmd.data.structure)
-			if structure == null or not is_instance_valid(structure):
-				push_error("Constructing command: structure entity_id %s is null or invalid" % cmd.data.structure)
+			var structure = _resolve_unit(cmd.data.structure, "CONSTRUCTING.structure")
+			if structure == null:
 				return
-			if structure.is_queued_for_deletion():
-				push_error("Constructing command: structure entity_id %s is queued for deletion" % cmd.data.structure)
+			if not structure is Structure:
+				push_error("CONSTRUCTING: entity_id %s is not a Structure" % cmd.data.structure)
 				return
-			# Check that structure is actually a Structure type (not a Worker or other unit that got" " corrupted)
-			if not structure.is_in_group("Structures"):
-				push_error("Constructing command: entity_id %s is not a Structure, it's a %s" % [cmd.data.structure, structure.get_class()])
+			if not _verify_unit_ownership(structure, cmd.player_id, "CONSTRUCTING.structure"):
 				return
-			
-			# Validate each constructor unit exists and is valid
 			for entry in cmd.data.selected_constructors:
-				var unit = EntityRegistry.get_unit(entry)
-				if unit == null or not is_instance_valid(unit):
-					push_error("Constructing command: constructor entity_id %s is null or invalid" % entry)
+				var parsed = _parse_target_entry(entry, "CONSTRUCTING")
+				if parsed.is_empty():
 					continue
-				if unit.is_queued_for_deletion():
-					push_error("Constructing command: constructor entity_id %s is queued for deletion" % entry)
+				var unit = _resolve_unit(parsed["unit_id"], "CONSTRUCTING.constructor")
+				if unit == null:
 					continue
-				# Check that unit is actually a Worker type capable of construction
-				if not unit.is_in_group("Workers"):
-					push_error("Constructing command: entity_id %s is not a Worker, it's a %s" % [entry, unit.get_class()])
+				if not _verify_unit_ownership(unit, cmd.player_id, "CONSTRUCTING.constructor"):
+					continue
+				if not Actions.Constructing.is_applicable(unit, structure):
+					push_error("CONSTRUCTING: entity_id %s cannot construct structure %s" % [parsed["unit_id"], cmd.data.structure])
 					continue
 				unit.action = Actions.Constructing.new(structure)
-		Enums.CommandType.ENTITY_IS_QUEUED:
-			var structure = EntityRegistry.get_unit(cmd.data.entity_id)
-			print('structure for production command: ', structure, cmd.data.entity_id)
-			if structure == null or not is_instance_valid(structure):
-				return
-			if structure.is_queued_for_deletion():
-				return
-			# Load the unit prototype and queue it for production
-			var unit_prototype = load(cmd.data.unit_type)
-			if unit_prototype != null and structure.has_node("ProductionQueue"):
-				structure.production_queue.produce(unit_prototype)
+
+		# ── STRUCTURE PLACEMENT ───────────────────────────────────────
+		# Places a new structure on the map. Resources are deducted HERE — not by the producer.
+		# This ensures replay determinism: during replay the same resource deduction happens
+		# at the same tick regardless of which controller originally requested it.
 		Enums.CommandType.STRUCTURE_PLACED:
-			var player = null
-			for p in get_tree().get_nodes_in_group("players"):
-				if p.id == cmd.data.player_id:
-					player = p
-					break
-			if player == null or not is_instance_valid(player):
+			var player = _resolve_player(cmd.player_id, "STRUCTURE_PLACED")
+			if player == null:
 				return
-			if player.is_queued_for_deletion():
+			var structure_prototype = load(cmd.data.structure_prototype)
+			if structure_prototype == null:
+				push_error("STRUCTURE_PLACED: cannot load %s" % cmd.data.structure_prototype)
 				return
 			var self_constructing = cmd.data.get("self_constructing", false)
+			# Deduct construction cost (the single authority for resource changes)
+			var construction_cost = UnitConstants.CONSTRUCTION_COSTS.get(cmd.data.structure_prototype, null)
+			if construction_cost != null:
+				if not player.has_resources(construction_cost):
+					# This is expected in a tick-based system: the AI checks resources before queuing
+					# the command, but another command may have spent them by the time this executes.
+					push_warning("STRUCTURE_PLACED: player %s cannot afford %s" % [player.id, cmd.data.structure_prototype])
+					return
+				player.subtract_resources(construction_cost)
 			MatchSignals.setup_and_spawn_unit.emit(
-				load(cmd.data.structure_prototype).instantiate(),
+				structure_prototype.instantiate(),
 				cmd.data.transform,
 				player,
 				self_constructing
 			)
-		Enums.CommandType.ENTITY_PRODUCTION_CANCELED:
-			var structure = EntityRegistry.get_unit(cmd.data.entity_id)
-			if structure == null or not is_instance_valid(structure):
+
+		# ── PRODUCTION ────────────────────────────────────────────────
+		# Queues a unit for production. Resources are checked and deducted by the
+		# ProductionQueue.produce() call (which is the execution point, not the producer).
+		Enums.CommandType.ENTITY_IS_QUEUED:
+			var structure = _resolve_unit(cmd.data.entity_id, "ENTITY_IS_QUEUED")
+			if structure == null:
 				return
-			if structure.is_queued_for_deletion():
+			if not _verify_unit_ownership(structure, cmd.player_id, "ENTITY_IS_QUEUED"):
 				return
-			# Find and cancel the queued element by unit type
 			var unit_prototype = load(cmd.data.unit_type)
-			if unit_prototype != null and structure.has_node("ProductionQueue"):
-				for element in structure.production_queue.get_elements():
-					if element.unit_prototype.resource_path == cmd.data.unit_type:
-						structure.production_queue.cancel(element)
-						break
+			if unit_prototype == null:
+				push_error("ENTITY_IS_QUEUED: cannot load %s" % cmd.data.unit_type)
+				return
+			if structure.has_node("ProductionQueue"):
+				structure.production_queue.produce(unit_prototype, cmd.data.get("ignore_limit", false))
+
+		Enums.CommandType.ENTITY_PRODUCTION_CANCELED:
+			var structure = _resolve_unit(cmd.data.entity_id, "ENTITY_PRODUCTION_CANCELED")
+			if structure == null:
+				return
+			if not _verify_unit_ownership(structure, cmd.player_id, "ENTITY_PRODUCTION_CANCELED"):
+				return
+			var unit_prototype = load(cmd.data.unit_type)
+			if unit_prototype == null or not structure.has_node("ProductionQueue"):
+				return
+			for element in structure.production_queue.get_elements():
+				if element.unit_prototype.resource_path == cmd.data.unit_type:
+					structure.production_queue.cancel(element)
+					break
+
+		Enums.CommandType.PRODUCTION_CANCEL_ALL:
+			var structure = _resolve_unit(cmd.data.entity_id, "PRODUCTION_CANCEL_ALL")
+			if structure == null:
+				return
+			if not _verify_unit_ownership(structure, cmd.player_id, "PRODUCTION_CANCEL_ALL"):
+				return
+			if structure.has_node("ProductionQueue"):
+				structure.production_queue.cancel_all()
+
+		# ── ACTION MANAGEMENT ─────────────────────────────────────────
+		Enums.CommandType.ACTION_CANCEL:
+			for entry in cmd.data.targets:
+				var parsed = _parse_target_entry(entry, "ACTION_CANCEL")
+				if parsed.is_empty():
+					continue
+				var unit = _resolve_unit(parsed["unit_id"], "ACTION_CANCEL")
+				if unit == null:
+					continue
+				if not _verify_unit_ownership(unit, cmd.player_id, "ACTION_CANCEL"):
+					continue
+				unit.action = null
+
+		Enums.CommandType.CANCEL_CONSTRUCTION:
+			var structure = _resolve_unit(cmd.data.entity_id, "CANCEL_CONSTRUCTION")
+			if structure == null:
+				return
+			if not _verify_unit_ownership(structure, cmd.player_id, "CANCEL_CONSTRUCTION"):
+				return
+			if not structure is Structure:
+				push_error("CANCEL_CONSTRUCTION: entity_id %s is not a Structure" % cmd.data.entity_id)
+				return
+			if not structure.is_under_construction():
+				push_error("CANCEL_CONSTRUCTION: entity_id %s is already constructed" % cmd.data.entity_id)
+				return
+			# cancel_construction() refunds resources and queue_frees the structure
+			structure.cancel_construction()
+
+		# ── RALLY POINTS ──────────────────────────────────────────────
+		Enums.CommandType.SET_RALLY_POINT:
+			var structure = _resolve_unit(cmd.data.entity_id, "SET_RALLY_POINT")
+			if structure == null:
+				return
+			if not _verify_unit_ownership(structure, cmd.player_id, "SET_RALLY_POINT"):
+				return
+			var rally_point = structure.find_child("RallyPoint")
+			if rally_point == null:
+				push_error("SET_RALLY_POINT: entity_id %s has no RallyPoint" % cmd.data.entity_id)
+				return
+			rally_point.target_unit = null
+			rally_point.global_position = cmd.data.position
+
+		Enums.CommandType.SET_RALLY_POINT_TO_UNIT:
+			var structure = _resolve_unit(cmd.data.entity_id, "SET_RALLY_POINT_TO_UNIT")
+			if structure == null:
+				return
+			if not _verify_unit_ownership(structure, cmd.player_id, "SET_RALLY_POINT_TO_UNIT"):
+				return
+			var target_unit = _resolve_unit(cmd.data.target_unit, "SET_RALLY_POINT_TO_UNIT.target")
+			if target_unit == null:
+				return
+			var rally_point = structure.find_child("RallyPoint")
+			if rally_point == null:
+				push_error("SET_RALLY_POINT_TO_UNIT: entity_id %s has no RallyPoint" % cmd.data.entity_id)
+				return
+			rally_point.target_unit = target_unit
+
 		_:
-			print('Cannot execute command: ', cmd)
+			push_error("Match: unknown command type %s — %s" % [cmd.type, cmd])
 
 
 func _unhandled_input(event):
@@ -354,9 +555,9 @@ func _setup_unit_groups(unit, player):
 	if player in visible_players:
 		unit.add_to_group("revealed_units")
 	else:
-		# Check if any visible player is on the same team - if so, include their units too
-		for visible_player in visible_players:
-			if visible_player != null and visible_player.team == player.team:
+		# Check if any visible player is on the same team — if so, share vision
+		for candidate_visible_player in visible_players:
+			if candidate_visible_player != null and candidate_visible_player.team == player.team:
 				unit.add_to_group("revealed_units")
 				break
 
@@ -384,7 +585,7 @@ func _move_camera_to_player_units_crowd_pivot(player):
 		func(unit): return unit.player == player
 	)
 	assert(not player_units.is_empty(), "player must have at least one initial unit")
-	var crowd_pivot = Utils.MatchUtils.Movement.calculate_aabb_crowd_pivot_yless(player_units)
+	var crowd_pivot = MatchUtils.Movement.calculate_aabb_crowd_pivot_yless(player_units)
 	_camera.set_position_safely(crowd_pivot)
 
 

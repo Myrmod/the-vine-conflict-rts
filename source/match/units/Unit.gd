@@ -106,7 +106,7 @@ func _is_movable():
 
 func _setup_color():
 	var material = player.get_color_material()
-	Utils.MatchUtils.traverse_node_tree_and_replace_materials_matching_albedo(
+	MatchUtils.traverse_node_tree_and_replace_materials_matching_albedo(
 		find_child("Geometry"),
 		MATERIAL_ALBEDO_TO_REPLACE,
 		MATERIAL_ALBEDO_TO_REPLACE_EPSILON,
@@ -167,6 +167,9 @@ func _safety_checks():
 
 
 func _handle_unit_death():
+	# Unregister from EntityRegistry so get_unit() returns null for dead units
+	# and the entities dict doesn't grow unbounded during a match.
+	EntityRegistry.unregister(self)
 	tree_exited.connect(func(): MatchSignals.unit_died.emit(self ))
 	queue_free()
 

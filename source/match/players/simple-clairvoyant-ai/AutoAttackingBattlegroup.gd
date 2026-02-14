@@ -1,13 +1,14 @@
 # Manages coordinated AI combat behavior for a group of units attacking a common enemy.
 # This is part of the clairvoyant AI strategy where multiple units work together as a battlegroup.
-# NOTE: While human players send commands through CommandBus, this directly assigns actions to units,
-# which bypasses the replay recording system. For perfect replay determinism, this should be
-# refactored to queue commands through CommandBus instead (like human players do).
+#
+# DETERMINISM: Player-switching delay uses tick counting (not wall-clock timers) so the same
+# commands are pushed at the same tick during replay. 5 ticks = 0.5 s at TICK_RATE 10.
 extends Node
 
 enum State {FORMING, ATTACKING}
 
-const PLAYER_TO_ATTACK_SWITCHING_DELAY_S = 0.5
+# Delay in ticks before switching to the next enemy player (5 ticks = 0.5 s at TICK_RATE 10).
+const PLAYER_TO_ATTACK_SWITCHING_DELAY_TICKS = 5
 
 var _expected_number_of_units = null
 var _players_to_attack = null
@@ -15,15 +16,31 @@ var _player_to_attack = null
 
 var _state = State.FORMING
 var _attached_units = []
+var _player = null
+# Tick at which we should execute the pending player-switch. -1 means no pending switch.
+var _pending_switch_tick = -1
 
 
-func _init(expected_number_of_units, players_to_attack):
+func _init(expected_number_of_units, players_to_attack, player):
 	# Store the expected unit count (battlegroup waits until all units attached before attacking)
 	# and the list of enemy players this battlegroup should attack
 	_expected_number_of_units = expected_number_of_units
 	_players_to_attack = players_to_attack
+	_player = player
 	# Start targeting the first enemy player; when cleared, move to next
 	_player_to_attack = _players_to_attack.front() if not _players_to_attack.is_empty() else null
+
+
+func _ready():
+	# Subscribe to deterministic tick events for delayed player-switching
+	MatchSignals.tick_advanced.connect(_on_tick_advanced)
+
+
+func _on_tick_advanced():
+	# Check if a pending player-switch delay has elapsed
+	if _pending_switch_tick >= 0 and Match.tick >= _pending_switch_tick:
+		_pending_switch_tick = -1
+		_attack_next_adversary_unit()
 
 
 func size():
@@ -79,15 +96,24 @@ func _attack_next_adversary_unit():
 			func(attached_unit):
 				return Actions.AutoAttacking.is_applicable(attached_unit, target_unit)
 		):
-			# Found a valid target! Assign attack or move-to-attack actions to all units in battlegroup
+			# Found a valid target! Push a single deterministic command for the whole battlegroup
 			target_unit.tree_exited.connect(_on_target_unit_died)
+			var targets = []
 			for attached_unit in _attached_units:
-				if Actions.AutoAttacking.is_applicable(attached_unit, target_unit):
-					# Unit is in range and can attack
-					attached_unit.action = Actions.AutoAttacking.new(target_unit)
-				else:
-					# Unit is out of range, move closer to target
-					attached_unit.action = Actions.MovingToUnit.new(target_unit)
+				targets.append({
+					"unit": attached_unit.id,
+					"pos": attached_unit.global_position,
+					"rot": attached_unit.global_rotation,
+				})
+			CommandBus.push_command({
+				"tick": Match.tick + 1,
+				"type": Enums.CommandType.AUTO_ATTACKING,
+				"player_id": _player.id,
+				"data": {
+					"targets": targets,
+					"target_unit": target_unit.id,
+				}
+			})
 			return
 	# No valid targets found on this player, try next enemy
 	_attack_next_player()
@@ -101,10 +127,9 @@ func _attack_next_player():
 	var player_to_attack_index = _players_to_attack.find(_player_to_attack)
 	var next_player_to_attack_index = (player_to_attack_index + 1) % _players_to_attack.size()
 	_player_to_attack = _players_to_attack[next_player_to_attack_index]
-	# Small delay before attacking next player (gives some bot "reaction time")
-	get_tree().create_timer(PLAYER_TO_ATTACK_SWITCHING_DELAY_S).timeout.connect(
-		_attack_next_adversary_unit
-	)
+	# Deterministic tick-based delay before attacking next player (replaces wall-clock timer).
+	# _on_tick_advanced() will fire _attack_next_adversary_unit when the tick arrives.
+	_pending_switch_tick = Match.tick + PLAYER_TO_ATTACK_SWITCHING_DELAY_TICKS
 
 
 func _on_unit_died(unit):

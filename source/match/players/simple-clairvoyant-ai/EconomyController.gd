@@ -39,8 +39,20 @@ func provision(resources, metadata):
 		_number_of_pending_worker_resource_requests -= 1
 		if _ccs.is_empty():
 			return
-		if _ccs[0].production_queue.produce(WorkerScene, true) != null:
-			_number_of_pending_workers += 1
+		# Queue worker production through CommandBus (not directly on production queue).
+		# This ensures the command is recorded for replay determinism.
+		CommandBus.push_command({
+			"tick": Match.tick + 1,
+			"type": Enums.CommandType.ENTITY_IS_QUEUED,
+			"player_id": _player.id,
+			"data": {
+				"entity_id": _ccs[0].id,
+				"unit_type": WorkerScene.resource_path,
+				"time_total": UnitConstants.PRODUCTION_TIMES[WorkerScene.resource_path],
+				"ignore_limit": true,
+			}
+		})
+		_number_of_pending_workers += 1
 	elif metadata == "cc":
 		assert(
 			resources == UnitConstants.DEFAULT_PROPERTIES[CommandCenterScene.resource_path]["costs"],
@@ -125,13 +137,14 @@ func _enforce_number_of_workers():
 func _construct_cc():
 	var construction_cost = UnitConstants.DEFAULT_PROPERTIES[
 		CommandCenterScene.resource_path
-	]["costs"]
-	assert(
-		_player.has_resources(construction_cost),
-		"player should have enough resources at this point"
-	)
+	]
+	# Pre-check resources as an optimistic filter. The authoritative check happens in
+	# Match._execute_command() — between queueing and execution another command may
+	# spend the resources, which Match handles gracefully.
+	if not _player.has_resources(construction_cost):
+		return
 	var unit_to_spawn = CommandCenterScene.instantiate()
-	var placement_position = Utils.MatchUtils.Placement.find_valid_position_radially(
+	var placement_position = MatchUtils.Placement.find_valid_position_radially(
 		_cc_base_position if _cc_base_position != null else _workers[0].global_position,
 		unit_to_spawn.radius + UnitConstants.EMPTY_SPACE_RADIUS_SURROUNDING_STRUCTURE_M,
 		find_parent("Match").navigation.get_navigation_map_rid_by_domain(
@@ -142,8 +155,19 @@ func _construct_cc():
 	var target_transform = Transform3D(Basis(), placement_position).looking_at(
 		placement_position + Vector3(0, 0, 1), Vector3.UP
 	)
-	_player.subtract_resources(construction_cost)
-	MatchSignals.setup_and_spawn_unit.emit(unit_to_spawn, target_transform, _player, true)
+	# Free the temporary instance used for radius calculation
+	unit_to_spawn.free()
+	# Place structure through CommandBus — resources are deducted by Match._execute_command()
+	CommandBus.push_command({
+		"tick": Match.tick + 1,
+		"type": Enums.CommandType.STRUCTURE_PLACED,
+		"player_id": _player.id,
+		"data": {
+			"structure_prototype": CommandCenterScene.resource_path,
+			"transform": target_transform,
+			"self_constructing": true,
+		}
+	})
 
 
 func _calculate_resource_collecting_statistics():
@@ -186,7 +210,15 @@ func _make_worker_collecting_resources(worker):
 		)
 	)
 	if closest_resource_unit != null:
-		worker.action = CollectingResourcesSequentially.new(closest_resource_unit)
+		CommandBus.push_command({
+			"tick": Match.tick + 1,
+			"type": Enums.CommandType.COLLECTING_RESOURCES_SEQUENTIALLY,
+			"player_id": _player.id,
+			"data": {
+				"targets": [{"unit": worker.id, "pos": worker.global_position, "rot": worker.global_rotation}],
+				"target_unit": closest_resource_unit.id,
+			}
+		})
 
 
 func _retarget_workers_if_necessary():
