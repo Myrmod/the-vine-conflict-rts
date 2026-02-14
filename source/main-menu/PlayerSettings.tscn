@@ -2,7 +2,7 @@
 
 [node name="PlayerSettings1" type="HBoxContainer" unique_id=597234648]
 
-[node name="Number" type="Label" parent="." unique_id=600383265]
+[node name="Number" type="Label" parent="."]
 layout_mode = 2
 text = "1."
 
@@ -23,6 +23,13 @@ popup/item_2/id = 2
 layout_mode = 2
 text = "color"
 color = Color(0.36101916, 0.45518267, 0.021557475, 1)
+
+[node name="SpawnSelect" type="OptionButton" parent="." unique_id=1348569761]
+layout_mode = 2
+selected = 0
+item_count = 1
+popup/item_0/text = "Random"
+popup/item_0/id = 0
 
 [node name="TeamSelect" type="OptionButton" parent="." unique_id=1258547993]
 layout_mode = 2

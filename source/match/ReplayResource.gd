@@ -7,7 +7,7 @@ class_name ReplayResource
 @export var commands: Array = []
 @export var map: String
 @export var settings: MatchSettings
-@export var players_data: Array = []  # Serializable player data (dicts with color, controller, spawn_index_offset)
+@export var players_data: Array = []  # Serializable player data (dicts with color, controller, spawn_index)
 ## Deterministic seed used for all RNG during the match. Replaying with the same seed
 ## + same commands guarantees identical AI decisions (shuffle, random targeting, etc.)
 @export var match_seed: int = 0

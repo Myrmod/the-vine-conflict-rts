@@ -112,7 +112,7 @@ func _serialize_players(players: Array[Resource]) -> Array:
 			"color": player_settings.color,
 			"controller": player_settings.controller,
 			"team": player_settings.team,
-			"spawn_index_offset": player_settings.spawn_index_offset,
+			"spawn_index": player_settings.spawn_index,
 		}
 		serialized.append(player_dict)
 	return serialized
@@ -131,7 +131,11 @@ func _restore_players(players_data: Array) -> Array[Resource]:
 			# Backward compatibility: old replays might not include team.
 			# Use unique team per player index to preserve expected combat behavior.
 			player_settings.team = data_variant.get("team") if data_variant.has("team") else index
-			player_settings.spawn_index_offset = data_variant.get("spawn_index_offset") if data_variant.has("spawn_index_offset") else 0
+			# Backward compatibility: old replays used spawn_index_offset, new ones use spawn_index
+			if data_variant.has("spawn_index"):
+				player_settings.spawn_index = data_variant.get("spawn_index")
+			else:
+				player_settings.spawn_index = -1
 		else:
 			player_settings = player_data as PlayerSettings
 			if player_settings != null and player_settings.team == null:

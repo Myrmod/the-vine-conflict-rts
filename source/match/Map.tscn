@@ -1,7 +1,8 @@
-[gd_scene load_steps=6 format=3 uid="uid://b7c1crf36x1li"]
+[gd_scene load_steps=13 format=3 uid="uid://b7c1crf36x1li"]
 
 [ext_resource type="Script" path="res://source/match/Map.gd" id="1_1svvv"]
 [ext_resource type="Material" uid="uid://co8vfcoqqs5i8" path="res://source/match/resources/materials/terrain.material.tres" id="1_81yiw"]
+[ext_resource type="Shader" uid="uid://c3ghbxw4fymi2" path="res://source/shaders/3d/fog.gdshader" id="3_fog"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ve5fg"]
 shading_mode = 0
@@ -16,8 +17,53 @@ material = ExtResource("1_81yiw")
 size = Vector2(54, 54)
 center_offset = Vector3(25, 0, 25)
 
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_map"]
+sun_angle_max = 200.0
+
+[sub_resource type="Sky" id="Sky_map"]
+sky_material = SubResource("ProceduralSkyMaterial_map")
+
+[sub_resource type="Environment" id="Environment_map"]
+background_mode = 2
+background_energy_multiplier = 1.2
+sky = SubResource("Sky_map")
+ambient_light_color = Color(1, 1, 1, 1)
+tonemap_mode = 3
+tonemap_exposure = 0.9
+fog_light_color = Color(0.960784, 0.745098, 0.654902, 1)
+fog_density = 0.0016
+fog_height = 0.25
+fog_height_density = 1.2
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_fog"]
+render_priority = 0
+shader = ExtResource("3_fog")
+shader_parameter/color = Color(0.85, 0.6596, 0.578, 1)
+shader_parameter/max_density_height = -0.5
+shader_parameter/min_density_height = 0.4
+shader_parameter/max_height = 9999.0
+shader_parameter/min_height = -0.05
+
+[sub_resource type="QuadMesh" id="QuadMesh_fog"]
+flip_faces = true
+size = Vector2(2, 2)
+
 [node name="Map" type="Node3D"]
 script = ExtResource("1_1svvv")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.512043, 0.673162, -0.533541, 0, 0.621148, 0.783694, 0.85896, -0.401285, 0.318054, 0, 38.7614, 0)
+shadow_enabled = true
+shadow_bias = 0.3
+shadow_blur = 0.05
+directional_shadow_split_1 = 0.45
+directional_shadow_split_2 = 0.5
+directional_shadow_split_3 = 0.55
+directional_shadow_blend_splits = true
+directional_shadow_pancake_size = 100.0
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_map")
 
 [node name="Geometry" type="Node3D" parent="."]
 
@@ -36,3 +82,9 @@ mesh = SubResource("PlaneMesh_ypksr")
 [node name="Resources" type="Node3D" parent="."]
 
 [node name="Decorations" type="Node3D" parent="."]
+
+[node name="HeightFog" type="MeshInstance3D" parent="."]
+material_override = SubResource("ShaderMaterial_fog")
+cast_shadow = 0
+extra_cull_margin = 16384.0
+mesh = SubResource("QuadMesh_fog")

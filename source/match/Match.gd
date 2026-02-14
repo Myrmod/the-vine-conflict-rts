@@ -498,24 +498,53 @@ func _create_players_from_settings():
 		# Teams are typically auto-assigned by Play.gd (player_index 0 -> team 0, player_index 1 -> team 1, etc.)
 		# to ensure playable matches. Custom team assignments override this (for alliances, etc.)
 		player.team = player_settings.team
-		if player_settings.spawn_index_offset > 0:
-			for _i in range(player_settings.spawn_index_offset):
-				_players.add_child(Node.new())
 		_players.add_child(player)
 
 
 func _setup_player_units():
+	var spawn_points = map.find_child("SpawnPoints").get_children()
+	var num_spawns = spawn_points.size()
+
+	# Build list of explicitly claimed spawn indices
+	var claimed_spawns: Dictionary = {}  # spawn_index -> player_index
+	var players_needing_spawn: Array[int] = []
+	var player_list: Array[Player] = []
+
 	for player in _players.get_children():
-		if not player is Player:
-			continue
-		var player_index = player.get_index()
+		if player is Player:
+			player_list.append(player)
+
+	for player_idx in range(player_list.size()):
+		var spawn_idx = settings.players[player_idx].spawn_index
+		if spawn_idx >= 0 and spawn_idx < num_spawns:
+			claimed_spawns[spawn_idx] = player_idx
+		else:
+			players_needing_spawn.append(player_idx)
+
+	# Deterministically assign remaining spawn points to players with random (-1)
+	var available_spawns: Array[int] = []
+	for i in range(num_spawns):
+		if not claimed_spawns.has(i):
+			available_spawns.append(i)
+
+	for player_idx in players_needing_spawn:
+		if available_spawns.is_empty():
+			break
+		claimed_spawns[available_spawns[0]] = player_idx
+		available_spawns.remove_at(0)
+
+	# Spawn units at assigned positions
+	for player_idx in range(player_list.size()):
+		var player = player_list[player_idx]
 		var predefined_units = player.get_children().filter(func(child): return child is Unit)
 		if not predefined_units.is_empty():
 			predefined_units.map(func(unit): _setup_unit_groups(unit, unit.player))
 		else:
-			_spawn_player_units(
-				player, map.find_child("SpawnPoints").get_child(player_index).global_transform
-			)
+			# Find this player's spawn index
+			for spawn_idx in claimed_spawns:
+				if claimed_spawns[spawn_idx] == player_idx:
+					_spawn_player_units(player, spawn_points[spawn_idx].global_transform)
+					break
 
 
 func _spawn_player_units(player, spawn_transform):

@@ -10,11 +10,13 @@ const PlayerSettingsScene = preload("res://source/main-menu/PlayerSettings.tscn"
 const LoadingScene = preload("res://source/main-menu/Loading.tscn")
 
 var _map_paths = []
+var _num_spawns := 0
 var replay_resource = null
 
 @onready var _start_button = find_child("StartButton")
 @onready var _map_list = find_child("MapList")
 @onready var _map_details = find_child("MapDetailsLabel")
+@onready var _map_preview = find_child("MapPreview")
 
 
 func _ready():
@@ -48,13 +50,12 @@ func _create_match_settings():
 	var match_settings = MatchSettings.new()
 
 	var player_settings_nodes = find_child("GridContainer").get_children()
-	var spawn_index_offset = 0
 	for player_index in range(player_settings_nodes.size()):
 		var player_container = player_settings_nodes[player_index]
 		var play_select = player_container.find_child("PlaySelect")
 		var color_picker = player_container.find_child("ColorPickerButton")
 		var team_select = player_container.find_child("TeamSelect")
-		# TODO: the spawn settings should be added as soon as we have proper map visuals, since currently nothing can be decided
+		var spawn_select = player_container.find_child("SpawnSelect")
 
 		var player_controller = play_select.selected
 		if player_controller != Constants.PlayerType.NONE:
@@ -64,11 +65,9 @@ func _create_match_settings():
 			# TEAM ASSIGNMENT: Read from UI selection. If 0 (default), users can override team memberships for alliances.
 			# Match.gd will use these team values when creating Player nodes.
 			player_settings.team = team_select.selected
-			player_settings.spawn_index_offset = spawn_index_offset
+			# SPAWN: 0 = Random (-1 internally), 1+ = specific spawn point (0-indexed)
+			player_settings.spawn_index = spawn_select.selected - 1
 			match_settings.players.append(player_settings)
-			spawn_index_offset = 0
-		else:
-			spawn_index_offset += 1
 
 	match_settings.visible_player = -1
 	for player_id in range(match_settings.players.size()):
@@ -101,6 +100,7 @@ func _on_back_button_pressed():
 func _align_player_controls_visibility_to_map(map):
 	var grid_container = find_child("GridContainer")
 	var num_players = map["players"]
+	_num_spawns = num_players
 	
 	# Clear existing player settings
 	for child in grid_container.get_children():
@@ -111,14 +111,15 @@ func _align_player_controls_visibility_to_map(map):
 		var player_settings_instance = PlayerSettingsScene.instantiate()
 		grid_container.add_child(player_settings_instance)
 		
-		# Set the player number label
-		var number_label = player_settings_instance.find_child("Number")
-		number_label.text = str(player_index + 1) + "."
-		
 		# Configure team select to only show teams matching spawn points
 		var team_select = player_settings_instance.find_child("TeamSelect")
 		_configure_team_options(team_select, num_players)
 		team_select.selected = player_index
+		
+		# Configure spawn select
+		var spawn_select = player_settings_instance.find_child("SpawnSelect")
+		_populate_spawn_select(spawn_select, num_players)
+		spawn_select.item_selected.connect(_on_spawn_selected.bind(player_index))
 		
 		# Set default color
 		var color_picker = player_settings_instance.find_child("ColorPickerButton")
@@ -161,11 +162,37 @@ func _on_map_list_item_selected(index):
 		[map["players"], map["size"].x, map["size"].y]
 	)
 
+	# Update map preview
+	_map_preview.set_map_data(_map_paths[index])
+
 	# Generate player settings for each spawn point
 	_align_player_controls_visibility_to_map(map)
 	
 	# Reset start button state
 	_start_button.disabled = false
+
+
+func _populate_spawn_select(spawn_select: OptionButton, num_spawns: int) -> void:
+	spawn_select.clear()
+	spawn_select.add_item("Random", 0)
+	for i in range(num_spawns):
+		spawn_select.add_item("Pos " + str(i + 1), i + 1)
+	spawn_select.selected = 0
+
+
+func _on_spawn_selected(_selected_id: int, _player_index: int) -> void:
+	# Enforce uniqueness: if a player picked a non-random spawn, clear any
+	# other player that had the same spawn selected.
+	var player_settings_nodes = find_child("GridContainer").get_children()
+	if _selected_id == 0:
+		return  # "Random" never conflicts
+	for i in range(player_settings_nodes.size()):
+		if i == _player_index:
+			continue
+		var other_spawn = player_settings_nodes[i].find_child("SpawnSelect")
+		if other_spawn.selected == _selected_id:
+			other_spawn.selected = 0  # reset to Random
+
 
 func _start_from_replay():
 	hide()
