@@ -1,5 +1,7 @@
 extends Node3D
 
+const Structure = preload("res://source/match/units/Structure.gd")
+
 @export var rectangular_selection_3d: NodePath
 
 var _rectangular_selection_3d = null
@@ -103,4 +105,12 @@ func _on_selection_finished(topdown_polygon_2d):
 			)
 		)
 	)
+	# Prefer non-structure units: if any mobile unit is in the selection,
+	# exclude structures so they don't clutter the selection
+	var non_structures = Utils.Set.new()
+	for unit in units_to_select.iterate():
+		if not (unit is Structure):
+			non_structures.add(unit)
+	if not non_structures.empty():
+		units_to_select = non_structures
 	MatchUtils.select_units(units_to_select)

@@ -12,6 +12,13 @@ signal finished(topdown_polygon_2d)
 
 var _rect_on_screen = null
 var _time_since_last_update = 0.0  # s
+var _placement_active = false
+
+
+func _ready():
+	if MatchSignals:
+		MatchSignals.structure_placement_started.connect(func(): _placement_active = true)
+		MatchSignals.structure_placement_ended.connect(func(): _placement_active = false)
 
 
 func _physics_process(delta):
@@ -21,6 +28,8 @@ func _physics_process(delta):
 
 
 func _unhandled_input(event):
+	if _placement_active:
+		return
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
 		_start()
 	if (

@@ -1,14 +1,10 @@
 [gd_scene format=3 uid="uid://b1gne72rgc7un"]
 
 [ext_resource type="Script" uid="uid://3pyyw3flsw8y" path="res://source/match/units/BuildRadius.gd" id="1_6xn1v"]
-[ext_resource type="Shader" uid="uid://bgjowh1ktjwaf" path="res://source/shaders/3d/grid_shader.gdshader" id="2_xwm0w"]
-
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_rynud"]
-render_priority = 0
-shader = ExtResource("2_xwm0w")
+[ext_resource type="Material" uid="uid://do2mao874r7lk" path="res://source/match/resources/materials/grid_overlay.material.tres" id="2_mat"]
 
 [sub_resource type="PlaneMesh" id="PlaneMesh_uhw6o"]
-material = SubResource("ShaderMaterial_rynud")
+material = ExtResource("2_mat")
 
 [node name="BuildRadius" type="Node3D" unique_id=1664502028]
 script = ExtResource("1_6xn1v")

@@ -6,10 +6,14 @@ signal finished(rect)
 @export var screen_margin = 1
 
 var _rect = null
+var _placement_active = false
 
 
 func _ready():
 	hide()
+	if MatchSignals:
+		MatchSignals.structure_placement_started.connect(func(): _placement_active = true)
+		MatchSignals.structure_placement_ended.connect(func(): _placement_active = false)
 
 
 func _physics_process(_delta):
@@ -19,6 +23,8 @@ func _physics_process(_delta):
 
 
 func _unhandled_input(event):
+	if _placement_active:
+		return
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
 		_start()
 	if (

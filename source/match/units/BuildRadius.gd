@@ -18,14 +18,17 @@ func _ready():
 	cell_size = FeatureFlags.grid_cell_size
 	if radius_in_cells > 0:
 		allowed_cells = _generate_circular_cells(radius_in_cells)
-	# Grab the material from the original PlaneMesh before replacing it
+	# Grab the material from the original PlaneMesh and duplicate it so each
+	# BuildRadius instance has its own copy (avoids shared sub-resource issues)
 	var original_mat: Material = null
 	if mesh_instance.mesh and mesh_instance.mesh.get_surface_count() > 0:
 		original_mat = mesh_instance.mesh.surface_get_material(0)
 	if original_mat == null:
 		original_mat = mesh_instance.material_override
+	if original_mat:
+		original_mat = original_mat.duplicate()
 	mesh_instance.mesh = _build_mesh(original_mat)
-	# Sync shader cell_size
+	# Sync shader cell_size from FeatureFlags
 	var mat = original_mat as ShaderMaterial
 	if mat:
 		mat.set_shader_parameter("cell_size", cell_size)
@@ -71,6 +74,7 @@ func _build_mesh(mat: Material) -> ArrayMesh:
 	for cell in allowed_cells:
 		_add_cell_quad(st, cell)
 
+	st.generate_normals()
 	var mesh = st.commit()
 	if mat:
 		mesh.surface_set_material(0, mat)
@@ -79,21 +83,35 @@ func _build_mesh(mat: Material) -> ArrayMesh:
 
 func _add_cell_quad(st: SurfaceTool, cell: Vector2i):
 	var half = cell_size * 0.5
+	var line_pad = cell_size * 0.05 * 0.5  # half of line_width (matching shader default)
 
 	var cx = cell.x * cell_size
 	var cz = cell.y * cell_size
 
-	var a = Vector3(cx-half, 0.02, cz-half)
-	var b = Vector3(cx+half, 0.02, cz-half)
-	var c = Vector3(cx+half, 0.02, cz+half)
-	var d = Vector3(cx-half, 0.02, cz+half)
+	# Expand outer edges so boundary lines render at full width
+	var x_min = cx - half - (line_pad if not allowed_cells.has(Vector2i(cell.x - 1, cell.y)) else 0.0)
+	var x_max = cx + half + (line_pad if not allowed_cells.has(Vector2i(cell.x + 1, cell.y)) else 0.0)
+	var z_min = cz - half - (line_pad if not allowed_cells.has(Vector2i(cell.x, cell.y - 1)) else 0.0)
+	var z_max = cz + half + (line_pad if not allowed_cells.has(Vector2i(cell.x, cell.y + 1)) else 0.0)
 
+	var a = Vector3(x_min, 0.005, z_min)
+	var b = Vector3(x_max, 0.005, z_min)
+	var c = Vector3(x_max, 0.005, z_max)
+	var d = Vector3(x_min, 0.005, z_max)
+
+	# UVs for proper texture/shader sampling
+	st.set_uv(Vector2(0, 0))
 	st.add_vertex(a)
+	st.set_uv(Vector2(1, 0))
 	st.add_vertex(b)
+	st.set_uv(Vector2(1, 1))
 	st.add_vertex(c)
 
+	st.set_uv(Vector2(0, 0))
 	st.add_vertex(a)
+	st.set_uv(Vector2(1, 1))
 	st.add_vertex(c)
+	st.set_uv(Vector2(0, 1))
 	st.add_vertex(d)
 
 
