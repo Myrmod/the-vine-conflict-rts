@@ -4,7 +4,7 @@ render_mode unshaded, blend_mix, cull_disabled;
 uniform float cell_size = 1.0;
 uniform float line_width : hint_range(0.01, 0.15) = 0.05;
 uniform vec4 fill_color : source_color = vec4(1.0, 1.0, 1.0, 1.0);
-uniform vec4 line_color : source_color = vec4(0.0, 0.0, 0.0, 0.0);
+uniform vec4 line_color : source_color = vec4(1.0, 1.0, 1.0, 0.2);
 
 varying vec3 local_pos;
 

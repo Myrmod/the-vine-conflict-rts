@@ -5,9 +5,12 @@ const Human = preload("res://source/match/players/human/Human.gd")
 
 @export var cell_size := 1.0
 
-# Option A: Set a radius (in cells) to auto-generate a circular build area.
+# Option A: Set a radius (in cells) to auto-generate a build area.
 # If > 0, this overrides allowed_cells with all cells within this radius.
 @export var radius_in_cells := 0
+
+# If true, generates a square shape; if false, generates a circular shape
+@export var use_square_shape := false
 
 # Option B: Manually define which grid cells are buildable (used when radius_in_cells == 0)
 @export var allowed_cells: Array[Vector2i] = []
@@ -17,7 +20,10 @@ const Human = preload("res://source/match/players/human/Human.gd")
 func _ready():
 	cell_size = FeatureFlags.grid_cell_size
 	if radius_in_cells > 0:
-		allowed_cells = _generate_circular_cells(radius_in_cells)
+		if use_square_shape:
+			allowed_cells = _generate_square_cells(radius_in_cells)
+		else:
+			allowed_cells = _generate_circular_cells(radius_in_cells)
 	# Grab the material from the original PlaneMesh and duplicate it so each
 	# BuildRadius instance has its own copy (avoids shared sub-resource issues)
 	var original_mat: Material = null
@@ -116,11 +122,30 @@ func _add_cell_quad(st: SurfaceTool, cell: Vector2i):
 
 
 func _generate_circular_cells(radius: int) -> Array[Vector2i]:
-	var cells: Array[Vector2i] = []
+	# First pass: collect all cells within the radius
+	var candidate_cells: Array[Vector2i] = []
 	for x in range(-radius, radius + 1):
 		for y in range(-radius, radius + 1):
 			if Vector2(x, y).length() <= radius:
-				cells.append(Vector2i(x, y))
+				candidate_cells.append(Vector2i(x, y))
+	# Second pass: remove cells that have fewer than 2 cardinal neighbors
+	# This eliminates single protruding cells on the edges
+	var cells: Array[Vector2i] = []
+	for cell in candidate_cells:
+		var neighbor_count := 0
+		for dir in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:
+			if candidate_cells.has(cell + dir):
+				neighbor_count += 1
+		if neighbor_count >= 2:
+			cells.append(cell)
+	return cells
+
+
+func _generate_square_cells(radius: int) -> Array[Vector2i]:
+	var cells: Array[Vector2i] = []
+	for x in range(-radius, radius + 1):
+		for y in range(-radius, radius + 1):
+			cells.append(Vector2i(x, y))
 	return cells
 
 
