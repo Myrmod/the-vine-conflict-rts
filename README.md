@@ -1,5 +1,7 @@
 # Overgrowth RTS
 
+<img width="1536" height="1024" alt="image" src="https://github.com/user-attachments/assets/52edc2cc-56af-4dbb-b00a-4bb692d25377" />
+
 ## Godot compatibility
 
 This project is compatible with Godot `4.6`.
