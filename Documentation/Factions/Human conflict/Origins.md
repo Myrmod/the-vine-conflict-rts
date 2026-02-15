@@ -1,6 +1,6 @@
 # The Ash war:
 ## The energy collapse:
-- By the late 2020s, the world stood mis transition to renewable energy sources, fossil fuel investment has been slashed but the infrastructue for green resources was not scaled quick enough, oil production declined, rare earth exports were weaponized and global power grid grew increasingly unstable under new demands.
+- By the late 2020s, the world stood mid transition to renewable energy sources, fossil fuel investment has been slashed but the infrastructue for green resources was not scaled quick enough, oil production declined, rare earth exports were weaponized and global power grid grew increasingly unstable under new demands.
 - Energy did not really disappear it became fragile, in 2029 tension escalated around critical maritime chokepoints such as south china sea, a naval confrontation resulted in the destruction of major tanker,triggering panic across global markets. 
 - Energy prices surged to global highs balckouts spread across continents Supply chains faltered. Desalination plants shut down. Cities dependent on uninterrupted power began to fracture internally.
 - With domestic stability collapsing, several major powers declared energy infrastructure a legitimate military target. Precision strikes hit LNG terminals, nuclear facilities, and strategic grid nodes. In the chaos, a missile strike near an early-warning radar installation was misinterpreted as preparation for a nuclear decapitation strike. 
