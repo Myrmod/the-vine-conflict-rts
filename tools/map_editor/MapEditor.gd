@@ -12,6 +12,8 @@ const EraseBrush = preload("res://tools/map_editor/brushes/EraseBrush.gd")
 const StructureBrush = preload("res://tools/map_editor/brushes/StructureBrush.gd")
 const UnitBrush = preload("res://tools/map_editor/brushes/UnitBrush.gd")
 const PaintCollisionCommand = preload("res://tools/map_editor/commands/PaintCollisionCommand.gd")
+const GridRenderer = preload("res://tools/map_editor/GridRenderer.gd")
+const CollisionRenderer = preload("res://tools/map_editor/CollisionRenderer.gd")
 
 enum ViewMode {
 	GAME_VIEW,
@@ -51,6 +53,16 @@ var visual_layer: Node3D
 var collision_layer: Node3D
 var grid_layer: Node3D
 
+# Renderers
+var grid_renderer: GridRenderer
+var collision_renderer: CollisionRenderer
+
+# Camera control
+var camera: Camera3D
+var camera_distance: float = 30.0
+var camera_angle: float = -45.0
+var camera_target: Vector3
+
 
 func _ready():
 	# Initialize core systems
@@ -61,31 +73,67 @@ func _ready():
 	# Set up initial brush
 	_create_brush(BrushType.PAINT_COLLISION)
 	
-	# Set up UI
-	_setup_ui()
+	# Set up UI connections
+	_setup_ui_connections()
 	
 	# Set up 3D scene
 	_setup_3d_scene()
 	
-	print("Map Editor initialized")
+	# Initialize camera target
+	camera_target = Vector3(current_map.size.x / 2.0, 0, current_map.size.y / 2.0)
+	
+	print("Map Editor initialized - Map size: ", current_map.size)
 
 
-func _setup_ui():
-	"""Set up the editor UI elements"""
-	# This will be expanded when we create the actual scene
-	# For now, just create minimal structure
-	pass
+func _setup_ui_connections():
+	"""Set up UI button connections"""
+	# Get UI elements from scene
+	var toolbar = get_node_or_null("VBoxContainer/Toolbar")
+	var palette_items = get_node_or_null("VBoxContainer/MainArea/LeftPalette/PaletteScroll/PaletteItems")
+	status_label = get_node_or_null("VBoxContainer/StatusBar/StatusLabel")
+	
+	if palette_items:
+		var paint_btn = palette_items.get_node_or_null("PaintBtn")
+		if paint_btn:
+			paint_btn.pressed.connect(func(): _create_brush(BrushType.PAINT_COLLISION))
+		
+		var erase_btn = palette_items.get_node_or_null("EraseBtn")
+		if erase_btn:
+			erase_btn.pressed.connect(func(): _create_brush(BrushType.ERASE))
+	
+	if toolbar:
+		var symmetry_option = toolbar.get_node_or_null("SymmetryOption")
+		if symmetry_option:
+			symmetry_option.clear()
+			symmetry_option.add_item("None", SymmetrySystem.Mode.NONE)
+			symmetry_option.add_item("Mirror X", SymmetrySystem.Mode.MIRROR_X)
+			symmetry_option.add_item("Mirror Y", SymmetrySystem.Mode.MIRROR_Y)
+			symmetry_option.add_item("Diagonal", SymmetrySystem.Mode.DIAGONAL)
+			symmetry_option.add_item("Quad", SymmetrySystem.Mode.QUAD)
+			symmetry_option.item_selected.connect(_on_symmetry_changed)
 
 
 func _setup_3d_scene():
 	"""Set up the 3D viewport and visual layers"""
+	# Get viewport container from scene or create it
+	var main_area = get_node_or_null("VBoxContainer/MainArea")
+	var viewport_area = get_node_or_null("VBoxContainer/MainArea/ViewportArea")
+	
+	if not viewport_area:
+		return
+	
 	# Create viewport structure
 	viewport_container = SubViewportContainer.new()
 	viewport_container.name = "ViewportContainer"
 	viewport_container.stretch = true
 	viewport_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	viewport_container.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	add_child(viewport_container)
+	
+	var margin = viewport_area.get_node_or_null("MarginContainer")
+	if margin:
+		margin.add_child(viewport_container)
+	else:
+		viewport_area.add_child(viewport_container)
 	
 	editor_viewport = SubViewport.new()
 	editor_viewport.name = "EditorViewport"
@@ -110,18 +158,53 @@ func _setup_3d_scene():
 	grid_layer.name = "GridLayer"
 	viewport_3d.add_child(grid_layer)
 	
+	# Create renderers
+	grid_renderer = GridRenderer.new()
+	grid_renderer.grid_size = current_map.size
+	grid_layer.add_child(grid_renderer)
+	
+	collision_renderer = CollisionRenderer.new(current_map)
+	collision_layer.add_child(collision_renderer)
+	
 	# Add camera
-	var camera = Camera3D.new()
+	camera = Camera3D.new()
 	camera.name = "Camera"
-	camera.position = Vector3(25, 30, 25)
-	camera.rotation_degrees = Vector3(-45, 0, 0)
+	_update_camera_position()
 	viewport_3d.add_child(camera)
 	
 	# Add directional light
 	var light = DirectionalLight3D.new()
 	light.name = "Light"
 	light.rotation_degrees = Vector3(-45, 30, 0)
+	light.light_energy = 0.8
 	viewport_3d.add_child(light)
+	
+	# Add ambient light
+	var env = Environment.new()
+	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
+	env.ambient_light_color = Color(0.5, 0.5, 0.5)
+	var world_env = WorldEnvironment.new()
+	world_env.environment = env
+	viewport_3d.add_child(world_env)
+
+
+func _update_camera_position():
+	"""Update camera position based on current angle and distance"""
+	if not camera:
+		return
+	
+	var angle_rad = deg_to_rad(camera_angle)
+	var offset = Vector3(0, camera_distance * sin(abs(angle_rad)), camera_distance * cos(angle_rad))
+	camera.position = camera_target + offset
+	camera.look_at(camera_target, Vector3.UP)
+
+
+func _on_symmetry_changed(index: int):
+	"""Handle symmetry mode change"""
+	var mode = index as SymmetrySystem.Mode
+	set_symmetry_mode(mode)
+	if status_label:
+		status_label.text = "Symmetry: " + symmetry_system.get_mode_name(mode)
 
 
 func _create_brush(brush_type: BrushType):
@@ -137,6 +220,23 @@ func _create_brush(brush_type: BrushType):
 			current_brush = StructureBrush.new(current_map, symmetry_system, "", current_player)
 		BrushType.PLACE_UNIT:
 			current_brush = UnitBrush.new(current_map, symmetry_system, "", current_player)
+	
+	# Connect brush signals
+	if current_brush and current_brush.brush_applied.is_connected(_on_brush_applied):
+		current_brush.brush_applied.disconnect(_on_brush_applied)
+	if current_brush:
+		current_brush.brush_applied.connect(_on_brush_applied)
+	
+	# Update UI
+	var brush_info = get_node_or_null("VBoxContainer/Toolbar/BrushInfo")
+	if brush_info and current_brush:
+		brush_info.text = current_brush.get_brush_name()
+
+
+func _on_brush_applied(positions: Array[Vector2i]):
+	"""Handle brush application - update visuals"""
+	if collision_renderer and current_brush_type == BrushType.PAINT_COLLISION:
+		collision_renderer.update_cells(positions)
 
 
 func _input(event):
@@ -149,6 +249,37 @@ func _input(event):
 				undo()
 		elif event.keycode == KEY_Y and event.ctrl_pressed:
 			redo()
+		elif event.keycode == KEY_V:
+			# Toggle view mode
+			if view_mode == ViewMode.GAME_VIEW:
+				set_view_mode(ViewMode.COLLISION_VIEW)
+			else:
+				set_view_mode(ViewMode.GAME_VIEW)
+	
+	# Handle mouse input in viewport
+	if event is InputEventMouseButton:
+		if event.button_index == MOUSE_BUTTON_LEFT:
+			is_painting = event.pressed
+			if event.pressed:
+				_try_paint_at_mouse(event.position)
+	
+	elif event is InputEventMouseMotion and is_painting:
+		_try_paint_at_mouse(event.position)
+
+
+func _try_paint_at_mouse(mouse_pos: Vector2):
+	"""Try to paint at the given mouse position"""
+	if not current_brush or not viewport_container:
+		return
+	
+	# Convert screen position to viewport position
+	var viewport_rect = viewport_container.get_global_rect()
+	var local_pos = mouse_pos - viewport_rect.position
+	
+	# For now, we need proper raycasting from viewport
+	# This is a placeholder - proper implementation would use camera raycasting
+	# to convert 2D mouse position to 3D grid position
+	pass
 
 
 func undo():
@@ -165,8 +296,8 @@ func redo():
 
 func _refresh_view():
 	"""Refresh the 3D view to reflect map changes"""
-	# This will be implemented to update visual representation
-	pass
+	if collision_renderer:
+		collision_renderer.refresh()
 
 
 func set_view_mode(mode: ViewMode):
