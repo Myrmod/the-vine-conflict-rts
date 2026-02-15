@@ -14,6 +14,7 @@ const UnitBrush = preload("res://tools/map_editor/brushes/UnitBrush.gd")
 const PaintCollisionCommand = preload("res://tools/map_editor/commands/PaintCollisionCommand.gd")
 const GridRenderer = preload("res://tools/map_editor/GridRenderer.gd")
 const CollisionRenderer = preload("res://tools/map_editor/CollisionRenderer.gd")
+const MapEditorDialogs = preload("res://tools/map_editor/ui/MapEditorDialogs.gd")
 
 enum ViewMode {
 	GAME_VIEW,
@@ -63,6 +64,9 @@ var camera_distance: float = 30.0
 var camera_angle: float = -45.0
 var camera_target: Vector3
 
+# Dialogs
+var dialogs: MapEditorDialogs
+
 
 func _ready():
 	# Initialize core systems
@@ -72,6 +76,9 @@ func _ready():
 	
 	# Set up initial brush
 	_create_brush(BrushType.PAINT_COLLISION)
+	
+	# Set up dialogs
+	_setup_dialogs()
 	
 	# Set up UI connections
 	_setup_ui_connections()
@@ -83,6 +90,27 @@ func _ready():
 	camera_target = Vector3(current_map.size.x / 2.0, 0, current_map.size.y / 2.0)
 	
 	print("Map Editor initialized - Map size: ", current_map.size)
+
+
+func _setup_dialogs():
+	"""Set up file dialogs"""
+	dialogs = MapEditorDialogs.new()
+	add_child(dialogs)
+	dialogs.map_saved.connect(_on_map_saved)
+	dialogs.map_loaded.connect(_on_map_loaded)
+	dialogs.map_exported.connect(_on_map_exported)
+
+
+func _on_map_saved(path: String):
+	save_map(path)
+
+
+func _on_map_loaded(path: String):
+	load_map(path)
+
+
+func _on_map_exported(path: String):
+	export_map(path)
 
 
 func _setup_ui_connections():
@@ -98,6 +126,18 @@ func _setup_ui_connections():
 		entity_palette.entity_selected.connect(_on_palette_entity_selected)
 	
 	if toolbar:
+		# Setup file menu
+		var file_menu = toolbar.get_node_or_null("FileMenu")
+		if file_menu:
+			var popup = file_menu.get_popup()
+			popup.clear()
+			popup.add_item("New Map", 0)
+			popup.add_item("Load Map", 1)
+			popup.add_item("Save Map", 2)
+			popup.add_separator()
+			popup.add_item("Export for Runtime", 3)
+			popup.id_pressed.connect(_on_file_menu_item_selected)
+		
 		var symmetry_option = toolbar.get_node_or_null("SymmetryOption")
 		if symmetry_option:
 			symmetry_option.clear()
@@ -107,6 +147,21 @@ func _setup_ui_connections():
 			symmetry_option.add_item("Diagonal", SymmetrySystem.Mode.DIAGONAL)
 			symmetry_option.add_item("Quad", SymmetrySystem.Mode.QUAD)
 			symmetry_option.item_selected.connect(_on_symmetry_changed)
+
+
+func _on_file_menu_item_selected(id: int):
+	"""Handle file menu item selection"""
+	match id:
+		0:  # New Map
+			new_map(Vector2i(50, 50))
+			if status_label:
+				status_label.text = "Created new map"
+		1:  # Load Map
+			dialogs.show_load_dialog()
+		2:  # Save Map
+			dialogs.show_save_dialog()
+		3:  # Export
+			dialogs.show_export_dialog()
 
 
 func _on_palette_brush_selected(brush_name: String):
@@ -352,12 +407,18 @@ func save_map(path: String):
 	var errors = current_map.validate()
 	if not errors.is_empty():
 		push_warning("Map has validation errors: " + str(errors))
+		if status_label:
+			status_label.text = "Validation errors: " + str(errors[0])
 	
 	var result = ResourceSaver.save(current_map, path)
 	if result == OK:
 		print("Map saved to: " + path)
+		if status_label:
+			status_label.text = "Map saved successfully"
 	else:
 		push_error("Failed to save map: " + str(result))
+		if status_label:
+			status_label.text = "Failed to save map"
 
 
 func load_map(path: String):
@@ -369,8 +430,12 @@ func load_map(path: String):
 		command_stack.clear()
 		_refresh_view()
 		print("Map loaded from: " + path)
+		if status_label:
+			status_label.text = "Map loaded: " + path.get_file()
 	else:
 		push_error("Failed to load map or invalid format")
+		if status_label:
+			status_label.text = "Failed to load map"
 
 
 func export_map(path: String):
@@ -380,12 +445,18 @@ func export_map(path: String):
 	
 	if not errors.is_empty():
 		push_warning("Runtime map has validation errors: " + str(errors))
+		if status_label:
+			status_label.text = "Validation errors: " + str(errors[0])
 	
 	var result = ResourceSaver.save(runtime_map, path)
 	if result == OK:
 		print("Map exported to: " + path)
+		if status_label:
+			status_label.text = "Map exported successfully"
 	else:
 		push_error("Failed to export map: " + str(result))
+		if status_label:
+			status_label.text = "Failed to export map"
 
 
 func _exit_tree():
