@@ -1,0 +1,108 @@
+[gd_scene load_steps=2 format=3 uid="uid://bjk4xrmtu1c1i"]
+
+[ext_resource type="Script" path="res://tools/map_editor/MapEditor.gd" id="1_map_editor"]
+
+[node name="MapEditor" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_map_editor")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Toolbar" type="HBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 0
+
+[node name="FileMenu" type="MenuButton" parent="VBoxContainer/Toolbar"]
+layout_mode = 2
+text = "File"
+
+[node name="EditMenu" type="MenuButton" parent="VBoxContainer/Toolbar"]
+layout_mode = 2
+text = "Edit"
+
+[node name="ViewMenu" type="MenuButton" parent="VBoxContainer/Toolbar"]
+layout_mode = 2
+text = "View"
+
+[node name="SymmetryLabel" type="Label" parent="VBoxContainer/Toolbar"]
+layout_mode = 2
+text = "Symmetry:"
+
+[node name="SymmetryOption" type="OptionButton" parent="VBoxContainer/Toolbar"]
+layout_mode = 2
+
+[node name="HSeparator" type="HSeparator" parent="VBoxContainer/Toolbar"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="BrushLabel" type="Label" parent="VBoxContainer/Toolbar"]
+layout_mode = 2
+text = "Brush:"
+
+[node name="BrushInfo" type="Label" parent="VBoxContainer/Toolbar"]
+layout_mode = 2
+text = "Paint Collision"
+
+[node name="MainArea" type="HBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="LeftPalette" type="VBoxContainer" parent="VBoxContainer/MainArea"]
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+
+[node name="Label" type="Label" parent="VBoxContainer/MainArea/LeftPalette"]
+layout_mode = 2
+text = "Palette"
+
+[node name="PaletteScroll" type="ScrollContainer" parent="VBoxContainer/MainArea/LeftPalette"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="PaletteItems" type="VBoxContainer" parent="VBoxContainer/MainArea/LeftPalette/PaletteScroll"]
+layout_mode = 2
+
+[node name="BrushSection" type="Label" parent="VBoxContainer/MainArea/LeftPalette/PaletteScroll/PaletteItems"]
+layout_mode = 2
+text = "Brushes"
+
+[node name="PaintBtn" type="Button" parent="VBoxContainer/MainArea/LeftPalette/PaletteScroll/PaletteItems"]
+layout_mode = 2
+text = "Paint Collision"
+
+[node name="EraseBtn" type="Button" parent="VBoxContainer/MainArea/LeftPalette/PaletteScroll/PaletteItems"]
+layout_mode = 2
+text = "Erase"
+
+[node name="ViewportArea" type="PanelContainer" parent="VBoxContainer/MainArea"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="MarginContainer" type="MarginContainer" parent="VBoxContainer/MainArea/ViewportArea"]
+layout_mode = 2
+
+[node name="StatusBar" type="HBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="StatusLabel" type="Label" parent="VBoxContainer/StatusBar"]
+layout_mode = 2
+text = "Ready"
+
+[node name="HSeparator" type="HSeparator" parent="VBoxContainer/StatusBar"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="PositionLabel" type="Label" parent="VBoxContainer/StatusBar"]
+layout_mode = 2
+text = "Position: 0, 0"
