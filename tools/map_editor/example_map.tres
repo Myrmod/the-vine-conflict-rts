@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="MapResource" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://tools/map_editor/MapResource.gd" id="1_map_resource"]
+
+[resource]
+script = ExtResource("1_map_resource")
+size = Vector2i(30, 30)
+terrain_seed = 12345
+collision_grid = PackedByteArray()
+placed_structures = Array[Dictionary]([])
+placed_units = Array[Dictionary]([])
+resource_nodes = Array[Dictionary]([])
+cosmetic_tiles = Array[Dictionary]([])
+map_name = "Example Map"
+author = "Map Editor"
+description = "A simple example map created with the editor"

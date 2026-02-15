@@ -391,3 +391,8 @@ func export_map(path: String):
 func _exit_tree():
 	# Clean up
 	pass
+
+
+func _on_back_button_pressed():
+	"""Return to main menu"""
+	get_tree().change_scene_to_file("res://source/main-menu/Main.tscn")
