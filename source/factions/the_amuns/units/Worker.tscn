@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://bf0r3fovbvf1m"]
 
-[ext_resource type="Script" path="res://source/match/units/Worker.gd" id="1_hapsg"]
+[ext_resource type="Script" path="res://source/factions/the_amuns/units/Worker.gd" id="1_hapsg"]
 [ext_resource type="PackedScene" uid="uid://cgsi062w5fjia" path="res://source/match/units/traits/Highlight.tscn" id="2_bt6lt"]
 [ext_resource type="PackedScene" uid="uid://j5umsiiyb8a7" path="res://assets/models/kenney-spacekit/rover.glb" id="2_ef11q"]
 [ext_resource type="PackedScene" uid="uid://3c1h14nqdumt" path="res://source/match/units/traits/Selection.tscn" id="3_yl7si"]

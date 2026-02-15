@@ -1,9 +1,9 @@
 [gd_scene format=3 uid="uid://cxilu6668nda6"]
 
-[ext_resource type="Script" uid="uid://b8kj8mdb0kmvx" path="res://source/match/units/AircraftFactory.gd" id="1_n6n1v"]
+[ext_resource type="Script" uid="uid://b8kj8mdb0kmvx" path="res://source/factions/the_amuns/structures/AircraftFactory.gd" id="1_n6n1v"]
 [ext_resource type="PackedScene" uid="uid://cgsi062w5fjia" path="res://source/match/units/traits/Highlight.tscn" id="1_r5i7t"]
 [ext_resource type="PackedScene" uid="uid://3c1h14nqdumt" path="res://source/match/units/traits/Selection.tscn" id="2_56ml3"]
-[ext_resource type="PackedScene" uid="uid://bklfapayb1ryk" path="res://source/match/units/structure-geometries/AircraftFactory.tscn" id="2_mlisu"]
+[ext_resource type="PackedScene" uid="uid://bklfapayb1ryk" path="res://source/factions/the_amuns/structures/structure-geometries/AircraftFactory.tscn" id="2_mlisu"]
 [ext_resource type="PackedScene" uid="uid://d4cwip5hpxlmo" path="res://source/match/units/traits/MovementObstacle.tscn" id="3_j1buj"]
 [ext_resource type="PackedScene" uid="uid://c3ssj2p6voauk" path="res://source/match/units/traits/HealthBar.tscn" id="4_igtfr"]
 [ext_resource type="PackedScene" uid="uid://b8jwlpdvxgrr6" path="res://source/match/units/traits/RallyPoint.tscn" id="8_opfgx"]

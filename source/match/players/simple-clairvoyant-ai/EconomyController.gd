@@ -2,10 +2,10 @@ extends Node
 
 signal resources_required(resources, metadata)
 
-const CommandCenter = preload("res://source/match/units/CommandCenter.gd")
-const CommandCenterScene = preload("res://source/match/units/CommandCenter.tscn")
-const Worker = preload("res://source/match/units/Worker.gd")
-const WorkerScene = preload("res://source/match/units/Worker.tscn")
+const CommandCenter = preload("res://source/factions/the_amuns/structures/CommandCenter.gd")
+const CommandCenterScene = preload("res://source/factions/the_amuns/structures/CommandCenter.tscn")
+const Worker = preload("res://source/factions/the_amuns/units/Worker.gd")
+const WorkerScene = preload("res://source/factions/the_amuns/units/Worker.tscn")
 const CollectingResourcesSequentially = preload(
 	"res://source/match/units/actions/CollectingResourcesSequentially.gd"
 )
@@ -41,21 +41,31 @@ func provision(resources, metadata):
 			return
 		# Queue worker production through CommandBus (not directly on production queue).
 		# This ensures the command is recorded for replay determinism.
-		CommandBus.push_command({
-			"tick": Match.tick + 1,
-			"type": Enums.CommandType.ENTITY_IS_QUEUED,
-			"player_id": _player.id,
-			"data": {
-				"entity_id": _ccs[0].id,
-				"unit_type": WorkerScene.resource_path,
-				"time_total": UnitConstants.DEFAULT_PROPERTIES[WorkerScene.resource_path]["build_time"],
-				"ignore_limit": true,
-			}
-		})
+		(
+			CommandBus
+			. push_command(
+				{
+					"tick": Match.tick + 1,
+					"type": Enums.CommandType.ENTITY_IS_QUEUED,
+					"player_id": _player.id,
+					"data":
+					{
+						"entity_id": _ccs[0].id,
+						"unit_type": WorkerScene.resource_path,
+						"time_total":
+						UnitConstants.DEFAULT_PROPERTIES[WorkerScene.resource_path]["build_time"],
+						"ignore_limit": true,
+					}
+				}
+			)
+		)
 		_number_of_pending_workers += 1
 	elif metadata == "cc":
 		assert(
-			resources == UnitConstants.DEFAULT_PROPERTIES[CommandCenterScene.resource_path]["costs"],
+			(
+				resources
+				== UnitConstants.DEFAULT_PROPERTIES[CommandCenterScene.resource_path]["costs"]
+			),
 			"unexpected amount of resources"
 		)
 		_number_of_pending_cc_resource_requests -= 1
@@ -135,9 +145,7 @@ func _enforce_number_of_workers():
 
 
 func _construct_cc():
-	var construction_cost = UnitConstants.DEFAULT_PROPERTIES[
-		CommandCenterScene.resource_path
-	]
+	var construction_cost = UnitConstants.DEFAULT_PROPERTIES[CommandCenterScene.resource_path]
 	# Pre-check resources as an optimistic filter. The authoritative check happens in
 	# Match._execute_command() — between queueing and execution another command may
 	# spend the resources, which Match handles gracefully.
@@ -158,16 +166,22 @@ func _construct_cc():
 	# Free the temporary instance used for radius calculation
 	unit_to_spawn.free()
 	# Place structure through CommandBus — resources are deducted by Match._execute_command()
-	CommandBus.push_command({
-		"tick": Match.tick + 1,
-		"type": Enums.CommandType.STRUCTURE_PLACED,
-		"player_id": _player.id,
-		"data": {
-			"structure_prototype": CommandCenterScene.resource_path,
-			"transform": target_transform,
-			"self_constructing": true,
-		}
-	})
+	(
+		CommandBus
+		. push_command(
+			{
+				"tick": Match.tick + 1,
+				"type": Enums.CommandType.STRUCTURE_PLACED,
+				"player_id": _player.id,
+				"data":
+				{
+					"structure_prototype": CommandCenterScene.resource_path,
+					"transform": target_transform,
+					"self_constructing": true,
+				}
+			}
+		)
+	)
 
 
 func _calculate_resource_collecting_statistics():
@@ -205,20 +219,33 @@ func _make_worker_collecting_resources(worker):
 			resource_filter = func(resource_unit): return "resource_b" in resource_unit
 	var closest_resource_unit = (
 		ResourceUtils
-		.find_resource_unit_closest_to_unit_yet_no_further_than(
+		. find_resource_unit_closest_to_unit_yet_no_further_than(
 			worker, UnitConstants.NEW_RESOURCE_SEARCH_RADIUS_M, resource_filter
 		)
 	)
 	if closest_resource_unit != null:
-		CommandBus.push_command({
-			"tick": Match.tick + 1,
-			"type": Enums.CommandType.COLLECTING_RESOURCES_SEQUENTIALLY,
-			"player_id": _player.id,
-			"data": {
-				"targets": [{"unit": worker.id, "pos": worker.global_position, "rot": worker.global_rotation}],
-				"target_unit": closest_resource_unit.id,
-			}
-		})
+		(
+			CommandBus
+			. push_command(
+				{
+					"tick": Match.tick + 1,
+					"type": Enums.CommandType.COLLECTING_RESOURCES_SEQUENTIALLY,
+					"player_id": _player.id,
+					"data":
+					{
+						"targets":
+						[
+							{
+								"unit": worker.id,
+								"pos": worker.global_position,
+								"rot": worker.global_rotation
+							}
+						],
+						"target_unit": closest_resource_unit.id,
+					}
+				}
+			)
+		)
 
 
 func _retarget_workers_if_necessary():

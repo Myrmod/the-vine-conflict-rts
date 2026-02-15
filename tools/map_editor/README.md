@@ -103,7 +103,7 @@ index = y * width + x
 Entities are stored as dictionaries:
 ```gdscript
 {
-    "scene_path": "res://source/match/units/Tank.tscn",
+    "scene_path": "res://source/factions/the_amuns/units/Tank.tscn",
     "pos": Vector2i(10, 15),
     "player": 0,  # Player/faction ID
     "rotation": 0.0

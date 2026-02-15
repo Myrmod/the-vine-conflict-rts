@@ -1,6 +1,6 @@
 [gd_scene load_steps=8 format=3 uid="uid://bufgjfa3ne3uk"]
 
-[ext_resource type="Script" path="res://source/match/units/non-player/ResourceB.gd" id="1_57n8v"]
+[ext_resource type="Script" path="res://source/factions/neutral/structures/ResourceB.gd" id="1_57n8v"]
 [ext_resource type="PackedScene" uid="uid://cgsi062w5fjia" path="res://source/match/units/traits/Highlight.tscn" id="2_c8mwe"]
 [ext_resource type="PackedScene" uid="uid://cqi7sb6vpnwt5" path="res://assets/models/kenney-spacekit/rock_crystalsLargeB.glb" id="2_ox5xj"]
 [ext_resource type="PackedScene" uid="uid://3c1h14nqdumt" path="res://source/match/units/traits/Selection.tscn" id="3_6dh54"]

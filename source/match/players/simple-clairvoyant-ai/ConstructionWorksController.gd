@@ -1,7 +1,7 @@
 extends Node
 
 const Structure = preload("res://source/match/units/Structure.gd")
-const Worker = preload("res://source/match/units/Worker.gd")
+const Worker = preload("res://source/factions/the_amuns/units/Worker.gd")
 const Constructing = preload("res://source/match/units/actions/Constructing.gd")
 
 # Tick-based refresh interval. At TICK_RATE 10, 5 ticks = 0.5 s.
@@ -43,16 +43,25 @@ func _on_refresh():
 		# TODO: introduce some algortihm based on distances
 		MatchUtils.rng_shuffle(workers)
 		MatchUtils.rng_shuffle(structures_to_construct)
-		CommandBus.push_command({
-			"tick": Match.tick + 1,
-			"type": Enums.CommandType.CONSTRUCTING,
-			"player_id": _player.id,
-			"data": {
-				"structure": structures_to_construct[0].id,
-				"selected_constructors": [{
-					"unit": workers[0].id,
-					"pos": workers[0].global_position,
-					"rot": workers[0].global_rotation,
-				}],
-			}
-		})
+		(
+			CommandBus
+			. push_command(
+				{
+					"tick": Match.tick + 1,
+					"type": Enums.CommandType.CONSTRUCTING,
+					"player_id": _player.id,
+					"data":
+					{
+						"structure": structures_to_construct[0].id,
+						"selected_constructors":
+						[
+							{
+								"unit": workers[0].id,
+								"pos": workers[0].global_position,
+								"rot": workers[0].global_rotation,
+							}
+						],
+					}
+				}
+			)
+		)

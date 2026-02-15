@@ -116,8 +116,8 @@ Validation errors appear in status bar.
 ### Scene Paths
 All entities reference their .tscn files:
 ```
-res://source/match/units/Tank.tscn
-res://source/match/units/CommandCenter.tscn
+res://source/factions/the_amuns/units/Tank.tscn
+res://source/factions/the_amuns/structures/CommandCenter.tscn
 ```
 
 ### Player IDs

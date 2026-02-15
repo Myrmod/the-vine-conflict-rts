@@ -2,16 +2,20 @@ extends Node
 
 signal resources_required(resources, metadata)
 
-const Worker = preload("res://source/match/units/Worker.gd")
-const CommandCenter = preload("res://source/match/units/CommandCenter.gd")
-const VehicleFactory = preload("res://source/match/units/VehicleFactory.gd")
-const VehicleFactoryScene = preload("res://source/match/units/VehicleFactory.tscn")
-const Tank = preload("res://source/match/units/Tank.gd")
-const TankScene = preload("res://source/match/units/Tank.tscn")
-const AircraftFactory = preload("res://source/match/units/AircraftFactory.gd")
-const AircraftFactoryScene = preload("res://source/match/units/AircraftFactory.tscn")
-const Helicopter = preload("res://source/match/units/Helicopter.gd")
-const HelicopterScene = preload("res://source/match/units/Helicopter.tscn")
+const Worker = preload("res://source/factions/the_amuns/units/Worker.gd")
+const CommandCenter = preload("res://source/factions/the_amuns/structures/CommandCenter.gd")
+const VehicleFactory = preload("res://source/factions/the_amuns/structures/VehicleFactory.gd")
+const VehicleFactoryScene = preload(
+	"res://source/factions/the_amuns/structures/VehicleFactory.tscn"
+)
+const Tank = preload("res://source/factions/the_amuns/units/Tank.gd")
+const TankScene = preload("res://source/factions/the_amuns/units/Tank.tscn")
+const AircraftFactory = preload("res://source/factions/the_amuns/structures/AircraftFactory.gd")
+const AircraftFactoryScene = preload(
+	"res://source/factions/the_amuns/structures/AircraftFactory.tscn"
+)
+const Helicopter = preload("res://source/factions/the_amuns/units/Helicopter.gd")
+const HelicopterScene = preload("res://source/factions/the_amuns/units/Helicopter.tscn")
 const AutoAttackingBattlegroup = preload(
 	"res://source/match/players/simple-clairvoyant-ai/AutoAttackingBattlegroup.gd"
 )
@@ -30,7 +34,6 @@ var _battlegroup_under_forming = null
 var _battlegroups = []
 
 @onready var _ai = get_parent()
-
 
 var _ticks_until_refresh = REFRESH_INTERVAL_TICKS
 
@@ -108,17 +111,24 @@ func _provision_unit(unit_scene, structure_producing_unit, resources, metadata):
 		return
 	_number_of_pending_unit_resource_requests[metadata] -= 1
 	# Queue production through CommandBus for replay determinism
-	CommandBus.push_command({
-		"tick": Match.tick + 1,
-		"type": Enums.CommandType.ENTITY_IS_QUEUED,
-		"player_id": _player.id,
-		"data": {
-			"entity_id": structure_producing_unit.id,
-			"unit_type": unit_scene.resource_path,
-			"time_total": UnitConstants.DEFAULT_PROPERTIES[unit_scene.resource_path]["build_time"],
-			"ignore_limit": true,
-		}
-	})
+	(
+		CommandBus
+		. push_command(
+			{
+				"tick": Match.tick + 1,
+				"type": Enums.CommandType.ENTITY_IS_QUEUED,
+				"player_id": _player.id,
+				"data":
+				{
+					"entity_id": structure_producing_unit.id,
+					"unit_type": unit_scene.resource_path,
+					"time_total":
+					UnitConstants.DEFAULT_PROPERTIES[unit_scene.resource_path]["build_time"],
+					"ignore_limit": true,
+				}
+			}
+		)
+	)
 
 
 func _try_creating_new_battlegroup():
@@ -128,14 +138,20 @@ func _try_creating_new_battlegroup():
 		# Cancel all production at the primary structure through CommandBus
 		var primary_structure = _primary_structure()
 		if primary_structure != null:
-			CommandBus.push_command({
-				"tick": Match.tick + 1,
-				"type": Enums.CommandType.PRODUCTION_CANCEL_ALL,
-				"player_id": _player.id,
-				"data": {
-					"entity_id": primary_structure.id,
-				}
-			})
+			(
+				CommandBus
+				. push_command(
+					{
+						"tick": Match.tick + 1,
+						"type": Enums.CommandType.PRODUCTION_CANCEL_ALL,
+						"player_id": _player.id,
+						"data":
+						{
+							"entity_id": primary_structure.id,
+						}
+					}
+				)
+			)
 		_battlegroup_under_forming = null
 		return false
 	var adversary_players = get_tree().get_nodes_in_group("players").filter(
@@ -191,16 +207,22 @@ func _construct_structure(structure_scene):
 	# Free the temporary instance used for radius/domain calculation
 	unit_to_spawn.free()
 	# Place structure through CommandBus — resources deducted by Match._execute_command()
-	CommandBus.push_command({
-		"tick": Match.tick + 1,
-		"type": Enums.CommandType.STRUCTURE_PLACED,
-		"player_id": _player.id,
-		"data": {
-			"structure_prototype": structure_scene.resource_path,
-			"transform": target_transform,
-			"self_constructing": true,
-		}
-	})
+	(
+		CommandBus
+		. push_command(
+			{
+				"tick": Match.tick + 1,
+				"type": Enums.CommandType.STRUCTURE_PLACED,
+				"player_id": _player.id,
+				"data":
+				{
+					"structure_prototype": structure_scene.resource_path,
+					"transform": target_transform,
+					"self_constructing": true,
+				}
+			}
+		)
+	)
 	_enforce_primary_units_production.call_deferred()
 
 
