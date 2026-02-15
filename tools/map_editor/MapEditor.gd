@@ -89,17 +89,13 @@ func _setup_ui_connections():
 	"""Set up UI button connections"""
 	# Get UI elements from scene
 	var toolbar = get_node_or_null("VBoxContainer/Toolbar")
-	var palette_items = get_node_or_null("VBoxContainer/MainArea/LeftPalette/PaletteScroll/PaletteItems")
+	var entity_palette = get_node_or_null("VBoxContainer/MainArea/LeftPalette/PaletteScroll/EntityPalette")
 	status_label = get_node_or_null("VBoxContainer/StatusBar/StatusLabel")
 	
-	if palette_items:
-		var paint_btn = palette_items.get_node_or_null("PaintBtn")
-		if paint_btn:
-			paint_btn.pressed.connect(func(): _create_brush(BrushType.PAINT_COLLISION))
-		
-		var erase_btn = palette_items.get_node_or_null("EraseBtn")
-		if erase_btn:
-			erase_btn.pressed.connect(func(): _create_brush(BrushType.ERASE))
+	# Connect entity palette signals
+	if entity_palette:
+		entity_palette.brush_selected.connect(_on_palette_brush_selected)
+		entity_palette.entity_selected.connect(_on_palette_entity_selected)
 	
 	if toolbar:
 		var symmetry_option = toolbar.get_node_or_null("SymmetryOption")
@@ -111,6 +107,33 @@ func _setup_ui_connections():
 			symmetry_option.add_item("Diagonal", SymmetrySystem.Mode.DIAGONAL)
 			symmetry_option.add_item("Quad", SymmetrySystem.Mode.QUAD)
 			symmetry_option.item_selected.connect(_on_symmetry_changed)
+
+
+func _on_palette_brush_selected(brush_name: String):
+	"""Handle brush selection from palette"""
+	match brush_name:
+		"paint_collision":
+			_create_brush(BrushType.PAINT_COLLISION)
+		"erase":
+			_create_brush(BrushType.ERASE)
+
+
+func _on_palette_entity_selected(entity_type: String, scene_path: String):
+	"""Handle entity selection from palette"""
+	match entity_type:
+		"structure":
+			_create_brush(BrushType.PLACE_STRUCTURE)
+			if current_brush is StructureBrush:
+				current_brush.set_structure(scene_path)
+		"unit":
+			_create_brush(BrushType.PLACE_UNIT)
+			if current_brush is UnitBrush:
+				current_brush.set_unit(scene_path)
+	
+	# Update brush info
+	var brush_info = get_node_or_null("VBoxContainer/Toolbar/BrushInfo")
+	if brush_info and current_brush:
+		brush_info.text = current_brush.get_brush_name()
 
 
 func _setup_3d_scene():

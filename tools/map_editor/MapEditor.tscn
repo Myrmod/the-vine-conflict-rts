@@ -1,6 +1,7 @@
-[gd_scene load_steps=2 format=3 uid="uid://bjk4xrmtu1c1i"]
+[gd_scene load_steps=3 format=3 uid="uid://bjk4xrmtu1c1i"]
 
 [ext_resource type="Script" path="res://tools/map_editor/MapEditor.gd" id="1_map_editor"]
+[ext_resource type="Script" path="res://tools/map_editor/ui/EntityPalette.gd" id="2_entity_palette"]
 
 [node name="MapEditor" type="Control"]
 layout_mode = 3
@@ -70,20 +71,10 @@ text = "Palette"
 layout_mode = 2
 size_flags_vertical = 3
 
-[node name="PaletteItems" type="VBoxContainer" parent="VBoxContainer/MainArea/LeftPalette/PaletteScroll"]
+[node name="EntityPalette" type="VBoxContainer" parent="VBoxContainer/MainArea/LeftPalette/PaletteScroll"]
 layout_mode = 2
-
-[node name="BrushSection" type="Label" parent="VBoxContainer/MainArea/LeftPalette/PaletteScroll/PaletteItems"]
-layout_mode = 2
-text = "Brushes"
-
-[node name="PaintBtn" type="Button" parent="VBoxContainer/MainArea/LeftPalette/PaletteScroll/PaletteItems"]
-layout_mode = 2
-text = "Paint Collision"
-
-[node name="EraseBtn" type="Button" parent="VBoxContainer/MainArea/LeftPalette/PaletteScroll/PaletteItems"]
-layout_mode = 2
-text = "Erase"
+size_flags_horizontal = 3
+script = ExtResource("2_entity_palette")
 
 [node name="ViewportArea" type="PanelContainer" parent="VBoxContainer/MainArea"]
 layout_mode = 2

@@ -25,3 +25,7 @@ func _on_campaign_button_pressed() -> void:
 	
 func _on_Load_button_pressed() -> void:
 	print("TODO")
+
+
+func _on_map_editor_button_pressed() -> void:
+	get_tree().change_scene_to_file("res://tools/map_editor/MapEditor.tscn")
