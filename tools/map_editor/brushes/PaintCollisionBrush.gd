@@ -1,5 +1,6 @@
-extends EditorBrush
 class_name PaintCollisionBrush
+
+extends EditorBrush
 
 ## Brush for painting collision tiles (blocked/walkable)
 
@@ -14,12 +15,12 @@ func _init(map_res: MapResource = null, symmetry_sys: SymmetrySystem = null, val
 func apply(cell_pos: Vector2i):
 	if not can_apply(cell_pos):
 		return
-	
+
 	var affected_positions = get_affected_positions(cell_pos)
-	
+
 	for pos in affected_positions:
 		map_resource.set_collision_at(pos, paint_value)
-	
+
 	brush_applied.emit(affected_positions)
 
 

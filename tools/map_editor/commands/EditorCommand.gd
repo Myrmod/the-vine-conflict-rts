@@ -1,5 +1,6 @@
-extends RefCounted
 class_name EditorCommand
+
+extends RefCounted
 
 ## Base class for undoable editor commands
 

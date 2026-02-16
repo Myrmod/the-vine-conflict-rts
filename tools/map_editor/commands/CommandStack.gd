@@ -1,5 +1,6 @@
-extends RefCounted
 class_name CommandStack
+
+extends RefCounted
 
 ## Manages undo/redo command history
 
@@ -15,11 +16,11 @@ func push_command(command: EditorCommand):
 	command.execute()
 	_undo_stack.append(command)
 	_redo_stack.clear()  # Clear redo stack when new command is executed
-	
+
 	# Limit history size
 	if _undo_stack.size() > _max_history:
 		_undo_stack.pop_front()
-	
+
 	history_changed.emit()
 
 
@@ -35,7 +36,7 @@ func undo():
 	"""Undo the last command"""
 	if not can_undo():
 		return
-	
+
 	var command = _undo_stack.pop_back()
 	command.undo()
 	_redo_stack.append(command)
@@ -46,7 +47,7 @@ func redo():
 	"""Redo the last undone command"""
 	if not can_redo():
 		return
-	
+
 	var command = _redo_stack.pop_back()
 	command.execute()
 	_undo_stack.append(command)

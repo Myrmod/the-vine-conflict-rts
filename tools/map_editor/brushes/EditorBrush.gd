@@ -1,5 +1,6 @@
-extends RefCounted
 class_name EditorBrush
+
+extends RefCounted
 
 ## Base class for all editor brushes
 ## Brushes handle painting/placing operations on the map
@@ -38,7 +39,7 @@ func get_affected_positions(cell_pos: Vector2i) -> Array[Vector2i]:
 		positions = symmetry_system.get_symmetric_positions(cell_pos)
 	else:
 		positions = [cell_pos]
-	
+
 	# Filter to only in-bounds positions
 	return positions.filter(func(p): return _is_in_bounds(p))
 
