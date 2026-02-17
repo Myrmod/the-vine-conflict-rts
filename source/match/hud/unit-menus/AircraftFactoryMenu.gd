@@ -1,7 +1,7 @@
 extends GridHotkeys
 
-const HelicopterUnit = preload("res://source/match/units/Helicopter.tscn")
-const DroneUnit = preload("res://source/match/units/Drone.tscn")
+const HelicopterUnit = preload("res://source/factions/the_amuns/units/Helicopter.tscn")
+const DroneUnit = preload("res://source/factions/the_amuns/units/Drone.tscn")
 
 var unit = null
 
@@ -11,9 +11,7 @@ var unit = null
 
 func _ready():
 	super._ready()
-	var helicopter_properties = UnitConstants.DEFAULT_PROPERTIES[
-		HelicopterUnit.resource_path
-	]
+	var helicopter_properties = UnitConstants.DEFAULT_PROPERTIES[HelicopterUnit.resource_path]
 	_helicopter_button.tooltip_text = ("{0} - {1}\n{2} HP, {3} DPS\n{4}: {5}, {6}: {7}".format(
 		[
 			tr("HELICOPTER"),
@@ -40,16 +38,22 @@ func _ready():
 
 
 func _on_produce_helicopter_button_pressed():
-	ProductionQueue._generate_unit_production_command(
-		unit.id,
-		DroneUnit.resource_path,
-		unit.player.id,
+	(
+		ProductionQueue
+		. _generate_unit_production_command(
+			unit.id,
+			DroneUnit.resource_path,
+			unit.player.id,
+		)
 	)
 
 
 func _on_produce_drone_button_pressed():
-	ProductionQueue._generate_unit_production_command(
-		unit.id,
-		DroneUnit.resource_path,
-		unit.player.id,
+	(
+		ProductionQueue
+		. _generate_unit_production_command(
+			unit.id,
+			DroneUnit.resource_path,
+			unit.player.id,
+		)
 	)

@@ -1,9 +1,9 @@
 [gd_scene format=3 uid="uid://h5lqor1xl2sf"]
 
-[ext_resource type="Script" uid="uid://cg14emxh4u6oc" path="res://source/match/units/VehicleFactory.gd" id="1_1a20j"]
+[ext_resource type="Script" uid="uid://cg14emxh4u6oc" path="res://source/factions/the_amuns/structures/VehicleFactory.gd" id="1_1a20j"]
 [ext_resource type="PackedScene" uid="uid://cgsi062w5fjia" path="res://source/match/units/traits/Highlight.tscn" id="1_8fcgb"]
 [ext_resource type="PackedScene" uid="uid://3c1h14nqdumt" path="res://source/match/units/traits/Selection.tscn" id="2_h27kt"]
-[ext_resource type="PackedScene" uid="uid://inepf56pyube" path="res://source/match/units/structure-geometries/VehicleFactory.tscn" id="2_j6xs6"]
+[ext_resource type="PackedScene" uid="uid://inepf56pyube" path="res://source/factions/the_amuns/structures/structure-geometries/VehicleFactory.tscn" id="2_j6xs6"]
 [ext_resource type="PackedScene" uid="uid://d4cwip5hpxlmo" path="res://source/match/units/traits/MovementObstacle.tscn" id="3_cp6bx"]
 [ext_resource type="PackedScene" uid="uid://c3ssj2p6voauk" path="res://source/match/units/traits/HealthBar.tscn" id="4_xd2eg"]
 [ext_resource type="PackedScene" uid="uid://d4cm4yhtf11ur" path="res://source/match/units/traits/Targetability.tscn" id="7_j4kwk"]

@@ -28,9 +28,7 @@ class_name Match
 const Structure = preload("res://source/match/units/Structure.gd")
 const Human = preload("res://source/match/players/human/Human.gd")
 
-const CommandCenter = preload("res://source/match/units/CommandCenter.tscn")
-const Drone = preload("res://source/match/units/Drone.tscn")
-const Worker = preload("res://source/match/units/Worker.tscn")
+const CommandCenter = preload("res://source/factions/the_amuns/structures/CommandCenter.tscn")
 
 @export var settings: Resource = null
 
@@ -61,7 +59,8 @@ static var tick := 0
 # produces the same sequence. Static so controllers and utils can access it directly.
 static var rng := RandomNumberGenerator.new()
 
-const TICK_RATE := 10 # RTS logic ticks per second
+const TICK_RATE := 10  # RTS logic ticks per second
+
 
 func _enter_tree():
 	assert(settings != null, "match cannot start without settings, see examples in tests/manual/")
@@ -101,12 +100,15 @@ func _ready():
 # COMMAND INFRASTRUCTURE
 # ──────────────────────────────────────────────────────────────────────
 
+
 # Parse a target entry from command data into a normalised dictionary.
 # Target entries use the deterministic schema: { "unit": int, "pos": Vector3?, "rot": Vector3? }
 # No object references — only IDs and positions. This is what makes replay serialisation work.
 func _parse_target_entry(entry: Variant, command_name: String) -> Dictionary:
 	if typeof(entry) != TYPE_DICTIONARY:
-		push_error("%s command: target entry must be Dictionary, got %s" % [command_name, typeof(entry)])
+		push_error(
+			"%s command: target entry must be Dictionary, got %s" % [command_name, typeof(entry)]
+		)
 		return {}
 	var unit_id = entry.get("unit", null)
 	if unit_id == null:
@@ -148,9 +150,12 @@ func _resolve_player(player_id: int, context: String):
 # Verify that a unit belongs to the commanding player. Returns true if valid.
 func _verify_unit_ownership(unit, player_id: int, context: String) -> bool:
 	if unit.player.id != player_id:
-		push_warning("%s: unit %s belongs to player %s, not commanding player %s" % [
-			context, unit.id, unit.player.id, player_id
-		])
+		push_warning(
+			(
+				"%s: unit %s belongs to player %s, not commanding player %s"
+				% [context, unit.id, unit.player.id, player_id]
+			)
+		)
 		return false
 	return true
 
@@ -158,6 +163,7 @@ func _verify_unit_ownership(unit, player_id: int, context: String) -> bool:
 # ──────────────────────────────────────────────────────────────────────
 # TICK LOOP
 # ──────────────────────────────────────────────────────────────────────
+
 
 # Called by the Timer at TICK_RATE Hz. Advances the deterministic tick counter
 # and executes all commands queued for this tick. This is the heartbeat of the
@@ -168,6 +174,7 @@ func _on_tick():
 	# Notify AI controllers and other tick-driven systems.
 	# This fires AFTER commands are executed, so listeners see up-to-date game state.
 	MatchSignals.tick_advanced.emit()
+
 
 # Fetch and execute every command for the current tick.
 # CommandBus decides the source: live queue during gameplay, replay data during playback.
@@ -193,6 +200,7 @@ func _process_commands_for_tick():
 #
 # If it changes game state, it MUST be a command type handled here.
 # ──────────────────────────────────────────────────────────────────────
+
 
 func _execute_command(cmd: Dictionary):
 	match cmd.type:
@@ -273,7 +281,12 @@ func _execute_command(cmd: Dictionary):
 				if not _verify_unit_ownership(unit, cmd.player_id, "AUTO_ATTACKING"):
 					continue
 				if not Actions.AutoAttacking.is_applicable(unit, target_unit):
-					push_warning("AUTO_ATTACKING: unit %s cannot attack target %s (no attack_range or wrong domain)" % [parsed["unit_id"], cmd.data.target_unit])
+					push_warning(
+						(
+							"AUTO_ATTACKING: unit %s cannot attack target %s (no attack_range or wrong domain)"
+							% [parsed["unit_id"], cmd.data.target_unit]
+						)
+					)
 					continue
 				unit.action = Actions.AutoAttacking.new(target_unit)
 
@@ -297,7 +310,12 @@ func _execute_command(cmd: Dictionary):
 				if not _verify_unit_ownership(unit, cmd.player_id, "CONSTRUCTING.constructor"):
 					continue
 				if not Actions.Constructing.is_applicable(unit, structure):
-					push_error("CONSTRUCTING: entity_id %s cannot construct structure %s" % [parsed["unit_id"], cmd.data.structure])
+					push_error(
+						(
+							"CONSTRUCTING: entity_id %s cannot construct structure %s"
+							% [parsed["unit_id"], cmd.data.structure]
+						)
+					)
 					continue
 				unit.action = Actions.Constructing.new(structure)
 
@@ -315,19 +333,26 @@ func _execute_command(cmd: Dictionary):
 				return
 			var self_constructing = cmd.data.get("self_constructing", false)
 			# Deduct construction cost (the single authority for resource changes)
-			var construction_cost = UnitConstants.DEFAULT_PROPERTIES.get(cmd.data.structure_prototype, {}).get("costs", null)
+			var construction_cost = (
+				UnitConstants
+				. DEFAULT_PROPERTIES
+				. get(cmd.data.structure_prototype, {})
+				. get("costs", null)
+			)
 			if construction_cost != null:
 				if not player.has_resources(construction_cost):
 					# This is expected in a tick-based system: the AI checks resources before queuing
 					# the command, but another command may have spent them by the time this executes.
-					push_warning("STRUCTURE_PLACED: player %s cannot afford %s" % [player.id, cmd.data.structure_prototype])
+					push_warning(
+						(
+							"STRUCTURE_PLACED: player %s cannot afford %s"
+							% [player.id, cmd.data.structure_prototype]
+						)
+					)
 					return
 				player.subtract_resources(construction_cost)
 			MatchSignals.setup_and_spawn_unit.emit(
-				structure_prototype.instantiate(),
-				cmd.data.transform,
-				player,
-				self_constructing
+				structure_prototype.instantiate(), cmd.data.transform, player, self_constructing
 			)
 
 		# ── PRODUCTION ────────────────────────────────────────────────
@@ -344,7 +369,9 @@ func _execute_command(cmd: Dictionary):
 				push_error("ENTITY_IS_QUEUED: cannot load %s" % cmd.data.unit_type)
 				return
 			if structure.has_node("ProductionQueue"):
-				structure.production_queue.produce(unit_prototype, cmd.data.get("ignore_limit", false))
+				structure.production_queue.produce(
+					unit_prototype, cmd.data.get("ignore_limit", false)
+				)
 
 		Enums.CommandType.ENTITY_PRODUCTION_CANCELED:
 			var structure = _resolve_unit(cmd.data.entity_id, "ENTITY_PRODUCTION_CANCELED")
@@ -389,10 +416,14 @@ func _execute_command(cmd: Dictionary):
 			if not _verify_unit_ownership(structure, cmd.player_id, "CANCEL_CONSTRUCTION"):
 				return
 			if not structure is Structure:
-				push_error("CANCEL_CONSTRUCTION: entity_id %s is not a Structure" % cmd.data.entity_id)
+				push_error(
+					"CANCEL_CONSTRUCTION: entity_id %s is not a Structure" % cmd.data.entity_id
+				)
 				return
 			if not structure.is_under_construction():
-				push_error("CANCEL_CONSTRUCTION: entity_id %s is already constructed" % cmd.data.entity_id)
+				push_error(
+					"CANCEL_CONSTRUCTION: entity_id %s is already constructed" % cmd.data.entity_id
+				)
 				return
 			# cancel_construction() refunds resources and queue_frees the structure
 			structure.cancel_construction()
@@ -422,7 +453,9 @@ func _execute_command(cmd: Dictionary):
 				return
 			var rally_point = structure.find_child("RallyPoint")
 			if rally_point == null:
-				push_error("SET_RALLY_POINT_TO_UNIT: entity_id %s has no RallyPoint" % cmd.data.entity_id)
+				push_error(
+					"SET_RALLY_POINT_TO_UNIT: entity_id %s has no RallyPoint" % cmd.data.entity_id
+				)
 				return
 			rally_point.target_unit = target_unit
 
@@ -549,15 +582,7 @@ func _setup_player_units():
 
 func _spawn_player_units(player, spawn_transform):
 	_setup_and_spawn_unit(CommandCenter.instantiate(), spawn_transform, player, false)
-	_setup_and_spawn_unit(
-		Drone.instantiate(), spawn_transform.translated(Vector3(-2, 0, -2)), player
-	)
-	_setup_and_spawn_unit(
-		Worker.instantiate(), spawn_transform.translated(Vector3(-3, 0, 3)), player
-	)
-	_setup_and_spawn_unit(
-		Worker.instantiate(), spawn_transform.translated(Vector3(3, 0, 3)), player
-	)
+	# starting units would be set here, e.g.: workers
 
 
 func _setup_and_spawn_unit(unit, a_transform, player, self_constructing = false):
@@ -576,7 +601,7 @@ func _setup_unit_groups(unit, player):
 		unit.add_to_group("controlled_units")
 	else:
 		unit.add_to_group("adversary_units")
-	
+
 	# TEAM-BASED VISION SHARING: Units are visible if their player is visible OR on same team.
 	# This is how team vision works: all units controlled by your team are automatically revealed.
 	# The UI systems (like FogOfWar) check for \"revealed_units\" group membership to decide what to show.

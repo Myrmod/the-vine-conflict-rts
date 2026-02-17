@@ -2,12 +2,12 @@ extends Node
 
 signal resources_required(resources, metadata)
 
-const Worker = preload("res://source/match/units/Worker.gd")
-const CommandCenter = preload("res://source/match/units/CommandCenter.gd")
-const AGTurret = preload("res://source/match/units/AntiGroundTurret.gd")
-const AGTurretScene = preload("res://source/match/units/AntiGroundTurret.tscn")
-const AATurret = preload("res://source/match/units/AntiAirTurret.gd")
-const AATurretScene = preload("res://source/match/units/AntiAirTurret.tscn")
+const Worker = preload("res://source/factions/the_amuns/units/Worker.gd")
+const CommandCenter = preload("res://source/factions/the_amuns/structures/CommandCenter.gd")
+const AGTurret = preload("res://source/factions/the_amuns/structures/AntiGroundTurret.gd")
+const AGTurretScene = preload("res://source/factions/the_amuns/structures/AntiGroundTurret.tscn")
+const AATurret = preload("res://source/factions/the_amuns/structures/AntiAirTurret.gd")
+const AATurretScene = preload("res://source/factions/the_amuns/structures/AntiAirTurret.tscn")
 
 # Tick-based refresh interval. At TICK_RATE 10, 5 ticks = 0.5 s.
 const REFRESH_INTERVAL_TICKS = 5
@@ -17,7 +17,6 @@ var _number_of_pending_ag_turret_resource_requests = 0
 var _number_of_pending_aa_turret_resource_requests = 0
 
 @onready var _ai = get_parent()
-
 
 var _ticks_until_refresh = REFRESH_INTERVAL_TICKS
 
@@ -149,16 +148,22 @@ func _construct_turret(turret_scene):
 	# Free the temporary instance used for radius/domain calculation
 	unit_to_spawn.free()
 	# Place structure through CommandBus — resources deducted by Match._execute_command()
-	CommandBus.push_command({
-		"tick": Match.tick + 1,
-		"type": Enums.CommandType.STRUCTURE_PLACED,
-		"player_id": _player.id,
-		"data": {
-			"structure_prototype": turret_scene.resource_path,
-			"transform": target_transform,
-			"self_constructing": true,
-		}
-	})
+	(
+		CommandBus
+		. push_command(
+			{
+				"tick": Match.tick + 1,
+				"type": Enums.CommandType.STRUCTURE_PLACED,
+				"player_id": _player.id,
+				"data":
+				{
+					"structure_prototype": turret_scene.resource_path,
+					"transform": target_transform,
+					"self_constructing": true,
+				}
+			}
+		)
+	)
 
 
 func _on_unit_died(unit):

@@ -1,6 +1,6 @@
-[gd_scene load_steps=15 format=3 uid="uid://e7tko4kpeiau"]
+[gd_scene format=3 uid="uid://e7tko4kpeiau"]
 
-[ext_resource type="Script" path="res://source/match/units/Helicopter.gd" id="1_4fna5"]
+[ext_resource type="Script" path="res://source/factions/the_amuns/units/Helicopter.gd" id="1_4fna5"]
 [ext_resource type="PackedScene" uid="uid://cgsi062w5fjia" path="res://source/match/units/traits/Highlight.tscn" id="1_nqs7t"]
 [ext_resource type="PackedScene" uid="uid://3c1h14nqdumt" path="res://source/match/units/traits/Selection.tscn" id="2_lki1x"]
 [ext_resource type="PackedScene" uid="uid://ivlo0e66qocl" path="res://source/match/units/traits/Movement.tscn" id="3_4ms8e"]

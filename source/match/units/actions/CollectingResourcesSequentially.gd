@@ -1,13 +1,13 @@
 extends "res://source/match/units/actions/Action.gd"
 
-enum State {NULL, MOVING_TO_RESOURCE, COLLECTING, MOVING_TO_CC}
+enum State { NULL, MOVING_TO_RESOURCE, COLLECTING, MOVING_TO_CC }
 
-const CommandCenter = preload("res://source/match/units/CommandCenter.gd")
+const CommandCenter = preload("res://source/factions/the_amuns/structures/CommandCenter.gd")
 const CollectingResourcesWhileInRange = preload(
 	"res://source/match/units/actions/CollectingResourcesWhileInRange.gd"
 )
 const MovingToUnit = preload("res://source/match/units/actions/MovingToUnit.gd")
-const Worker = preload("res://source/match/units/Worker.gd")
+const Worker = preload("res://source/factions/the_amuns/units/Worker.gd")
 const ResourceUnit = preload("res://source/match/units/non-player/ResourceUnit.gd")
 
 var _state := State.NULL
@@ -16,7 +16,7 @@ var _resource_unit = null
 var _cc_unit = null
 var _sub_action = null
 
-@onready var _unit = Utils.NodeEx.find_parent_with_group(self , "units")
+@onready var _unit = Utils.NodeEx.find_parent_with_group(self, "units")
 
 
 static func is_applicable(source_unit, target_unit):
@@ -41,7 +41,7 @@ func _ready():
 
 
 func _to_string():
-	return "{0}({1})".format([ super (), str(_sub_action) if _sub_action != null else ""])
+	return "{0}({1})".format([super(), str(_sub_action) if _sub_action != null else ""])
 
 
 func get_resource_unit():

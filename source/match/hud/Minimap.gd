@@ -83,6 +83,7 @@ func _sync_unit(unit):
 	var unit_pos_3d = unit.global_transform.origin
 	var unit_pos_2d = Vector2(unit_pos_3d.x, unit_pos_3d.z) * MINIMAP_PIXELS_PER_WORLD_METER
 	_unit_to_corresponding_node_mapping[unit].position = unit_pos_2d
+	print(unit)
 	_unit_to_corresponding_node_mapping[unit].color = (
 		unit.player.color if unit is Unit else unit.color
 	)

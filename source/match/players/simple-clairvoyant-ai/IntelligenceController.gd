@@ -15,7 +15,7 @@ const TARGET_SWITCHING_DELAY_MAX_TICKS = 10
 
 const MovingToUnitAction = preload("res://source/match/units/actions/MovingToUnit.gd")
 
-const Drone = preload("res://source/match/units/Drone.gd")
+const Drone = preload("res://source/factions/the_amuns/units/Drone.gd")
 
 var _player = null
 var _blacklisted_drone_target_paths = {}
@@ -81,15 +81,28 @@ func _navigate_to_random_unit(drone):
 	if not random_player_units_in_random_order.is_empty():
 		var target_unit = random_player_units_in_random_order.front()
 		_blacklisted_drone_target_paths[drone] = target_unit.get_path()
-		CommandBus.push_command({
-			"tick": Match.tick + 1,
-			"type": Enums.CommandType.MOVING_TO_UNIT,
-			"player_id": _player.id,
-			"data": {
-				"targets": [{"unit": drone.id, "pos": drone.global_position, "rot": drone.global_rotation}],
-				"target_unit": target_unit.id,
-			}
-		})
+		(
+			CommandBus
+			. push_command(
+				{
+					"tick": Match.tick + 1,
+					"type": Enums.CommandType.MOVING_TO_UNIT,
+					"player_id": _player.id,
+					"data":
+					{
+						"targets":
+						[
+							{
+								"unit": drone.id,
+								"pos": drone.global_position,
+								"rot": drone.global_rotation
+							}
+						],
+						"target_unit": target_unit.id,
+					}
+				}
+			)
+		)
 	else:
 		var units_in_random_order = get_tree().get_nodes_in_group("units").filter(
 			func(unit): return unit.player != _player and unit.player.team != _player.team
@@ -101,15 +114,28 @@ func _navigate_to_random_unit(drone):
 		if not units_in_random_order.is_empty():
 			var target_unit = units_in_random_order.front()
 			_blacklisted_drone_target_paths[drone] = target_unit.get_path()
-			CommandBus.push_command({
-				"tick": Match.tick + 1,
-				"type": Enums.CommandType.MOVING_TO_UNIT,
-				"player_id": _player.id,
-				"data": {
-					"targets": [{"unit": drone.id, "pos": drone.global_position, "rot": drone.global_rotation}],
-					"target_unit": target_unit.id,
-				}
-			})
+			(
+				CommandBus
+				. push_command(
+					{
+						"tick": Match.tick + 1,
+						"type": Enums.CommandType.MOVING_TO_UNIT,
+						"player_id": _player.id,
+						"data":
+						{
+							"targets":
+							[
+								{
+									"unit": drone.id,
+									"pos": drone.global_position,
+									"rot": drone.global_rotation
+								}
+							],
+							"target_unit": target_unit.id,
+						}
+					}
+				)
+			)
 
 
 func _on_tick_advanced():
@@ -130,7 +156,9 @@ func _on_tick_advanced():
 func _on_drone_action_changed(new_action, drone):
 	if new_action == null:
 		# Schedule retarget after a random tick delay (deterministic via seeded RNG).
-		var delay_ticks = Match.rng.randi_range(TARGET_SWITCHING_DELAY_MIN_TICKS, TARGET_SWITCHING_DELAY_MAX_TICKS)
+		var delay_ticks = Match.rng.randi_range(
+			TARGET_SWITCHING_DELAY_MIN_TICKS, TARGET_SWITCHING_DELAY_MAX_TICKS
+		)
 		_pending_drone_retargets[drone] = Match.tick + delay_ticks
 
 

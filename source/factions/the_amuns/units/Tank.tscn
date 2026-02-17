@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://i58ffvwxbbwm"]
 
 [ext_resource type="PackedScene" uid="uid://cgsi062w5fjia" path="res://source/match/units/traits/Highlight.tscn" id="1_n4t54"]
-[ext_resource type="Script" uid="uid://dmcpcep6jedgx" path="res://source/match/units/Tank.gd" id="1_npbka"]
+[ext_resource type="Script" uid="uid://dmcpcep6jedgx" path="res://source/factions/the_amuns/units/Tank.gd" id="1_npbka"]
 [ext_resource type="PackedScene" uid="uid://bm8n8g2h8yi1p" path="res://assets/models/kenney-spacekit/craft_cargoB.glb" id="2_464dm"]
 [ext_resource type="PackedScene" uid="uid://3c1h14nqdumt" path="res://source/match/units/traits/Selection.tscn" id="2_mbcqe"]
 [ext_resource type="PackedScene" uid="uid://ivlo0e66qocl" path="res://source/match/units/traits/Movement.tscn" id="3_4m8ma"]

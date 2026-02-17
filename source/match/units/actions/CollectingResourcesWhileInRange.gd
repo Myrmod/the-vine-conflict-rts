@@ -1,12 +1,12 @@
 extends "res://source/match/units/actions/Action.gd"
 
-const Worker = preload("res://source/match/units/Worker.gd")
+const Worker = preload("res://source/factions/the_amuns/units/Worker.gd")
 const ResourceUnit = preload("res://source/match/units/non-player/ResourceUnit.gd")
 
 var _resource_unit = null
 var _timer = null
 
-@onready var _unit = Utils.NodeEx.find_parent_with_group(self , "units")
+@onready var _unit = Utils.NodeEx.find_parent_with_group(self, "units")
 @onready var _unit_movement_trait = _unit.find_child("Movement")
 
 

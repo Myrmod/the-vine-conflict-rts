@@ -1,7 +1,7 @@
 extends GridHotkeys
 
-const WorkerUnit = preload("res://source/match/units/Worker.tscn")
-const TankUnit = preload("res://source/match/units/Tank.tscn")
+const WorkerUnit = preload("res://source/factions/the_amuns/units/Worker.tscn")
+const TankUnit = preload("res://source/factions/the_amuns/units/Tank.tscn")
 
 var unit = null
 
@@ -36,16 +36,24 @@ func _ready():
 		]
 	))
 
+
 func _on_produce_worker_button_pressed():
-	ProductionQueue._generate_unit_production_command(
-		unit.id,
-		WorkerUnit.resource_path,
-		unit.player.id,
+	(
+		ProductionQueue
+		. _generate_unit_production_command(
+			unit.id,
+			WorkerUnit.resource_path,
+			unit.player.id,
+		)
 	)
 
+
 func _on_produce_tank_button_pressed():
-	ProductionQueue._generate_unit_production_command(
-		unit.id,
-		TankUnit.resource_path,
-		unit.player.id,
+	(
+		ProductionQueue
+		. _generate_unit_production_command(
+			unit.id,
+			TankUnit.resource_path,
+			unit.player.id,
+		)
 	)

@@ -1,8 +1,8 @@
 [gd_scene format=3 uid="uid://ct0ejt0trkhrf"]
 
-[ext_resource type="Script" uid="uid://bkmpfv4oblv5h" path="res://source/match/units/CommandCenter.gd" id="1_hpo2s"]
+[ext_resource type="Script" uid="uid://bkmpfv4oblv5h" path="res://source/factions/the_amuns/structures/CommandCenter.gd" id="1_hpo2s"]
 [ext_resource type="PackedScene" uid="uid://cgsi062w5fjia" path="res://source/match/units/traits/Highlight.tscn" id="2_c41i5"]
-[ext_resource type="PackedScene" uid="uid://bxx81l3t16rrs" path="res://source/match/units/structure-geometries/CommandCenter.tscn" id="2_hwq4d"]
+[ext_resource type="PackedScene" uid="uid://bxx81l3t16rrs" path="res://source/factions/the_amuns/structures/structure-geometries/CommandCenter.tscn" id="2_hwq4d"]
 [ext_resource type="PackedScene" uid="uid://3c1h14nqdumt" path="res://source/match/units/traits/Selection.tscn" id="3_slmue"]
 [ext_resource type="PackedScene" uid="uid://d4cwip5hpxlmo" path="res://source/match/units/traits/MovementObstacle.tscn" id="4_f5u8t"]
 [ext_resource type="PackedScene" uid="uid://c3ssj2p6voauk" path="res://source/match/units/traits/HealthBar.tscn" id="5_xuulo"]

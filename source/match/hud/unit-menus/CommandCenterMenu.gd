@@ -1,10 +1,14 @@
 extends GridHotkeys
 
-const CommandCenterUnit = preload("res://source/match/units/CommandCenter.tscn")
-const VehicleFactoryUnit = preload("res://source/match/units/VehicleFactory.tscn")
-const AircraftFactoryUnit = preload("res://source/match/units/AircraftFactory.tscn")
-const AntiGroundTurretUnit = preload("res://source/match/units/AntiGroundTurret.tscn")
-const AntiAirTurretUnit = preload("res://source/match/units/AntiAirTurret.tscn")
+const CommandCenterUnit = preload("res://source/factions/the_amuns/structures/CommandCenter.tscn")
+const VehicleFactoryUnit = preload("res://source/factions/the_amuns/structures/VehicleFactory.tscn")
+const AircraftFactoryUnit = preload(
+	"res://source/factions/the_amuns/structures/AircraftFactory.tscn"
+)
+const AntiGroundTurretUnit = preload(
+	"res://source/factions/the_amuns/structures/AntiGroundTurret.tscn"
+)
+const AntiAirTurretUnit = preload("res://source/factions/the_amuns/structures/AntiAirTurret.tscn")
 
 @onready var _ag_turret_button = find_child("PlaceAntiGroundTurretButton")
 @onready var _aa_turret_button = find_child("PlaceAntiAirTurretButton")
@@ -17,9 +21,7 @@ var unit = null
 
 func _ready():
 	super._ready()
-	var ag_turret_properties = UnitConstants.DEFAULT_PROPERTIES[
-		AntiGroundTurretUnit.resource_path
-	]
+	var ag_turret_properties = UnitConstants.DEFAULT_PROPERTIES[AntiGroundTurretUnit.resource_path]
 	_ag_turret_button.tooltip_text = ("{0} - {1}\n{2} HP, {3} DPS\n{4}: {5}, {6}: {7}".format(
 		[
 			tr("AG_TURRET"),
@@ -29,18 +31,16 @@ func _ready():
 			tr("RESOURCE_A"),
 			(
 				UnitConstants
-				.DEFAULT_PROPERTIES[AntiGroundTurretUnit.resource_path]["costs"]["resource_a"]
+				. DEFAULT_PROPERTIES[AntiGroundTurretUnit.resource_path]["costs"]["resource_a"]
 			),
 			tr("RESOURCE_B"),
 			(
 				UnitConstants
-				.DEFAULT_PROPERTIES[AntiGroundTurretUnit.resource_path]["costs"]["resource_b"]
+				. DEFAULT_PROPERTIES[AntiGroundTurretUnit.resource_path]["costs"]["resource_b"]
 			)
 		]
 	))
-	var aa_turret_properties = UnitConstants.DEFAULT_PROPERTIES[
-		AntiAirTurretUnit.resource_path
-	]
+	var aa_turret_properties = UnitConstants.DEFAULT_PROPERTIES[AntiAirTurretUnit.resource_path]
 	_aa_turret_button.tooltip_text = ("{0} - {1}\n{2} HP, {3} DPS\n{4}: {5}, {6}: {7}".format(
 		[
 			tr("AA_TURRET"),
@@ -48,7 +48,10 @@ func _ready():
 			aa_turret_properties["hp_max"],
 			aa_turret_properties["attack_damage"] * aa_turret_properties["attack_interval"],
 			tr("RESOURCE_A"),
-			UnitConstants.DEFAULT_PROPERTIES[AntiAirTurretUnit.resource_path]["costs"]["resource_a"],
+			(
+				UnitConstants
+				. DEFAULT_PROPERTIES[AntiAirTurretUnit.resource_path]["costs"]["resource_a"]
+			),
 			tr("RESOURCE_B"),
 			UnitConstants.DEFAULT_PROPERTIES[AntiAirTurretUnit.resource_path]["costs"]["resource_b"]
 		]
@@ -59,7 +62,10 @@ func _ready():
 			tr("CC_DESCRIPTION"),
 			UnitConstants.DEFAULT_PROPERTIES[CommandCenterUnit.resource_path]["hp_max"],
 			tr("RESOURCE_A"),
-			UnitConstants.DEFAULT_PROPERTIES[CommandCenterUnit.resource_path]["costs"]["resource_a"],
+			(
+				UnitConstants
+				. DEFAULT_PROPERTIES[CommandCenterUnit.resource_path]["costs"]["resource_a"]
+			),
 			tr("RESOURCE_B"),
 			UnitConstants.DEFAULT_PROPERTIES[CommandCenterUnit.resource_path]["costs"]["resource_b"]
 		]
@@ -72,10 +78,13 @@ func _ready():
 			tr("RESOURCE_A"),
 			(
 				UnitConstants
-				.DEFAULT_PROPERTIES[VehicleFactoryUnit.resource_path]["costs"]["resource_a"]
+				. DEFAULT_PROPERTIES[VehicleFactoryUnit.resource_path]["costs"]["resource_a"]
 			),
 			tr("RESOURCE_B"),
-			UnitConstants.DEFAULT_PROPERTIES[VehicleFactoryUnit.resource_path]["costs"]["resource_b"]
+			(
+				UnitConstants
+				. DEFAULT_PROPERTIES[VehicleFactoryUnit.resource_path]["costs"]["resource_b"]
+			)
 		]
 	))
 	_aircraft_factory_button.tooltip_text = ("{0} - {1}\n{2} HP\n{3}: {4}, {5}: {6}".format(
@@ -86,12 +95,12 @@ func _ready():
 			tr("RESOURCE_A"),
 			(
 				UnitConstants
-				.DEFAULT_PROPERTIES[AircraftFactoryUnit.resource_path]["costs"]["resource_a"]
+				. DEFAULT_PROPERTIES[AircraftFactoryUnit.resource_path]["costs"]["resource_a"]
 			),
 			tr("RESOURCE_B"),
 			(
 				UnitConstants
-				.DEFAULT_PROPERTIES[AircraftFactoryUnit.resource_path]["costs"]["resource_b"]
+				. DEFAULT_PROPERTIES[AircraftFactoryUnit.resource_path]["costs"]["resource_b"]
 			)
 		]
 	))

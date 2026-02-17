@@ -1,10 +1,10 @@
-extends Node3D
-
 class_name Player
+
+extends Node3D
 
 signal changed
 
-@export var resource_a = 0:
+@export var resource_a = 10:
 	set(value):
 		resource_a = value
 		emit_changed()
@@ -22,6 +22,7 @@ var id: int
 # Default (0) is assigned by Play.gd: first player=team 0, second player=team 1, etc.
 # Custom team values can be set to create alliances or custom match configurations.
 var team: int = 0
+
 
 func _ready():
 	id = PlayerManager.add_player()

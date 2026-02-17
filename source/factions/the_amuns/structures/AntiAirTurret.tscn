@@ -1,8 +1,8 @@
 [gd_scene format=3 uid="uid://cfa8cpnpk5pcb"]
 
-[ext_resource type="Script" uid="uid://vp4u2gmayjii" path="res://source/match/units/AntiAirTurret.gd" id="1_ec2s5"]
+[ext_resource type="Script" uid="uid://vp4u2gmayjii" path="res://source/factions/the_amuns/structures/AntiAirTurret.gd" id="1_ec2s5"]
 [ext_resource type="PackedScene" uid="uid://cgsi062w5fjia" path="res://source/match/units/traits/Highlight.tscn" id="1_tbjvv"]
-[ext_resource type="PackedScene" uid="uid://cm3iqdsdeo625" path="res://source/match/units/structure-geometries/AntiAirTurret.tscn" id="2_bhouy"]
+[ext_resource type="PackedScene" uid="uid://cm3iqdsdeo625" path="res://source/factions/the_amuns/structures/structure-geometries/AntiAirTurret.tscn" id="2_bhouy"]
 [ext_resource type="PackedScene" uid="uid://3c1h14nqdumt" path="res://source/match/units/traits/Selection.tscn" id="2_ookx0"]
 [ext_resource type="PackedScene" uid="uid://d4cwip5hpxlmo" path="res://source/match/units/traits/MovementObstacle.tscn" id="3_hgb44"]
 [ext_resource type="PackedScene" uid="uid://c3ssj2p6voauk" path="res://source/match/units/traits/HealthBar.tscn" id="4_qhoj1"]

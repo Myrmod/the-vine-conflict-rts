@@ -4,7 +4,7 @@
 # then ConstructingWhileInRange performs the actual work.
 extends "res://source/match/units/actions/Action.gd"
 
-const Worker = preload("res://source/match/units/Worker.gd")
+const Worker = preload("res://source/factions/the_amuns/units/Worker.gd")
 const Structure = preload("res://source/match/units/Structure.gd")
 const MovingToUnit = preload("res://source/match/units/actions/MovingToUnit.gd")
 const ConstructingWhileInRange = preload(
@@ -14,7 +14,7 @@ const ConstructingWhileInRange = preload(
 var _target_unit = null
 var _sub_action = null
 
-@onready var _unit = Utils.NodeEx.find_parent_with_group(self , "units")
+@onready var _unit = Utils.NodeEx.find_parent_with_group(self, "units")
 
 
 # Validate construction is legal: must be Worker → uncompleted Structure, same player
@@ -51,7 +51,7 @@ func _construct_or_move_closer():
 
 
 func _to_string():
-	return "{0}({1})".format([ super (), str(_sub_action) if _sub_action != null else ""])
+	return "{0}({1})".format([super(), str(_sub_action) if _sub_action != null else ""])
 
 
 func _on_sub_action_finished():

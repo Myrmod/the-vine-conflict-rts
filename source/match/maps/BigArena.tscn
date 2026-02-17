@@ -2,9 +2,9 @@
 
 [ext_resource type="PackedScene" uid="uid://b7c1crf36x1li" path="res://source/match/Map.tscn" id="1_c0hq7"]
 [ext_resource type="Material" uid="uid://co8vfcoqqs5i8" path="res://source/match/resources/materials/terrain.material.tres" id="2_hmoqb"]
-[ext_resource type="PackedScene" uid="uid://bf3jjdafqvh0w" path="res://source/match/units/non-player/ResourceA.tscn" id="3_qa7u8"]
-[ext_resource type="PackedScene" uid="uid://bufgjfa3ne3uk" path="res://source/match/units/non-player/ResourceB.tscn" id="4_un678"]
-[ext_resource type="PackedScene" uid="uid://btor1402wkw8k" path="res://source/match/decorations/RockLargeA.tscn" id="5_blryv"]
+[ext_resource type="PackedScene" uid="uid://bf3jjdafqvh0w" path="res://source/factions/neutral/structures/ResourceA.tscn" id="3_qa7u8"]
+[ext_resource type="PackedScene" uid="uid://bufgjfa3ne3uk" path="res://source/factions/neutral/structures/ResourceB.tscn" id="4_un678"]
+[ext_resource type="PackedScene" uid="uid://btor1402wkw8k" path="res://source/decorations/RockLargeA.tscn" id="5_blryv"]
 
 [sub_resource type="PlaneMesh" id="PlaneMesh_w1pt1"]
 resource_local_to_scene = true
