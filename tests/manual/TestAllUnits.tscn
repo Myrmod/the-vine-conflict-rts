@@ -15,7 +15,6 @@
 [ext_resource type="PackedScene" uid="uid://dh8dedilkhuoy" path="res://source/match/players/human/Human.tscn" id="5_tlbff"]
 [ext_resource type="PackedScene" uid="uid://bf3jjdafqvh0w" path="res://source/factions/neutral/structures/ResourceA.tscn" id="6_414qe"]
 [ext_resource type="PackedScene" uid="uid://cfa8cpnpk5pcb" path="res://source/factions/the_amuns/structures/AntiAirTurret.tscn" id="6_lglnp"]
-[ext_resource type="PackedScene" uid="uid://bufgjfa3ne3uk" path="res://source/factions/neutral/structures/ResourceB.tscn" id="7_g0wbf"]
 [ext_resource type="PackedScene" uid="uid://i58ffvwxbbwm" path="res://source/factions/the_amuns/units/Tank.tscn" id="9_csgr3"]
 [ext_resource type="PackedScene" uid="uid://bf0r3fovbvf1m" path="res://source/factions/the_amuns/units/Worker.tscn" id="10_c3eov"]
 [ext_resource type="Shader" path="res://source/shaders/2d/white_transparent.gdshader" id="16_mqpbu"]
@@ -77,9 +76,6 @@ resource_a = 2
 transform = Transform3D(0.157813, 0, -0.987469, 0, 1, 0, 0.987469, 0, 0.157813, 11.6939, -7.15256e-06, 17.7958)
 resource_a = 2
 
-[node name="ResourceB5" parent="Map/Resources" index="10" instance=ExtResource("7_g0wbf")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12.9437, -7.62939e-06, 16.1825)
-resource_b = 2
 
 [node name="Human" parent="Players" index="0" instance=ExtResource("5_tlbff")]
 

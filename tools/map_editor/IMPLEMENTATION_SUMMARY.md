@@ -178,8 +178,6 @@ The following need testing in Godot editor:
 
 4. **Navigation Baking**: Not integrated. Maps can be created but navigation mesh generation would need to be added to runtime map loading.
 
-5. **Resource Node Types**: Currently supports single resource type string, could be expanded to support ResourceA/ResourceB from game.
-
 ## How to Test
 
 1. **Open in Godot 4.6**:

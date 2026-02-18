@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" uid="uid://ckm24mh7vimg7" path="res://source/factions/neutral/structures/ResourceA.gd" id="1_3daqx"]
 [ext_resource type="PackedScene" uid="uid://cgsi062w5fjia" path="res://source/match/units/traits/Highlight.tscn" id="1_d3pi2"]
-[ext_resource type="PackedScene" uid="uid://4jj1yjsdku8f" path="res://assets/models/kenney-spacekit/rock_crystalsLargeA.glb" id="2_0hxur"]
+[ext_resource type="PackedScene" uid="uid://gf6dsimii60p" path="res://source/factions/neutral/structures/vines.glb" id="2_ag1am"]
 [ext_resource type="PackedScene" uid="uid://3c1h14nqdumt" path="res://source/match/units/traits/Selection.tscn" id="2_pgrb1"]
 [ext_resource type="PackedScene" uid="uid://d4cwip5hpxlmo" path="res://source/match/units/traits/MovementObstacle.tscn" id="3_xabt4"]
 [ext_resource type="PackedScene" uid="uid://d4cm4yhtf11ur" path="res://source/match/units/traits/Targetability.tscn" id="5_vqxvf"]
@@ -15,8 +15,8 @@ script = ExtResource("1_3daqx")
 
 [node name="Geometry" type="Node3D" parent="." unique_id=1814349527]
 
-[node name="rock_crystalsLargeA" parent="Geometry" unique_id=1817233458 instance=ExtResource("2_0hxur")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 0, -1.5)
+[node name="Model" parent="Geometry" unique_id=1457596080 instance=ExtResource("2_ag1am")]
+transform = Transform3D(0.08, 0, 0, 0, 0.08, 0, 0, 0, 0.08, 0, 0, 0)
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=1561615472]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.3, 0)

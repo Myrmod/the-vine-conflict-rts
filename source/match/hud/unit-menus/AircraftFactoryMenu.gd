@@ -12,29 +12,34 @@ var unit = null
 func _ready():
 	super._ready()
 	var helicopter_properties = UnitConstants.DEFAULT_PROPERTIES[HelicopterUnit.resource_path]
-	_helicopter_button.tooltip_text = ("{0} - {1}\n{2} HP, {3} DPS\n{4}: {5}, {6}: {7}".format(
-		[
-			tr("HELICOPTER"),
-			tr("HELICOPTER_DESCRIPTION"),
-			helicopter_properties["hp_max"],
-			helicopter_properties["attack_damage"] * helicopter_properties["attack_interval"],
-			tr("RESOURCE_A"),
-			UnitConstants.DEFAULT_PROPERTIES[HelicopterUnit.resource_path]["costs"]["resource_a"],
-			tr("RESOURCE_B"),
-			UnitConstants.DEFAULT_PROPERTIES[HelicopterUnit.resource_path]["costs"]["resource_b"]
-		]
-	))
-	_drone_button.tooltip_text = ("{0} - {1}\n{2} HP\n{3}: {4}, {5}: {6}".format(
-		[
-			tr("DRONE"),
-			tr("DRONE_DESCRIPTION"),
-			UnitConstants.DEFAULT_PROPERTIES[DroneUnit.resource_path]["hp_max"],
-			tr("RESOURCE_A"),
-			UnitConstants.DEFAULT_PROPERTIES[DroneUnit.resource_path]["costs"]["resource_a"],
-			tr("RESOURCE_B"),
-			UnitConstants.DEFAULT_PROPERTIES[DroneUnit.resource_path]["costs"]["resource_b"]
-		]
-	))
+	_helicopter_button.tooltip_text = (
+		"{0} - {1}\n{2} HP, {3} DPS\n{4}: {5}, {6}: {7}"
+		. format(
+			[
+				tr("HELICOPTER"),
+				tr("HELICOPTER_DESCRIPTION"),
+				helicopter_properties["hp_max"],
+				helicopter_properties["attack_damage"] * helicopter_properties["attack_interval"],
+				tr("RESOURCE_A"),
+				(
+					UnitConstants
+					. DEFAULT_PROPERTIES[HelicopterUnit.resource_path]["costs"]["resource_a"]
+				),
+			]
+		)
+	)
+	_drone_button.tooltip_text = (
+		"{0} - {1}\n{2} HP\n{3}: {4}, {5}: {6}"
+		. format(
+			[
+				tr("DRONE"),
+				tr("DRONE_DESCRIPTION"),
+				UnitConstants.DEFAULT_PROPERTIES[DroneUnit.resource_path]["hp_max"],
+				tr("RESOURCE_A"),
+				UnitConstants.DEFAULT_PROPERTIES[DroneUnit.resource_path]["costs"]["resource_a"],
+			]
+		)
+	)
 
 
 func _on_produce_helicopter_button_pressed():

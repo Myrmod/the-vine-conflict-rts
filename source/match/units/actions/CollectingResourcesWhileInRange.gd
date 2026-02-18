@@ -41,8 +41,6 @@ func _setup_timer():
 	add_child(_timer)
 	if "resource_a" in _resource_unit:
 		_timer.start(Resources.A.COLLECTING_TIME_S)
-	elif "resource_b" in _resource_unit:
-		_timer.start(Resources.B.COLLECTING_TIME_S)
 
 
 func _transfer_single_resource_unit_from_resource_to_worker():
@@ -52,9 +50,6 @@ func _transfer_single_resource_unit_from_resource_to_worker():
 	if "resource_a" in _resource_unit:
 		_resource_unit.resource_a -= 1
 		_unit.resource_a += 1
-	if "resource_b" in _resource_unit:
-		_resource_unit.resource_b -= 1
-		_unit.resource_b += 1
 	if _unit.is_full():
 		queue_free()
 

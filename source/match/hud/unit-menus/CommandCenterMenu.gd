@@ -22,88 +22,84 @@ var unit = null
 func _ready():
 	super._ready()
 	var ag_turret_properties = UnitConstants.DEFAULT_PROPERTIES[AntiGroundTurretUnit.resource_path]
-	_ag_turret_button.tooltip_text = ("{0} - {1}\n{2} HP, {3} DPS\n{4}: {5}, {6}: {7}".format(
-		[
-			tr("AG_TURRET"),
-			tr("AG_TURRET_DESCRIPTION"),
-			ag_turret_properties["hp_max"],
-			ag_turret_properties["attack_damage"] * ag_turret_properties["attack_interval"],
-			tr("RESOURCE_A"),
-			(
-				UnitConstants
-				. DEFAULT_PROPERTIES[AntiGroundTurretUnit.resource_path]["costs"]["resource_a"]
-			),
-			tr("RESOURCE_B"),
-			(
-				UnitConstants
-				. DEFAULT_PROPERTIES[AntiGroundTurretUnit.resource_path]["costs"]["resource_b"]
-			)
-		]
-	))
+	_ag_turret_button.tooltip_text = (
+		"{0} - {1}\n{2} HP, {3} DPS\n{4}: {5}, {6}: {7}"
+		. format(
+			[
+				tr("AG_TURRET"),
+				tr("AG_TURRET_DESCRIPTION"),
+				ag_turret_properties["hp_max"],
+				ag_turret_properties["attack_damage"] * ag_turret_properties["attack_interval"],
+				tr("RESOURCE_A"),
+				(
+					UnitConstants
+					. DEFAULT_PROPERTIES[AntiGroundTurretUnit.resource_path]["costs"]["resource_a"]
+				),
+			]
+		)
+	)
 	var aa_turret_properties = UnitConstants.DEFAULT_PROPERTIES[AntiAirTurretUnit.resource_path]
-	_aa_turret_button.tooltip_text = ("{0} - {1}\n{2} HP, {3} DPS\n{4}: {5}, {6}: {7}".format(
-		[
-			tr("AA_TURRET"),
-			tr("AA_TURRET_DESCRIPTION"),
-			aa_turret_properties["hp_max"],
-			aa_turret_properties["attack_damage"] * aa_turret_properties["attack_interval"],
-			tr("RESOURCE_A"),
-			(
-				UnitConstants
-				. DEFAULT_PROPERTIES[AntiAirTurretUnit.resource_path]["costs"]["resource_a"]
-			),
-			tr("RESOURCE_B"),
-			UnitConstants.DEFAULT_PROPERTIES[AntiAirTurretUnit.resource_path]["costs"]["resource_b"]
-		]
-	))
-	_cc_button.tooltip_text = ("{0} - {1}\n{2} HP\n{3}: {4}, {5}: {6}".format(
-		[
-			tr("CC"),
-			tr("CC_DESCRIPTION"),
-			UnitConstants.DEFAULT_PROPERTIES[CommandCenterUnit.resource_path]["hp_max"],
-			tr("RESOURCE_A"),
-			(
-				UnitConstants
-				. DEFAULT_PROPERTIES[CommandCenterUnit.resource_path]["costs"]["resource_a"]
-			),
-			tr("RESOURCE_B"),
-			UnitConstants.DEFAULT_PROPERTIES[CommandCenterUnit.resource_path]["costs"]["resource_b"]
-		]
-	))
-	_vehicle_factory_button.tooltip_text = ("{0} - {1}\n{2} HP\n{3}: {4}, {5}: {6}".format(
-		[
-			tr("VEHICLE_FACTORY"),
-			tr("VEHICLE_FACTORY_DESCRIPTION"),
-			UnitConstants.DEFAULT_PROPERTIES[VehicleFactoryUnit.resource_path]["hp_max"],
-			tr("RESOURCE_A"),
-			(
-				UnitConstants
-				. DEFAULT_PROPERTIES[VehicleFactoryUnit.resource_path]["costs"]["resource_a"]
-			),
-			tr("RESOURCE_B"),
-			(
-				UnitConstants
-				. DEFAULT_PROPERTIES[VehicleFactoryUnit.resource_path]["costs"]["resource_b"]
-			)
-		]
-	))
-	_aircraft_factory_button.tooltip_text = ("{0} - {1}\n{2} HP\n{3}: {4}, {5}: {6}".format(
-		[
-			tr("AIRCRAFT_FACTORY"),
-			tr("AIRCRAFT_FACTORY_DESCRIPTION"),
-			UnitConstants.DEFAULT_PROPERTIES[AircraftFactoryUnit.resource_path]["hp_max"],
-			tr("RESOURCE_A"),
-			(
-				UnitConstants
-				. DEFAULT_PROPERTIES[AircraftFactoryUnit.resource_path]["costs"]["resource_a"]
-			),
-			tr("RESOURCE_B"),
-			(
-				UnitConstants
-				. DEFAULT_PROPERTIES[AircraftFactoryUnit.resource_path]["costs"]["resource_b"]
-			)
-		]
-	))
+	_aa_turret_button.tooltip_text = (
+		"{0} - {1}\n{2} HP, {3} DPS\n{4}: {5}, {6}: {7}"
+		. format(
+			[
+				tr("AA_TURRET"),
+				tr("AA_TURRET_DESCRIPTION"),
+				aa_turret_properties["hp_max"],
+				aa_turret_properties["attack_damage"] * aa_turret_properties["attack_interval"],
+				tr("RESOURCE_A"),
+				(
+					UnitConstants
+					. DEFAULT_PROPERTIES[AntiAirTurretUnit.resource_path]["costs"]["resource_a"]
+				),
+			]
+		)
+	)
+	_cc_button.tooltip_text = (
+		"{0} - {1}\n{2} HP\n{3}: {4}, {5}: {6}"
+		. format(
+			[
+				tr("CC"),
+				tr("CC_DESCRIPTION"),
+				UnitConstants.DEFAULT_PROPERTIES[CommandCenterUnit.resource_path]["hp_max"],
+				tr("RESOURCE_A"),
+				(
+					UnitConstants
+					. DEFAULT_PROPERTIES[CommandCenterUnit.resource_path]["costs"]["resource_a"]
+				),
+			]
+		)
+	)
+	_vehicle_factory_button.tooltip_text = (
+		"{0} - {1}\n{2} HP\n{3}: {4}, {5}: {6}"
+		. format(
+			[
+				tr("VEHICLE_FACTORY"),
+				tr("VEHICLE_FACTORY_DESCRIPTION"),
+				UnitConstants.DEFAULT_PROPERTIES[VehicleFactoryUnit.resource_path]["hp_max"],
+				tr("RESOURCE_A"),
+				(
+					UnitConstants
+					. DEFAULT_PROPERTIES[VehicleFactoryUnit.resource_path]["costs"]["resource_a"]
+				),
+			]
+		)
+	)
+	_aircraft_factory_button.tooltip_text = (
+		"{0} - {1}\n{2} HP\n{3}: {4}, {5}: {6}"
+		. format(
+			[
+				tr("AIRCRAFT_FACTORY"),
+				tr("AIRCRAFT_FACTORY_DESCRIPTION"),
+				UnitConstants.DEFAULT_PROPERTIES[AircraftFactoryUnit.resource_path]["hp_max"],
+				tr("RESOURCE_A"),
+				(
+					UnitConstants
+					. DEFAULT_PROPERTIES[AircraftFactoryUnit.resource_path]["costs"]["resource_a"]
+				),
+			]
+		)
+	)
 
 
 func _on_place_command_center_button_pressed():

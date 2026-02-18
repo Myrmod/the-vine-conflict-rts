@@ -41,6 +41,9 @@ func populate_neutral():
 	for c in neutral_container.get_children():
 		c.queue_free()
 
+	populate_container_with_scenes(
+		"res://source/factions/neutral/structures/ResourceNode/", neutral_container
+	)
 	populate_container_with_scenes("res://source/factions/neutral/structures/", neutral_container)
 
 

@@ -8,10 +8,7 @@ signal changed
 	set(value):
 		resource_a = value
 		emit_changed()
-@export var resource_b = 0:
-	set(value):
-		resource_b = value
-		emit_changed()
+
 @export var color = Color.WHITE
 
 var _color_material = null

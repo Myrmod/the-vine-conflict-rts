@@ -19,7 +19,7 @@ const DEFAULT_PROPERTIES = {
 		"sight_range": 10.0,
 		"hp": 6,
 		"hp_max": 6,
-		"costs": {"resource_a": 2, "resource_b": 0},
+		"costs": {"resource_a": 2},
 		"build_time": 3.0,
 	},
 	"res://source/factions/the_amuns/units/Worker.tscn":
@@ -28,7 +28,7 @@ const DEFAULT_PROPERTIES = {
 		"hp": 6,
 		"hp_max": 6,
 		"resources_max": 2,
-		"costs": {"resource_a": 2, "resource_b": 0},
+		"costs": {"resource_a": 2},
 		"build_time": 3.0,
 	},
 	"res://source/factions/the_amuns/units/Helicopter.tscn":
@@ -44,7 +44,7 @@ const DEFAULT_PROPERTIES = {
 			NavigationConstants.Domain.TERRAIN,
 			NavigationConstants.Domain.AIR,
 		],
-		"costs": {"resource_a": 1, "resource_b": 3},
+		"costs": {"resource_a": 1},
 		"build_time": 6.0,
 	},
 	"res://source/factions/the_amuns/units/Tank.tscn":
@@ -59,7 +59,7 @@ const DEFAULT_PROPERTIES = {
 		[
 			NavigationConstants.Domain.TERRAIN,
 		],
-		"costs": {"resource_a": 3, "resource_b": 1},
+		"costs": {"resource_a": 3},
 		"build_time": 6.0,
 	},
 	"res://source/factions/the_amuns/structures/CommandCenter.tscn":
@@ -67,7 +67,7 @@ const DEFAULT_PROPERTIES = {
 		"sight_range": 10.0,
 		"hp": 20,
 		"hp_max": 20,
-		"costs": {"resource_a": 8, "resource_b": 8},
+		"costs": {"resource_a": 8},
 		"build_time": 10.0,
 	},
 	"res://source/factions/the_amuns/structures/VehicleFactory.tscn":
@@ -75,7 +75,7 @@ const DEFAULT_PROPERTIES = {
 		"sight_range": 8.0,
 		"hp": 16,
 		"hp_max": 16,
-		"costs": {"resource_a": 6, "resource_b": 0},
+		"costs": {"resource_a": 6},
 		"build_time": 8.0,
 	},
 	"res://source/factions/the_amuns/structures/AircraftFactory.tscn":
@@ -83,7 +83,7 @@ const DEFAULT_PROPERTIES = {
 		"sight_range": 8.0,
 		"hp": 16,
 		"hp_max": 16,
-		"costs": {"resource_a": 4, "resource_b": 4},
+		"costs": {"resource_a": 4},
 		"build_time": 8.0,
 	},
 	"res://source/factions/the_amuns/structures/AntiGroundTurret.tscn":
@@ -98,7 +98,7 @@ const DEFAULT_PROPERTIES = {
 		[
 			NavigationConstants.Domain.TERRAIN,
 		],
-		"costs": {"resource_a": 2, "resource_b": 2},
+		"costs": {"resource_a": 2},
 		"build_time": 5.0,
 	},
 	"res://source/factions/the_amuns/structures/AntiAirTurret.tscn":
@@ -113,7 +113,7 @@ const DEFAULT_PROPERTIES = {
 		[
 			NavigationConstants.Domain.AIR,
 		],
-		"costs": {"resource_a": 2, "resource_b": 2},
+		"costs": {"resource_a": 2},
 		"build_time": 5.0,
 	},
 }

@@ -16,15 +16,16 @@ var _camera_movement_active = false
 
 @export var MaxSize = 100
 
+
 func _ready():
 	if not FeatureFlags.show_minimap:
 		queue_free()
 	_remove_dummy_nodes()
 	await _match.ready  # make sure Match is ready as it may change map on setup
-	
-	var viewport_size = (_match.find_child("Map").size * MINIMAP_PIXELS_PER_WORLD_METER)
+
+	var viewport_size = _match.find_child("Map").size * MINIMAP_PIXELS_PER_WORLD_METER
 	find_child("MinimapViewport").size = viewport_size
-	
+
 	await get_tree().process_frame
 
 	get_parent().pivot_offset = Vector2(0, viewport_size.y)
@@ -34,7 +35,7 @@ func _ready():
 	if larger_dimension > MaxSize:
 		scale_factor = MaxSize / larger_dimension * 2
 	get_parent().scale = Vector2(scale_factor, scale_factor)
-	
+
 	_texture_rect.gui_input.connect(_on_gui_input)
 
 
@@ -83,7 +84,6 @@ func _sync_unit(unit):
 	var unit_pos_3d = unit.global_transform.origin
 	var unit_pos_2d = Vector2(unit_pos_3d.x, unit_pos_3d.z) * MINIMAP_PIXELS_PER_WORLD_METER
 	_unit_to_corresponding_node_mapping[unit].position = unit_pos_2d
-	print(unit)
 	_unit_to_corresponding_node_mapping[unit].color = (
 		unit.player.color if unit is Unit else unit.color
 	)
@@ -163,7 +163,7 @@ func _issue_movement_action(position_2d_within_texture_rect):
 	if world_position_2d == null:
 		return
 	var abstract_world_position_3d = Vector3(world_position_2d.x, 0, world_position_2d.y)
-	
+
 	#Leaving this temporarily because maybe the OG writer knew something I don't?
 	#var camera = get_viewport().get_camera_3d()
 	#var target_point_on_colliding_surface = camera.get_ray_intersection(
@@ -176,13 +176,14 @@ func _issue_movement_action(position_2d_within_texture_rect):
 	var ray_from = Vector3(world_position_2d.x, 1000.0, world_position_2d.y)
 	var ray_to = Vector3(world_position_2d.x, -1000.0, world_position_2d.y)
 	var query = PhysicsRayQueryParameters3D.create(ray_from, ray_to)
-	query.collision_mask = 1 #Landscape Collision channel
+	query.collision_mask = 1  #Landscape Collision channel
 	var result = space_state.intersect_ray(query)
 
 	if result:
 		MatchSignals.terrain_targeted.emit(result.position)
 	else:
 		MatchSignals.terrain_targeted.emit(abstract_world_position_3d)
+
 
 func _on_gui_input(event):
 	if event is InputEventMouseButton:

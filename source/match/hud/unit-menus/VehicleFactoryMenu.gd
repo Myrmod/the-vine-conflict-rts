@@ -11,30 +11,31 @@ var unit = null
 
 func _ready():
 	super._ready()
-	_worker_button.tooltip_text = ("{0} - {1}\n{2} HP\n{3}: {4}, {5}: {6}".format(
-		[
-			tr("WORKER"),
-			tr("WORKER_DESCRIPTION"),
-			UnitConstants.DEFAULT_PROPERTIES[WorkerUnit.resource_path]["hp_max"],
-			tr("RESOURCE_A"),
-			UnitConstants.DEFAULT_PROPERTIES[WorkerUnit.resource_path]["costs"]["resource_a"],
-			tr("RESOURCE_B"),
-			UnitConstants.DEFAULT_PROPERTIES[WorkerUnit.resource_path]["costs"]["resource_b"]
-		]
-	))
+	_worker_button.tooltip_text = (
+		"{0} - {1}\n{2} HP\n{3}: {4}, {5}: {6}"
+		. format(
+			[
+				tr("WORKER"),
+				tr("WORKER_DESCRIPTION"),
+				UnitConstants.DEFAULT_PROPERTIES[WorkerUnit.resource_path]["hp_max"],
+				tr("RESOURCE_A"),
+				UnitConstants.DEFAULT_PROPERTIES[WorkerUnit.resource_path]["costs"]["resource_a"],
+			]
+		)
+	)
 	var tank_properties = UnitConstants.DEFAULT_PROPERTIES[TankUnit.resource_path]
-	_tank_button.tooltip_text = ("{0} - {1}\n{2} HP, {3} DPS\n{4}: {5}, {6}: {7}".format(
-		[
-			tr("TANK"),
-			tr("TANK_DESCRIPTION"),
-			tank_properties["hp_max"],
-			tank_properties["attack_damage"] * tank_properties["attack_interval"],
-			tr("RESOURCE_A"),
-			UnitConstants.DEFAULT_PROPERTIES[TankUnit.resource_path]["costs"]["resource_a"],
-			tr("RESOURCE_B"),
-			UnitConstants.DEFAULT_PROPERTIES[TankUnit.resource_path]["costs"]["resource_b"]
-		]
-	))
+	_tank_button.tooltip_text = (
+		"{0} - {1}\n{2} HP, {3} DPS\n{4}: {5}, {6}: {7}"
+		. format(
+			[
+				tr("TANK"),
+				tr("TANK_DESCRIPTION"),
+				tank_properties["hp_max"],
+				tank_properties["attack_damage"] * tank_properties["attack_interval"],
+				tr("RESOURCE_A"),
+			]
+		)
+	)
 
 
 func _on_produce_worker_button_pressed():

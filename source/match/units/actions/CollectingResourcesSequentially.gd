@@ -113,9 +113,7 @@ func _set_cc_unit(cc_unit):
 
 func _transfer_collected_resources_to_player():
 	_unit.player.resource_a += _unit.resource_a
-	_unit.player.resource_b += _unit.resource_b
 	_unit.resource_a = 0
-	_unit.resource_b = 0
 
 
 func _find_closest_resource_unit_in_nearby_area():
