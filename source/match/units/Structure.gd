@@ -76,7 +76,7 @@ func cancel_construction():
 
 func _exit_tree():
 	if MatchGlobal.map != null:
-		MatchGlobal.map.free_area(_occupied_cell, _footprint)
+		MatchGlobal.map.clear_area(_occupied_cell, _footprint)
 
 
 func is_constructed():
