@@ -18,6 +18,9 @@ const MAPS = {
 		"size": Vector2i(100, 100),
 	},
 }
+const TICK_RATE: int = 10  # RTS logic ticks per second
+const VINE_SPAWN_RATE_IN_S: int = 30  # RTS logic ticks per second
+
 
 class VoiceNarrator:
 	enum Events {

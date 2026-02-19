@@ -1,6 +1,6 @@
-extends Node3D
-
 class_name Match
+
+extends Node3D
 
 # ──────────────────────────────────────────────────────────────────────
 # Match: The SINGLE POINT OF AUTHORITY for all game state changes.
@@ -59,8 +59,6 @@ static var tick := 0
 # produces the same sequence. Static so controllers and utils can access it directly.
 static var rng := RandomNumberGenerator.new()
 
-const TICK_RATE := 10  # RTS logic ticks per second
-
 
 func _enter_tree():
 	assert(settings != null, "match cannot start without settings, see examples in tests/manual/")
@@ -83,7 +81,7 @@ func _ready():
 
 	# Start the deterministic tick timer (10 ticks/sec = 100ms per tick)
 	var timer := Timer.new()
-	timer.wait_time = 1.0 / TICK_RATE
+	timer.wait_time = 1.0 / MatchConstants.TICK_RATE
 	timer.autostart = true
 	timer.timeout.connect(_on_tick)
 	add_child(timer)
@@ -475,6 +473,7 @@ func _set_map(a_map):
 	a_map.name = "Map"
 	add_child(a_map)
 	a_map.owner = self
+	MatchGlobal.map = a_map  # for static access by other classes, e.g. VineSpawner
 
 
 func _ignore(_value):

@@ -9,10 +9,23 @@ const UNDER_CONSTRUCTION_MATERIAL = preload(
 var _construction_progress = 1.0
 var _self_constructing = false
 var _self_construction_speed = 0.0
+var _occupied_cell: Vector2i
+var _footprint: Vector2i = Vector2i(1, 1)
 
 @onready var production_queue = find_child("ProductionQueue"):
 	set(_value):
 		pass
+
+
+func _ready():
+	super()
+	var map = MatchGlobal.map
+	if map == null:
+		push_error("Structure: MatchGlobal.map is null")
+		return
+
+	_occupied_cell = map.world_to_cell(global_position)
+	map.occupy_area(_occupied_cell, _footprint)
 
 
 func _process(delta):
@@ -21,7 +34,7 @@ func _process(delta):
 
 
 func is_revealing():
-	return super () and is_constructed()
+	return super() and is_constructed()
 
 
 func mark_as_under_construction(self_constructing = false):
@@ -30,7 +43,9 @@ func mark_as_under_construction(self_constructing = false):
 	_self_constructing = self_constructing
 	if _self_constructing:
 		var scene_path = get_script().resource_path.replace(".gd", ".tscn")
-		var construction_time = UnitConstants.DEFAULT_PROPERTIES.get(scene_path, {}).get("build_time", 5.0)
+		var construction_time = UnitConstants.DEFAULT_PROPERTIES.get(scene_path, {}).get(
+			"build_time", 5.0
+		)
 		_self_construction_speed = 1.0 / construction_time
 	_change_geometry_material(UNDER_CONSTRUCTION_MATERIAL)
 	if hp == null:
@@ -59,6 +74,11 @@ func cancel_construction():
 	queue_free()
 
 
+func _exit_tree():
+	if MatchGlobal.map != null:
+		MatchGlobal.map.free_area(_occupied_cell, _footprint)
+
+
 func is_constructed():
 	return _construction_progress >= 1.0
 
@@ -72,7 +92,7 @@ func _finish_construction():
 	_change_geometry_material(null)
 	if is_inside_tree():
 		constructed.emit()
-		MatchSignals.unit_construction_finished.emit(self )
+		MatchSignals.unit_construction_finished.emit(self)
 
 
 func _change_geometry_material(material):

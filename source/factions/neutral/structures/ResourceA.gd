@@ -25,5 +25,5 @@ func _setup_mesh_colors():
 	# gdlint: ignore = function-preload-variable-name
 	var material = preload(Resources.A.MATERIAL_PATH)
 	MatchUtils.traverse_node_tree_and_replace_materials_matching_albedo(
-		self , MATERIAL_ALBEDO_TO_REPLACE, MATERIAL_ALBEDO_TO_REPLACE_EPSILON, material
+		self, MATERIAL_ALBEDO_TO_REPLACE, MATERIAL_ALBEDO_TO_REPLACE_EPSILON, material
 	)

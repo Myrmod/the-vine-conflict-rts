@@ -34,6 +34,7 @@ ReplayRecorder="*uid://shseie6vv1ne"
 EntityRegistry="*uid://ih1cm60v3gld"
 GameData="*uid://ufpaci6ywatp"
 CommandType="*uid://fjmnrbmh4ujk"
+MatchGlobal="*uid://u8dmif40cejc"
 
 [debug]
 
