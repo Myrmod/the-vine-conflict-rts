@@ -11,7 +11,7 @@ const EXTRA_MARGIN = 2
 		find_child("Terrain").mesh.size = size + Vector2(EXTRA_MARGIN, EXTRA_MARGIN) * 2
 		find_child("Terrain").mesh.center_offset = Vector3(size.x, 0.0, size.y) / 2.0
 
-## Vector2i -> bool (occupied)
+## Vector2i -> bool || Enums.OccupationType (occupied)
 var _grid: Dictionary = {}
 
 
@@ -70,11 +70,11 @@ func is_area_free(cell: Vector2i, footprint: Vector2i) -> bool:
 	return true
 
 
-func occupy_area(cell: Vector2i, footprint: Vector2i) -> void:
+func occupy_area(cell: Vector2i, footprint: Vector2i, _type: Enums.OccupationType) -> void:
 	for x in range(footprint.x):
 		for y in range(footprint.y):
 			var c := Vector2i(cell.x + x, cell.y + y)
-			_grid[c] = true
+			_grid[c] = _type || true
 
 
 func clear_area(cell: Vector2i, footprint: Vector2i) -> void:
@@ -89,9 +89,11 @@ func is_world_area_free(world_pos: Vector3, footprint: Vector2i) -> bool:
 	return is_area_free(cell, footprint)
 
 
-func occupy_world_area(world_pos: Vector3, footprint: Vector2i) -> void:
+func occupy_world_area(
+	world_pos: Vector3, footprint: Vector2i, _type: Enums.OccupationType
+) -> void:
 	var cell := world_to_cell(world_pos)
-	occupy_area(cell, footprint)
+	occupy_area(cell, footprint, _type)
 
 
 func find_nearest_free_area(origin_cell: Vector2i, footprint: Vector2i, max_radius: int = 50):

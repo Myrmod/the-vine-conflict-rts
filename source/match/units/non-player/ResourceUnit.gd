@@ -14,6 +14,7 @@ var id: int
 
 var _occupied_cell: Vector2i
 var _footprint: Vector2i = Vector2i(1, 1)
+var _type: Enums.OccupationType = Enums.OccupationType.RESOURCE
 
 
 func _ready():
@@ -25,7 +26,7 @@ func _ready():
 		return
 
 	_occupied_cell = map.world_to_cell(global_position)
-	map.occupy_area(_occupied_cell, _footprint)
+	map.occupy_area(_occupied_cell, _footprint, _type)
 
 
 func _enter_tree():

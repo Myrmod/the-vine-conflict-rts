@@ -10,6 +10,7 @@ const VineScene = preload("uid://bf3jjdafqvh0w")
 
 func _ready() -> void:
 	MatchSignals.tick_advanced.connect(_on_tick_advanced)
+	_type = Enums.OccupationType.RESOURCE_SPAWNER
 
 
 func _on_tick_advanced():

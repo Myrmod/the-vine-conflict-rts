@@ -25,7 +25,7 @@ func _ready():
 		return
 
 	_occupied_cell = map.world_to_cell(global_position)
-	map.occupy_area(_occupied_cell, _footprint)
+	map.occupy_area(_occupied_cell, _footprint, Enums.OccupationType.STRUCTURE)
 
 
 func _process(delta):

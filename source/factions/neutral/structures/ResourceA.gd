@@ -17,6 +17,7 @@ var color = Resources.A.COLOR:
 
 
 func _ready():
+	_type = Enums.OccupationType.RESOURCE
 	super._ready()
 	_setup_mesh_colors()
 
