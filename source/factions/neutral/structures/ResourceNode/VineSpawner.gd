@@ -29,7 +29,6 @@ func _ready() -> void:
 
 	var map = MatchGlobal.map
 	if map == null:
-		push_error("VineSpawner: MatchGlobal.map is null")
 		return
 	_occupied_cell = map.world_to_cell(global_position)
 	map.occupy_area(_occupied_cell, _footprint, _type)

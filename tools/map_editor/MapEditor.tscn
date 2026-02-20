@@ -296,13 +296,16 @@ stretch = true
 
 [node name="EditorViewport" type="SubViewport" parent="VBoxContainer/MainArea/ViewportArea/MarginContainer/ViewportContainer" unique_id=1010968828]
 world_3d = SubResource("World3D_6yib5")
+handle_input_locally = false
 size = Vector2i(1615, 1018)
+render_target_update_mode = 4
 
 [node name="Viewport3D" type="Node3D" parent="VBoxContainer/MainArea/ViewportArea/MarginContainer/ViewportContainer/EditorViewport" unique_id=907894722]
 
 [node name="VisualLayer" type="Node3D" parent="VBoxContainer/MainArea/ViewportArea/MarginContainer/ViewportContainer/EditorViewport" unique_id=1173281011]
 
 [node name="CollisionLayer" type="Node3D" parent="VBoxContainer/MainArea/ViewportArea/MarginContainer/ViewportContainer/EditorViewport" unique_id=2102924395]
+visible = false
 
 [node name="GridLayer" type="Node3D" parent="VBoxContainer/MainArea/ViewportArea/MarginContainer/ViewportContainer/EditorViewport" unique_id=251285702]
 

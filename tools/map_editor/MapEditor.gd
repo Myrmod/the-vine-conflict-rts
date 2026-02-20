@@ -358,8 +358,10 @@ func _input(event):
 		elif event.keycode == KEY_V:
 			# Toggle view mode
 			if view_mode == ViewMode.GAME_VIEW:
+				print("viewmode to collision")
 				set_view_mode(ViewMode.COLLISION_VIEW)
 			else:
+				print("viewmode to game")
 				set_view_mode(ViewMode.GAME_VIEW)
 
 	# Handle mouse scroll for zoom and middle mouse for orbit

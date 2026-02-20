@@ -47,4 +47,3 @@ radius = 0.7
 [node name="VineSystem" type="Node3D" parent="." unique_id=161965838]
 
 [node name="VineTile" parent="VineSystem" unique_id=1616044755 instance=ExtResource("7_pxd62")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 3.0231538)

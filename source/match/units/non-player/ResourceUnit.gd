@@ -24,7 +24,6 @@ func _ready():
 
 	var map = MatchGlobal.map
 	if map == null:
-		push_error("ResourceUnit: MatchGlobal.map is null")
 		return
 
 	_occupied_cell = map.world_to_cell(global_position)
