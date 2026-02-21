@@ -1,21 +1,9 @@
-[gd_scene load_steps=13 format=3 uid="uid://b7c1crf36x1li"]
+[gd_scene format=3 uid="uid://b7c1crf36x1li"]
 
-[ext_resource type="Script" path="res://source/match/Map.gd" id="1_1svvv"]
+[ext_resource type="Script" uid="uid://cmfdk5aew0thj" path="res://source/match/Map.gd" id="1_1svvv"]
 [ext_resource type="Material" uid="uid://co8vfcoqqs5i8" path="res://source/match/resources/materials/terrain.material.tres" id="1_81yiw"]
 [ext_resource type="Shader" uid="uid://c3ghbxw4fymi2" path="res://source/shaders/3d/fog.gdshader" id="3_fog"]
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ve5fg"]
-shading_mode = 0
-albedo_color = Color(0, 0, 0, 1)
-
-[sub_resource type="PlaneMesh" id="PlaneMesh_0fj4w"]
-size = Vector2(1000, 1000)
-
-[sub_resource type="PlaneMesh" id="PlaneMesh_ypksr"]
-resource_local_to_scene = true
-material = ExtResource("1_81yiw")
-size = Vector2(54, 54)
-center_offset = Vector3(25, 0, 25)
+[ext_resource type="PackedScene" uid="uid://bxe2bwqo30j5o" path="res://source/match/TerrainSystem.tscn" id="4_usfks"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_map"]
 sun_angle_max = 200.0
@@ -35,6 +23,19 @@ fog_density = 0.0016
 fog_height = 0.25
 fog_height_density = 1.2
 
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ve5fg"]
+shading_mode = 0
+albedo_color = Color(0, 0, 0, 1)
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_0fj4w"]
+size = Vector2(1000, 1000)
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_ypksr"]
+resource_local_to_scene = true
+material = ExtResource("1_81yiw")
+size = Vector2(54, 54)
+center_offset = Vector3(25, 0, 25)
+
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_fog"]
 render_priority = 0
 shader = ExtResource("3_fog")
@@ -48,10 +49,10 @@ shader_parameter/min_height = -0.05
 flip_faces = true
 size = Vector2(2, 2)
 
-[node name="Map" type="Node3D"]
+[node name="Map" type="Node3D" unique_id=723060403]
 script = ExtResource("1_1svvv")
 
-[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=313200187]
 transform = Transform3D(0.512043, 0.673162, -0.533541, 0, 0.621148, 0.783694, 0.85896, -0.401285, 0.318054, 0, 38.7614, 0)
 shadow_enabled = true
 shadow_bias = 0.3
@@ -62,28 +63,34 @@ directional_shadow_split_3 = 0.55
 directional_shadow_blend_splits = true
 directional_shadow_pancake_size = 100.0
 
-[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=1790756690]
 environment = SubResource("Environment_map")
 
-[node name="Geometry" type="Node3D" parent="."]
+[node name="Geometry" type="Node3D" parent="." unique_id=1147796471]
 
-[node name="BlackBackgroundFixingAntiAliasingBug" type="MeshInstance3D" parent="Geometry"]
+[node name="BlackBackgroundFixingAntiAliasingBug" type="MeshInstance3D" parent="Geometry" unique_id=51787617]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.1, 0)
 material_override = SubResource("StandardMaterial3D_ve5fg")
 cast_shadow = 0
 mesh = SubResource("PlaneMesh_0fj4w")
 
-[node name="Terrain" type="MeshInstance3D" parent="Geometry" groups=["terrain_navigation_input"]]
+[node name="Terrain" type="MeshInstance3D" parent="Geometry" unique_id=1784002302 groups=["terrain_navigation_input"]]
 cast_shadow = 0
 mesh = SubResource("PlaneMesh_ypksr")
 
-[node name="SpawnPoints" type="Node3D" parent="."]
+[node name="TerrainSystem" parent="Geometry" unique_id=1246279829 instance=ExtResource("4_usfks")]
 
-[node name="Resources" type="Node3D" parent="."]
+[node name="TerrainMesh" type="MeshInstance3D" parent="Geometry/TerrainSystem" unique_id=1186585190]
 
-[node name="Decorations" type="Node3D" parent="."]
+[node name="WaterMesh" type="MeshInstance3D" parent="Geometry/TerrainSystem" unique_id=180812330]
 
-[node name="HeightFog" type="MeshInstance3D" parent="."]
+[node name="SpawnPoints" type="Node3D" parent="." unique_id=1918326678]
+
+[node name="Resources" type="Node3D" parent="." unique_id=1136795596]
+
+[node name="Decorations" type="Node3D" parent="." unique_id=434785225]
+
+[node name="HeightFog" type="MeshInstance3D" parent="." unique_id=1865432178]
 material_override = SubResource("ShaderMaterial_fog")
 cast_shadow = 0
 extra_cull_margin = 16384.0

@@ -19,7 +19,7 @@ const MapEditorDialogs = preload("res://tools/map_editor/ui/MapEditorDialogs.gd"
 
 enum ViewMode { GAME_VIEW, COLLISION_VIEW }
 
-enum BrushType { PAINT_COLLISION, ERASE, PLACE_ENTITY }
+enum BrushType { PAINT_COLLISION, ERASE, PLACE_ENTITY, PAINT_TEXTURE }
 
 # Core systems
 var current_map: MapResource
@@ -123,12 +123,28 @@ func _setup_ui_connections():
 	# Get UI elements from scene
 	var toolbar = get_node_or_null("VBoxContainer/Toolbar")
 	var palette_select = get_node_or_null("VBoxContainer/MainArea/LeftPalette/PaletteSelect")
+	var texture_select = get_node_or_null(
+		"VBoxContainer/MainArea/LeftPalette/PaletteSelect/Textures/TexturePalette"
+	)
 	status_label = get_node_or_null("VBoxContainer/StatusBar/StatusLabel")
 
-	print("Setting up UI connections - Toolbar: ", toolbar, " PaletteSelect: ", palette_select)
+	print(
+		"Setting up UI connections - Toolbar: ",
+		toolbar,
+		" PaletteSelect: ",
+		palette_select,
+		"TextureSelect:",
+		texture_select,
+	)
 	# Connect entity palette signals
 	if palette_select:
 		palette_select.entity_selected.connect(_on_palette_entity_selected)
+	# Connect texture palette signals
+	if texture_select:
+		texture_select.texture_selected.connect(_on_palette_texture_selected)
+		texture_select.texture_selected_as_base_layer.connect(
+			_on_palette_texture_selected_as_base_layer
+		)
 
 	if toolbar:
 		# Setup file menu
@@ -170,11 +186,28 @@ func _on_file_menu_item_selected(id: int):
 
 
 func _on_palette_entity_selected(scene_path: String):
-	print("Entity selected from palette: ", scene_path)
 	"""Handle entity selection from palette"""
 	_create_brush(BrushType.PLACE_ENTITY)
 	if current_brush is EntityBrush:
 		current_brush.set_entity(scene_path)
+
+	# Update brush info
+	var brush_info = get_node_or_null("VBoxContainer/Toolbar/BrushInfo")
+	print("Updating brush info label: ", brush_info)
+	if brush_info and current_brush:
+		brush_info.text = current_brush.get_brush_name()
+
+
+func _on_palette_texture_selected_as_base_layer(terrain: TerrainType):
+	print("_on_palette_texture_selected_as_base_layer: ", terrain.name, current_map)
+
+
+func _on_palette_texture_selected(terrain: TerrainType):
+	print("Terrain selected from palette: ", terrain.name)
+	"""Handle entity selection from palette"""
+	_create_brush(BrushType.PAINT_TEXTURE)
+	if current_brush is TextureBrush:
+		current_brush.set_texture(terrain)
 
 	# Update brush info
 	var brush_info = get_node_or_null("VBoxContainer/Toolbar/BrushInfo")
@@ -291,6 +324,16 @@ func _create_brush(brush_type: BrushType):
 		BrushType.PLACE_ENTITY:
 			current_brush = EntityBrush.new(
 				current_map, symmetry_system, command_stack, "", current_player
+			)
+		BrushType.PAINT_TEXTURE:
+			current_brush = (
+				TextureBrush
+				. new(
+					current_map,
+					symmetry_system,
+					command_stack,
+					null,
+				)
 			)
 
 	# Connect brush signals

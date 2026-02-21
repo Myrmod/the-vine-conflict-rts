@@ -6,7 +6,7 @@ extends EditorCommand
 
 var map_resource: MapResource
 var positions: Array[Vector2i]
-var scene_path: String
+var terrain: TerrainType
 var rotation: float
 
 # For undo: store what was at these positions before
@@ -14,11 +14,14 @@ var removed_textures: Array[Dictionary] = []
 
 
 func _init(
-	map_res: MapResource, affected_positions: Array[Vector2i], path: String, rot: float = 0.0
+	map_res: MapResource,
+	affected_positions: Array[Vector2i],
+	terrain: TerrainType,
+	rot: float = 0.0
 ):
 	map_resource = map_res
 	positions = affected_positions.duplicate()
-	scene_path = path
+	terrain = terrain
 	rotation = rot
 
 	# Store what will be removed for undo
@@ -43,7 +46,7 @@ func execute():
 		)
 
 		# Place new texture
-		map_resource.add_texture(scene_path, pos, rotation)
+		map_resource.add_texture(terrain, pos, rotation)
 
 
 func undo():

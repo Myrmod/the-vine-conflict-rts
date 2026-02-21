@@ -11,6 +11,11 @@ extends Resource
 # Logical grid data for collision (1 byte per cell: 0=walkable, 1=blocked)
 @export var collision_grid: PackedByteArray = PackedByteArray()
 
+@export var terrain_grid: PackedByteArray = PackedByteArray()
+
+# Size = map.size.x * map.size.y
+@export var height_grid: PackedFloat32Array
+
 # Entity placements
 @export var placed_entities: Array[Dictionary] = []
 
@@ -27,12 +32,20 @@ func _init():
 	# Initialize with default size if needed
 	if collision_grid.is_empty():
 		_initialize_collision_grid()
+	if terrain_grid.is_empty():
+		_initialize_terrain_grid()
 
 
 func _initialize_collision_grid():
 	var grid_size = size.x * size.y
 	collision_grid.resize(grid_size)
 	collision_grid.fill(0)  # 0 = walkable
+
+
+func _initialize_terrain_grid():
+	var grid_size = size.x * size.y
+	terrain_grid.resize(grid_size)
+	terrain_grid.fill(0)
 
 
 func resize_map(new_size: Vector2i):
@@ -111,3 +124,15 @@ func validate() -> Array[String]:
 			errors.append("Entity at %s is outside map bounds" % entity.pos)
 
 	return errors
+
+
+func get_terrain_at(pos: Vector2i) -> int:
+	if not _is_in_bounds(pos):
+		return -1
+	return terrain_grid[pos.y * size.x + pos.x]
+
+
+func set_terrain_at(pos: Vector2i, value: int):
+	if not _is_in_bounds(pos):
+		return
+	terrain_grid[pos.y * size.x + pos.x] = value

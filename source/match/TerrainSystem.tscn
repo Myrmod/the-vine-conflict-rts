@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://bxe2bwqo30j5o"]
+
+[ext_resource type="Script" uid="uid://dfswsd3q4ogqh" path="res://source/match/TerrainSystem.gd" id="1_cn2ly"]
+
+[node name="TerrainSystem" type="Node3D" unique_id=1246279829]
+script = ExtResource("1_cn2ly")

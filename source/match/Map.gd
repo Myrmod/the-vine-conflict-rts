@@ -14,6 +14,8 @@ const EXTRA_MARGIN = 2
 ## Vector2i -> bool || Enums.OccupationType (occupied)
 var _grid: Dictionary = {}
 
+@onready var terrain_system = $Geometry/TerrainSystem
+
 
 func get_topdown_polygon_2d():
 	return [Vector2(0, 0), Vector2(size.x, 0), size, Vector2(0, size.y)]
