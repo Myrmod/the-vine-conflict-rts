@@ -3,28 +3,33 @@ extends GridContainer
 class_name Hotkeys
 
 
-var hotkey_buttons = {}
+var container = ""
+var hotkey_buttons = []
 
-func register_button(name: String, button: Button) -> void:
-	hotkey_buttons[name] = button
+# Declare the container name
+# This is used during hotkey lookups as the container path
+# It must be called before the first invocation of _assign_grid_shortcuts or no hotkeys will be loaded
+# You should do this in _ready before calling super._ready()
+func declare_hotkey_container(c: String) -> void:
+	container = c
+	
+# Declare a button and a corresponding action
+# You should do this in _ready before calling super._ready()
+func declare_hotkey_button(action: String, button: Button) -> void:
+	hotkey_buttons.append([button, action])
 
 func _ready():
 	_assign_grid_shortcuts()
 	UserSettings.hotkeys_changed.connect(_assign_grid_shortcuts)
 
-func _assign_grid_shortcuts():
-	var button_roles: Array = hotkey_buttons.keys()
-	
-	var hotkeys = UserSettings.read_hotkeys("VehicleFactory", button_roles)
-	
-	for i in range(0, button_roles.size()):
-		if hotkeys[i] == null:
-			print("no hotkey assignment for " + button_roles[i])
-			continue
-		var button: Button = hotkey_buttons[button_roles[i]]
+func _assign_grid_shortcuts():	
+	for tuple in hotkey_buttons:
+		var button: Button = tuple[0]
+		var action: String = tuple[1]
 		
-		var keycode = hotkeys[i]
-		
+		var keycode = UserSettings.get_hotkey(container, action)
+		if keycode == Key.KEY_NONE:
+			push_warning("no hotkey assignment for ", container, action)
 		var ev := InputEventKey.new()
 		var sc := Shortcut.new()
 		ev.keycode = keycode
