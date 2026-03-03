@@ -34,3 +34,17 @@ enum OccupationType {
 	RESOURCE = 2,
 	RESOURCE_SPAWNER = 3,
 }
+
+enum MovementTypes {
+	LAND,
+	AIR,
+	WATER,
+}
+
+enum PlacementTypes {
+	LAND,
+	WATER,
+	SLOPE,
+}
+
+enum HeightLevel { WATER = -1, GROUND = 0, HIGH_GROUND = 1, AIR = 2 }

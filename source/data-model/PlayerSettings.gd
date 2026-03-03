@@ -1,6 +1,6 @@
-extends Resource
-
 class_name PlayerSettings
+
+extends Resource
 
 @export var color = Color.BLUE
 @export var team = 0

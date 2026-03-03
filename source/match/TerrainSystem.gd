@@ -32,12 +32,10 @@ func set_map(_map: MapResource):
 		$TerrainMesh.position = Vector3(map.size.x / 2.0, 0, map.size.y / 2.0)
 
 	if not $WaterMesh.mesh:
-		var plane := PlaneMesh.new()
-		plane.size = _map.size
-		$WaterMesh.mesh = plane
-
-		# we need to properly set the position of the created mesh
-		$WaterMesh.position = Vector3(map.size.x / 2.0, 0, map.size.y / 2.0)
+		$WaterMesh.mesh = PlaneMesh.new()
+	$WaterMesh.mesh.size = _map.size
+	var water_y: float = Constants.LEVEL_HEIGHTS[Enums.HeightLevel.WATER]
+	$WaterMesh.position = Vector3(map.size.x / 2.0, water_y, map.size.y / 2.0)
 
 	if map.splatmaps.is_empty():
 		map.initialize_splatmaps(Globals.terrain_types.size())
@@ -54,15 +52,21 @@ func set_map(_map: MapResource):
 
 
 func _upload_height_grid():
-	"""Build an RF image from map.height_grid and upload it to the shader."""
+	"""Build an RF image from map.height_grid and upload it to the shader.
+	Water cells are pushed below the water surface so the WaterMesh is visible."""
 	if not map:
 		return
 
+	var water_depth_offset := 1.0  # push terrain below the water plane
 	var img = Image.create(size.x, size.y, false, Image.FORMAT_RF)
 
 	for y in range(size.y):
 		for x in range(size.x):
-			var h = map.get_height_at(Vector2i(x, y))
+			var pos := Vector2i(x, y)
+			var h: float = map.get_height_at(pos)
+			var ct: int = map.get_cell_type_at(pos) if not map.cell_type_grid.is_empty() else 0
+			if ct == MapResource.CELL_WATER:
+				h -= water_depth_offset
 			img.set_pixel(x, y, Color(h, 0, 0, 0))
 
 	if _height_grid_texture:

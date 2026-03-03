@@ -3,16 +3,15 @@ class_name EntityBrush
 extends EditorBrush
 
 ## Brush for placing entities
-## Blocks placement on slopes and water unless the entity has
-## allow_slope_placement / allow_water_placement set to true.
+## Blocks placement on terrain types not listed in the entity's
+## placement_domains (structures) or movement_domains (units).
 
 var scene_path: String = ""
 var player_id: int = 0
 var rotation: float = 0.0
 
-# Cached placement flags from the loaded scene
-var _allow_slope_placement: bool = false
-var _allow_water_placement: bool = false
+# Cached placement domains from the loaded scene
+var _placement_domains: Array = []
 
 
 func _init(
@@ -25,7 +24,7 @@ func _init(
 	super._init(map_res, symmetry_sys, cmd_stack)
 	scene_path = entity_path
 	player_id = player
-	_refresh_placement_flags()
+	_refresh_placement_domains()
 
 
 func apply(cell_pos: Vector2i):
@@ -39,10 +38,16 @@ func apply(cell_pos: Vector2i):
 	# Validate terrain type at target cell
 	if map_resource:
 		var cell_type = map_resource.get_cell_type_at(cell_pos)
-		if cell_type == MapResource.CELL_SLOPE and not _allow_slope_placement:
+		if (
+			cell_type == MapResource.CELL_SLOPE
+			and Enums.PlacementTypes.SLOPE not in _placement_domains
+		):
 			push_warning("Cannot place entity on a slope (entity does not allow slope placement)")
 			return
-		if cell_type == MapResource.CELL_WATER and not _allow_water_placement:
+		if (
+			cell_type == MapResource.CELL_WATER
+			and Enums.PlacementTypes.WATER not in _placement_domains
+		):
 			push_warning("Cannot place entity on water (entity does not allow water placement)")
 			return
 
@@ -59,7 +64,7 @@ func apply(cell_pos: Vector2i):
 
 func set_entity(path: String):
 	scene_path = path
-	_refresh_placement_flags()
+	_refresh_placement_domains()
 
 
 func set_player(player: int):
@@ -70,10 +75,9 @@ func set_rotation(rot: float):
 	rotation = rot
 
 
-func _refresh_placement_flags():
-	"""Check the entity scene for allow_slope_placement / allow_water_placement."""
-	_allow_slope_placement = false
-	_allow_water_placement = false
+func _refresh_placement_domains():
+	"""Check the entity scene for placement_domains (structures) or movement_domains (units)."""
+	_placement_domains = []
 
 	if scene_path.is_empty():
 		return
@@ -83,10 +87,23 @@ func _refresh_placement_flags():
 		return
 
 	var inst = packed.instantiate()
-	if inst.get("allow_slope_placement") != null:
-		_allow_slope_placement = inst.allow_slope_placement
-	if inst.get("allow_water_placement") != null:
-		_allow_water_placement = inst.allow_water_placement
+	if inst.get("placement_domains") != null:
+		_placement_domains = Array(inst.placement_domains)
+	elif inst.get("movement_domains") != null:
+		# Map MovementTypes to PlacementTypes for consistent checking
+		for mt in inst.movement_domains:
+			match mt:
+				Enums.MovementTypes.LAND:
+					if Enums.PlacementTypes.LAND not in _placement_domains:
+						_placement_domains.append(Enums.PlacementTypes.LAND)
+				Enums.MovementTypes.WATER:
+					if Enums.PlacementTypes.WATER not in _placement_domains:
+						_placement_domains.append(Enums.PlacementTypes.WATER)
+				Enums.MovementTypes.AIR:
+					# Air units can be placed anywhere
+					_placement_domains.append(Enums.PlacementTypes.LAND)
+					_placement_domains.append(Enums.PlacementTypes.WATER)
+					_placement_domains.append(Enums.PlacementTypes.SLOPE)
 	inst.queue_free()
 
 

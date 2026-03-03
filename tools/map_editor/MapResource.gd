@@ -51,6 +51,23 @@ const CELL_WATER_SLOPE := 4  ## Slope connecting water to ground (separate passa
 @export var description: String = ""
 
 # ============================================================
+# Lighting & Environment  (captured from the map editor on save)
+# ============================================================
+
+# DirectionalLight3D ("Sun") properties
+@export var sun_transform: Transform3D = Transform3D.IDENTITY
+@export var sun_color: Color = Color.WHITE
+@export var sun_energy: float = 1.0
+@export var sun_specular: float = 0.5
+@export var sun_shadow_enabled: bool = true
+@export var sun_shadow_bias: float = 0.2
+@export var sun_shadow_blur: float = 0.2
+
+# Environment snapshot — stored as a packed Resource so Godot can
+# serialize/deserialize it together with the MapResource.
+@export var environment: Environment = null
+
+# ============================================================
 # Initialization
 # ============================================================
 

@@ -42,8 +42,8 @@ const DEFAULT_PROPERTIES = {
 		"attack_range": 5.0,
 		"attack_domains":
 		[
-			NavigationConstants.Domain.TERRAIN,
-			NavigationConstants.Domain.AIR,
+			Enums.MovementTypes.LAND,
+			Enums.MovementTypes.AIR,
 		],
 		"costs": {"resource": 1},
 		"build_time": 6.0,
@@ -58,7 +58,7 @@ const DEFAULT_PROPERTIES = {
 		"attack_range": 5.0,
 		"attack_domains":
 		[
-			NavigationConstants.Domain.TERRAIN,
+			Enums.MovementTypes.LAND,
 		],
 		"costs": {"resource": 3},
 		"build_time": 6.0,
@@ -97,7 +97,7 @@ const DEFAULT_PROPERTIES = {
 		"attack_range": 8.0,
 		"attack_domains":
 		[
-			NavigationConstants.Domain.TERRAIN,
+			Enums.MovementTypes.LAND,
 		],
 		"costs": {"resource": 2},
 		"build_time": 5.0,
@@ -112,7 +112,7 @@ const DEFAULT_PROPERTIES = {
 		"attack_range": 8.0,
 		"attack_domains":
 		[
-			NavigationConstants.Domain.AIR,
+			Enums.MovementTypes.AIR,
 		],
 		"costs": {"resource": 2},
 		"build_time": 5.0,

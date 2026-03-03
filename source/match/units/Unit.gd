@@ -19,12 +19,11 @@ var attack_damage = null
 var attack_interval = null
 var attack_range = null
 var attack_domains = []
+var movement_domains: Array[Enums.MovementTypes] = []
 var _player_ref
 
 var radius:
 	get = _get_radius
-var movement_domain:
-	get = _get_movement_domain
 var movement_speed:
 	get = _get_movement_speed
 var sight_range = null
@@ -88,12 +87,11 @@ func _get_radius():
 	return null
 
 
-func _get_movement_domain():
-	if find_child("Movement") != null:
-		return find_child("Movement").domain
-	if find_child("MovementObstacle") != null:
-		return find_child("MovementObstacle").domain
-	return null
+func get_nav_domain():
+	"""Derive the NavigationConstants.Domain from movement_domains."""
+	if Enums.MovementTypes.AIR in movement_domains:
+		return NavigationConstants.Domain.AIR
+	return NavigationConstants.Domain.TERRAIN
 
 
 func _get_movement_speed():
@@ -146,12 +144,12 @@ func _teardown_current_action():
 
 
 func _safety_checks():
-	if movement_domain == NavigationConstants.Domain.AIR:
+	if Enums.MovementTypes.AIR in movement_domains:
 		assert(
 			radius < Air.MAX_AGENT_RADIUS or is_equal_approx(radius, Air.MAX_AGENT_RADIUS),
 			"Unit radius exceeds the established limit"
 		)
-	elif movement_domain == NavigationConstants.Domain.TERRAIN:
+	elif Enums.MovementTypes.LAND in movement_domains:
 		assert(
 			(
 				not _is_movable()

@@ -235,7 +235,7 @@ func _on_palette_height_selected(level: int):
 	"""Handle height level selection from palette (-1=water, 0=ground, 1=high)"""
 	_create_brush(BrushType.PAINT_HEIGHT)
 	if current_brush is HeightBrush:
-		current_brush.set_level(level as HeightBrush.HeightLevel)
+		current_brush.set_level(level as Enums.HeightLevel)
 
 	var brush_info = get_node_or_null("VBoxContainer/Toolbar/BrushInfo")
 	if brush_info and current_brush:
@@ -665,7 +665,8 @@ func _refresh_entity_previews():
 			continue
 		var inst = scene.instantiate()
 		inst.name = "EntityPreview_%s_%s" % [entity.scene_path.get_file(), str(entity.pos)]
-		inst.position = Vector3(entity.pos.x, 0, entity.pos.y)
+		var height_y: float = current_map.get_height_at(entity.pos)
+		inst.position = Vector3(entity.pos.x, height_y, entity.pos.y)
 		if entity.has("rotation"):
 			inst.rotation.y = entity.rotation
 		visual_layer.add_child(inst)
@@ -758,6 +759,9 @@ func save_map(path: String):
 	# Generate merged collision shapes before saving
 	current_map.collision_shapes = CollisionShapeBuilder.build_all(current_map)
 
+	# Capture lighting & environment from the editor viewport
+	_capture_lighting_to_map_resource()
+
 	var result = ResourceSaver.save(current_map, path)
 	if result == OK:
 		if status_label:
@@ -818,6 +822,26 @@ func export_map(path: String):
 func _exit_tree():
 	# Clean up
 	pass
+
+
+func _capture_lighting_to_map_resource():
+	"""Snapshot the editor's Sun light and Environment into the MapResource
+	so the game can reproduce the exact same lighting."""
+	var sun = visual_layer.get_node_or_null("Sun") as DirectionalLight3D
+	if sun:
+		current_map.sun_transform = sun.transform
+		current_map.sun_color = sun.light_color
+		current_map.sun_energy = sun.light_energy
+		current_map.sun_specular = sun.light_specular
+		current_map.sun_shadow_enabled = sun.shadow_enabled
+		current_map.sun_shadow_bias = sun.shadow_bias
+		current_map.sun_shadow_blur = sun.shadow_blur
+
+	var env: Environment = (
+		editor_viewport.world_3d.environment if editor_viewport.world_3d else null
+	)
+	if env:
+		current_map.environment = env.duplicate()
 
 
 func _on_back_button_pressed():

@@ -17,9 +17,8 @@ extends RefCounted
 ##     │    └─ Marker3D × N
 ##     ├─ Resources
 ##     │    └─ entity instances …
-##     ├─ Decorations
-##     │    └─ entity instances …
-##     └─ HeightFog
+##     └─ Decorations
+##          └─ entity instances …
 
 const MAP_SCENE_PATH = "res://source/match/Map.tscn"
 
@@ -66,6 +65,10 @@ static func build(map_resource: MapResource) -> Node3D:
 	#    and units physically cannot clip through.
 	map_node.build_cliff_collision()
 
+	# 8. Apply lighting & environment from the MapResource so the game
+	#    reproduces the exact same look as the map editor.
+	_apply_lighting(map_resource, map_node)
+
 	return map_node
 
 
@@ -106,7 +109,8 @@ static func _add_entities(
 		var inst = scene.instantiate()
 		var pos: Vector2i = entity.get("pos", Vector2i.ZERO)
 		var rot: float = entity.get("rotation", 0.0)
-		inst.transform = Transform3D(Basis(Vector3.UP, rot), Vector3(pos.x, 0, pos.y))
+		var height_y: float = map_resource.get_height_at(pos)
+		inst.transform = Transform3D(Basis(Vector3.UP, rot), Vector3(pos.x, height_y, pos.y))
 
 		# Decide parent: resource nodes go under Resources, everything else under Decorations
 		if "ResourceNode" in scene_path or "resource" in scene_path.to_lower():
@@ -133,3 +137,26 @@ static func initialize_terrain_from_meta(map_node: Node3D):
 		var terrain_mesh = map_node.find_child("Terrain")
 		if terrain_mesh is MeshInstance3D:
 			terrain_mesh.visible = false
+
+
+static func _apply_lighting(map_resource: MapResource, map_node: Node3D):
+	"""Override the Map scene's DirectionalLight3D and WorldEnvironment
+	with the values stored in the MapResource (captured from the editor)."""
+
+	# --- Sun (DirectionalLight3D) ---
+	if map_resource.sun_transform != Transform3D.IDENTITY:
+		var sun = map_node.find_child("DirectionalLight3D") as DirectionalLight3D
+		if sun:
+			sun.transform = map_resource.sun_transform
+			sun.light_color = map_resource.sun_color
+			sun.light_energy = map_resource.sun_energy
+			sun.light_specular = map_resource.sun_specular
+			sun.shadow_enabled = map_resource.sun_shadow_enabled
+			sun.shadow_bias = map_resource.sun_shadow_bias
+			sun.shadow_blur = map_resource.sun_shadow_blur
+
+	# --- Environment ---
+	if map_resource.environment:
+		var world_env = map_node.find_child("WorldEnvironment") as WorldEnvironment
+		if world_env:
+			world_env.environment = map_resource.environment.duplicate()

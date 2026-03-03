@@ -11,12 +11,14 @@
 sky_material = SubResource("PhysicalSkyMaterial_gsndc")
 
 [sub_resource type="Environment" id="Environment_gsndc"]
+background_mode = 2
 sky = SubResource("Sky_afdhn")
 ambient_light_source = 2
-ambient_light_color = Color(0.8630173, 0.950432, 0.9999998, 1)
+ambient_light_color = Color(1, 1, 1, 1)
 ambient_light_sky_contribution = 0.5
 ambient_light_energy = 0.5
 reflected_light_source = 2
+tonemap_mode = 2
 ssao_enabled = true
 ssao_radius = 0.5
 ssao_intensity = 0.7

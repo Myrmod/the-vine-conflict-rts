@@ -181,7 +181,7 @@ func _start_structure_placement(structure_prototype):
 	_pending_structure_navmap_rid = (
 		find_parent("Match")
 		. navigation
-		. get_navigation_map_rid_by_domain(temporary_structure_instance.movement_domain)
+		. get_navigation_map_rid_by_domain(temporary_structure_instance.get_nav_domain())
 	)
 	temporary_structure_instance.free()
 	MatchSignals.structure_placement_started.emit()

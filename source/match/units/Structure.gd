@@ -7,9 +7,8 @@ const UNDER_CONSTRUCTION_MATERIAL = preload(
 )
 
 ## Terrain placement rules — checked by the map editor's EntityBrush.
-## Override in subclasses or per-scene to allow placement on special terrain.
-@export var allow_slope_placement: bool = false
-@export var allow_water_placement: bool = false
+## Add entries to allow placement on special terrain (WATER, SLOPE, etc.).
+@export var placement_domains: Array[Enums.PlacementTypes] = []
 
 var _construction_progress = 1.0
 var _self_constructing = false

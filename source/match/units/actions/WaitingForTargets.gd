@@ -35,11 +35,11 @@ func _get_units_to_attack():
 			return (
 				unit.player != _unit.player  # Different player
 				and unit.player.team != _unit.player.team  # Different TEAM (core protection)
-				and unit.movement_domain in _unit.attack_domains  # Attackable domain
+				and _unit.attack_domains.any(func(d): return d in unit.movement_domains)  # Attackable domain
 				and (
 					_unit.global_position_yless.distance_to(unit.global_position_yless)
-					<= _unit.sight_range  # In vision range
-				)
+					<= _unit.sight_range
+				)  # In vision range
 			)
 	)
 

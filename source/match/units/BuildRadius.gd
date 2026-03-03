@@ -1,5 +1,6 @@
-extends Node3D
 class_name BuildRadius
+
+extends Node3D
 
 const Human = preload("res://source/match/players/human/Human.gd")
 
@@ -16,6 +17,7 @@ const Human = preload("res://source/match/players/human/Human.gd")
 @export var allowed_cells: Array[Vector2i] = []
 
 @onready var mesh_instance: MeshInstance3D = $GridOverlayMesh
+
 
 func _ready():
 	cell_size = FeatureFlags.grid_cell_size
@@ -57,14 +59,12 @@ func _on_placement_started():
 	if player == null:
 		return
 	# Find the human player to compare ownership/alliance
-	var human_players = get_tree().get_nodes_in_group("players").filter(
-		func(p): return p is Human
-	)
+	var human_players = get_tree().get_nodes_in_group("players").filter(func(p): return p is Human)
 	if human_players.is_empty():
 		return
 	var human_player = human_players[0]
-	var is_own = (player == human_player)
-	var is_allied = (player != human_player and player.team == human_player.team)
+	var is_own = player == human_player
+	var is_allied = player != human_player and player.team == human_player.team
 	if is_own or (is_allied and FeatureFlags.allow_placement_in_allied_build_radius):
 		visible = true
 
@@ -95,10 +95,18 @@ func _add_cell_quad(st: SurfaceTool, cell: Vector2i):
 	var cz = cell.y * cell_size
 
 	# Expand outer edges so boundary lines render at full width
-	var x_min = cx - half - (line_pad if not allowed_cells.has(Vector2i(cell.x - 1, cell.y)) else 0.0)
-	var x_max = cx + half + (line_pad if not allowed_cells.has(Vector2i(cell.x + 1, cell.y)) else 0.0)
-	var z_min = cz - half - (line_pad if not allowed_cells.has(Vector2i(cell.x, cell.y - 1)) else 0.0)
-	var z_max = cz + half + (line_pad if not allowed_cells.has(Vector2i(cell.x, cell.y + 1)) else 0.0)
+	var x_min = (
+		cx - half - (line_pad if not allowed_cells.has(Vector2i(cell.x - 1, cell.y)) else 0.0)
+	)
+	var x_max = (
+		cx + half + (line_pad if not allowed_cells.has(Vector2i(cell.x + 1, cell.y)) else 0.0)
+	)
+	var z_min = (
+		cz - half - (line_pad if not allowed_cells.has(Vector2i(cell.x, cell.y - 1)) else 0.0)
+	)
+	var z_max = (
+		cz + half + (line_pad if not allowed_cells.has(Vector2i(cell.x, cell.y + 1)) else 0.0)
+	)
 
 	var a = Vector3(x_min, 0.005, z_min)
 	var b = Vector3(x_max, 0.005, z_min)
@@ -152,10 +160,7 @@ func _generate_square_cells(radius: int) -> Array[Vector2i]:
 ## Returns the grid cell coordinate for a world position
 func _world_to_cell(world_pos: Vector3) -> Vector2i:
 	var local_pos = world_pos - global_position
-	return Vector2i(
-		roundi(local_pos.x / cell_size),
-		roundi(local_pos.z / cell_size)
-	)
+	return Vector2i(roundi(local_pos.x / cell_size), roundi(local_pos.z / cell_size))
 
 
 ## Checks if a world position falls within this BuildRadius's allowed cells
@@ -166,7 +171,9 @@ func is_position_in_radius(world_pos: Vector3) -> bool:
 
 ## Static helper: checks if a world position is within any owned/allied build radius.
 ## Pass the player who is placing the structure.
-static func is_position_in_any_build_radius(tree: SceneTree, world_pos: Vector3, placing_player) -> bool:
+static func is_position_in_any_build_radius(
+	tree: SceneTree, world_pos: Vector3, placing_player
+) -> bool:
 	var build_radii = tree.get_nodes_in_group("build_radii")
 	for br: BuildRadius in build_radii:
 		var unit = br.get_parent()
@@ -175,8 +182,8 @@ static func is_position_in_any_build_radius(tree: SceneTree, world_pos: Vector3,
 		var owner_player = unit.player if "player" in unit else null
 		if owner_player == null:
 			continue
-		var is_own = (owner_player == placing_player)
-		var is_allied = (owner_player != placing_player and owner_player.team == placing_player.team)
+		var is_own = owner_player == placing_player
+		var is_allied = owner_player != placing_player and owner_player.team == placing_player.team
 		if is_own or (is_allied and FeatureFlags.allow_placement_in_allied_build_radius):
 			if br.is_position_in_radius(world_pos):
 				return true

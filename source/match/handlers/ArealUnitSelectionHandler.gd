@@ -41,7 +41,7 @@ func _get_controlled_units_from_navigation_domain_within_topdown_polygon_2d(
 	var units_within_polygon = Utils.Set.new()
 	var camera = get_viewport().get_camera_3d()
 	for unit in get_tree().get_nodes_in_group("controlled_units"):
-		if not unit.visible or unit.movement_domain != navigation_domain:
+		if not unit.visible or not _matches_nav_domain(unit, navigation_domain):
 			continue
 		# Project the unit's 3D position to screen space, then check if the
 		# screen point falls inside the selection rectangle.  This makes the
@@ -121,3 +121,14 @@ func _on_selection_finished(topdown_polygon_2d):
 	if not non_structures.empty():
 		units_to_select = non_structures
 	MatchUtils.select_units(units_to_select)
+
+
+func _matches_nav_domain(unit, navigation_domain: NavigationConstants.Domain) -> bool:
+	"""Check if a unit's movement_domains correspond to the given nav domain."""
+	if navigation_domain == NavigationConstants.Domain.AIR:
+		return Enums.MovementTypes.AIR in unit.movement_domains
+	# TERRAIN domain matches LAND or WATER movement types
+	return (
+		Enums.MovementTypes.LAND in unit.movement_domains
+		or Enums.MovementTypes.WATER in unit.movement_domains
+	)

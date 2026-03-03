@@ -52,8 +52,12 @@ func produce(unit_prototype, ignore_limit = false):
 	_unit.player.subtract_resources(production_cost)
 	var queue_element = ProductionQueueElement.new()
 	queue_element.unit_prototype = unit_prototype
-	queue_element.time_total = UnitConstants.DEFAULT_PROPERTIES[unit_prototype.resource_path]["build_time"]
-	queue_element.time_left = UnitConstants.DEFAULT_PROPERTIES[unit_prototype.resource_path]["build_time"]
+	queue_element.time_total = (
+		UnitConstants.DEFAULT_PROPERTIES[unit_prototype.resource_path]["build_time"]
+	)
+	queue_element.time_left = (
+		UnitConstants.DEFAULT_PROPERTIES[unit_prototype.resource_path]["build_time"]
+	)
 	_enqueue_element(queue_element)
 	MatchSignals.unit_production_started.emit(unit_prototype, _unit)
 
@@ -66,9 +70,9 @@ func cancel_all():
 func cancel(element):
 	if not element in _queue:
 		return
-	var production_cost = UnitConstants.DEFAULT_PROPERTIES[
-		element.unit_prototype.resource_path
-	]["costs"]
+	var production_cost = (
+		UnitConstants.DEFAULT_PROPERTIES[element.unit_prototype.resource_path]["costs"]
+	)
 	_unit.player.add_resources(production_cost)
 	_remove_element(element)
 
@@ -86,7 +90,8 @@ func _remove_element(element):
 func _finalize_production(former_queue_element):
 	var produced_unit = former_queue_element.unit_prototype.instantiate()
 	var placement_position = (
-		UnitPlacementUtils.find_valid_position_radially_yet_skip_starting_radius(
+		UnitPlacementUtils
+		. find_valid_position_radially_yet_skip_starting_radius(
 			_unit.global_position,
 			_unit.radius,
 			produced_unit.radius,
@@ -94,13 +99,20 @@ func _finalize_production(former_queue_element):
 			Vector3(0, 0, 1),
 			false,
 			find_parent("Match").navigation.get_navigation_map_rid_by_domain(
-				produced_unit.movement_domain
+				produced_unit.get_nav_domain()
 			),
 			get_tree()
 		)
 	)
-	MatchSignals.setup_and_spawn_unit.emit(
-		produced_unit, Transform3D(Basis(), placement_position), _unit.player, false,
+	(
+		MatchSignals
+		. setup_and_spawn_unit
+		. emit(
+			produced_unit,
+			Transform3D(Basis(), placement_position),
+			_unit.player,
+			false,
+		)
 	)
 	MatchSignals.unit_production_finished.emit(produced_unit, _unit)
 

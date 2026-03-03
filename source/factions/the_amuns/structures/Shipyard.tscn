@@ -1,0 +1,57 @@
+[gd_scene format=3 uid="uid://c5ye6ktpt21v"]
+
+[ext_resource type="Script" path="res://source/factions/the_amuns/structures/Shipyard.gd" id="1_j7t71"]
+[ext_resource type="PackedScene" uid="uid://cgsi062w5fjia" path="res://source/match/units/traits/Highlight.tscn" id="1_r5i7t"]
+[ext_resource type="PackedScene" uid="uid://3c1h14nqdumt" path="res://source/match/units/traits/Selection.tscn" id="2_56ml3"]
+[ext_resource type="PackedScene" uid="uid://ckdoxcj48hgrw" path="res://source/factions/the_amuns/structures/structure-geometries/Shipyard.tscn" id="2_j7t71"]
+[ext_resource type="PackedScene" uid="uid://d4cwip5hpxlmo" path="res://source/match/units/traits/MovementObstacle.tscn" id="3_j1buj"]
+[ext_resource type="PackedScene" uid="uid://c3ssj2p6voauk" path="res://source/match/units/traits/HealthBar.tscn" id="4_igtfr"]
+[ext_resource type="PackedScene" uid="uid://b8jwlpdvxgrr6" path="res://source/match/units/traits/RallyPoint.tscn" id="8_opfgx"]
+[ext_resource type="PackedScene" uid="uid://cd3v6508vjcu3" path="res://source/match/units/traits/ProductionQueue.tscn" id="9_c3qd5"]
+[ext_resource type="PackedScene" uid="uid://d4cm4yhtf11ur" path="res://source/match/units/traits/Targetability.tscn" id="9_qqlap"]
+[ext_resource type="PackedScene" uid="uid://b1gne72rgc7un" path="res://source/match/units/BuildRadius.tscn" id="10_lcmu4"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_spb4d"]
+size = Vector3(3, 2, 4)
+
+[node name="Shipyard" type="Area3D" unique_id=276084540]
+collision_layer = 2
+collision_mask = 0
+script = ExtResource("1_j7t71")
+placement_domains = Array[Enums.PlacementTypes]([1])
+
+[node name="Geometry" parent="." unique_id=1679539723 instance=ExtResource("2_j7t71")]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=1954100010]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0.8051336)
+shape = SubResource("BoxShape3D_spb4d")
+debug_fill = false
+
+[node name="Highlight" parent="." unique_id=264780724 instance=ExtResource("1_r5i7t")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, 0)
+radius = 1.5
+
+[node name="Selection" parent="." unique_id=1288821649 instance=ExtResource("2_56ml3")]
+transform = Transform3D(1.25, 0, 0, 0, 1.25, 0, 0, 0, 1.25, 0, 0.05, 0)
+radius = 1.5
+
+[node name="MovementObstacle" parent="." unique_id=1672042096 instance=ExtResource("3_j1buj")]
+radius = 1.5
+vertices = PackedVector3Array(0, 0, -1.1, 0.777, 0, -0.777, 1.1, 0, 0, 0.777, 0, 0.777, 0, 0, 1.1, -0.777, 0, 0.777, -1.1, 0, 0, -0.777, 0, -0.777)
+affect_navigation_mesh = true
+path_height_offset = 0.6
+
+[node name="HealthBar" parent="." unique_id=1751205811 instance=ExtResource("4_igtfr")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 0)
+size = Vector2(250, 10)
+
+[node name="Targetability" parent="." unique_id=1048328374 instance=ExtResource("9_qqlap")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, 0)
+radius = 1.5
+
+[node name="RallyPoint" parent="." unique_id=692094960 instance=ExtResource("8_opfgx")]
+
+[node name="ProductionQueue" parent="." unique_id=1905394915 instance=ExtResource("9_c3qd5")]
+
+[node name="BuildRadius" parent="." unique_id=1664502028 instance=ExtResource("10_lcmu4")]
+radius_in_cells = 5

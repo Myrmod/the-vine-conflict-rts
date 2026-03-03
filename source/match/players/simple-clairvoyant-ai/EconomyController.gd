@@ -156,7 +156,7 @@ func _construct_cc():
 		_cc_base_position if _cc_base_position != null else _workers[0].global_position,
 		unit_to_spawn.radius + UnitConstants.EMPTY_SPACE_RADIUS_SURROUNDING_STRUCTURE_M,
 		find_parent("Match").navigation.get_navigation_map_rid_by_domain(
-			unit_to_spawn.movement_domain
+			unit_to_spawn.get_nav_domain()
 		),
 		get_tree()
 	)
