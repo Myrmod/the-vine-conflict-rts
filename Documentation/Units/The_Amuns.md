@@ -24,4 +24,4 @@
 - can activate stealth (ability purshace needed t2)
 
 #### Trait
-- crushable: no
+

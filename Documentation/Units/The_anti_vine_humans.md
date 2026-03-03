@@ -23,4 +23,3 @@
 - can activate sprint to gain 0.25 ms for 10 secons
 
 #### Trait
-- crushable: yes

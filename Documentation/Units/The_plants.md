@@ -23,4 +23,3 @@
 - no abilities
 
 #### Trait
-- crushable: yes

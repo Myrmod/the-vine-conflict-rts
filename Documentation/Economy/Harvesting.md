@@ -16,7 +16,7 @@
   - delivery rate: 100 res per second
 
 ## plant faction:
-- they use building to harvest energy from vines,harvests in a radius around it 3 tiles
+- they use building to harvest energy from vines,harvests in a radius around it 5 tiles
 - harvesting stats:
  - capacity: infinite
  - speed:0

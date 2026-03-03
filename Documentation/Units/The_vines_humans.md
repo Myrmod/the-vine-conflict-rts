@@ -23,4 +23,3 @@
 - can deploy to prevent crushes
 
 #### Trait
-- crushable: yes
