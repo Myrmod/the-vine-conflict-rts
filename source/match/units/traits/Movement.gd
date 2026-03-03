@@ -17,6 +17,8 @@ const ROTATION_LOW_PASS_FILTER_VELOCITY_THRESHOLD: float = 0.01  # velocities be
 
 const PASSIVE_MOVEMENT_TRACKING_ENABLED: bool = true
 
+const AIR_HEIGHT_ADJUST_SPEED: float = 6.0  # lerp rate for flying units adjusting to terrain height
+
 @export var domain: NavigationConstants.Domain = NavigationConstants.Domain.TERRAIN
 @export var speed: float = 4.0
 
@@ -53,17 +55,19 @@ func _physics_process(delta: float) -> void:
 		_process_water_movement()
 		return
 
-	# The navmesh is flat at Y=0 but the unit may sit at terrain height (e.g. Y=2).
+	# The navmesh is flat (Y=0 for terrain, Y=Air.Y for air) but the unit may
+	# sit at a different height (e.g. terrain height or air height over high ground).
 	# NavigationAgent3D uses 3D distance for waypoint advancement, so the Y gap
 	# prevents it from ever reaching the next waypoint.  Drop to navmesh height
 	# for all navigation queries, then restore after set_velocity().
-	var terrain_y: float = _unit.global_transform.origin.y
-	_unit.global_transform.origin.y = 0.0
+	var nav_y: float = Air.Y if domain == NavigationConstants.Domain.AIR else 0.0
+	var real_y: float = _unit.global_transform.origin.y
+	_unit.global_transform.origin.y = nav_y
 
 	var fake_direction: Variant = _get_fake_direction_due_to_stuck_prevention()
 	if fake_direction != null:
 		set_velocity(fake_direction * _interim_speed)
-		_unit.global_transform.origin.y = terrain_y
+		_unit.global_transform.origin.y = real_y
 		return
 	var next_path_position: Vector3 = get_next_path_position()
 	var current_agent_position: Vector3 = _unit.global_transform.origin
@@ -72,8 +76,8 @@ func _physics_process(delta: float) -> void:
 	var new_velocity: Vector3 = direction.normalized() * _interim_speed
 	set_velocity(new_velocity)
 
-	# Restore terrain height — will be refreshed in _on_velocity_computed
-	_unit.global_transform.origin.y = terrain_y
+	# Restore real height — will be refreshed in _on_velocity_computed
+	_unit.global_transform.origin.y = real_y
 
 
 func _ready() -> void:
@@ -90,7 +94,7 @@ func _ready() -> void:
 	navigation_finished.connect(_on_navigation_finished)
 	set_navigation_map(_match.navigation.get_navigation_map_rid_by_domain(domain))
 	_align_unit_position_to_navigation()
-	_apply_terrain_height_and_tilt()
+	_apply_terrain_height_and_tilt(true)
 	move(
 		(
 			_unit.global_position
@@ -276,9 +280,23 @@ func _on_navigation_finished() -> void:
 	movement_finished.emit()
 
 
-func _apply_terrain_height_and_tilt() -> void:
-	# Air units fly at fixed height — skip terrain adjustment
+func _apply_terrain_height_and_tilt(snap: bool = false) -> void:
+	# Air units adjust height to stay above terrain
 	if terrain_move_type == NavigationConstants.TerrainMoveType.AIR:
+		if not _match or not _match.map:
+			return
+		var pos: Vector3 = _unit.global_transform.origin
+		var terrain_y: float = _match.map.get_height_at_world(pos)
+		var target_y: float = terrain_y + Air.Y
+		if snap:
+			_unit.global_transform.origin.y = target_y
+		else:
+			var dt: float = get_physics_process_delta_time()
+			_unit.global_transform.origin.y = lerpf(
+				_unit.global_transform.origin.y,
+				target_y,
+				clampf(AIR_HEIGHT_ADJUST_SPEED * dt, 0.0, 1.0)
+			)
 		return
 
 	if not _match or not _match.map:

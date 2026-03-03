@@ -34,6 +34,7 @@ func _ready():
 		match_settings.players = ReplayRecorder._restore_players(replay_resource.players_data)
 	a_match.settings = match_settings
 	a_match.map = map
+	a_match.map_source_path = map_path
 	a_match.is_replay_mode = !!replay_resource
 
 	# ── DETERMINISTIC SEED ──────────────────────────────────────────

@@ -43,6 +43,11 @@ var visible_players = null:
 
 var is_replay_mode = false
 
+## Original path used to load the map (e.g. "res://maps/test.tres" for
+## MapResource maps or a .tscn path for built-in maps).  Stored so the
+## ReplayRecorder can save the correct path instead of the base template.
+var map_source_path: String = ""
+
 @onready var navigation = $Navigation
 @onready var fog_of_war = $FogOfWar
 @onready var global_build_grid = $GlobalBuildGrid

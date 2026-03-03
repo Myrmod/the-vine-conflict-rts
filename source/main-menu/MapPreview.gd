@@ -16,6 +16,7 @@ var _viewport: SubViewport = null
 var _map_instance: Node = null
 var _camera: Camera3D = null
 var _texture_rect: TextureRect = null
+var _terrain_overlay_texture: ImageTexture = null
 
 
 func _ready():
@@ -48,6 +49,7 @@ func set_map_data(map_path: String) -> void:
 
 	_spawn_positions = []
 	_map_size = Vector2.ZERO
+	_terrain_overlay_texture = null
 
 	var map_scene = load(map_path)
 	if map_scene == null:
@@ -104,6 +106,12 @@ func set_map_data(map_path: String) -> void:
 	await get_tree().process_frame
 	_viewport.render_target_update_mode = SubViewport.UPDATE_DISABLED
 
+	# Generate 2D terrain overlay from the Map node (predefined .tscn maps)
+	if _terrain_overlay_texture == null and _map_instance:
+		var terrain_img := MinimapTerrainRenderer.generate_image_from_map(_map_instance)
+		if terrain_img:
+			_terrain_overlay_texture = ImageTexture.create_from_image(terrain_img)
+
 	queue_redraw()
 
 
@@ -130,6 +138,18 @@ func _draw() -> void:
 		scale_factor = control_size.y / tex_size.y
 		var rendered_width = tex_size.x * scale_factor
 		offset = Vector2((control_size.x - rendered_width) * 0.5, 0)
+
+	var rendered_size := (
+		Vector2(_map_size.x, _map_size.y)
+		* Vector2(
+			(tex_size.x / _map_size.x) * scale_factor, (tex_size.y / _map_size.y) * scale_factor
+		)
+	)
+
+	# Draw 2D terrain overlay (water, high ground, slopes) behind spawn markers
+	if _terrain_overlay_texture:
+		var overlay_rect := Rect2(offset, rendered_size)
+		draw_texture_rect(_terrain_overlay_texture, overlay_rect, false, Color(1, 1, 1, 0.45))
 
 	var pixels_per_unit_x = (tex_size.x / _map_size.x) * scale_factor
 	var pixels_per_unit_y = (tex_size.y / _map_size.y) * scale_factor
@@ -182,6 +202,7 @@ func set_map_data_from_resource(resource_path: String) -> void:
 
 	_spawn_positions = []
 	_map_size = Vector2.ZERO
+	_terrain_overlay_texture = null
 
 	var res = load(resource_path)
 	if res == null or not (res is MapResource):
@@ -201,11 +222,20 @@ func set_map_data_from_resource(resource_path: String) -> void:
 		queue_redraw()
 		return
 
-	_strip_gameplay_nodes(_map_instance)
+	# Add to viewport FIRST so internal node paths ($TerrainMesh etc.) resolve
 	_viewport.add_child(_map_instance)
 
-	# Initialize terrain splatmaps
+	# Initialize terrain splatmaps BEFORE stripping scripts —
+	# TerrainSystem.set_map() needs its GDScript methods to be intact.
 	MapSceneBuilder.initialize_terrain_from_meta(_map_instance)
+
+	# Now strip gameplay scripts so no Match-dependent _ready() runs
+	_strip_gameplay_nodes(_map_instance)
+
+	# Generate 2D terrain overlay from the MapResource data
+	var terrain_img := MinimapTerrainRenderer.generate_image_from_resource(map_resource)
+	if terrain_img:
+		_terrain_overlay_texture = ImageTexture.create_from_image(terrain_img)
 
 	# Set viewport aspect
 	var aspect = _map_size.x / _map_size.y

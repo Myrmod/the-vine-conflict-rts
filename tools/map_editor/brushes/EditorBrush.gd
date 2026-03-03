@@ -92,6 +92,11 @@ func get_edge_falloff(_cell_pos: Vector2i, _center: Vector2i) -> float:
 	return 1.0
 
 
+func is_single_placement() -> bool:
+	"""Return true if this brush places a discrete item per click (no drag-painting)."""
+	return false
+
+
 func get_brush_name() -> String:
 	"""Get display name for this brush"""
 	return "Base Brush"

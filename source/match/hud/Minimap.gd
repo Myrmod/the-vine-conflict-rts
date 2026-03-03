@@ -23,8 +23,12 @@ func _ready():
 	_remove_dummy_nodes()
 	await _match.ready  # make sure Match is ready as it may change map on setup
 
-	var viewport_size = _match.find_child("Map").size * MINIMAP_PIXELS_PER_WORLD_METER
+	var map_node = _match.find_child("Map")
+	var viewport_size = map_node.size * MINIMAP_PIXELS_PER_WORLD_METER
 	find_child("MinimapViewport").size = viewport_size
+
+	# Replace the flat gray background with a terrain overview image
+	_generate_terrain_background(map_node)
 
 	await get_tree().process_frame
 
@@ -196,3 +200,33 @@ func _on_gui_input(event):
 			_issue_movement_action(event.position)
 	elif event is InputEventMouseMotion and _camera_movement_active:
 		_try_teleporting_camera_based_on_local_texture_rect_position(event.position)
+
+
+func _generate_terrain_background(map_node: Node3D) -> void:
+	"""Replace the flat ColorRect background with a terrain overview."""
+	var img := MinimapTerrainRenderer.generate_image_from_map(map_node)
+	if img == null:
+		return
+
+	# Scale the 1px-per-cell image up to the minimap viewport resolution
+	var viewport_size_i: Vector2i = find_child("MinimapViewport").size
+	img.resize(viewport_size_i.x, viewport_size_i.y, Image.INTERPOLATE_NEAREST)
+
+	var tex := ImageTexture.create_from_image(img)
+
+	# Replace the Background ColorRect with a TextureRect
+	if _viewport_background:
+		var tex_rect := TextureRect.new()
+		tex_rect.name = "Background"
+		tex_rect.texture = tex
+		tex_rect.stretch_mode = TextureRect.STRETCH_SCALE
+		tex_rect.set_anchors_preset(Control.PRESET_FULL_RECT)
+		tex_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+		var parent = _viewport_background.get_parent()
+		var idx = _viewport_background.get_index()
+		_viewport_background.queue_free()
+
+		parent.add_child(tex_rect)
+		parent.move_child(tex_rect, idx)
+		_viewport_background = tex_rect

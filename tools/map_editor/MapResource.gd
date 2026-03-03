@@ -131,16 +131,18 @@ func resize_map(new_size: Vector2i, terrain_count: int):
 	var old_size = size
 	size = new_size
 
-	_resize_byte_grid(collision_grid, old_size, 0)
-	_resize_float_grid(height_grid, old_size, 0.0)
-	_resize_float_grid(water_grid, old_size, 0.0)
-	_resize_byte_grid(cell_type_grid, old_size, CELL_GROUND)
+	collision_grid = _resized_byte_grid(collision_grid, old_size, 0)
+	height_grid = _resized_float_grid(height_grid, old_size, 0.0)
+	water_grid = _resized_float_grid(water_grid, old_size, 0.0)
+	cell_type_grid = _resized_byte_grid(cell_type_grid, old_size, CELL_GROUND)
 	_resize_splatmaps(terrain_count)
 
 	_remove_out_of_bounds_placements()
 
 
-func _resize_byte_grid(grid: PackedByteArray, old_size: Vector2i, default_value: int):
+func _resized_byte_grid(
+	grid: PackedByteArray, old_size: Vector2i, default_value: int
+) -> PackedByteArray:
 	var new_grid = PackedByteArray()
 	new_grid.resize(size.x * size.y)
 	new_grid.fill(default_value)
@@ -151,11 +153,12 @@ func _resize_byte_grid(grid: PackedByteArray, old_size: Vector2i, default_value:
 			var new_index = y * size.x + x
 			new_grid[new_index] = grid[old_index]
 
-	grid.resize(new_grid.size())
-	grid = new_grid
+	return new_grid
 
 
-func _resize_float_grid(grid: PackedFloat32Array, old_size: Vector2i, default_value: float):
+func _resized_float_grid(
+	grid: PackedFloat32Array, old_size: Vector2i, default_value: float
+) -> PackedFloat32Array:
 	var new_grid = PackedFloat32Array()
 	new_grid.resize(size.x * size.y)
 	new_grid.fill(default_value)
@@ -166,8 +169,7 @@ func _resize_float_grid(grid: PackedFloat32Array, old_size: Vector2i, default_va
 			var new_index = y * size.x + x
 			new_grid[new_index] = grid[old_index]
 
-	grid.resize(new_grid.size())
-	grid = new_grid
+	return new_grid
 
 
 func _resize_splatmaps(terrain_count: int):

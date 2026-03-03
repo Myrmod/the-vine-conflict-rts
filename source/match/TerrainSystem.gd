@@ -28,10 +28,16 @@ func ensure_mesh(map_size: Vector2):
 	predefined .tscn maps that have no MapResource."""
 	if $TerrainMesh.mesh:
 		return
+	_create_terrain_mesh(map_size)
+
+
+func _create_terrain_mesh(map_size: Vector2):
+	"""(Re-)create the terrain plane mesh with the given dimensions."""
 	# Save the terrain system shader before replacing with a simple fallback.
 	# For predefined maps (no MapResource) the shader has no textures and
 	# renders solid white, hiding everything at Y=0.
-	_terrain_shader_material = $TerrainMesh.material_override
+	if not _terrain_shader_material:
+		_terrain_shader_material = $TerrainMesh.material_override
 	$TerrainMesh.material_override = preload(
 		"res://source/match/resources/materials/terrain.material.tres"
 	)
@@ -41,6 +47,17 @@ func ensure_mesh(map_size: Vector2):
 	plane.subdivide_depth = int(map_size.y) - 1
 	$TerrainMesh.mesh = plane
 	$TerrainMesh.position = Vector3(map_size.x / 2.0, 0, map_size.y / 2.0)
+
+
+func resize_mesh(map_size: Vector2):
+	"""Recreate the terrain mesh at a new size (e.g. after map resize).
+	Also clears cached textures so they are rebuilt at the new resolution."""
+	_create_terrain_mesh(map_size)
+	# Force-clear texture caches — they were created at the old dimensions
+	# and ImageTexture.update() cannot change an image's size.
+	_height_grid_texture = null
+	splat_textures.clear()
+	splat_images.clear()
 
 
 func set_map(_map: MapResource):

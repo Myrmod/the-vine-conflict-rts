@@ -76,6 +76,33 @@ text = "Symmetry:"
 [node name="SymmetryOption" type="OptionButton" parent="VBoxContainer/Toolbar" unique_id=902609769]
 layout_mode = 2
 
+[node name="Sep1" type="VSeparator" parent="VBoxContainer/Toolbar"]
+layout_mode = 2
+
+[node name="MapSizeLabel" type="Label" parent="VBoxContainer/Toolbar"]
+layout_mode = 2
+text = "Map Size:"
+
+[node name="MapSizeX" type="SpinBox" parent="VBoxContainer/Toolbar"]
+layout_mode = 2
+min_value = 10.0
+max_value = 200.0
+value = 50.0
+prefix = "X:"
+suffix = ""
+
+[node name="MapSizeY" type="SpinBox" parent="VBoxContainer/Toolbar"]
+layout_mode = 2
+min_value = 10.0
+max_value = 200.0
+value = 50.0
+prefix = "Y:"
+suffix = ""
+
+[node name="ApplySizeButton" type="Button" parent="VBoxContainer/Toolbar"]
+layout_mode = 2
+text = "Apply"
+
 [node name="HSeparator" type="HSeparator" parent="VBoxContainer/Toolbar" unique_id=310674019]
 layout_mode = 2
 size_flags_horizontal = 3
@@ -357,3 +384,4 @@ layout_mode = 2
 text = "Position: 0, 0"
 
 [connection signal="pressed" from="VBoxContainer/Toolbar/BackButton" to="." method="_on_back_button_pressed"]
+[connection signal="pressed" from="VBoxContainer/Toolbar/ApplySizeButton" to="." method="_on_apply_size_pressed"]

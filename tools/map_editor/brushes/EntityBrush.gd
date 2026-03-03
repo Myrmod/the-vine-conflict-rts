@@ -107,11 +107,16 @@ func _refresh_placement_domains():
 	inst.queue_free()
 
 
+func is_single_placement() -> bool:
+	return true
+
+
 func get_brush_name() -> String:
 	if scene_path.is_empty():
 		return "Entity (None Selected)"
 	var entity_name = scene_path.get_file().get_basename()
-	return "Entity: " + entity_name
+	var rot_deg := int(rad_to_deg(rotation)) % 360
+	return "Entity: %s  rot: %d°" % [entity_name, rot_deg]
 
 
 func get_cursor_color() -> Color:

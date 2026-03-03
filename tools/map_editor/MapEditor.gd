@@ -44,6 +44,8 @@ var editor_cursor: EditorCursor
 var entity_preview_nodes := {}
 # Spawn point preview nodes
 var spawn_preview_nodes: Array[Node3D] = []
+# Symmetry axis visual guide
+var _symmetry_line_mesh: MeshInstance3D = null
 
 # Camera control – orthogonal isometric to match in-game camera
 var camera: Camera3D
@@ -181,9 +183,12 @@ func _on_file_menu_item_selected(id: int):
 	"""Handle file menu item selection"""
 	match id:
 		0:  # New Map
-			new_map(Vector2i(50, 50))
+			var sx = _get_map_size_x_spinbox()
+			var sy = _get_map_size_y_spinbox()
+			var map_size = Vector2i(int(sx.value) if sx else 50, int(sy.value) if sy else 50)
+			new_map(map_size)
 			if status_label:
-				status_label.text = "Created new map"
+				status_label.text = "Created new %dx%d map" % [map_size.x, map_size.y]
 		1:  # Load Map
 			dialogs.show_load_dialog()
 		2:  # Save Map
@@ -213,6 +218,9 @@ func _on_palette_entity_selected(scene_path: String):
 	_create_brush(BrushType.PLACE_ENTITY)
 	if current_brush is EntityBrush:
 		current_brush.set_entity(scene_path)
+
+	# Force ghost recreation for the new entity
+	_hide_entity_ghost()
 
 	# Update brush info
 	var brush_info = get_node_or_null("VBoxContainer/Toolbar/BrushInfo")
@@ -429,6 +437,9 @@ func _create_brush(brush_type: BrushType):
 
 	current_brush_type = brush_type
 
+	# Clear entity ghost when switching brushes
+	_hide_entity_ghost()
+
 	match brush_type:
 		BrushType.PAINT_COLLISION:
 			current_brush = PaintCollisionBrush.new(current_map, symmetry_system, 1)
@@ -541,21 +552,33 @@ func _input(event):
 			_reset_camera()
 		elif event.keycode == KEY_V:
 			_toggle_view_mode()
+		elif event.keycode == KEY_R:
+			# Rotate entity brush by 90°
+			_rotate_entity_brush(90.0)
 
 	# Handle mouse scroll for zoom and middle mouse for orbit
 	if event is InputEventMouseButton:
-		if event.button_index == MOUSE_BUTTON_WHEEL_UP and event.pressed:
+		# Only process viewport mouse events when the cursor is over the viewport
+		var _over_viewport := _is_mouse_over_viewport(event.position)
+		if event.button_index == MOUSE_BUTTON_WHEEL_UP and event.pressed and _over_viewport:
 			camera_size = maxf(camera_size_min, camera_size - camera_zoom_speed)
 			_update_camera_position()
-		elif event.button_index == MOUSE_BUTTON_WHEEL_DOWN and event.pressed:
+		elif event.button_index == MOUSE_BUTTON_WHEEL_DOWN and event.pressed and _over_viewport:
 			camera_size = minf(camera_size_max, camera_size + camera_zoom_speed)
 			_update_camera_position()
 		elif event.button_index == MOUSE_BUTTON_MIDDLE:
 			is_orbiting = event.pressed
 		elif event.button_index == MOUSE_BUTTON_LEFT:
-			is_painting = event.pressed
-			if event.pressed:
-				_try_paint_at_mouse(event.position)
+			if not event.pressed:
+				# Always clear painting state on release
+				is_painting = false
+			elif _over_viewport:
+				if current_brush and current_brush.is_single_placement():
+					# Single-placement brushes: click to place, no drag
+					_try_paint_at_mouse(event.position)
+				else:
+					is_painting = true
+					_try_paint_at_mouse(event.position)
 
 	elif event is InputEventMouseMotion:
 		if is_orbiting:
@@ -584,11 +607,100 @@ func _update_cursor_at_mouse(mouse_pos: Vector2):
 	var grid_pos: Variant = _raycast_mouse_to_grid(mouse_pos)
 	if grid_pos == null:
 		editor_cursor.set_visible_cursor(false)
+		_hide_entity_ghost()
 		return
 	editor_cursor.set_visible_cursor(true)
 	editor_cursor.set_cursor_position(grid_pos)
 	if current_brush:
 		editor_cursor.set_affected_cells(current_brush.get_affected_positions(grid_pos))
+	_update_entity_ghost(grid_pos)
+
+
+# ── Entity rotation ─────────────────────────────────────────────────
+
+
+func _rotate_entity_brush(degrees: float):
+	"""Rotate the current entity brush by the given degrees."""
+	if current_brush is EntityBrush:
+		current_brush.set_rotation(current_brush.rotation + deg_to_rad(degrees))
+		_update_brush_info_label()
+		_update_entity_ghost_rotation()
+
+
+func _update_brush_info_label():
+	var brush_info = get_node_or_null("VBoxContainer/Toolbar/BrushInfo")
+	if brush_info and current_brush:
+		brush_info.text = current_brush.get_brush_name()
+
+
+# ── Entity ghost preview ────────────────────────────────────────────
+
+var _entity_ghost: Node3D = null
+var _entity_ghost_path: String = ""
+
+
+func _update_entity_ghost(grid_pos: Vector2i):
+	"""Show a transparent ghost of the entity being placed at the cursor."""
+	if not current_brush is EntityBrush:
+		_hide_entity_ghost()
+		return
+
+	var brush: EntityBrush = current_brush
+	if brush.scene_path.is_empty():
+		_hide_entity_ghost()
+		return
+
+	# Recreate ghost if entity changed
+	if _entity_ghost_path != brush.scene_path:
+		_hide_entity_ghost()
+		var packed = load(brush.scene_path)
+		if not packed:
+			return
+		_entity_ghost = packed.instantiate()
+		_entity_ghost.name = "EntityGhost"
+		# Make it transparent
+		_apply_ghost_material(_entity_ghost)
+		viewport_3d.add_child(_entity_ghost)
+		_entity_ghost_path = brush.scene_path
+
+	if _entity_ghost and is_instance_valid(_entity_ghost):
+		var height_y: float = current_map.get_height_at(grid_pos) if current_map else 0.0
+		_entity_ghost.position = Vector3(grid_pos.x, height_y, grid_pos.y)
+		_entity_ghost.rotation.y = brush.rotation
+		_entity_ghost.visible = true
+
+
+func _update_entity_ghost_rotation():
+	"""Update the ghost rotation to match the brush without repositioning."""
+	if _entity_ghost and is_instance_valid(_entity_ghost) and current_brush is EntityBrush:
+		_entity_ghost.rotation.y = current_brush.rotation
+
+
+func _hide_entity_ghost():
+	"""Hide (and optionally free) the entity ghost."""
+	if _entity_ghost and is_instance_valid(_entity_ghost):
+		_entity_ghost.queue_free()
+		_entity_ghost = null
+		_entity_ghost_path = ""
+
+
+func _apply_ghost_material(node: Node):
+	"""Apply a translucent material override to all mesh children."""
+	var ghost_mat := StandardMaterial3D.new()
+	ghost_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	ghost_mat.albedo_color = Color(0.4, 0.8, 1.0, 0.4)
+	ghost_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	ghost_mat.no_depth_test = true
+	for child in node.find_children("*"):
+		if child is MeshInstance3D:
+			child.material_override = ghost_mat
+
+
+func _is_mouse_over_viewport(mouse_pos: Vector2) -> bool:
+	"""Return true if the mouse position is inside the viewport container rect."""
+	if not viewport_container:
+		return false
+	return viewport_container.get_global_rect().has_point(mouse_pos)
 
 
 func _raycast_mouse_to_grid(mouse_pos: Vector2) -> Variant:
@@ -740,6 +852,73 @@ func set_view_mode(mode: ViewMode):
 func set_symmetry_mode(mode: SymmetrySystem.Mode):
 	"""Set the symmetry mode for brush operations"""
 	symmetry_system.set_mode(mode)
+	_update_symmetry_line()
+
+
+func _update_symmetry_line():
+	"""Draw / remove a visual guide line for the current symmetry axis."""
+	if _symmetry_line_mesh and is_instance_valid(_symmetry_line_mesh):
+		_symmetry_line_mesh.queue_free()
+		_symmetry_line_mesh = null
+
+	if not viewport_3d or not symmetry_system:
+		return
+	if symmetry_system.current_mode == SymmetrySystem.Mode.NONE:
+		return
+
+	var sx: float = current_map.size.x
+	var sy: float = current_map.size.y
+	var im := ImmediateMesh.new()
+
+	var line_y: float = 0.3  # slightly above ground
+
+	match symmetry_system.current_mode:
+		SymmetrySystem.Mode.MIRROR_X:
+			# Vertical line through center X
+			var cx := sx * 0.5
+			im.surface_begin(Mesh.PRIMITIVE_LINES)
+			im.surface_add_vertex(Vector3(cx, line_y, 0))
+			im.surface_add_vertex(Vector3(cx, line_y, sy))
+			im.surface_end()
+
+		SymmetrySystem.Mode.MIRROR_Y:
+			# Horizontal line through center Y
+			var cz := sy * 0.5
+			im.surface_begin(Mesh.PRIMITIVE_LINES)
+			im.surface_add_vertex(Vector3(0, line_y, cz))
+			im.surface_add_vertex(Vector3(sx, line_y, cz))
+			im.surface_end()
+
+		SymmetrySystem.Mode.DIAGONAL:
+			# Diagonal line from (0,0) to (sx,sy)
+			im.surface_begin(Mesh.PRIMITIVE_LINES)
+			im.surface_add_vertex(Vector3(0, line_y, 0))
+			im.surface_add_vertex(Vector3(sx, line_y, sy))
+			im.surface_end()
+
+		SymmetrySystem.Mode.QUAD:
+			# Both center lines
+			var cx := sx * 0.5
+			var cz := sy * 0.5
+			im.surface_begin(Mesh.PRIMITIVE_LINES)
+			im.surface_add_vertex(Vector3(cx, line_y, 0))
+			im.surface_add_vertex(Vector3(cx, line_y, sy))
+			im.surface_add_vertex(Vector3(0, line_y, cz))
+			im.surface_add_vertex(Vector3(sx, line_y, cz))
+			im.surface_end()
+
+	var mat := StandardMaterial3D.new()
+	mat.albedo_color = Color(1, 1, 0, 0.8)
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	mat.no_depth_test = true
+
+	_symmetry_line_mesh = MeshInstance3D.new()
+	_symmetry_line_mesh.name = "SymmetryLine"
+	_symmetry_line_mesh.mesh = im
+	_symmetry_line_mesh.material_override = mat
+	_symmetry_line_mesh.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	viewport_3d.add_child(_symmetry_line_mesh)
 
 
 func new_map(_size: Vector2i):
@@ -747,9 +926,16 @@ func new_map(_size: Vector2i):
 	current_map = MapResource.new()
 	current_map.size = _size
 	current_map._initialize_collision_grid()
+	current_map._initialize_height_grid()
+	current_map._initialize_water_grid()
+	current_map._initialize_cell_type_grid()
 	symmetry_system.set_map_size(_size)
 	command_stack.clear()
+	_sync_size_spinboxes()
+	_rebuild_3d_scene()
+	_create_brush(current_brush_type)
 	_refresh_view()
+	_update_symmetry_line()
 
 
 func save_map(path: String):
@@ -783,6 +969,7 @@ func load_map(path: String):
 		current_map = loaded_map
 		symmetry_system.set_map_size(current_map.size)
 		command_stack.clear()
+		_sync_size_spinboxes()
 		# Reinitialize terrain system with loaded map
 		if terrain_system:
 			terrain_system.set_map(current_map)
@@ -791,7 +978,9 @@ func load_map(path: String):
 			collision_renderer.set_map_resource(current_map)
 		# Recreate current brush so it references the new map
 		_create_brush(current_brush_type)
+		_rebuild_3d_scene()
 		_refresh_view()
+		_update_symmetry_line()
 		if status_label:
 			status_label.text = "Map loaded: " + path.get_file()
 	else:
@@ -851,3 +1040,92 @@ func _capture_lighting_to_map_resource():
 func _on_back_button_pressed():
 	"""Return to main menu"""
 	get_tree().change_scene_to_file("res://source/main-menu/Main.tscn")
+
+
+# ============================================================
+# Map Size
+# ============================================================
+
+
+func _get_map_size_x_spinbox() -> SpinBox:
+	return get_node_or_null("VBoxContainer/Toolbar/MapSizeX")
+
+
+func _get_map_size_y_spinbox() -> SpinBox:
+	return get_node_or_null("VBoxContainer/Toolbar/MapSizeY")
+
+
+func _sync_size_spinboxes():
+	"""Update the map size spinboxes to reflect the current map size."""
+	var sx = _get_map_size_x_spinbox()
+	var sy = _get_map_size_y_spinbox()
+	if sx:
+		sx.value = current_map.size.x
+	if sy:
+		sy.value = current_map.size.y
+
+
+func _on_apply_size_pressed():
+	"""Resize the current map to the dimensions set in the spinboxes."""
+	var sx = _get_map_size_x_spinbox()
+	var sy = _get_map_size_y_spinbox()
+	if not sx or not sy:
+		return
+	var new_size := Vector2i(int(sx.value), int(sy.value))
+	if new_size == current_map.size:
+		return
+	resize_current_map(new_size)
+
+
+func resize_current_map(new_size: Vector2i):
+	"""Resize the current map and rebuild all 3D scene elements."""
+	var terrain_count: int = Globals.terrain_types.size() if Globals.terrain_types else 4
+	current_map.resize_map(new_size, terrain_count)
+	symmetry_system.set_map_size(new_size)
+	_rebuild_3d_scene()
+	_create_brush(current_brush_type)
+	_refresh_view()
+	_update_symmetry_line()
+	if status_label:
+		status_label.text = "Map resized to %dx%d" % [new_size.x, new_size.y]
+
+
+func _rebuild_3d_scene():
+	"""Rebuild 3D scene elements after a map resize (ground body, grid, terrain, etc.)."""
+	# Recreate ground collision body for raycasting so the physics server
+	# picks up the new extents on the very next query.
+	if viewport_3d:
+		var old_ground = viewport_3d.get_node_or_null("PaintGround")
+		if old_ground:
+			# Use free() (not queue_free) so the old physics body is removed
+			# from the server immediately — otherwise the smaller shape lingers
+			# until end-of-frame and raycasts to the expanded area return null.
+			old_ground.free()
+
+		var ground_body := StaticBody3D.new()
+		ground_body.name = "PaintGround"
+		var shape := CollisionShape3D.new()
+		var box := BoxShape3D.new()
+		box.size = Vector3(current_map.size.x, 1.0, current_map.size.y)
+		shape.shape = box
+		shape.position = Vector3(current_map.size.x * 0.5, -0.5, current_map.size.y * 0.5)
+		ground_body.add_child(shape)
+		viewport_3d.add_child(ground_body)
+
+	# Rebuild grid renderer
+	if grid_renderer:
+		grid_renderer.set_grid_size(current_map.size)
+
+	# Rebuild collision renderer
+	if collision_renderer:
+		collision_renderer.set_map_resource(current_map)
+		collision_renderer.refresh()
+
+	# Rebuild terrain system
+	if terrain_system:
+		terrain_system.resize_mesh(Vector2(current_map.size))
+		terrain_system.set_map(current_map)
+
+	# Re-center camera
+	camera_target = Vector3(current_map.size.x / 2.0, 0, current_map.size.y / 2.0)
+	_update_camera_position()
