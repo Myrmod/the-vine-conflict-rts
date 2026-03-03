@@ -6,6 +6,7 @@
 [ext_resource type="PackedScene" uid="uid://co800e4shs7bh" path="res://source/generic-scenes-and-nodes/3d/RectangularSelection3D.tscn" id="5_yi0pu"]
 [ext_resource type="PackedScene" uid="uid://clbjgy724q2si" path="res://source/generic-scenes-and-nodes/2d/DynamicCircle2D.tscn" id="6_ux0ef"]
 [ext_resource type="Script" uid="uid://cdr8087xuexpg" path="res://source/match/Terrain.gd" id="7_ccpu4"]
+[ext_resource type="Script" path="res://source/match/GlobalBuildGrid.gd" id="33_gbg"]
 [ext_resource type="Script" uid="uid://bgsj8b6lrs8gr" path="res://source/match/Navigation.gd" id="10_1wfp1"]
 [ext_resource type="PackedScene" uid="uid://b6n7cwv706x5n" path="res://source/match/debug/GodModeHud.tscn" id="10_p6gno"]
 [ext_resource type="Shader" uid="uid://c4hdqt5bbe6oh" path="res://source/shaders/2d/blurr.gdshader" id="12_pow7t"]
@@ -102,10 +103,14 @@ bounding_planes = Array[Plane]([Plane(1, 0, 0, 0), Plane(-1, 0, 0, -50), Plane(0
 [node name="RectangularSelection3D" parent="." unique_id=1823991713 instance=ExtResource("5_yi0pu")]
 
 [node name="Terrain" type="StaticBody3D" parent="." unique_id=1940924122]
+collision_layer = 2
 collision_mask = 0
 script = ExtResource("7_ccpu4")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Terrain" unique_id=647494412]
+
+[node name="GlobalBuildGrid" type="Node3D" parent="."]
+script = ExtResource("33_gbg")
 
 [node name="FogOfWar" type="Node3D" parent="." unique_id=722058329]
 script = ExtResource("5_eb52t")

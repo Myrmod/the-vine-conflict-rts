@@ -9,12 +9,14 @@ const AntiGroundTurretUnit = preload(
 	"res://source/factions/the_amuns/structures/AntiGroundTurret.tscn"
 )
 const AntiAirTurretUnit = preload("res://source/factions/the_amuns/structures/AntiAirTurret.tscn")
+const ShipyardUnit = preload("res://source/factions/the_amuns/structures/Shipyard.tscn")
 
 @onready var _ag_turret_button = find_child("PlaceAntiGroundTurretButton")
 @onready var _aa_turret_button = find_child("PlaceAntiAirTurretButton")
 @onready var _cc_button = find_child("PlaceCommandCenterButton")
 @onready var _vehicle_factory_button = find_child("PlaceVehicleFactoryButton")
 @onready var _aircraft_factory_button = find_child("PlaceAircraftFactoryButton")
+@onready var _shipyard_button = find_child("PlaceShipyardButton")
 
 var unit = null
 
@@ -100,6 +102,21 @@ func _ready():
 			]
 		)
 	)
+	_shipyard_button.tooltip_text = (
+		"{0} - {1}\n{2} HP\n{3}: {4}"
+		. format(
+			[
+				tr("SHIPYARD"),
+				tr("SHIPYARD_DESCRIPTION"),
+				UnitConstants.DEFAULT_PROPERTIES[ShipyardUnit.resource_path]["hp_max"],
+				tr("RESOURCE"),
+				(
+					UnitConstants
+					. DEFAULT_PROPERTIES[ShipyardUnit.resource_path]["costs"]["resource"]
+				),
+			]
+		)
+	)
 
 
 func _on_place_command_center_button_pressed():
@@ -120,3 +137,7 @@ func _on_place_anti_ground_turret_button_pressed():
 
 func _on_place_anti_air_turret_button_pressed():
 	MatchSignals.place_structure.emit(AntiAirTurretUnit)
+	
+	
+func _on_place_shipyard_button_pressed():
+	MatchSignals.place_structure.emit(ShipyardUnit)

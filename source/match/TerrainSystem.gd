@@ -16,20 +16,41 @@ var splat_textures: Array[Texture2D] = []
 ## per-vertex based on the MapResource height data.
 var _height_grid_texture: ImageTexture
 
+## The terrain system shader assigned in the scene file.  Saved before
+## ensure_mesh() overrides material_override with a simple fallback so
+## set_map() can restore it when a MapResource supplies real textures.
+var _terrain_shader_material: Material = null
+
+
+func ensure_mesh(map_size: Vector2):
+	"""Create the TerrainMesh geometry if it has not been set up yet.
+	Called by set_map() for MapResource maps, and directly by Match for
+	predefined .tscn maps that have no MapResource."""
+	if $TerrainMesh.mesh:
+		return
+	# Save the terrain system shader before replacing with a simple fallback.
+	# For predefined maps (no MapResource) the shader has no textures and
+	# renders solid white, hiding everything at Y=0.
+	_terrain_shader_material = $TerrainMesh.material_override
+	$TerrainMesh.material_override = preload(
+		"res://source/match/resources/materials/terrain.material.tres"
+	)
+	var plane := PlaneMesh.new()
+	plane.size = map_size
+	plane.subdivide_width = int(map_size.x) - 1
+	plane.subdivide_depth = int(map_size.y) - 1
+	$TerrainMesh.mesh = plane
+	$TerrainMesh.position = Vector3(map_size.x / 2.0, 0, map_size.y / 2.0)
+
 
 func set_map(_map: MapResource):
 	map = _map
 	size = map.size
 
-	if not $TerrainMesh.mesh:
-		var plane := PlaneMesh.new()
-		plane.size = _map.size
-		plane.subdivide_width = map.size.x - 1
-		plane.subdivide_depth = map.size.y - 1
-		$TerrainMesh.mesh = plane
-
-		# we need to properly set the position of the created mesh
-		$TerrainMesh.position = Vector3(map.size.x / 2.0, 0, map.size.y / 2.0)
+	ensure_mesh(map.size)
+	# Restore the terrain system shader now that we have real textures to load.
+	if _terrain_shader_material:
+		$TerrainMesh.material_override = _terrain_shader_material
 
 	if not $WaterMesh.mesh:
 		$WaterMesh.mesh = PlaneMesh.new()

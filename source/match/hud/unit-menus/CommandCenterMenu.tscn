@@ -7,6 +7,8 @@
 [ext_resource type="Texture2D" uid="uid://djmjxf3ikfrri" path="res://assets/ui/icons/VehicleFactory.png" id="5_kr1ye"]
 [ext_resource type="Texture2D" uid="uid://dvdd6mno4d5da" path="res://assets/ui/icons/AircraftFactory.png" id="6_ogyqs"]
 
+[sub_resource type="ImageTexture" id="ImageTexture_u87ix"]
+
 [node name="CommandCenterMenu" type="GridContainer" unique_id=1828532022]
 offset_right = 204.0
 offset_bottom = 152.0
@@ -95,9 +97,21 @@ mouse_filter = 2
 texture = ExtResource("6_ogyqs")
 expand_mode = 1
 
-[node name="Padding" type="Button" parent="." unique_id=636270567]
-custom_minimum_size = Vector2(48, 48)
+[node name="PlaceShipyardButton" type="Button" parent="." unique_id=396995312]
 layout_mode = 2
+focus_mode = 0
+text = "SY"
+
+[node name="TextureRect" type="TextureRect" parent="PlaceShipyardButton" unique_id=1995837584]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = SubResource("ImageTexture_u87ix")
+expand_mode = 1
 
 [node name="Padding2" type="Button" parent="." unique_id=781768800]
 custom_minimum_size = Vector2(48, 48)
@@ -128,3 +142,4 @@ layout_mode = 2
 [connection signal="pressed" from="PlaceCommandCenterButton" to="." method="_on_place_command_center_button_pressed"]
 [connection signal="pressed" from="PlaceVehicleFactoryButton" to="." method="_on_place_vehicle_factory_button_pressed"]
 [connection signal="pressed" from="PlaceAircraftFactoryButton" to="." method="_on_place_aircraft_factory_button_pressed"]
+[connection signal="pressed" from="PlaceShipyardButton" to="." method="_on_place_shipyard_button_pressed"]

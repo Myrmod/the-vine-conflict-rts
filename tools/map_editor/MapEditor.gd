@@ -45,19 +45,17 @@ var entity_preview_nodes := {}
 # Spawn point preview nodes
 var spawn_preview_nodes: Array[Node3D] = []
 
-# Camera control
+# Camera control – orthogonal isometric to match in-game camera
 var camera: Camera3D
-var camera_distance: float = 30.0
-var camera_angle: float = -45.0
+var camera_angle: float = -30.0  # fixed pitch matching IsometricCamera3D
 var camera_yaw: float = 0.0
 var camera_target: Vector3
 var camera_pan_speed: float = 20.0
-var camera_zoom_speed: float = 2.0
-var camera_min_distance: float = 5.0
-var camera_max_distance: float = 80.0
+var camera_zoom_speed: float = 1.0  # orthogonal size step
+var camera_size: float = 15.0  # orthogonal size (zoom level)
+var camera_size_min: float = 3.0
+var camera_size_max: float = 40.0
 var camera_rotate_sensitivity: float = 0.3
-var camera_min_pitch: float = -85.0
-var camera_max_pitch: float = -10.0
 var is_orbiting: bool = false
 
 # Dialogs
@@ -346,9 +344,11 @@ func _setup_3d_scene():
 	editor_cursor = EditorCursor.new()
 	viewport_3d.add_child(editor_cursor)
 
-	# Add camera
+	# Add camera – orthogonal isometric like the in-game camera
 	camera = Camera3D.new()
 	camera.name = "Camera"
+	camera.projection = Camera3D.PROJECTION_ORTHOGONAL
+	camera.size = camera_size
 	viewport_3d.add_child(camera)
 	_update_camera_position()
 
@@ -363,16 +363,21 @@ func _setup_3d_scene():
 
 
 func _update_camera_position():
-	"""Update camera position based on current pitch, yaw and distance"""
+	"""Update camera position based on current pitch, yaw and orthogonal size.
+	Mimics the in-game IsometricCamera3D: fixed -30° pitch, orthogonal projection."""
 	if not camera:
 		return
 
+	camera.size = camera_size
+
+	# Place the camera far enough so geometry is not clipped.
+	var arm_length: float = 80.0
 	var pitch_rad = deg_to_rad(camera_angle)
 	var yaw_rad = deg_to_rad(camera_yaw)
 	var offset = Vector3(
-		camera_distance * cos(pitch_rad) * sin(yaw_rad),
-		camera_distance * sin(abs(pitch_rad)),
-		camera_distance * cos(pitch_rad) * cos(yaw_rad)
+		arm_length * cos(pitch_rad) * sin(yaw_rad),
+		arm_length * sin(abs(pitch_rad)),
+		arm_length * cos(pitch_rad) * cos(yaw_rad)
 	)
 	camera.position = camera_target + offset
 	camera.look_at(camera_target, Vector3.UP)
@@ -381,8 +386,8 @@ func _update_camera_position():
 func _reset_camera():
 	"""Reset camera to default centered position"""
 	camera_target = Vector3(current_map.size.x / 2.0, 0, current_map.size.y / 2.0)
-	camera_distance = 30.0
-	camera_angle = -45.0
+	camera_size = 15.0
+	camera_angle = -30.0
 	camera_yaw = 0.0
 	_update_camera_position()
 
@@ -540,10 +545,10 @@ func _input(event):
 	# Handle mouse scroll for zoom and middle mouse for orbit
 	if event is InputEventMouseButton:
 		if event.button_index == MOUSE_BUTTON_WHEEL_UP and event.pressed:
-			camera_distance = maxf(camera_min_distance, camera_distance - camera_zoom_speed)
+			camera_size = maxf(camera_size_min, camera_size - camera_zoom_speed)
 			_update_camera_position()
 		elif event.button_index == MOUSE_BUTTON_WHEEL_DOWN and event.pressed:
-			camera_distance = minf(camera_max_distance, camera_distance + camera_zoom_speed)
+			camera_size = minf(camera_size_max, camera_size + camera_zoom_speed)
 			_update_camera_position()
 		elif event.button_index == MOUSE_BUTTON_MIDDLE:
 			is_orbiting = event.pressed
@@ -554,9 +559,8 @@ func _input(event):
 
 	elif event is InputEventMouseMotion:
 		if is_orbiting:
+			# Only allow yaw rotation; pitch stays fixed at -30° to match in-game view
 			camera_yaw += event.relative.x * camera_rotate_sensitivity
-			camera_angle -= event.relative.y * camera_rotate_sensitivity
-			camera_angle = clampf(camera_angle, camera_min_pitch, camera_max_pitch)
 			_update_camera_position()
 		else:
 			_update_cursor_at_mouse(event.position)

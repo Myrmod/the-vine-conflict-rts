@@ -45,6 +45,7 @@ var is_replay_mode = false
 
 @onready var navigation = $Navigation
 @onready var fog_of_war = $FogOfWar
+@onready var global_build_grid = $GlobalBuildGrid
 
 @onready var _camera = $IsometricCamera3D
 @onready var _players = $Players
@@ -497,10 +498,17 @@ func _get_visible_players():
 
 
 func _setup_subsystems_dependent_on_map():
-	_terrain.update_shape(map.find_child("Terrain").mesh)
+	# Ensure TerrainSystem has its mesh geometry. For MapResource maps this is
+	# already done by MapSceneBuilder.initialize_terrain_from_meta(); for
+	# predefined .tscn maps that have no MapResource we create it now so
+	# the navmesh bake has geometry to work with.
+	if map.terrain_system:
+		map.terrain_system.ensure_mesh(map.size)
+	_terrain.update_shape_from_map_size(map.size)
 	fog_of_war.resize(map.size)
 	_recalculate_camera_bounding_planes(map.size)
 	navigation.setup(map)
+	global_build_grid.build(map)
 
 
 func _recalculate_camera_bounding_planes(map_size: Vector2):

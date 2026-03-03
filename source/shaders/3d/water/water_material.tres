@@ -47,7 +47,7 @@ seamless_blend_skirt = 0.358
 
 [resource]
 resource_local_to_scene = true
-render_priority = 0
+render_priority = -1
 shader = ExtResource("1_mpvtw")
 shader_parameter/wave_speed = 0.02
 shader_parameter/edge_fade_power = 2.0
@@ -73,6 +73,7 @@ shader_parameter/normal_noise2 = ExtResource("5_12ghi")
 shader_parameter/normal_noise_size = 1.0
 shader_parameter/normal_noise_speed = 0.02
 shader_parameter/v_normal_scale = 1.0
+shader_parameter/refraction_strength = 0.025
 shader_parameter/normal_map_w = 256
 shader_parameter/sky_color = Color(0.0588235, 0.341176, 0.458824, 1)
 shader_parameter/high_color = Color(0, 0.540833, 0.59, 1)

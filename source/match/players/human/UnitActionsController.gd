@@ -33,7 +33,7 @@ func _try_navigating_selected_units_towards_position(target_point):
 		func(unit):
 			return (
 				unit.is_in_group("controlled_units")
-				and Enums.MovementTypes.LAND in unit.movement_domains
+				and unit.get_nav_domain() == NavigationConstants.Domain.TERRAIN
 				and Actions.Moving.is_applicable(unit)
 			)
 	)
@@ -41,7 +41,7 @@ func _try_navigating_selected_units_towards_position(target_point):
 		func(unit):
 			return (
 				unit.is_in_group("controlled_units")
-				and Enums.MovementTypes.AIR in unit.movement_domains
+				and unit.get_nav_domain() == NavigationConstants.Domain.AIR
 				and Actions.Moving.is_applicable(unit)
 			)
 	)

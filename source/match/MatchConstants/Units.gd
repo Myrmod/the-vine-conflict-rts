@@ -12,6 +12,8 @@ const STRUCTURE_BLUEPRINTS = {
 	"res://source/factions/the_amuns/structures/structure-geometries/AntiGroundTurret.tscn",
 	"res://source/factions/the_amuns/structures/AntiAirTurret.tscn":
 	"res://source/factions/the_amuns/structures/structure-geometries/AntiAirTurret.tscn",
+	"res://source/factions/the_amuns/structures/Shipyard.tscn":
+	"res://source/factions/the_amuns/structures/structure-geometries/Shipyard.tscn",
 }
 const DEFAULT_PROPERTIES = {
 	"res://source/factions/the_amuns/units/Drone.tscn":
@@ -19,6 +21,7 @@ const DEFAULT_PROPERTIES = {
 		"sight_range": 10.0,
 		"hp": 6,
 		"hp_max": 6,
+		"movement_domains": [Enums.MovementTypes.WATER],
 		"costs": {"resource": 2},
 		"build_time": 3.0,
 	},
@@ -116,6 +119,14 @@ const DEFAULT_PROPERTIES = {
 		],
 		"costs": {"resource": 2},
 		"build_time": 5.0,
+	},
+	"res://source/factions/the_amuns/structures/Shipyard.tscn":
+	{
+		"sight_range": 8.0,
+		"hp": 16,
+		"hp_max": 16,
+		"costs": {"resource": 5},
+		"build_time": 8.0,
 	},
 }
 const PROJECTILES = {

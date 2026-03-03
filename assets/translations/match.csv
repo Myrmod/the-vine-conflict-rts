@@ -9,6 +9,7 @@ BLUEPRINT_NOT_NAVIGABLE,Irregular terrain,Nierówny teren
 BLUEPRINT_NOT_ENOUGH_RESOURCES,Not enough resources,Brakuje zasobów
 BLUEPRINT_OUT_OF_MAP,Out of map limits,Poza granicami mapy
 BLUEPRINT_OUTSIDE_BUILD_RADIUS,Outside build radius,Poza zasięgiem budowy
+BLUEPRINT_WRONG_TERRAIN,Wrong terrain type,Nieodpowiedni typ terenu
 RESOURCE,Credits,Credits
 CANCEL_CURRENT_ACTION,Cancel current action,Anuluj aktualną akcję
 WORKER,Worker,Robotnik
@@ -29,3 +30,5 @@ VEHICLE_FACTORY,Vehicle factory,Fabryka pojazdów
 VEHICLE_FACTORY_DESCRIPTION,produces vehicles,wytwarza pojazdy
 AIRCRAFT_FACTORY,Aircraft factory,Fabryka jednostek powietrznych
 AIRCRAFT_FACTORY_DESCRIPTION,produces air units,wytwarza jednostki powietrzne
+SHIPYARD,Shipyard,Stocznia
+SHIPYARD_DESCRIPTION,produces water units,wytwarza jednostki wodne

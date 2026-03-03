@@ -1,31 +1,9 @@
 [gd_scene format=3 uid="uid://bkqj84vbodkb6"]
 
 [ext_resource type="PackedScene" uid="uid://b7c1crf36x1li" path="res://source/match/Map.tscn" id="1_c0hq7"]
-[ext_resource type="Texture2D" uid="uid://dhpb3f8vv6hsa" path="res://source/textures/Ground048_1K-PNG/Ground048_1K-PNG_Color.png" id="2_wg71e"]
-[ext_resource type="Texture2D" uid="uid://cauysayi3wikw" path="res://source/textures/Ground048_1K-PNG/Ground048_1K-PNG_AmbientOcclusion.png" id="3_4ecoi"]
-[ext_resource type="Texture2D" uid="uid://bmnxf35b6dp2o" path="res://source/textures/Ground048_1K-PNG/Ground048_1K-PNG_Displacement.png" id="4_5frur"]
-[ext_resource type="Texture2D" uid="uid://bobe4hujvon4o" path="res://source/textures/Ground048_1K-PNG/Ground048_1K-PNG_NormalGL.png" id="5_8t16r"]
 [ext_resource type="PackedScene" uid="uid://btor1402wkw8k" path="res://source/decorations/RockLargeA.tscn" id="5_blryv"]
 [ext_resource type="PackedScene" uid="uid://ifedmjndcw3x" path="res://source/factions/neutral/structures/ResourceNode/AncientTreeResourceNode.tscn" id="5_pkctb"]
-[ext_resource type="Texture2D" uid="uid://bfxovaj7bisp4" path="res://source/textures/Ground048_1K-PNG/Ground048_1K-PNG_Roughness.png" id="6_rbmah"]
 [ext_resource type="PackedScene" uid="uid://dwihfgr811wiv" path="res://source/factions/neutral/structures/ResourceNode/VineTile.tscn" id="9_4ecoi"]
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_pkctb"]
-albedo_texture = ExtResource("2_wg71e")
-roughness_texture = ExtResource("6_rbmah")
-normal_enabled = true
-normal_texture = ExtResource("5_8t16r")
-ao_enabled = true
-ao_texture = ExtResource("3_4ecoi")
-heightmap_enabled = true
-heightmap_texture = ExtResource("4_5frur")
-uv1_scale = Vector3(60, 60, 60)
-
-[sub_resource type="PlaneMesh" id="PlaneMesh_5frur"]
-resource_local_to_scene = true
-material = SubResource("StandardMaterial3D_pkctb")
-size = Vector2(104, 104)
-center_offset = Vector3(50, 0, 50)
 
 [node name="Map" unique_id=1347523015 instance=ExtResource("1_c0hq7")]
 size = Vector2(100, 100)
@@ -33,9 +11,7 @@ size = Vector2(100, 100)
 [node name="BlackBackgroundFixingAntiAliasingBug" parent="Geometry" parent_id_path=PackedInt32Array(1147796471) index="0" unique_id=51787617]
 metadata/_edit_lock_ = true
 
-[node name="Terrain" parent="Geometry" parent_id_path=PackedInt32Array(1147796471) index="1" unique_id=1784002302]
-mesh = SubResource("PlaneMesh_5frur")
-metadata/_edit_lock_ = true
+[node name="TerrainSystem" parent="Geometry" parent_id_path=PackedInt32Array(1147796471) index="2" unique_id=1246279829]
 
 [node name="Marker3D" type="Marker3D" parent="SpawnPoints" parent_id_path=PackedInt32Array(1918326678) index="0" unique_id=1986936700]
 transform = Transform3D(-1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, 10, 0, 30)
@@ -549,26 +525,26 @@ transform = Transform3D(-0.229008, 0, 2.99125, 0, 1.5, 0, -2.99125, 0, -0.229008
 [node name="RockLargeA24" parent="Decorations/Wall7" index="23" unique_id=231864588 instance=ExtResource("5_blryv")]
 transform = Transform3D(2.21699, 0, 2.02113, 0, 1.5, 0, -2.02113, 0, 2.21699, 11.1121, 9.53676e-07, 86.6327)
 
-[node name="VineTile" parent="." index="7" unique_id=1616044755 instance=ExtResource("9_4ecoi")]
+[node name="VineTile" parent="." index="6" unique_id=1616044755 instance=ExtResource("9_4ecoi")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12.058743, 0, 24.636229)
 
-[node name="VineTile2" parent="." index="8" unique_id=136565156 instance=ExtResource("9_4ecoi")]
+[node name="VineTile2" parent="." index="7" unique_id=136565156 instance=ExtResource("9_4ecoi")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 40.581676, 0, 15.020292)
 
-[node name="VineTile3" parent="." index="9" unique_id=829081781 instance=ExtResource("9_4ecoi")]
+[node name="VineTile3" parent="." index="8" unique_id=829081781 instance=ExtResource("9_4ecoi")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 70.583626, 0, 12.601311)
 
-[node name="VineTile4" parent="." index="10" unique_id=1060135816 instance=ExtResource("9_4ecoi")]
+[node name="VineTile4" parent="." index="9" unique_id=1060135816 instance=ExtResource("9_4ecoi")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 87.900246, 0, 25.275795)
 
-[node name="VineTile5" parent="." index="11" unique_id=954989195 instance=ExtResource("9_4ecoi")]
+[node name="VineTile5" parent="." index="10" unique_id=954989195 instance=ExtResource("9_4ecoi")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 83.42126, 0, 67.618614)
 
-[node name="VineTile6" parent="." index="12" unique_id=1450595835 instance=ExtResource("9_4ecoi")]
+[node name="VineTile6" parent="." index="11" unique_id=1450595835 instance=ExtResource("9_4ecoi")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 58.672123, 0, 88.841064)
 
-[node name="VineTile7" parent="." index="13" unique_id=1884600491 instance=ExtResource("9_4ecoi")]
+[node name="VineTile7" parent="." index="12" unique_id=1884600491 instance=ExtResource("9_4ecoi")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 33.052673, 1.9073486e-06, 87.95059)
 
-[node name="VineTile8" parent="." index="14" unique_id=430303522 instance=ExtResource("9_4ecoi")]
+[node name="VineTile8" parent="." index="13" unique_id=430303522 instance=ExtResource("9_4ecoi")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12.167513, 0, 65.686035)

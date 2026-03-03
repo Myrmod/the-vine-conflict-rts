@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://c5ye6ktpt21v"]
 
-[ext_resource type="Script" path="res://source/factions/the_amuns/structures/Shipyard.gd" id="1_j7t71"]
+[ext_resource type="Script" uid="uid://d3yg1sjwnjqo" path="res://source/factions/the_amuns/structures/Shipyard.gd" id="1_j7t71"]
 [ext_resource type="PackedScene" uid="uid://cgsi062w5fjia" path="res://source/match/units/traits/Highlight.tscn" id="1_r5i7t"]
 [ext_resource type="PackedScene" uid="uid://3c1h14nqdumt" path="res://source/match/units/traits/Selection.tscn" id="2_56ml3"]
 [ext_resource type="PackedScene" uid="uid://ckdoxcj48hgrw" path="res://source/factions/the_amuns/structures/structure-geometries/Shipyard.tscn" id="2_j7t71"]
@@ -18,7 +18,7 @@ size = Vector3(3, 2, 4)
 collision_layer = 2
 collision_mask = 0
 script = ExtResource("1_j7t71")
-placement_domains = Array[Enums.PlacementTypes]([1])
+placement_domains = Array[int]([1])
 
 [node name="Geometry" parent="." unique_id=1679539723 instance=ExtResource("2_j7t71")]
 

@@ -132,12 +132,6 @@ static func initialize_terrain_from_meta(map_node: Node3D):
 	if terrain_system and terrain_system.has_method("set_map"):
 		terrain_system.set_map(map_resource)
 
-		# Hide the original Terrain mesh so it doesn't z-fight with TerrainSystem's mesh.
-		# The Terrain MeshInstance3D is still used by Match for collision shape.
-		var terrain_mesh = map_node.find_child("Terrain")
-		if terrain_mesh is MeshInstance3D:
-			terrain_mesh.visible = false
-
 
 static func _apply_lighting(map_resource: MapResource, map_node: Node3D):
 	"""Override the Map scene's DirectionalLight3D and WorldEnvironment

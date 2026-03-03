@@ -59,11 +59,14 @@ func _ready():
 
 	_label.text = tr("LOADING_STEP_STARTING_MATCH")
 	await get_tree().physics_frame
-	get_parent().add_child(a_match)
 
-	# If the map was built from a MapResource, initialize TerrainSystem splatmaps
-	# now that the scene tree is ready.
+	# Initialize TerrainSystem (mesh, splatmaps, heights) BEFORE adding the
+	# match to the tree.  Match._ready() bakes the navmesh from the
+	# terrain_navigation_input group, so the TerrainMesh must already have
+	# its geometry at that point.
 	MapSceneBuilder.initialize_terrain_from_meta(map)
+
+	get_parent().add_child(a_match)
 
 	get_tree().current_scene = a_match
 	queue_free()

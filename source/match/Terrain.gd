@@ -7,8 +7,17 @@ func _ready():
 	input_event.connect(_on_input_event)
 
 
-func update_shape(reference_mesh):
-	_collision_shape.shape = reference_mesh.create_trimesh_shape()
+func update_shape_from_map_size(map_size: Vector2):
+	var plane := PlaneMesh.new()
+	plane.size = map_size
+	plane.center_offset = Vector3(map_size.x / 2.0, 0.0, map_size.y / 2.0)
+	_collision_shape.shape = plane.create_trimesh_shape()
+	# Add to navmesh source group so the flat collision plane is baked into
+	# the navigation mesh. Using the collision shape (instead of the visual
+	# TerrainMesh) avoids GPU→CPU readback and keeps the navmesh flat at
+	# Y=0 — water cells stay navigable regardless of visual displacement.
+	if not is_in_group("terrain_navigation_input"):
+		add_to_group("terrain_navigation_input")
 
 
 func _on_input_event(_camera, event, _click_position, _click_normal, _shape_idx):

@@ -1,5 +1,5 @@
 shader_type spatial;
-render_mode cull_disabled, world_vertex_coords, depth_draw_always, ambient_light_disabled, diffuse_burley;
+render_mode cull_disabled, world_vertex_coords, depth_draw_opaque, ambient_light_disabled, diffuse_burley, shadows_disabled;
 
 //uniform float sync_time;
 varying vec3 triplanar_pos;
@@ -35,6 +35,7 @@ uniform sampler2D normal_noise2 : hint_normal, filter_linear_mipmap;
 uniform float normal_noise_size = 51.2; // for correct scaling related to foam, this must be a multiple of 2 with thje decimal moved if you want it smaller
 uniform float normal_noise_speed = 0.05;
 uniform float v_normal_scale = 1; // scaling of the vertex normals effect
+uniform float refraction_strength : hint_range(0.0, 0.1, 0.001) = 0.025; // how much the water distorts what is seen below
 uniform int normal_map_w = 256; // this should be set to the size of your normal map texture, which is assumed to be square
 
 uniform vec3 sky_color : source_color;
@@ -192,15 +193,19 @@ void fragment() {
 
 	NORMAL_MAP = mix(n_map1, n_map2, 0.5);
 
+	// Distort the screen-texture UV so shadows / objects under water shift with waves
+	vec2 refracted_uv = SCREEN_UV + (NORMAL_MAP.xy - 0.5) * refraction_strength;
+	refracted_uv = clamp(refracted_uv, vec2(0.0), vec2(1.0));
+
 	if(FRONT_FACING) {
-		vec3 under = texture(screen_texture, SCREEN_UV).rgb;
+		vec3 under = texture(screen_texture, refracted_uv).rgb;
 		_albedo = mix(under, deep, alpha_blend);
 		float _ALPHA = remap(0.0, opacity, opacity_floor, opacity_ceiling, pow(alpha_blend, edge_fade_power));
 		_albedo = mix(under + transmit_color, _albedo, _ALPHA);
 	} else {
 		NORMAL = -NORMAL;
 		NORMAL_MAP = mix(vec3(1.0,1.0,1.0), vec3(0.0,0.0,0.0), NORMAL_MAP);
-		vec3 over = texture(screen_texture, SCREEN_UV).rgb;
+		vec3 over = texture(screen_texture, refracted_uv).rgb;
 		_albedo = mix(over, surface_bottom.rgb, surface_bottom.a);
 	}
 	

@@ -6,11 +6,10 @@
 [ext_resource type="PackedScene" uid="uid://ivlo0e66qocl" path="res://source/match/units/traits/Movement.tscn" id="4_wemaw"]
 [ext_resource type="PackedScene" uid="uid://c3ssj2p6voauk" path="res://source/match/units/traits/HealthBar.tscn" id="5_vqiw1"]
 [ext_resource type="PackedScene" uid="uid://cmvtt1w71wso2" path="res://assets/models/kenney-spacekit/craft_speederA.glb" id="6_88s7t"]
-[ext_resource type="PackedScene" uid="uid://b1r67ex7h3veu" path="res://source/match/units/traits/AirToTerrainMarker.tscn" id="7_hxqr1"]
 [ext_resource type="PackedScene" uid="uid://d4cm4yhtf11ur" path="res://source/match/units/traits/Targetability.tscn" id="8_hsorq"]
 
 [sub_resource type="CylinderShape3D" id="CylinderShape3D_2f8yw"]
-height = 0.3
+height = 1.0
 
 [node name="Drone" type="Area3D" unique_id=1635144182]
 collision_layer = 4
@@ -23,7 +22,7 @@ script = ExtResource("1_5qo4j")
 transform = Transform3D(0.3, 0, 0, 0, 0.3, 0, 0, 0, 0.3, -0.6, 0, -0.45)
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=1332296032]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.15, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.4, 0)
 shape = SubResource("CylinderShape3D_2f8yw")
 
 [node name="Highlight" parent="." unique_id=2050365467 instance=ExtResource("1_44soy")]
@@ -39,13 +38,11 @@ path_height_offset = 0.8
 radius = 0.6
 neighbor_distance = 8.0
 max_neighbors = 40
-domain = 0
+terrain_move_type = 1
 
 [node name="HealthBar" parent="." unique_id=1639718595 instance=ExtResource("5_vqiw1")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.7, 0)
 size = Vector2(100, 10)
-
-[node name="AirToTerrainMarker" parent="." unique_id=1584848763 instance=ExtResource("7_hxqr1")]
 
 [node name="Targetability" parent="." unique_id=480810698 instance=ExtResource("8_hsorq")]
 radius = 0.6

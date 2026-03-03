@@ -45,6 +45,14 @@ var _passive_movement_detected: bool = false
 func _physics_process(delta: float) -> void:
 	_interim_speed = speed * delta
 
+	# Water units move directly toward their target instead of following the
+	# navmesh path.  The terrain navmesh covers land+water, so an Agent3D path
+	# may route through land cells which _can_enter_position blocks, causing
+	# wiggling.  Water areas are open, so pathfinding is unnecessary.
+	if terrain_move_type == NavigationConstants.TerrainMoveType.WATER:
+		_process_water_movement()
+		return
+
 	# The navmesh is flat at Y=0 but the unit may sit at terrain height (e.g. Y=2).
 	# NavigationAgent3D uses 3D distance for waypoint advancement, so the Y gap
 	# prevents it from ever reaching the next waypoint.  Drop to navmesh height
@@ -100,6 +108,34 @@ func move(movement_target: Vector3) -> void:
 
 func stop() -> void:
 	target_position = Vector3.INF
+
+
+func _process_water_movement() -> void:
+	"""Direct movement for water units — bypasses navmesh path following.
+	Water units head straight for their target.  The avoidance system
+	(set_velocity → velocity_computed) still prevents unit overlap, and
+	_can_enter_position prevents entering non-water cells."""
+	var terrain_y: float = _unit.global_transform.origin.y
+	_unit.global_transform.origin.y = 0.0
+
+	if target_position == Vector3.INF:
+		set_velocity(Vector3.ZERO)
+		_unit.global_transform.origin.y = terrain_y
+		return
+
+	var diff: Vector3 = target_position - _unit.global_transform.origin
+	diff.y = 0.0
+
+	if diff.length() < target_desired_distance:
+		set_velocity(Vector3.ZERO)
+		_unit.global_transform.origin.y = terrain_y
+		target_position = Vector3.INF
+		movement_finished.emit()
+		return
+
+	var new_velocity: Vector3 = diff.normalized() * _interim_speed
+	set_velocity(new_velocity)
+	_unit.global_transform.origin.y = terrain_y
 
 
 func _align_unit_position_to_navigation() -> void:
@@ -231,6 +267,11 @@ func _on_velocity_computed(safe_velocity: Vector3) -> void:
 
 
 func _on_navigation_finished() -> void:
+	# Water units handle arrival in _process_water_movement, so ignore
+	# the NavigationAgent3D signal which may fire spuriously when the
+	# navmesh has no valid path for a water-only unit.
+	if terrain_move_type == NavigationConstants.TerrainMoveType.WATER:
+		return
 	target_position = Vector3.INF
 	movement_finished.emit()
 

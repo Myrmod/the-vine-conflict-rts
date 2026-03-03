@@ -2,7 +2,24 @@ class_name BuildRadius
 
 extends Node3D
 
+## Data-only build-radius node.
+##
+## Defines which cells around a structure are part of the build area (land and
+## water radii).  It does NOT render anything — the GlobalBuildGrid is the
+## single grid implementation and draws the radius portion during placement.
+##
+## Responsibilities:
+##   - Calculate land / water cell sets at _ready().
+##   - Provide get_world_cells() so GlobalBuildGrid can collect them.
+##   - Provide is_position_in_radius() for placement-gating checks.
+##   - Track whether parent structure has finished construction.
+
 const Human = preload("res://source/match/players/human/Human.gd")
+const Structure = preload("res://source/match/units/Structure.gd")
+
+## Multiplier applied to radius_in_cells for the water build radius.
+## Every structure emits both a land and a water build radius; the water one is larger.
+const WATER_RADIUS_MULTIPLIER := 2
 
 @export var cell_size := 1.0
 
@@ -16,117 +33,103 @@ const Human = preload("res://source/match/players/human/Human.gd")
 # Option B: Manually define which grid cells are buildable (used when radius_in_cells == 0)
 @export var allowed_cells: Array[Vector2i] = []
 
-@onready var mesh_instance: MeshInstance3D = $GridOverlayMesh
+## Whether the parent structure has finished construction.
+## Build radii are only active (visible + counted) after construction completes.
+var _construction_complete := true
+
+# Internal cell sets (offsets relative to parent's cell)
+var _land_cells: Array[Vector2i] = []
+var _water_cells: Array[Vector2i] = []
 
 
 func _ready():
 	cell_size = FeatureFlags.grid_cell_size
 	if radius_in_cells > 0:
+		var land_radius = radius_in_cells
+		var water_radius = radius_in_cells * WATER_RADIUS_MULTIPLIER
 		if use_square_shape:
-			allowed_cells = _generate_square_cells(radius_in_cells)
+			_land_cells = _generate_square_cells(land_radius)
+			_water_cells = _generate_square_cells(water_radius)
 		else:
-			allowed_cells = _generate_circular_cells(radius_in_cells)
-	# Grab the material from the original PlaneMesh and duplicate it so each
-	# BuildRadius instance has its own copy (avoids shared sub-resource issues)
-	var original_mat: Material = null
-	if mesh_instance.mesh and mesh_instance.mesh.get_surface_count() > 0:
-		original_mat = mesh_instance.mesh.surface_get_material(0)
-	if original_mat == null:
-		original_mat = mesh_instance.material_override
-	if original_mat:
-		original_mat = original_mat.duplicate()
-	mesh_instance.mesh = _build_mesh(original_mat)
-	# Sync shader cell_size from FeatureFlags
-	var mat = original_mat as ShaderMaterial
-	if mat:
-		mat.set_shader_parameter("cell_size", cell_size)
-	# Detach from parent's rotation so the grid stays axis-aligned
-	top_level = true
-	global_position = get_parent().global_position
-	# Hidden by default — shown when placement mode is active
-	visible = false
-	add_to_group("build_radii")
-	MatchSignals.structure_placement_started.connect(_on_placement_started)
-	MatchSignals.structure_placement_ended.connect(_on_placement_ended)
+			_land_cells = _generate_circular_cells(land_radius)
+			_water_cells = _generate_circular_cells(water_radius)
+	# Keep allowed_cells as the land set for backward compatibility
+	allowed_cells = _land_cells
 
+	# Remove the legacy template PlaneMesh child if present
+	var template_mesh = get_node_or_null("GridOverlayMesh")
+	if template_mesh:
+		template_mesh.queue_free()
 
-func _on_placement_started():
-	# Only show for own/allied structures
+	# Check if the parent is a structure that's still under construction
 	var unit = get_parent()
-	if unit == null or not is_instance_valid(unit):
-		return
-	var player = unit.player if "player" in unit else null
-	if player == null:
-		return
-	# Find the human player to compare ownership/alliance
-	var human_players = get_tree().get_nodes_in_group("players").filter(func(p): return p is Human)
-	if human_players.is_empty():
-		return
-	var human_player = human_players[0]
-	var is_own = player == human_player
-	var is_allied = player != human_player and player.team == human_player.team
-	if is_own or (is_allied and FeatureFlags.allow_placement_in_allied_build_radius):
-		visible = true
+	if unit is Structure and unit.is_under_construction():
+		_construction_complete = false
+		unit.constructed.connect(_on_structure_constructed)
+	else:
+		_construction_complete = true
+
+	add_to_group("build_radii")
 
 
-func _on_placement_ended():
-	visible = false
+func _on_structure_constructed():
+	_construction_complete = true
 
 
-func _build_mesh(mat: Material) -> ArrayMesh:
-	var st := SurfaceTool.new()
-	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+## Returns world-space cell coordinates covered by this build radius.
+## GlobalBuildGrid calls this during placement to collect all cells to display.
+func get_world_cells(placement_domains: Array) -> Array[Vector2i]:
+	var parent_pos: Vector3 = get_parent().global_position
+	var origin := Vector2i(int(floor(parent_pos.x)), int(floor(parent_pos.z)))
 
-	for cell in allowed_cells:
-		_add_cell_quad(st, cell)
+	var cells: Array[Vector2i]
+	if Enums.PlacementTypes.WATER in placement_domains:
+		cells = _water_cells
+	else:
+		cells = _land_cells
 
-	st.generate_normals()
-	var mesh = st.commit()
-	if mat:
-		mesh.surface_set_material(0, mat)
-	return mesh
+	var world_cells: Array[Vector2i] = []
+	for cell in cells:
+		world_cells.append(Vector2i(origin.x + cell.x, origin.y + cell.y))
+	return world_cells
 
 
-func _add_cell_quad(st: SurfaceTool, cell: Vector2i):
-	var half = cell_size * 0.5
-	var line_pad = cell_size * 0.05 * 0.5  # half of line_width (matching shader default)
+## Checks if a world position falls within this BuildRadius's cells for the given domain.
+func is_position_in_radius(
+	world_pos: Vector3, domain: Enums.PlacementTypes = Enums.PlacementTypes.LAND
+) -> bool:
+	var parent_pos: Vector3 = get_parent().global_position
+	var local_pos := world_pos - parent_pos
+	var cell := Vector2i(int(floor(local_pos.x / cell_size)), int(floor(local_pos.z / cell_size)))
+	if domain == Enums.PlacementTypes.WATER:
+		return cell in _water_cells
+	return cell in _land_cells
 
-	var cx = cell.x * cell_size
-	var cz = cell.y * cell_size
 
-	# Expand outer edges so boundary lines render at full width
-	var x_min = (
-		cx - half - (line_pad if not allowed_cells.has(Vector2i(cell.x - 1, cell.y)) else 0.0)
-	)
-	var x_max = (
-		cx + half + (line_pad if not allowed_cells.has(Vector2i(cell.x + 1, cell.y)) else 0.0)
-	)
-	var z_min = (
-		cz - half - (line_pad if not allowed_cells.has(Vector2i(cell.x, cell.y - 1)) else 0.0)
-	)
-	var z_max = (
-		cz + half + (line_pad if not allowed_cells.has(Vector2i(cell.x, cell.y + 1)) else 0.0)
-	)
-
-	var a = Vector3(x_min, 0.005, z_min)
-	var b = Vector3(x_max, 0.005, z_min)
-	var c = Vector3(x_max, 0.005, z_max)
-	var d = Vector3(x_min, 0.005, z_max)
-
-	# UVs for proper texture/shader sampling
-	st.set_uv(Vector2(0, 0))
-	st.add_vertex(a)
-	st.set_uv(Vector2(1, 0))
-	st.add_vertex(b)
-	st.set_uv(Vector2(1, 1))
-	st.add_vertex(c)
-
-	st.set_uv(Vector2(0, 0))
-	st.add_vertex(a)
-	st.set_uv(Vector2(1, 1))
-	st.add_vertex(c)
-	st.set_uv(Vector2(0, 1))
-	st.add_vertex(d)
+## Static helper: checks if a world position is within any owned/allied build radius.
+## Pass the player who is placing the structure and the placement domain to check.
+static func is_position_in_any_build_radius(
+	tree: SceneTree,
+	world_pos: Vector3,
+	placing_player,
+	domain: Enums.PlacementTypes = Enums.PlacementTypes.LAND,
+) -> bool:
+	var build_radii = tree.get_nodes_in_group("build_radii")
+	for br: BuildRadius in build_radii:
+		if not br._construction_complete:
+			continue
+		var unit = br.get_parent()
+		if unit == null or not is_instance_valid(unit):
+			continue
+		var owner_player = unit.player if "player" in unit else null
+		if owner_player == null:
+			continue
+		var is_own = owner_player == placing_player
+		var is_allied = owner_player != placing_player and owner_player.team == placing_player.team
+		if is_own or (is_allied and FeatureFlags.allow_placement_in_allied_build_radius):
+			if br.is_position_in_radius(world_pos, domain):
+				return true
+	return false
 
 
 func _generate_circular_cells(radius: int) -> Array[Vector2i]:
@@ -155,36 +158,3 @@ func _generate_square_cells(radius: int) -> Array[Vector2i]:
 		for y in range(-radius, radius + 1):
 			cells.append(Vector2i(x, y))
 	return cells
-
-
-## Returns the grid cell coordinate for a world position
-func _world_to_cell(world_pos: Vector3) -> Vector2i:
-	var local_pos = world_pos - global_position
-	return Vector2i(roundi(local_pos.x / cell_size), roundi(local_pos.z / cell_size))
-
-
-## Checks if a world position falls within this BuildRadius's allowed cells
-func is_position_in_radius(world_pos: Vector3) -> bool:
-	var cell = _world_to_cell(world_pos)
-	return cell in allowed_cells
-
-
-## Static helper: checks if a world position is within any owned/allied build radius.
-## Pass the player who is placing the structure.
-static func is_position_in_any_build_radius(
-	tree: SceneTree, world_pos: Vector3, placing_player
-) -> bool:
-	var build_radii = tree.get_nodes_in_group("build_radii")
-	for br: BuildRadius in build_radii:
-		var unit = br.get_parent()
-		if unit == null or not is_instance_valid(unit):
-			continue
-		var owner_player = unit.player if "player" in unit else null
-		if owner_player == null:
-			continue
-		var is_own = owner_player == placing_player
-		var is_allied = owner_player != placing_player and owner_player.team == placing_player.team
-		if is_own or (is_allied and FeatureFlags.allow_placement_in_allied_build_radius):
-			if br.is_position_in_radius(world_pos):
-				return true
-	return false

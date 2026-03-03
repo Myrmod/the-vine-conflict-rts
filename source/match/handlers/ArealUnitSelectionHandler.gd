@@ -124,11 +124,5 @@ func _on_selection_finished(topdown_polygon_2d):
 
 
 func _matches_nav_domain(unit, navigation_domain: NavigationConstants.Domain) -> bool:
-	"""Check if a unit's movement_domains correspond to the given nav domain."""
-	if navigation_domain == NavigationConstants.Domain.AIR:
-		return Enums.MovementTypes.AIR in unit.movement_domains
-	# TERRAIN domain matches LAND or WATER movement types
-	return (
-		Enums.MovementTypes.LAND in unit.movement_domains
-		or Enums.MovementTypes.WATER in unit.movement_domains
-	)
+	"""Check if a unit belongs to the given navigation domain."""
+	return unit.get_nav_domain() == navigation_domain

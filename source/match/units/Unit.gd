@@ -88,10 +88,31 @@ func _get_radius():
 
 
 func get_nav_domain():
-	"""Derive the NavigationConstants.Domain from movement_domains."""
-	if Enums.MovementTypes.AIR in movement_domains:
-		return NavigationConstants.Domain.AIR
+	"""Derive the NavigationConstants.Domain from movement_domains,
+	with fallback to Movement/MovementObstacle child node domain."""
+	if not movement_domains.is_empty():
+		if Enums.MovementTypes.AIR in movement_domains:
+			return NavigationConstants.Domain.AIR
+		return NavigationConstants.Domain.TERRAIN
+	# Fallback for units that don't explicitly set movement_domains
+	if find_child("Movement") != null:
+		return find_child("Movement").domain
+	if find_child("MovementObstacle") != null:
+		return find_child("MovementObstacle").domain
 	return NavigationConstants.Domain.TERRAIN
+
+
+func get_effective_movement_types() -> Array:
+	"""Return the effective movement types for this unit.
+	Used for attack-domain targeting (can an attacker with LAND attack this unit?).
+	Falls back to deriving from Movement/MovementObstacle domain when
+	movement_domains is not explicitly set."""
+	if not movement_domains.is_empty():
+		return movement_domains
+	var domain = get_nav_domain()
+	if domain == NavigationConstants.Domain.AIR:
+		return [Enums.MovementTypes.AIR]
+	return [Enums.MovementTypes.LAND]
 
 
 func _get_movement_speed():
@@ -144,12 +165,13 @@ func _teardown_current_action():
 
 
 func _safety_checks():
-	if Enums.MovementTypes.AIR in movement_domains:
+	var nav_domain = get_nav_domain()
+	if nav_domain == NavigationConstants.Domain.AIR:
 		assert(
 			radius < Air.MAX_AGENT_RADIUS or is_equal_approx(radius, Air.MAX_AGENT_RADIUS),
 			"Unit radius exceeds the established limit"
 		)
-	elif Enums.MovementTypes.LAND in movement_domains:
+	elif nav_domain == NavigationConstants.Domain.TERRAIN:
 		assert(
 			(
 				not _is_movable()

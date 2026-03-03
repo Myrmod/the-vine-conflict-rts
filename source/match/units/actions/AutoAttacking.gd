@@ -31,7 +31,9 @@ static func is_applicable(source_unit, target_unit):
 		and source_unit.player != target_unit.player
 		# TEAM SYSTEM: Same-team players cannot attack each other - core team mechanic
 		and source_unit.player.team != target_unit.player.team
-		and source_unit.attack_domains.any(func(d): return d in target_unit.movement_domains)
+		and source_unit.attack_domains.any(
+			func(d): return d in target_unit.get_effective_movement_types()
+		)
 	)
 
 
