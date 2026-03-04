@@ -1,10 +1,11 @@
-[gd_scene load_steps=7 format=3 uid="uid://b6n7cwv706x5n"]
+[gd_scene load_steps=8 format=3 uid="uid://b6n7cwv706x5n"]
 
 [ext_resource type="Script" path="res://source/match/debug/GodModeHud.gd" id="1_n4lpk"]
 [ext_resource type="Script" path="res://source/match/debug/UnitsManager.gd" id="3_1fe88"]
 [ext_resource type="Script" path="res://source/match/debug/TimeManager.gd" id="4_0nfe7"]
 [ext_resource type="Script" path="res://source/match/debug/FogOfWarManager.gd" id="5_8n1qy"]
 [ext_resource type="Script" path="res://source/match/debug/VisiblePlayerManager.gd" id="5_tlapw"]
+[ext_resource type="Script" path="res://source/match/debug/BuildGridManager.gd" id="6_bgm"]
 
 [sub_resource type="ButtonGroup" id="ButtonGroup_0h5ms"]
 resource_local_to_scene = false
@@ -204,8 +205,43 @@ layout_mode = 2
 focus_mode = 0
 text = "Toggle"
 
+[node name="BuildGridManager" type="PanelContainer" parent="MarginContainer2/VBoxContainer"]
+layout_mode = 2
+script = ExtResource("6_bgm")
+
+[node name="MarginContainer" type="MarginContainer" parent="MarginContainer2/VBoxContainer/BuildGridManager"]
+layout_mode = 2
+theme_override_constants/margin_left = 5
+theme_override_constants/margin_top = 5
+theme_override_constants/margin_right = 5
+theme_override_constants/margin_bottom = 5
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer2/VBoxContainer/BuildGridManager/MarginContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="MarginContainer2/VBoxContainer/BuildGridManager/MarginContainer/VBoxContainer"]
+layout_mode = 2
+text = "Build Grid"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Panel" type="Panel" parent="MarginContainer2/VBoxContainer/BuildGridManager/MarginContainer/VBoxContainer/Label"]
+show_behind_parent = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="ToggleButton" type="Button" parent="MarginContainer2/VBoxContainer/BuildGridManager/MarginContainer/VBoxContainer"]
+layout_mode = 2
+focus_mode = 0
+text = "Toggle"
+
 [connection signal="pressed" from="MarginContainer/VBoxContainer/UnitsManager/MarginContainer/VBoxContainer/ActionCaptionToggleButton" to="MarginContainer/VBoxContainer/UnitsManager" method="_on_action_caption_toggle_button_pressed"]
 [connection signal="pressed" from="MarginContainer/VBoxContainer/UnitsManager/MarginContainer/VBoxContainer/DebugVisualsToggleButton" to="MarginContainer/VBoxContainer/UnitsManager" method="_on_debug_visuals_toggle_button_pressed"]
 [connection signal="pressed" from="MarginContainer/VBoxContainer/UnitsManager/MarginContainer/VBoxContainer/ClearAllButton" to="MarginContainer/VBoxContainer/UnitsManager" method="_on_clear_all_button_pressed"]
 [connection signal="value_changed" from="MarginContainer/VBoxContainer/TimeManager/MarginContainer/VBoxContainer/TimeScaleSpinBox" to="MarginContainer/VBoxContainer/TimeManager" method="_on_time_scale_spin_box_value_changed"]
 [connection signal="pressed" from="MarginContainer2/VBoxContainer/FogOfWarManager/MarginContainer/VBoxContainer/ToggleButton" to="MarginContainer2/VBoxContainer/FogOfWarManager" method="_on_toggle_button_pressed"]
+[connection signal="pressed" from="MarginContainer2/VBoxContainer/BuildGridManager/MarginContainer/VBoxContainer/ToggleButton" to="MarginContainer2/VBoxContainer/BuildGridManager" method="_on_toggle_button_pressed"]

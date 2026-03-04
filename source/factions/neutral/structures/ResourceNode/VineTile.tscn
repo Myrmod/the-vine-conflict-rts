@@ -1,0 +1,45 @@
+[gd_scene format=3 uid="uid://dwihfgr811wiv"]
+
+[ext_resource type="Script" uid="uid://brs0ajtgkymql" path="res://source/factions/neutral/structures/ResourceNode/Resource.gd" id="1_6f511"]
+[ext_resource type="Texture2D" uid="uid://on5cwebgrnfr" path="res://source/factions/neutral/structures/ResourceNode/vines/vines_albedo.png" id="2_mxcoa"]
+[ext_resource type="Texture2D" uid="uid://dk82rm70rgbiw" path="res://source/factions/neutral/structures/ResourceNode/vines/vines_height.png" id="3_blh1h"]
+[ext_resource type="Texture2D" uid="uid://cdcy74x0rvasw" path="res://source/factions/neutral/structures/ResourceNode/vines/vines_metallic.png" id="4_vbq7f"]
+[ext_resource type="Texture2D" uid="uid://bim57lq6bqos8" path="res://source/factions/neutral/structures/ResourceNode/vines/vines_normal-ogl.png" id="5_rktrf"]
+[ext_resource type="Texture2D" uid="uid://dijujweyo6p2e" path="res://source/factions/neutral/structures/ResourceNode/vines/vines_roughness.png" id="6_yhewt"]
+[ext_resource type="PackedScene" uid="uid://d4cm4yhtf11ur" path="res://source/match/units/traits/Targetability.tscn" id="7_32e8m"]
+[ext_resource type="PackedScene" uid="uid://3c1h14nqdumt" path="res://source/match/units/traits/Selection.tscn" id="8_4imn5"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_o470q"]
+albedo_texture = ExtResource("2_mxcoa")
+metallic = 1.0
+metallic_texture = ExtResource("4_vbq7f")
+roughness_texture = ExtResource("6_yhewt")
+normal_enabled = true
+normal_texture = ExtResource("5_rktrf")
+heightmap_enabled = true
+heightmap_texture = ExtResource("3_blh1h")
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_8u36v"]
+material = SubResource("StandardMaterial3D_o470q")
+size = Vector2(1, 1)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_42j2y"]
+
+[node name="VineTile" type="Area3D" unique_id=1616044755 groups=["resource_units"]]
+script = ExtResource("1_6f511")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="." unique_id=348170576]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, 0)
+mesh = SubResource("PlaneMesh_8u36v")
+skeleton = NodePath("../..")
+
+[node name="Targetability" parent="." unique_id=20131795 instance=ExtResource("7_32e8m")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.07, 0)
+radius = 0.6
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=351272760]
+shape = SubResource("BoxShape3D_42j2y")
+
+[node name="Selection" parent="." unique_id=669614356 instance=ExtResource("8_4imn5")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, 0)
+radius = 0.5

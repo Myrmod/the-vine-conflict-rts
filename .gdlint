@@ -1,0 +1,5 @@
+# gdlint configuration for this project
+# Disables the max-line-length constraint
+[max-line-length]
+enabled = false
+max-line-length = 200

@@ -1,3 +1,19 @@
+# FOG OF WAR SYSTEM: Renders what each player can see on the map.
+# The \"revealed_units\" group (created by Match._setup_unit_groups()) drives visibility.
+# Units in \"revealed_units\" are visible; others are in fog of war.
+#
+# HOW TEAM VISION WORKS:
+# - Match._setup_unit_groups() adds units to \"revealed_units\" if:
+#   1. Their controlling player is visible to the human player, OR
+#   2. Their controlling player is on the same TEAM as a visible player
+# - When a teammate's unit is added to \"revealed_units\", FogOfWar sees it and reveals it
+# - This creates automatic team vision: all playable teammates share sight automatically
+#
+# RENDERING:
+# - Revealed units: rendered with vision circles in the viewport
+# - Unrevealed units: hidden by fog texture overlay
+# - \"shroud\" areas: never seen before
+# - \"fog\" areas: seen before but currently hidden
 extends Node3D
 
 const DynamicCircle2D = preload("res://source/generic-scenes-and-nodes/2d/DynamicCircle2D.tscn")
@@ -28,6 +44,8 @@ func _ready():
 
 
 func _physics_process(_delta):
+	# Sync vision circles for all currently revealed units
+	# This updates the fog texture every frame based on what units can see
 	var units_synced = {}
 	var units_to_sync = get_tree().get_nodes_in_group("revealed_units")
 	for unit in units_to_sync:

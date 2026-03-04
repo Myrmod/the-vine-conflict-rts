@@ -1,12 +1,12 @@
 extends "res://source/match/units/actions/Action.gd"
 
-const Worker = preload("res://source/match/units/Worker.gd")
+const Worker = preload("res://source/factions/the_amuns/units/Worker.gd")
 const ResourceUnit = preload("res://source/match/units/non-player/ResourceUnit.gd")
 
 var _resource_unit = null
 var _timer = null
 
-@onready var _unit = Utils.NodeEx.find_parent_with_group(self , "units")
+@onready var _unit = Utils.NodeEx.find_parent_with_group(self, "units")
 @onready var _unit_movement_trait = _unit.find_child("Movement")
 
 
@@ -15,7 +15,7 @@ static func is_applicable(source_unit, target_unit):
 		source_unit is Worker
 		and target_unit is ResourceUnit
 		and not source_unit.is_full()
-		and Utils.MatchUtils.Movement.units_adhere(source_unit, target_unit)
+		and MatchUtils.Movement.units_adhere(source_unit, target_unit)
 	)
 
 
@@ -39,22 +39,17 @@ func _setup_timer():
 	_timer = Timer.new()
 	_timer.timeout.connect(_transfer_single_resource_unit_from_resource_to_worker)
 	add_child(_timer)
-	if "resource_a" in _resource_unit:
+	if "resource" in _resource_unit:
 		_timer.start(Resources.A.COLLECTING_TIME_S)
-	elif "resource_b" in _resource_unit:
-		_timer.start(Resources.B.COLLECTING_TIME_S)
 
 
 func _transfer_single_resource_unit_from_resource_to_worker():
-	if not Utils.MatchUtils.Movement.units_adhere(_unit, _resource_unit):
+	if not MatchUtils.Movement.units_adhere(_unit, _resource_unit):
 		queue_free()
 		return
-	if "resource_a" in _resource_unit:
-		_resource_unit.resource_a -= 1
-		_unit.resource_a += 1
-	if "resource_b" in _resource_unit:
-		_resource_unit.resource_b -= 1
-		_unit.resource_b += 1
+	if "resource" in _resource_unit:
+		_resource_unit.resource -= _unit.resources_gather_rate
+		_unit.resource += _unit.resources_gather_rate
 	if _unit.is_full():
 		queue_free()
 

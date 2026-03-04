@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="TerrainType" format=3 uid="uid://bxlyaefu4hpdb"]
+
+[ext_resource type="Script" uid="uid://s622ule41hbv" path="res://tools/map_editor/library/TerrainLibrary/TerrainType.gd" id="1_1mrpx"]
+[ext_resource type="Texture2D" uid="uid://dhpb3f8vv6hsa" path="res://source/textures/Ground048_1K-PNG/Ground048_1K-PNG_Color.png" id="1_t05bb"]
+[ext_resource type="Texture2D" uid="uid://cauysayi3wikw" path="res://source/textures/Ground048_1K-PNG/Ground048_1K-PNG_AmbientOcclusion.png" id="2_opxyp"]
+[ext_resource type="Texture2D" uid="uid://bmnxf35b6dp2o" path="res://source/textures/Ground048_1K-PNG/Ground048_1K-PNG_Displacement.png" id="3_wldtw"]
+[ext_resource type="Texture2D" uid="uid://cq6uste5s720g" path="res://source/textures/Ground048_1K-PNG/Ground048_1K-PNG_NormalDX.png" id="4_42aun"]
+[ext_resource type="Texture2D" uid="uid://bobe4hujvon4o" path="res://source/textures/Ground048_1K-PNG/Ground048_1K-PNG_NormalGL.png" id="5_g28gc"]
+[ext_resource type="Texture2D" uid="uid://bfxovaj7bisp4" path="res://source/textures/Ground048_1K-PNG/Ground048_1K-PNG_Roughness.png" id="6_e6g74"]
+[ext_resource type="Texture2D" uid="uid://dj5yc8ahtv6ld" path="res://source/textures/Ground048_1K-PNG/Ground048.png" id="6_opxyp"]
+
+[resource]
+script = ExtResource("1_1mrpx")
+name = "Dirt2"
+preview = ExtResource("6_opxyp")
+ao = ExtResource("2_opxyp")
+albedo = ExtResource("1_t05bb")
+displacement = ExtResource("3_wldtw")
+normal_dx = ExtResource("4_42aun")
+normal_gl = ExtResource("5_g28gc")
+roughness = ExtResource("6_e6g74")
+metadata/_custom_type_script = "uid://s622ule41hbv"

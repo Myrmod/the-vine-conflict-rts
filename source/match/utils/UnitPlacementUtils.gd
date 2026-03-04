@@ -55,7 +55,7 @@ static func find_valid_position_radially_yet_skip_starting_radius(
 			)
 			next_rotation_angle_rad += rotation_angle_rad
 		if shuffle:
-			radial_positions.shuffle()
+			MatchUtils.rng_shuffle(radial_positions)
 		for radial_position in radial_positions:
 			if _is_agent_placement_position_valid(
 				radial_position, radius, units, navigation_map_rid

@@ -3,15 +3,21 @@ extends NavigationObstacle3D
 @export var domain = NavigationConstants.Domain.TERRAIN
 @export var path_height_offset = 0.0
 
+## Determines which terrain cell types this unit can occupy.
+@export var terrain_move_type: NavigationConstants.TerrainMoveType = (
+	NavigationConstants.TerrainMoveType.LAND
+)
+
 @onready var _match = find_parent("Match")
 @onready var _unit = get_parent()
 
 
 func _ready():
-	await get_tree().process_frame # wait for navigation to be operational
-	set_navigation_map(_match.navigation.get_navigation_map_rid_by_domain(domain))
-	_align_unit_position_to_navigation()
-	_affect_navigation_if_needed()
+	await get_tree().process_frame  # wait for navigation to be operational
+	if _match:
+		set_navigation_map(_match.navigation.get_navigation_map_rid_by_domain(domain))
+		_align_unit_position_to_navigation()
+		_affect_navigation_if_needed()
 
 
 func _exit_tree():

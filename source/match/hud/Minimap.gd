@@ -16,15 +16,20 @@ var _camera_movement_active = false
 
 @export var MaxSize = 100
 
+
 func _ready():
 	if not FeatureFlags.show_minimap:
 		queue_free()
 	_remove_dummy_nodes()
 	await _match.ready  # make sure Match is ready as it may change map on setup
-	
-	var viewport_size = (_match.find_child("Map").size * MINIMAP_PIXELS_PER_WORLD_METER)
+
+	var map_node = _match.find_child("Map")
+	var viewport_size = map_node.size * MINIMAP_PIXELS_PER_WORLD_METER
 	find_child("MinimapViewport").size = viewport_size
-	
+
+	# Replace the flat gray background with a terrain overview image
+	_generate_terrain_background(map_node)
+
 	await get_tree().process_frame
 
 	get_parent().pivot_offset = Vector2(0, viewport_size.y)
@@ -34,7 +39,7 @@ func _ready():
 	if larger_dimension > MaxSize:
 		scale_factor = MaxSize / larger_dimension * 2
 	get_parent().scale = Vector2(scale_factor, scale_factor)
-	
+
 	_texture_rect.gui_input.connect(_on_gui_input)
 
 
@@ -162,7 +167,7 @@ func _issue_movement_action(position_2d_within_texture_rect):
 	if world_position_2d == null:
 		return
 	var abstract_world_position_3d = Vector3(world_position_2d.x, 0, world_position_2d.y)
-	
+
 	#Leaving this temporarily because maybe the OG writer knew something I don't?
 	#var camera = get_viewport().get_camera_3d()
 	#var target_point_on_colliding_surface = camera.get_ray_intersection(
@@ -175,13 +180,14 @@ func _issue_movement_action(position_2d_within_texture_rect):
 	var ray_from = Vector3(world_position_2d.x, 1000.0, world_position_2d.y)
 	var ray_to = Vector3(world_position_2d.x, -1000.0, world_position_2d.y)
 	var query = PhysicsRayQueryParameters3D.create(ray_from, ray_to)
-	query.collision_mask = 1 #Landscape Collision channel
+	query.collision_mask = 1  #Landscape Collision channel
 	var result = space_state.intersect_ray(query)
 
 	if result:
 		MatchSignals.terrain_targeted.emit(result.position)
 	else:
 		MatchSignals.terrain_targeted.emit(abstract_world_position_3d)
+
 
 func _on_gui_input(event):
 	if event is InputEventMouseButton:
@@ -194,3 +200,33 @@ func _on_gui_input(event):
 			_issue_movement_action(event.position)
 	elif event is InputEventMouseMotion and _camera_movement_active:
 		_try_teleporting_camera_based_on_local_texture_rect_position(event.position)
+
+
+func _generate_terrain_background(map_node: Node3D) -> void:
+	"""Replace the flat ColorRect background with a terrain overview."""
+	var img := MinimapTerrainRenderer.generate_image_from_map(map_node)
+	if img == null:
+		return
+
+	# Scale the 1px-per-cell image up to the minimap viewport resolution
+	var viewport_size_i: Vector2i = find_child("MinimapViewport").size
+	img.resize(viewport_size_i.x, viewport_size_i.y, Image.INTERPOLATE_NEAREST)
+
+	var tex := ImageTexture.create_from_image(img)
+
+	# Replace the Background ColorRect with a TextureRect
+	if _viewport_background:
+		var tex_rect := TextureRect.new()
+		tex_rect.name = "Background"
+		tex_rect.texture = tex
+		tex_rect.stretch_mode = TextureRect.STRETCH_SCALE
+		tex_rect.set_anchors_preset(Control.PRESET_FULL_RECT)
+		tex_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+		var parent = _viewport_background.get_parent()
+		var idx = _viewport_background.get_index()
+		_viewport_background.queue_free()
+
+		parent.add_child(tex_rect)
+		parent.move_child(tex_rect, idx)
+		_viewport_background = tex_rect

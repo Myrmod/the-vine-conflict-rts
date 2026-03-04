@@ -3,6 +3,14 @@ class_name MatchUtils
 const Movement = preload("res://source/match/utils/UnitMovementUtils.gd")
 const Placement = preload("res://source/match/utils/UnitPlacementUtils.gd")
 
+## Fisher-Yates shuffle using the match-local RNG. Deterministic across replays.
+static func rng_shuffle(array: Array) -> void:
+	for i in range(array.size() - 1, 0, -1):
+		var j = Match.rng.randi_range(0, i)
+		var tmp = array[i]
+		array[i] = array[j]
+		array[j] = tmp
+
 static func traverse_node_tree_and_replace_materials_matching_albedo(
 	starting_node, albedo_to_match, epsilon, material_to_set
 ):

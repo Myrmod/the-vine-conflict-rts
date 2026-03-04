@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="TerrainLibrary" format=3 uid="uid://wobncmqv0prv"]
+
+[ext_resource type="Script" uid="uid://c4s1goa5mxjb" path="res://tools/map_editor/library/TerrainLibrary/TerrainLibrary.gd" id="1_gpkdy"]
+[ext_resource type="Script" uid="uid://s622ule41hbv" path="res://tools/map_editor/library/TerrainLibrary/TerrainType.gd" id="2_jpajb"]
+[ext_resource type="Resource" uid="uid://cxrgox06sfwce" path="res://tools/map_editor/library/TerrainLibrary/TerrainTypes/Dirt1.tres" id="3_nrsxc"]
+[ext_resource type="Resource" uid="uid://bxlyaefu4hpdb" path="res://tools/map_editor/library/TerrainLibrary/TerrainTypes/Dirt2.tres" id="4_014lu"]
+[ext_resource type="Resource" uid="uid://bsmn83flki4o5" path="res://tools/map_editor/library/TerrainLibrary/TerrainTypes/Dirt3.tres" id="5_kttgc"]
+[ext_resource type="Resource" uid="uid://t5wl8eagnb7u" path="res://tools/map_editor/library/TerrainLibrary/TerrainTypes/Dirt4.tres" id="6_7exas"]
+[ext_resource type="Resource" uid="uid://s4rmnieqr6eb" path="res://tools/map_editor/library/TerrainLibrary/TerrainTypes/Grass1.tres" id="7_whytu"]
+[ext_resource type="Resource" uid="uid://bevu3mdx8wxr4" path="res://tools/map_editor/library/TerrainLibrary/TerrainTypes/Grass2.tres" id="8_a67wt"]
+[ext_resource type="Resource" uid="uid://d2be60ya8ihib" path="res://tools/map_editor/library/TerrainLibrary/TerrainTypes/Grass3.tres" id="9_abjyy"]
+[ext_resource type="Resource" uid="uid://cu5nppktjell7" path="res://tools/map_editor/library/TerrainLibrary/TerrainTypes/Gravel1.tres" id="10_srpnk"]
+[ext_resource type="Resource" uid="uid://des5frsun0ltx" path="res://tools/map_editor/library/TerrainLibrary/TerrainTypes/Snow1.tres" id="11_qsjlo"]
+[ext_resource type="Resource" uid="uid://drkbuglt47awj" path="res://tools/map_editor/library/TerrainLibrary/TerrainTypes/Snow2.tres" id="12_6e5hr"]
+[ext_resource type="Resource" uid="uid://coxbr2nbs078y" path="res://tools/map_editor/library/TerrainLibrary/TerrainTypes/Snow3.tres" id="13_15a12"]
+
+[resource]
+script = ExtResource("1_gpkdy")
+terrain_types = Array[ExtResource("2_jpajb")]([ExtResource("3_nrsxc"), ExtResource("4_014lu"), ExtResource("5_kttgc"), ExtResource("6_7exas"), ExtResource("7_whytu"), ExtResource("8_a67wt"), ExtResource("9_abjyy"), ExtResource("10_srpnk"), ExtResource("11_qsjlo"), ExtResource("12_6e5hr"), ExtResource("13_15a12")])
+metadata/_custom_type_script = "uid://c4s1goa5mxjb"

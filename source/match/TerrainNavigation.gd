@@ -13,12 +13,8 @@ var _map_geometry = NavigationMeshSourceGeometryData3D.new()
 
 func _ready():
 	assert(_safety_checks())
-	NavigationServer3D.map_set_cell_size(
-		navigation_map_rid, Terrain.CELL_SIZE
-	)
-	NavigationServer3D.map_set_cell_height(
-		navigation_map_rid, Terrain.CELL_HEIGHT
-	)
+	NavigationServer3D.map_set_cell_size(navigation_map_rid, Terrain.CELL_SIZE)
+	NavigationServer3D.map_set_cell_height(navigation_map_rid, Terrain.CELL_HEIGHT)
 	NavigationServer3D.map_force_update(navigation_map_rid)
 	MatchSignals.schedule_navigation_rebake.connect(_on_schedule_navigation_rebake)
 
@@ -38,6 +34,12 @@ func bake(map):
 	assert(
 		_navigation_region.navigation_mesh.get_polygon_count() == 0,
 		"bake() should be called exactly once - during runtime"
+	)
+	# Ensure the navmesh parses both mesh instances AND static colliders.
+	# Cliff wall StaticBody3D nodes have no mesh — they are only detected
+	# when PARSED_GEOMETRY_BOTH (or STATIC_COLLIDERS) is active.
+	_navigation_region.navigation_mesh.geometry_parsed_geometry_type = (
+		NavigationMesh.PARSED_GEOMETRY_BOTH
 	)
 	# setting custom AABB for baking so that height of dynamic AABB is always the same
 	# - without such setting, re-baking may yield different results depending on geometry height
@@ -77,23 +79,15 @@ func _sync_navmesh_changes():
 
 func _safety_checks():
 	assert(
-		is_equal_approx(
-			_navigation_region.navigation_mesh.agent_radius,
-			Terrain.MAX_AGENT_RADIUS
-		),
+		is_equal_approx(_navigation_region.navigation_mesh.agent_radius, Terrain.MAX_AGENT_RADIUS),
 		"Navmesh 'agent_radius' must match established constant"
 	)
 	assert(
-		is_equal_approx(
-			_navigation_region.navigation_mesh.cell_size, Terrain.CELL_SIZE
-		),
+		is_equal_approx(_navigation_region.navigation_mesh.cell_size, Terrain.CELL_SIZE),
 		"Navmesh 'cell_size' must match established constant"
 	)
 	assert(
-		is_equal_approx(
-			_navigation_region.navigation_mesh.cell_height,
-			Terrain.CELL_HEIGHT
-		),
+		is_equal_approx(_navigation_region.navigation_mesh.cell_height, Terrain.CELL_HEIGHT),
 		"Navmesh 'cell_height' must match established constant"
 	)
 	return true

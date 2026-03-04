@@ -7,6 +7,7 @@
 [ext_resource type="PackedScene" uid="uid://btvii654eytjr" path="res://source/match/hud/unit-menus/WorkerMenu.tscn" id="4_1s3pp"]
 [ext_resource type="PackedScene" uid="uid://d1b3uq81171lf" path="res://source/match/hud/unit-menus/VehicleFactoryMenu.tscn" id="4_ngnkq"]
 [ext_resource type="PackedScene" uid="uid://dk3no87nfpp8i" path="res://source/match/hud/unit-menus/AircraftFactoryMenu.tscn" id="5_jocca"]
+[ext_resource type="PackedScene" uid="uid://bshipyardmenu1" path="res://source/match/hud/unit-menus/ShipyardMenu.tscn" id="6_symen"]
 
 [node name="UnitMenus" type="PanelContainer" unique_id=1247134405]
 script = ExtResource("1_hugbq")
@@ -84,6 +85,10 @@ layout_mode = 2
 mouse_filter = 2
 
 [node name="AircraftFactoryMenu" parent="MarginContainer" unique_id=671015378 instance=ExtResource("5_jocca")]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="ShipyardMenu" parent="MarginContainer" unique_id=7710001 instance=ExtResource("6_symen")]
 layout_mode = 2
 mouse_filter = 2
 

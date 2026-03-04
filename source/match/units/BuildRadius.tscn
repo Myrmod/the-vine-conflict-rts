@@ -1,0 +1,14 @@
+[gd_scene format=3 uid="uid://b1gne72rgc7un"]
+
+[ext_resource type="Script" uid="uid://3pyyw3flsw8y" path="res://source/match/units/BuildRadius.gd" id="1_6xn1v"]
+[ext_resource type="Material" uid="uid://do2mao874r7lk" path="res://source/match/resources/materials/grid_overlay.material.tres" id="2_mat"]
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_uhw6o"]
+material = ExtResource("2_mat")
+
+[node name="BuildRadius" type="Node3D" unique_id=1664502028]
+script = ExtResource("1_6xn1v")
+radius_in_cells = 7
+
+[node name="GridOverlayMesh" type="MeshInstance3D" parent="." unique_id=1327095809]
+mesh = SubResource("PlaneMesh_uhw6o")

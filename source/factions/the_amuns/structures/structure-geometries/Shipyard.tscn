@@ -1,0 +1,15 @@
+[gd_scene format=3 uid="uid://ckdoxcj48hgrw"]
+
+[ext_resource type="PackedScene" uid="uid://dhcxwg04t1ywt" path="res://assets/models/kenney-spacekit/hangar_roundA.glb" id="1_g1wl6"]
+[ext_resource type="PackedScene" uid="uid://bc4m68e5j0g42" path="res://assets/models/kenney-spacekit/platform_large.glb" id="2_efbkl"]
+
+[node name="Geometry" type="Node3D" unique_id=1679539723]
+
+[node name="Transforms" type="Node3D" parent="." unique_id=118736546]
+transform = Transform3D(0.95, 0, 0, 0, 0.95, 0, 0, 0, 0.95, 0, 0, 0)
+
+[node name="hangar_roundA" parent="Transforms" unique_id=1145329453 instance=ExtResource("1_g1wl6")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 0, -1.5)
+
+[node name="platform_large" parent="Transforms" unique_id=935822204 instance=ExtResource("2_efbkl")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 0, 0.5)

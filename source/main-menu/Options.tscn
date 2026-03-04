@@ -1,10 +1,10 @@
-[gd_scene load_steps=4 format=3 uid="uid://bawu5eau3t4ek"]
+[gd_scene format=3 uid="uid://bawu5eau3t4ek"]
 
 [ext_resource type="Theme" uid="uid://c2kgsk4ffhbwo" path="res://source/resources/main_menu.theme" id="1_a5uwh"]
-[ext_resource type="Script" path="res://source/main-menu/Options.gd" id="1_msrcd"]
+[ext_resource type="Script" uid="uid://bwlxtvc7gkan8" path="res://source/main-menu/Options.gd" id="1_msrcd"]
 [ext_resource type="PackedScene" uid="uid://dij5xr8swlfdx" path="res://source/main-menu/Background.tscn" id="2_mgrkx"]
 
-[node name="Options" type="Control"]
+[node name="Options" type="Control" unique_id=616166029]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -14,55 +14,76 @@ grow_vertical = 2
 theme = ExtResource("1_a5uwh")
 script = ExtResource("1_msrcd")
 
-[node name="Background" parent="." instance=ExtResource("2_mgrkx")]
+[node name="Background" parent="." unique_id=1282378650 instance=ExtResource("2_mgrkx")]
 layout_mode = 1
 
-[node name="PanelContainer" type="PanelContainer" parent="."]
+[node name="PanelContainer" type="PanelContainer" parent="." unique_id=1463419247]
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -224.5
-offset_top = -112.0
-offset_right = 224.5
-offset_bottom = 112.0
+offset_left = -960.0
+offset_top = -540.0
+offset_right = 960.0
+offset_bottom = 540.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="MarginContainer" type="MarginContainer" parent="PanelContainer"]
+[node name="MarginContainer" type="MarginContainer" parent="PanelContainer" unique_id=1033921594]
 layout_mode = 2
 theme_override_constants/margin_left = 20
 theme_override_constants/margin_top = 20
 theme_override_constants/margin_right = 20
 theme_override_constants/margin_bottom = 20
 
-[node name="VBoxContainer" type="VBoxContainer" parent="PanelContainer/MarginContainer"]
-custom_minimum_size = Vector2(400, 0)
+[node name="VBoxContainer" type="VBoxContainer" parent="PanelContainer/MarginContainer" unique_id=1771038079]
+layout_mode = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="PanelContainer/MarginContainer/VBoxContainer" unique_id=2110868724]
+layout_mode = 2
+
+[node name="Button" type="Button" parent="PanelContainer/MarginContainer/VBoxContainer/HBoxContainer" unique_id=1587202184]
+layout_mode = 2
+theme = ExtResource("1_a5uwh")
+text = "BACK"
+
+[node name="TabContainer" type="TabContainer" parent="PanelContainer/MarginContainer/VBoxContainer" unique_id=440954596]
+layout_mode = 2
+current_tab = 1
+
+[node name="Video" type="ScrollContainer" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer" unique_id=94142765]
+visible = false
+custom_minimum_size = Vector2(0, 956)
+layout_mode = 2
+metadata/_tab_index = 0
+
+[node name="VBoxContainer" type="VBoxContainer" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Video" unique_id=1554509516]
+custom_minimum_size = Vector2(400, 73)
 layout_mode = 2
 theme_override_constants/separation = 10
 alignment = 1
 
-[node name="PanelContainer" type="PanelContainer" parent="PanelContainer/MarginContainer/VBoxContainer"]
+[node name="PanelContainer" type="PanelContainer" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Video/VBoxContainer" unique_id=1099225355]
 layout_mode = 2
 
-[node name="MarginContainer" type="MarginContainer" parent="PanelContainer/MarginContainer/VBoxContainer/PanelContainer"]
+[node name="MarginContainer" type="MarginContainer" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Video/VBoxContainer/PanelContainer" unique_id=1961817564]
 layout_mode = 2
 theme_override_constants/margin_left = 5
 theme_override_constants/margin_top = 5
 theme_override_constants/margin_right = 5
 theme_override_constants/margin_bottom = 5
 
-[node name="VBoxContainer" type="VBoxContainer" parent="PanelContainer/MarginContainer/VBoxContainer/PanelContainer/MarginContainer"]
+[node name="VBoxContainer" type="VBoxContainer" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Video/VBoxContainer/PanelContainer/MarginContainer" unique_id=682463576]
 layout_mode = 2
 
-[node name="Label" type="Label" parent="PanelContainer/MarginContainer/VBoxContainer/PanelContainer/MarginContainer/VBoxContainer"]
+[node name="Label" type="Label" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Video/VBoxContainer/PanelContainer/MarginContainer/VBoxContainer" unique_id=35015891]
 layout_mode = 2
 text = "Video"
 horizontal_alignment = 1
 
-[node name="Panel" type="Panel" parent="PanelContainer/MarginContainer/VBoxContainer/PanelContainer/MarginContainer/VBoxContainer/Label"]
+[node name="Panel" type="Panel" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Video/VBoxContainer/PanelContainer/MarginContainer/VBoxContainer/Label" unique_id=208535024]
 show_behind_parent = true
 layout_mode = 1
 anchors_preset = 15
@@ -71,35 +92,35 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="Screen" type="OptionButton" parent="PanelContainer/MarginContainer/VBoxContainer/PanelContainer/MarginContainer/VBoxContainer"]
+[node name="Screen" type="OptionButton" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Video/VBoxContainer/PanelContainer/MarginContainer/VBoxContainer" unique_id=731107818]
 layout_mode = 2
 focus_mode = 0
-item_count = 2
 selected = 0
+item_count = 2
 popup/item_0/text = "Fullscreen"
 popup/item_0/id = 0
 popup/item_1/text = "Window"
 popup/item_1/id = 1
 
-[node name="PanelContainer2" type="PanelContainer" parent="PanelContainer/MarginContainer/VBoxContainer"]
+[node name="PanelContainer2" type="PanelContainer" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Video/VBoxContainer" unique_id=1252672348]
 layout_mode = 2
 
-[node name="MarginContainer" type="MarginContainer" parent="PanelContainer/MarginContainer/VBoxContainer/PanelContainer2"]
+[node name="MarginContainer" type="MarginContainer" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Video/VBoxContainer/PanelContainer2" unique_id=1467252217]
 layout_mode = 2
 theme_override_constants/margin_left = 5
 theme_override_constants/margin_top = 5
 theme_override_constants/margin_right = 5
 theme_override_constants/margin_bottom = 5
 
-[node name="VBoxContainer" type="VBoxContainer" parent="PanelContainer/MarginContainer/VBoxContainer/PanelContainer2/MarginContainer"]
+[node name="VBoxContainer" type="VBoxContainer" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Video/VBoxContainer/PanelContainer2/MarginContainer" unique_id=902362206]
 layout_mode = 2
 
-[node name="Label" type="Label" parent="PanelContainer/MarginContainer/VBoxContainer/PanelContainer2/MarginContainer/VBoxContainer"]
+[node name="Label" type="Label" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Video/VBoxContainer/PanelContainer2/MarginContainer/VBoxContainer" unique_id=338212186]
 layout_mode = 2
 text = "Mouse"
 horizontal_alignment = 1
 
-[node name="Panel" type="Panel" parent="PanelContainer/MarginContainer/VBoxContainer/PanelContainer2/MarginContainer/VBoxContainer/Label"]
+[node name="Panel" type="Panel" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Video/VBoxContainer/PanelContainer2/MarginContainer/VBoxContainer/Label" unique_id=1777201415]
 show_behind_parent = true
 layout_mode = 1
 anchors_preset = 15
@@ -108,16 +129,45 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="MouseMovementRestricted" type="CheckBox" parent="PanelContainer/MarginContainer/VBoxContainer/PanelContainer2/MarginContainer/VBoxContainer"]
+[node name="MouseMovementRestricted" type="CheckBox" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Video/VBoxContainer/PanelContainer2/MarginContainer/VBoxContainer" unique_id=799464184]
 layout_mode = 2
 focus_mode = 0
 text = "Mouse movement restricted to the game window"
 
-[node name="Button" type="Button" parent="PanelContainer/MarginContainer/VBoxContainer"]
+[node name="Audio" type="ScrollContainer" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer" unique_id=1246592285]
+custom_minimum_size = Vector2(0, 956)
 layout_mode = 2
-theme = ExtResource("1_a5uwh")
-text = "BACK"
+metadata/_tab_index = 1
 
-[connection signal="item_selected" from="PanelContainer/MarginContainer/VBoxContainer/PanelContainer/MarginContainer/VBoxContainer/Screen" to="." method="_on_screen_item_selected"]
-[connection signal="pressed" from="PanelContainer/MarginContainer/VBoxContainer/PanelContainer2/MarginContainer/VBoxContainer/MouseMovementRestricted" to="." method="_on_mouse_movement_restricted_pressed"]
-[connection signal="pressed" from="PanelContainer/MarginContainer/VBoxContainer/Button" to="." method="_on_back_button_pressed"]
+[node name="VBoxContainer" type="VBoxContainer" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Audio" unique_id=1312308065]
+custom_minimum_size = Vector2(500, 956)
+layout_mode = 2
+
+[node name="GridContainer" type="GridContainer" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Audio/VBoxContainer" unique_id=1896062021]
+layout_mode = 2
+columns = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Audio/VBoxContainer/GridContainer" unique_id=1311793173]
+custom_minimum_size = Vector2(500, 0)
+layout_mode = 2
+
+[node name="Label" type="Label" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Audio/VBoxContainer/GridContainer/HBoxContainer" unique_id=983542364]
+layout_mode = 2
+text = "Master Volume"
+
+[node name="MasterVolume" type="HSlider" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Audio/VBoxContainer/GridContainer/HBoxContainer" unique_id=987607227]
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+
+[node name="Controls" type="ScrollContainer" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer" unique_id=1977574795]
+visible = false
+layout_mode = 2
+metadata/_tab_index = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Controls" unique_id=1964752525]
+visible = false
+layout_mode = 2
+
+[connection signal="pressed" from="PanelContainer/MarginContainer/VBoxContainer/HBoxContainer/Button" to="." method="_on_back_button_pressed"]
+[connection signal="item_selected" from="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Video/VBoxContainer/PanelContainer/MarginContainer/VBoxContainer/Screen" to="." method="_on_screen_item_selected"]
+[connection signal="pressed" from="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Video/VBoxContainer/PanelContainer2/MarginContainer/VBoxContainer/MouseMovementRestricted" to="." method="_on_mouse_movement_restricted_pressed"]

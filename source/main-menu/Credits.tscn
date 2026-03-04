@@ -1,10 +1,10 @@
-[gd_scene load_steps=4 format=3 uid="uid://ds57esabi07np"]
+[gd_scene format=3 uid="uid://ds57esabi07np"]
 
 [ext_resource type="Theme" uid="uid://c2kgsk4ffhbwo" path="res://source/resources/main_menu.theme" id="1_7ubwb"]
-[ext_resource type="Script" path="res://source/main-menu/Credits.gd" id="1_33n17"]
+[ext_resource type="Script" uid="uid://21eouap7f4w0" path="res://source/main-menu/Credits.gd" id="1_33n17"]
 [ext_resource type="PackedScene" uid="uid://dij5xr8swlfdx" path="res://source/main-menu/Background.tscn" id="2_txygx"]
 
-[node name="Credits" type="Control"]
+[node name="Credits" type="Control" unique_id=1553588170]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -14,10 +14,10 @@ grow_vertical = 2
 theme = ExtResource("1_7ubwb")
 script = ExtResource("1_33n17")
 
-[node name="Background" parent="." instance=ExtResource("2_txygx")]
+[node name="Background" parent="." unique_id=1777919358 instance=ExtResource("2_txygx")]
 layout_mode = 1
 
-[node name="PanelContainer" type="PanelContainer" parent="."]
+[node name="PanelContainer" type="PanelContainer" parent="." unique_id=1295080335]
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
@@ -31,47 +31,49 @@ offset_bottom = 129.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="MarginContainer" type="MarginContainer" parent="PanelContainer"]
+[node name="MarginContainer" type="MarginContainer" parent="PanelContainer" unique_id=1880308837]
 layout_mode = 2
 theme_override_constants/margin_left = 20
 theme_override_constants/margin_top = 20
 theme_override_constants/margin_right = 20
 theme_override_constants/margin_bottom = 20
 
-[node name="VBoxContainer" type="VBoxContainer" parent="PanelContainer/MarginContainer"]
+[node name="VBoxContainer" type="VBoxContainer" parent="PanelContainer/MarginContainer" unique_id=1859796233]
 custom_minimum_size = Vector2(400, 0)
 layout_mode = 2
 theme_override_constants/separation = 10
 alignment = 1
 
-[node name="Padding" type="Control" parent="PanelContainer/MarginContainer/VBoxContainer"]
+[node name="Padding" type="Control" parent="PanelContainer/MarginContainer/VBoxContainer" unique_id=156839582]
 layout_mode = 2
 size_flags_vertical = 3
 
-[node name="PanelContainer" type="PanelContainer" parent="PanelContainer/MarginContainer/VBoxContainer"]
+[node name="PanelContainer" type="PanelContainer" parent="PanelContainer/MarginContainer/VBoxContainer" unique_id=831879981]
 layout_mode = 2
 
-[node name="MarginContainer" type="MarginContainer" parent="PanelContainer/MarginContainer/VBoxContainer/PanelContainer"]
+[node name="MarginContainer" type="MarginContainer" parent="PanelContainer/MarginContainer/VBoxContainer/PanelContainer" unique_id=1146436523]
 layout_mode = 2
 theme_override_constants/margin_top = 15
 theme_override_constants/margin_bottom = 15
 
-[node name="RichTextLabel" type="RichTextLabel" parent="PanelContainer/MarginContainer/VBoxContainer/PanelContainer/MarginContainer"]
+[node name="RichTextLabel" type="RichTextLabel" parent="PanelContainer/MarginContainer/VBoxContainer/PanelContainer/MarginContainer" unique_id=1326725761]
 layout_mode = 2
 theme_override_font_sizes/normal_font_size = 20
 bbcode_enabled = true
-text = "[center][u]CORE_CONTRIBUTORS:[/u]
+text = "[u]CORE_CONTRIBUTORS:[/u]
 - Pascal Galle | Myrmod
 
 [u]ASSETS:[/u]
-- 3D Space Kit by Kenney.nl"
+- 3D Space Kit by Kenney.nl
+- \"Modular Vines\" (https://skfb.ly/ortCn) by Somersby is licensed under Creative Commons Attribution (http://creativecommons.org/licenses/by/4.0/).
+- \"Ancient Tree\" (https://skfb.ly/6TDXp) by DJMaesen is licensed under Creative Commons Attribution (http://creativecommons.org/licenses/by/4.0/)."
 fit_content = true
 
-[node name="Padding2" type="Control" parent="PanelContainer/MarginContainer/VBoxContainer"]
+[node name="Padding2" type="Control" parent="PanelContainer/MarginContainer/VBoxContainer" unique_id=1602534444]
 layout_mode = 2
 size_flags_vertical = 3
 
-[node name="Button" type="Button" parent="PanelContainer/MarginContainer/VBoxContainer"]
+[node name="Button" type="Button" parent="PanelContainer/MarginContainer/VBoxContainer" unique_id=620460703]
 layout_mode = 2
 text = "BACK"
 

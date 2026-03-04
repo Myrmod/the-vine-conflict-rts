@@ -2,15 +2,12 @@ extends PanelContainer
 
 var player = null
 
-@onready var _resource_a_label = find_child("ResourceALabel")
-@onready var _resource_b_label = find_child("ResourceBLabel")
-@onready var _resource_a_color_rect = find_child("ResourceAColorRect")
-@onready var _resource_b_color_rect = find_child("ResourceBColorRect")
+@onready var _resource_label = find_child("ResourceLabel")
+@onready var _resource_color_rect = find_child("ResourceColorRect")
 
 
 func _ready():
-	_resource_a_color_rect.color = Resources.A.COLOR
-	_resource_b_color_rect.color = Resources.B.COLOR
+	_resource_color_rect.color = Color.AQUAMARINE
 
 
 func setup(a_player):
@@ -21,5 +18,4 @@ func setup(a_player):
 
 
 func _on_player_resource_changed():
-	_resource_a_label.text = str(player.resource_a)
-	_resource_b_label.text = str(player.resource_b)
+	_resource_label.text = str(player.resource)

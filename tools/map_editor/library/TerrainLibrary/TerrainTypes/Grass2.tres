@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="TerrainType" format=3 uid="uid://bevu3mdx8wxr4"]
+
+[ext_resource type="Script" uid="uid://s622ule41hbv" path="res://tools/map_editor/library/TerrainLibrary/TerrainType.gd" id="1_cpthp"]
+[ext_resource type="Texture2D" uid="uid://ds62honhurl4" path="res://source/textures/Grass003_1K-PNG/Grass003_1K-PNG_Color.png" id="1_rxtu3"]
+[ext_resource type="Texture2D" uid="uid://bf2ed6v0wq2c6" path="res://source/textures/Grass003_1K-PNG/Grass003_1K-PNG_AmbientOcclusion.png" id="2_86cno"]
+[ext_resource type="Texture2D" uid="uid://cah70r70egjy3" path="res://source/textures/Grass003_1K-PNG/Grass003_1K-PNG_Displacement.png" id="3_ibokj"]
+[ext_resource type="Texture2D" uid="uid://cuvaefdotswpp" path="res://source/textures/Grass003_1K-PNG/Grass003_1K-PNG_NormalDX.png" id="4_7i4sy"]
+[ext_resource type="Texture2D" uid="uid://jbtjb2io3cxi" path="res://source/textures/Grass003_1K-PNG/Grass003_1K-PNG_NormalGL.png" id="5_eopwe"]
+[ext_resource type="Texture2D" uid="uid://dkpynl1xp3c13" path="res://source/textures/Grass003_1K-PNG/Grass003_1K-PNG_Roughness.png" id="6_3igwe"]
+[ext_resource type="Texture2D" uid="uid://b4hmm7don157a" path="res://source/textures/Grass003_1K-PNG/Grass003.png" id="6_86cno"]
+
+[resource]
+script = ExtResource("1_cpthp")
+name = "Grass2"
+preview = ExtResource("6_86cno")
+ao = ExtResource("2_86cno")
+albedo = ExtResource("1_rxtu3")
+displacement = ExtResource("3_ibokj")
+normal_dx = ExtResource("4_7i4sy")
+normal_gl = ExtResource("5_eopwe")
+roughness = ExtResource("6_3igwe")
+metadata/_custom_type_script = "uid://s622ule41hbv"

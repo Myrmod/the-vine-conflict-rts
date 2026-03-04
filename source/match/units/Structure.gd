@@ -6,20 +6,51 @@ const UNDER_CONSTRUCTION_MATERIAL = preload(
 	"res://source/match/resources/materials/structure_under_construction.material.tres"
 )
 
+## Terrain placement rules — checked by the map editor's EntityBrush.
+## Add entries to allow placement on special terrain (WATER, SLOPE, etc.).
+@export var placement_domains: Array[Enums.PlacementTypes] = []
+
 var _construction_progress = 1.0
+var _self_constructing = false
+var _self_construction_speed = 0.0
+var _occupied_cell: Vector2i
+var _footprint: Vector2i = Vector2i(1, 1)
 
 @onready var production_queue = find_child("ProductionQueue"):
 	set(_value):
 		pass
 
 
+func _ready():
+	super()
+	var map = MatchGlobal.map
+	if map == null:
+		push_error("Structure: MatchGlobal.map is null")
+		return
+
+	_occupied_cell = map.world_to_cell(global_position)
+	map.occupy_area(_occupied_cell, _footprint, Enums.OccupationType.STRUCTURE)
+
+
+func _process(delta):
+	if _self_constructing and is_under_construction():
+		construct(delta * _self_construction_speed)
+
+
 func is_revealing():
-	return super () and is_constructed()
+	return super() and is_constructed()
 
 
-func mark_as_under_construction():
+func mark_as_under_construction(self_constructing = false):
 	assert(not is_under_construction(), "structure already under construction")
 	_construction_progress = 0.0
+	_self_constructing = self_constructing
+	if _self_constructing:
+		var scene_path = get_script().resource_path.replace(".gd", ".tscn")
+		var construction_time = UnitConstants.DEFAULT_PROPERTIES.get(scene_path, {}).get(
+			"build_time", 5.0
+		)
+		_self_construction_speed = 1.0 / construction_time
 	_change_geometry_material(UNDER_CONSTRUCTION_MATERIAL)
 	if hp == null:
 		await ready
@@ -40,9 +71,16 @@ func construct(progress):
 
 func cancel_construction():
 	var scene_path = get_script().resource_path.replace(".gd", ".tscn")
-	var construction_cost = UnitConstants.CONSTRUCTION_COSTS[scene_path]
+	var construction_cost = UnitConstants.DEFAULT_PROPERTIES[scene_path]["costs"]
 	player.add_resources(construction_cost)
+	# Unregister before freeing so EntityRegistry doesn't hold stale references
+	EntityRegistry.unregister(self)
 	queue_free()
+
+
+func _exit_tree():
+	if MatchGlobal.map != null:
+		MatchGlobal.map.clear_area(_occupied_cell, _footprint)
 
 
 func is_constructed():
@@ -54,10 +92,11 @@ func is_under_construction():
 
 
 func _finish_construction():
+	_self_constructing = false
 	_change_geometry_material(null)
 	if is_inside_tree():
 		constructed.emit()
-		MatchSignals.unit_construction_finished.emit(self )
+		MatchSignals.unit_construction_finished.emit(self)
 
 
 func _change_geometry_material(material):

@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="TerrainType" format=3 uid="uid://des5frsun0ltx"]
+
+[ext_resource type="Script" uid="uid://s622ule41hbv" path="res://tools/map_editor/library/TerrainLibrary/TerrainType.gd" id="1_2v60u"]
+[ext_resource type="Texture2D" uid="uid://7psstivke25w" path="res://source/textures/Snow002_1K-PNG/Snow002_1K-PNG_Color.png" id="1_nxe0b"]
+[ext_resource type="Texture2D" uid="uid://o4uddb3ev7mg" path="res://source/textures/Snow002_1K-PNG/Snow002_1K-PNG_Displacement.png" id="2_wehg1"]
+[ext_resource type="Texture2D" uid="uid://bsgdsyjvou0ao" path="res://source/textures/Snow002_1K-PNG/Snow002_1K-PNG_NormalDX.png" id="3_yjlhj"]
+[ext_resource type="Texture2D" uid="uid://efg8lwcwjnm6" path="res://source/textures/Snow002_1K-PNG/Snow002_1K-PNG_NormalGL.png" id="4_vutns"]
+[ext_resource type="Texture2D" uid="uid://nkdcdici8v7" path="res://source/textures/Snow002_1K-PNG/Snow002_1K-PNG_Roughness.png" id="5_ko4yw"]
+[ext_resource type="Texture2D" uid="uid://c3ljqqht6i0of" path="res://source/textures/Snow002_1K-PNG/Snow002.png" id="5_wehg1"]
+
+[resource]
+script = ExtResource("1_2v60u")
+name = "Snow1"
+preview = ExtResource("5_wehg1")
+albedo = ExtResource("1_nxe0b")
+displacement = ExtResource("2_wehg1")
+normal_dx = ExtResource("3_yjlhj")
+normal_gl = ExtResource("4_vutns")
+roughness = ExtResource("5_ko4yw")
+metadata/_custom_type_script = "uid://s622ule41hbv"
