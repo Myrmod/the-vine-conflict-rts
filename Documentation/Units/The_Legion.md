@@ -6,10 +6,10 @@
 - turn_rate:
 - hp: 100
 - max_hp: 100
-- cost: X
+- cost: 200
 - armor:
   - 0% rifle
-  - 0% plasma
+  - 0% Explosive
   - 0% melee
 
 #### Weapon: rifle

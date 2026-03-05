@@ -2,14 +2,14 @@
 ## Infantry:
 ### The phase seedling:
 #### General
-- movement_speed: 3
+- movement_speed: 2
 - turn_rate:
 - hp: 50
 - max_hp: 50
-- cost: 0.5X
+- cost: 100
 - armor:
   - 0% rifle
-  - 0% plasma
+  - 0% Explosive
   - 0% melee
 
 #### Weapon: melee

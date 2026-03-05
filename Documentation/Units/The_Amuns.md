@@ -6,14 +6,14 @@
 - turn_rate:
 - hp: 250
 - max_hp: 250
-- cost: 2x
+- cost: 500
 - armor:
   - 25% rifle
-  - 25% plasma
+  - 25% Explosive
   - 50% melee
 
 #### Weapon: plasma gun
-- damage_type: Plasma
+- damage_type: Explosive
 - dmg: 25
 - aoe: 1
 - range: 3.5
