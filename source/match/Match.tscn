@@ -6,29 +6,24 @@
 [ext_resource type="PackedScene" uid="uid://co800e4shs7bh" path="res://source/generic-scenes-and-nodes/3d/RectangularSelection3D.tscn" id="5_yi0pu"]
 [ext_resource type="PackedScene" uid="uid://clbjgy724q2si" path="res://source/generic-scenes-and-nodes/2d/DynamicCircle2D.tscn" id="6_ux0ef"]
 [ext_resource type="Script" uid="uid://cdr8087xuexpg" path="res://source/match/Terrain.gd" id="7_ccpu4"]
-[ext_resource type="Script" path="res://source/match/GlobalBuildGrid.gd" id="33_gbg"]
 [ext_resource type="Script" uid="uid://bgsj8b6lrs8gr" path="res://source/match/Navigation.gd" id="10_1wfp1"]
 [ext_resource type="PackedScene" uid="uid://b6n7cwv706x5n" path="res://source/match/debug/GodModeHud.tscn" id="10_p6gno"]
 [ext_resource type="Shader" uid="uid://c4hdqt5bbe6oh" path="res://source/shaders/2d/blurr.gdshader" id="12_pow7t"]
-[ext_resource type="PackedScene" uid="uid://cwefaix6rye6k" path="res://source/match/hud/ResourcesBar.tscn" id="12_r13sk"]
-[ext_resource type="PackedScene" uid="uid://cwcedr6jj7yty" path="res://source/match/hud/UnitMenus.tscn" id="13_6cypl"]
 [ext_resource type="Shader" uid="uid://doavjq8ju7xxp" path="res://source/shaders/3d/simple_fog_of_war.gdshader" id="13_jo8b7"]
-[ext_resource type="PackedScene" uid="uid://nnsih72ih7qr" path="res://source/match/hud/ProductionQueue.tscn" id="13_qv3xn"]
 [ext_resource type="PackedScene" uid="uid://dk7sa3fkyxks5" path="res://source/generic-scenes-and-nodes/control/RectangularSelection2D.tscn" id="16_ccb0o"]
 [ext_resource type="Script" uid="uid://cbiijxuc1qhtx" path="res://source/match/AirNavigation.gd" id="16_ravsv"]
-[ext_resource type="Script" uid="uid://cdxensngpqh1y" path="res://source/match/hud/Resources.gd" id="16_vjwpn"]
-[ext_resource type="Script" uid="uid://b1hpe60t5y74n" path="res://source/match/hud/Minimap.gd" id="17_0bfte"]
 [ext_resource type="Script" uid="uid://ccujxvxsaqaoh" path="res://source/match/TerrainNavigation.gd" id="17_6fprk"]
-[ext_resource type="Shader" uid="uid://pxfhc3ku5i4l" path="res://source/shaders/2d/white_transparent.gdshader" id="19_m1b2v"]
 [ext_resource type="PackedScene" uid="uid://c0uxy26e4qs4w" path="res://source/match/handlers/MouseClickAnimationsHandler.tscn" id="22_438pb"]
 [ext_resource type="PackedScene" uid="uid://1rby73ckmk7b" path="res://source/match/Menu.tscn" id="22_ofmlu"]
 [ext_resource type="PackedScene" uid="uid://b83l4dny3gly0" path="res://source/match/debug/FrameIncrementer.tscn" id="23_exhtd"]
 [ext_resource type="PackedScene" uid="uid://c3xjdp2yrr1fu" path="res://source/match/debug/DiagnosticHud.tscn" id="23_pocq6"]
+[ext_resource type="PackedScene" uid="uid://dg5144jbydpky" path="res://source/match/hud/HUD.tscn" id="24_3l8e4"]
 [ext_resource type="PackedScene" uid="uid://bocb7hjilvri5" path="res://source/match/handlers/ArealUnitSelectionHandler.tscn" id="24_aug7m"]
 [ext_resource type="PackedScene" uid="uid://pi813oou7xim" path="res://source/match/handlers/DoubleClickUnitSelectionHandler.tscn" id="25_ldkhw"]
 [ext_resource type="PackedScene" uid="uid://yn470qvc3eak" path="res://source/match/handlers/MatchEndHandler.tscn" id="26_4d7im"]
 [ext_resource type="PackedScene" uid="uid://ck6vrgdyg7hja" path="res://source/match/handlers/UnitGroupSelectionHandler.tscn" id="27_j2drv"]
 [ext_resource type="PackedScene" uid="uid://b8p6lcwubx1tp" path="res://source/match/handlers/UnitVisibilityHandler.tscn" id="32_fci1c"]
+[ext_resource type="Script" uid="uid://brxscciphlay1" path="res://source/match/GlobalBuildGrid.gd" id="33_gbg"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_c3tkw"]
 shader = ExtResource("12_pow7t")
@@ -75,17 +70,6 @@ agent_radius = 0.9
 agent_max_climb = 0.0
 edge_max_error = 1.0
 
-[sub_resource type="ViewportTexture" id="ViewportTexture_vu2gm"]
-viewport_path = NodePath("FogOfWar/CombinedViewport")
-
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_3nec5"]
-resource_local_to_scene = true
-shader = ExtResource("19_m1b2v")
-shader_parameter/reference_texture = SubResource("ViewportTexture_vu2gm")
-
-[sub_resource type="ViewportTexture" id="ViewportTexture_8q44e"]
-viewport_path = NodePath("HUD/MarginContainer/Minimap/MarginContainer/MinimapViewport")
-
 [node name="Match" type="Node3D" unique_id=2081765841]
 script = ExtResource("1_1555u")
 
@@ -109,7 +93,7 @@ script = ExtResource("7_ccpu4")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Terrain" unique_id=647494412]
 
-[node name="GlobalBuildGrid" type="Node3D" parent="."]
+[node name="GlobalBuildGrid" type="Node3D" parent="." unique_id=408804729]
 script = ExtResource("33_gbg")
 
 [node name="FogOfWar" type="Node3D" parent="." unique_id=722058329]
@@ -220,144 +204,6 @@ navigation_mesh = SubResource("NavigationMesh_exfwj")
 
 [node name="RectangularSelection2D" parent="UI" unique_id=1446899849 instance=ExtResource("16_ccb0o")]
 
-[node name="HUD" type="CanvasLayer" parent="." unique_id=692461479]
-
-[node name="MarginContainer" type="MarginContainer" parent="HUD" unique_id=1855559512]
-anchors_preset = 2
-anchor_top = 1.0
-anchor_bottom = 1.0
-offset_top = -215.0
-offset_right = 215.0
-grow_vertical = 0
-theme_override_constants/margin_left = 5
-theme_override_constants/margin_bottom = 5
-
-[node name="Minimap" type="PanelContainer" parent="HUD/MarginContainer" unique_id=345912243]
-layout_mode = 2
-script = ExtResource("17_0bfte")
-
-[node name="MarginContainer" type="MarginContainer" parent="HUD/MarginContainer/Minimap" unique_id=600926205]
-layout_mode = 2
-theme_override_constants/margin_left = 5
-theme_override_constants/margin_top = 5
-theme_override_constants/margin_right = 5
-theme_override_constants/margin_bottom = 5
-
-[node name="MinimapViewport" type="SubViewport" parent="HUD/MarginContainer/Minimap/MarginContainer" unique_id=1339750257]
-disable_3d = true
-size = Vector2i(100, 100)
-
-[node name="Background" type="ColorRect" parent="HUD/MarginContainer/Minimap/MarginContainer/MinimapViewport" unique_id=1932084698]
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-color = Color(0.351562, 0.351562, 0.351562, 1)
-
-[node name="EditorOnlyDummyUnit" type="ColorRect" parent="HUD/MarginContainer/Minimap/MarginContainer/MinimapViewport" unique_id=2113758731]
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -1.0
-offset_top = -1.0
-offset_right = 1.0
-offset_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-color = Color(1, 0, 0, 1)
-
-[node name="EditorOnlyDummyUnit2" type="ColorRect" parent="HUD/MarginContainer/Minimap/MarginContainer/MinimapViewport" unique_id=2126059176]
-anchors_preset = -1
-anchor_left = 0.25
-anchor_right = 0.25
-offset_left = -1.0
-offset_right = 1.0
-offset_bottom = 2.0
-grow_horizontal = 2
-color = Color(1, 0, 0, 1)
-
-[node name="FogOfWarMask" type="ColorRect" parent="HUD/MarginContainer/Minimap/MarginContainer/MinimapViewport" unique_id=109213414]
-material = SubResource("ShaderMaterial_3nec5")
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-color = Color(0, 0, 0, 1)
-
-[node name="CameraIndicator" type="Line2D" parent="HUD/MarginContainer/Minimap/MarginContainer/MinimapViewport" unique_id=1100799162]
-points = PackedVector2Array(5, 5, 5, 30, 30, 30, 30, 5, 5, 5)
-width = 1.0
-begin_cap_mode = 1
-end_cap_mode = 1
-antialiased = true
-
-[node name="MinimapTextureRect" type="TextureRect" parent="HUD/MarginContainer/Minimap/MarginContainer" unique_id=50014525]
-layout_mode = 2
-texture = SubResource("ViewportTexture_8q44e")
-stretch_mode = 5
-
-[node name="MarginContainer2" type="MarginContainer" parent="HUD" unique_id=531979622]
-offset_right = 40.0
-offset_bottom = 11.0
-theme_override_constants/margin_left = 5
-theme_override_constants/margin_top = 5
-
-[node name="Resources" type="VBoxContainer" parent="HUD/MarginContainer2" unique_id=444458537]
-layout_mode = 2
-script = ExtResource("16_vjwpn")
-
-[node name="ResourcesBar" parent="HUD/MarginContainer2/Resources" unique_id=694123678 instance=ExtResource("12_r13sk")]
-layout_mode = 2
-
-[node name="ResourcesBar2" parent="HUD/MarginContainer2/Resources" unique_id=1656568976 instance=ExtResource("12_r13sk")]
-layout_mode = 2
-
-[node name="ResourcesBar3" parent="HUD/MarginContainer2/Resources" unique_id=1942896685 instance=ExtResource("12_r13sk")]
-layout_mode = 2
-
-[node name="ResourcesBar4" parent="HUD/MarginContainer2/Resources" unique_id=2114536728 instance=ExtResource("12_r13sk")]
-layout_mode = 2
-
-[node name="ResourcesBar5" parent="HUD/MarginContainer2/Resources" unique_id=734794856 instance=ExtResource("12_r13sk")]
-layout_mode = 2
-
-[node name="ResourcesBar6" parent="HUD/MarginContainer2/Resources" unique_id=1176070922 instance=ExtResource("12_r13sk")]
-layout_mode = 2
-
-[node name="ResourcesBar7" parent="HUD/MarginContainer2/Resources" unique_id=1207457146 instance=ExtResource("12_r13sk")]
-layout_mode = 2
-
-[node name="ResourcesBar8" parent="HUD/MarginContainer2/Resources" unique_id=203239257 instance=ExtResource("12_r13sk")]
-layout_mode = 2
-
-[node name="MarginContainer3" type="MarginContainer" parent="HUD" unique_id=1095839039]
-anchors_preset = 3
-anchor_left = 1.0
-anchor_top = 1.0
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_left = -40.0
-offset_top = -40.0
-grow_horizontal = 0
-grow_vertical = 0
-theme_override_constants/margin_right = 5
-theme_override_constants/margin_bottom = 5
-
-[node name="VBoxContainer" type="VBoxContainer" parent="HUD/MarginContainer3" unique_id=1154608522]
-layout_mode = 2
-theme_override_constants/separation = 5
-
-[node name="ProductionQueue" parent="HUD/MarginContainer3/VBoxContainer" unique_id=1528192687 instance=ExtResource("13_qv3xn")]
-layout_mode = 2
-
-[node name="UnitMenus" parent="HUD/MarginContainer3/VBoxContainer" unique_id=32705158 instance=ExtResource("13_6cypl")]
-layout_mode = 2
-size_flags_horizontal = 8
-
 [node name="Menu" parent="." unique_id=2015371880 instance=ExtResource("22_ofmlu")]
 visible = false
 
@@ -384,3 +230,5 @@ rectangular_selection_3d = NodePath("../../RectangularSelection3D")
 visible = false
 
 [node name="UnitVisibilityHandler" parent="Handlers" unique_id=435844044 instance=ExtResource("32_fci1c")]
+
+[node name="HUD" parent="." unique_id=128907128 instance=ExtResource("24_3l8e4")]
