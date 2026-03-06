@@ -13,16 +13,17 @@ var _camera_movement_active = false
 @onready var _camera_indicator = find_child("CameraIndicator")
 @onready var _viewport_background = find_child("Background")
 @onready var _texture_rect = find_child("MinimapTextureRect")
+@onready var _fog_of_war_mask = find_child("FogOfWarMask")
 
 @export var MaxSize = 100
 
 
 func _ready():
-	return
 	if not FeatureFlags.show_minimap:
 		queue_free()
 	_remove_dummy_nodes()
 	await _match.ready  # make sure Match is ready as it may change map on setup
+	_setup_fog_of_war_texture()
 
 	var map_node = _match.find_child("Map")
 	var viewport_size = map_node.size * MINIMAP_PIXELS_PER_WORLD_METER
@@ -44,8 +45,15 @@ func _ready():
 	_texture_rect.gui_input.connect(_on_gui_input)
 
 
+func _setup_fog_of_war_texture():
+	var combined_viewport: SubViewport = _match.find_child("CombinedViewport")
+	if combined_viewport != null and _fog_of_war_mask != null:
+		_fog_of_war_mask.material.set_shader_parameter(
+			"reference_texture", combined_viewport.get_texture()
+		)
+
+
 func _physics_process(_delta):
-	return
 	_sync_real_units_with_minimap_representations()
 	_update_camera_indicator()
 

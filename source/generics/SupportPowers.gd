@@ -1,6 +1,8 @@
 class_name SupportPowers
 
-extends Node
+extends Node3D
+
+var cooldown: int = 60
 
 
 ## this is supposed to be overwritten by extending SupportPowers

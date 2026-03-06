@@ -57,12 +57,12 @@ var map_source_path: String = ""
 
 @onready var navigation = $Navigation
 @onready var fog_of_war = $FogOfWar
+@onready var hud: CanvasLayer = $HUD
 @onready var global_build_grid = $GlobalBuildGrid
 
 @onready var _camera = $IsometricCamera3D
 @onready var _players = $Players
 @onready var _terrain = $Terrain
-@onready var hud: CanvasLayer = $HUD
 
 # Tick counter — drives deterministic command execution. Static so producers can read it.
 static var tick := 0
