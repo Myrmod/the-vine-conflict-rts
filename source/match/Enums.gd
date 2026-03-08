@@ -25,6 +25,7 @@ enum CommandType {
 	PRODUCTION_CANCEL_ALL,  # Cancel ALL queued units at a structure
 	ACTION_CANCEL,  # Cancel current unit action (set action = null)
 	CANCEL_CONSTRUCTION,  # Cancel an under-construction structure (refund + free)
+	PAUSE_CONSTRUCTION,  # Pause/unpause an under-construction structure
 	SET_RALLY_POINT,  # Set a structure's rally point to a terrain position
 	SET_RALLY_POINT_TO_UNIT,  # Set a structure's rally point to follow a unit
 	REPAIR_ENTITY,

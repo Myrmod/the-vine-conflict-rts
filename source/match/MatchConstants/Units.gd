@@ -96,7 +96,7 @@ const DEFAULT_PROPERTIES = {
 		"production_tab_grid_slot": Enums.ProductionTabGridSlots.F4,
 		"produces": [Enums.ProductionTabType.STRUCTURE, Enums.ProductionTabType.DEFENCES],
 		"sight_range": 10.0,
-		"hp": 20,
+		"hp": 10,
 		"hp_max": 20,
 		"costs": {"credits": 8, "energy": 0},
 		"build_time": 10.0,

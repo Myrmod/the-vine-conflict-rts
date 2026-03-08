@@ -30,6 +30,14 @@ signal structure_placement_ended
 
 signal player_resource_changed(credits: int, type: Enums.ResourceType)
 
+## Structure action mode (repair / sell / disable)
+signal structure_action_started(action_type: Enums.CommandType)
+signal structure_action_ended
+signal structure_disabled_changed(unit)
+
 ## Set by StructurePlacementHandler before emitting structure_placement_started
 ## so BuildRadius nodes know which radius (land or water) to display.
 var current_placement_domains: Array = []
+
+## Currently active structure action type, or -1 if none.
+var current_structure_action: int = -1

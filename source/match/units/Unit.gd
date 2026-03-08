@@ -197,7 +197,14 @@ func _setup_default_properties_from_constants():
 	var default_properties = UnitConstants.DEFAULT_PROPERTIES[get_script().resource_path.replace(
 		".gd", ".tscn"
 	)]
+	## Properties that may be pre-set in the scene/map editor and should
+	## not be overwritten by the constants table when already assigned.
+	var preserve_if_set := ["hp", "hp_max"]
 	for property in default_properties:
+		if preserve_if_set.has(property):
+			var current = get(property)
+			if current != null:
+				continue
 		set(property, default_properties[property])
 
 

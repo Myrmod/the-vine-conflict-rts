@@ -1,0 +1,27 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://source/match/units/traits/SellBar.gd" id="1_sb"]
+
+[sub_resource type="Gradient" id="Gradient_sell"]
+resource_local_to_scene = true
+interpolation_mode = 1
+offsets = PackedFloat32Array(0, 1.0)
+colors = PackedColorArray(1, 0.6, 0, 1, 0.292969, 0.292969, 0.292969, 1)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_sell"]
+resource_local_to_scene = true
+gradient = SubResource("Gradient_sell")
+width = 200
+height = 12
+
+[node name="SellBar" type="Node3D"]
+script = ExtResource("1_sb")
+
+[node name="ActualBar" type="Sprite3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.15, 0)
+billboard = 1
+transparent = false
+no_depth_test = true
+texture_filter = 2
+render_priority = 2
+texture = SubResource("GradientTexture2D_sell")

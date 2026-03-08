@@ -199,6 +199,10 @@ func _validate_command_schema(cmd: Dictionary) -> bool:
 			if not cmd.data.has("entity_id") or typeof(cmd.data.entity_id) != TYPE_INT:
 				push_error("CommandBus: CANCEL_CONSTRUCTION requires int data.entity_id")
 				return false
+		Enums.CommandType.PAUSE_CONSTRUCTION:
+			if not cmd.data.has("entity_id") or typeof(cmd.data.entity_id) != TYPE_INT:
+				push_error("CommandBus: PAUSE_CONSTRUCTION requires int data.entity_id")
+				return false
 		Enums.CommandType.SET_RALLY_POINT:
 			# Set rally point to terrain position. data.entity_id = structure, data.position = Vector3.
 			if not cmd.data.has("entity_id") or typeof(cmd.data.entity_id) != TYPE_INT:
@@ -216,11 +220,17 @@ func _validate_command_schema(cmd: Dictionary) -> bool:
 				push_error("CommandBus: SET_RALLY_POINT_TO_UNIT requires int data.target_unit")
 				return false
 		Enums.CommandType.REPAIR_ENTITY:
-			print("command called validated", cmd.type)
+			if not cmd.data.has("entity_id") or typeof(cmd.data.entity_id) != TYPE_INT:
+				push_error("CommandBus: REPAIR_ENTITY requires int data.entity_id")
+				return false
 		Enums.CommandType.SELL_ENTITY:
-			print("command called validated", cmd.type)
+			if not cmd.data.has("entity_id") or typeof(cmd.data.entity_id) != TYPE_INT:
+				push_error("CommandBus: SELL_ENTITY requires int data.entity_id")
+				return false
 		Enums.CommandType.DISABLE_ENTITY:
-			print("command called validated", cmd.type)
+			if not cmd.data.has("entity_id") or typeof(cmd.data.entity_id) != TYPE_INT:
+				push_error("CommandBus: DISABLE_ENTITY requires int data.entity_id")
+				return false
 		Enums.CommandType.CAST_SUPPORT_POWER:
 			print("command called validated", cmd.type)
 		_:

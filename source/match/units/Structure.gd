@@ -5,6 +5,9 @@ signal constructed
 const UNDER_CONSTRUCTION_MATERIAL = preload(
 	"res://source/match/resources/materials/structure_under_construction.material.tres"
 )
+const SELL_DURATION_TICKS: int = 50  # 5 seconds at 10 ticks/s
+const DISABLED_DARKEN := Color(0.4, 0.4, 0.4, 1.0)
+const SELL_BAR_SCENE = preload("res://source/match/units/traits/SellBar.tscn")
 
 ## Terrain placement rules — checked by the map editor's EntityBrush.
 ## Add entries to allow placement on special terrain (WATER, SLOPE, etc.).
@@ -14,11 +17,30 @@ const UNDER_CONSTRUCTION_MATERIAL = preload(
 ## Set from Units.DEFAULT_PROPERTIES via _setup_default_properties_from_constants().
 var produces: Array = []
 
+## ── Structure action state ──────────────────────────────
+## Disabled: production halted, visually darkened.
+var is_disabled: bool = false
+## Selling: ticks down from SELL_DURATION_TICKS to 0, then sells.
+var is_selling: bool = false
+## Repairing: ticks up like reverse damage, costs proportional.
+var is_repairing: bool = false
+## Construction paused: first right-click in grid stops progress.
+var is_construction_paused: bool = false
+
 var _construction_progress = 1.0
 var _self_constructing = false
 var _self_construction_speed = 0.0
+
+## Public read access to construction progress (0.0 → 1.0).
+var construction_progress: float:
+	get:
+		return _construction_progress
 var _occupied_cell: Vector2i
 var _footprint: Vector2i = Vector2i(1, 1)
+var _sell_ticks_remaining: int = 0
+var _repair_ticks_total: int = 0
+var _repair_ticks_done: int = 0
+var _repair_cost_per_tick: float = 0.0
 
 @onready var production_queue = find_child("ProductionQueue"):
 	set(_value):
@@ -34,11 +56,27 @@ func _ready():
 
 	_occupied_cell = map.world_to_cell(global_position)
 	map.occupy_area(_occupied_cell, _footprint, Enums.OccupationType.STRUCTURE)
+	MatchSignals.tick_advanced.connect(_on_tick_advanced)
 
 
 func _process(delta):
-	if _self_constructing and is_under_construction():
+	if (
+		_self_constructing
+		and is_under_construction()
+		and not is_disabled
+		and not is_construction_paused
+		and _has_active_structure_producer()
+	):
 		construct(delta * _self_construction_speed)
+
+
+func _on_tick_advanced() -> void:
+	if is_selling:
+		_sell_ticks_remaining -= 1
+		if _sell_ticks_remaining <= 0:
+			_complete_sell()
+	if is_repairing:
+		_tick_repair()
 
 
 func is_revealing():
@@ -73,6 +111,11 @@ func construct(progress):
 		_finish_construction()
 
 
+## Pause / unpause construction progress (grid right-click).
+func pause_construction() -> void:
+	is_construction_paused = not is_construction_paused
+
+
 func cancel_construction():
 	var scene_path = get_script().resource_path.replace(".gd", ".tscn")
 	var construction_cost = UnitConstants.DEFAULT_PROPERTIES[scene_path]["costs"]
@@ -95,6 +138,70 @@ func is_under_construction():
 	return not is_constructed()
 
 
+## Returns true if at least one constructed, non-disabled, non-selling
+## structure of the same player produces the STRUCTURE tab.
+func _has_active_structure_producer() -> bool:
+	if player == null:
+		return true
+	for unit in get_tree().get_nodes_in_group("controlled_units"):
+		if unit == self:
+			continue
+		if not "produces" in unit:
+			continue
+		if unit.player != player:
+			continue
+		if unit.is_under_construction():
+			continue
+		if unit.get("is_disabled"):
+			continue
+		if unit.get("is_selling"):
+			continue
+		if unit.produces.has(Enums.ProductionTabType.STRUCTURE):
+			return true
+	return false
+
+
+## Cancel (refund + free) every under-construction structure owned by the
+## same player that would no longer have any active producer after this
+## structure is removed.  Called right before queue_free in _complete_sell().
+func _cancel_orphaned_constructions() -> void:
+	if player == null:
+		return
+	# Collect other active structure-producers (excluding self)
+	var other_producers: Array = []
+	for unit in get_tree().get_nodes_in_group("controlled_units"):
+		if unit == self:
+			continue
+		if not "produces" in unit:
+			continue
+		if unit.player != player:
+			continue
+		if unit.is_under_construction():
+			continue
+		if unit.get("is_disabled"):
+			continue
+		if unit.get("is_selling"):
+			continue
+		if unit.produces.has(Enums.ProductionTabType.STRUCTURE):
+			other_producers.append(unit)
+	# If another producer still exists, nothing to cancel
+	if not other_producers.is_empty():
+		return
+	# No producers left — cancel all under-construction structures
+	var to_cancel: Array = []
+	for unit in get_tree().get_nodes_in_group("controlled_units"):
+		if unit == self:
+			continue
+		if unit.player != player:
+			continue
+		if not unit.has_method("is_under_construction"):
+			continue
+		if unit.is_under_construction():
+			to_cancel.append(unit)
+	for unit in to_cancel:
+		unit.cancel_construction()
+
+
 func _finish_construction():
 	_self_constructing = false
 	_change_geometry_material(null)
@@ -107,3 +214,159 @@ func _change_geometry_material(material):
 	for child in find_child("Geometry").find_children("*"):
 		if "material_override" in child:
 			child.material_override = material
+
+
+# ── Structure action helpers ─────────────────────────────
+
+
+## Toggle sell countdown. Calling again cancels the sell.
+## Cannot sell structures that are still under construction.
+func toggle_sell() -> void:
+	if is_under_construction():
+		return
+	if is_selling:
+		is_selling = false
+		_sell_ticks_remaining = 0
+		_remove_sell_bar()
+		return
+	is_selling = true
+	_sell_ticks_remaining = SELL_DURATION_TICKS
+	_add_sell_bar()
+
+
+func _complete_sell() -> void:
+	is_selling = false
+	_remove_sell_bar()
+	var scene_path = get_script().resource_path.replace(".gd", ".tscn")
+	var cost = UnitConstants.DEFAULT_PROPERTIES.get(scene_path, {}).get("costs", {})
+	# Refund 50 %
+	if not cost.is_empty():
+		var refund := {}
+		for key in cost:
+			refund[key] = int(cost[key] * 0.5)
+		player.add_resources(refund)
+	# Cancel all under-construction structures that no longer have a producer
+	_cancel_orphaned_constructions()
+	EntityRegistry.unregister(self)
+	queue_free()
+
+
+func _add_sell_bar() -> void:
+	if find_child("SellBar") != null:
+		return
+	var bar = SELL_BAR_SCENE.instantiate()
+	add_child(bar)
+
+
+func _remove_sell_bar() -> void:
+	var bar = find_child("SellBar")
+	if bar != null:
+		remove_child(bar)
+		bar.queue_free()
+
+
+## Toggle repair. Costs the missing-HP percentage of the build cost,
+## and takes the same percentage of the build time.
+func toggle_repair() -> void:
+	if is_repairing:
+		is_repairing = false
+		_repair_ticks_done = 0
+		_repair_ticks_total = 0
+		_repair_cost_per_tick = 0.0
+		return
+	if hp >= hp_max:
+		return  # already full
+	var scene_path = get_script().resource_path.replace(".gd", ".tscn")
+	var props = UnitConstants.DEFAULT_PROPERTIES.get(scene_path, {})
+	var build_time: float = props.get("build_time", 5.0)
+	var cost = props.get("costs", {})
+	var credit_cost: float = float(cost.get("credits", 0))
+	var missing_fraction: float = 1.0 - float(hp) / float(hp_max)
+	var total_repair_cost := credit_cost * missing_fraction
+	var repair_time := build_time * missing_fraction
+	var ticks := int(repair_time * MatchConstants.TICK_RATE)
+	if ticks < 1:
+		ticks = 1
+	if not player.has_resources({"credits": int(ceil(total_repair_cost))}):
+		return  # cannot afford
+	_repair_ticks_total = ticks
+	_repair_ticks_done = 0
+	_repair_cost_per_tick = total_repair_cost / float(ticks)
+	is_repairing = true
+
+
+func _tick_repair() -> void:
+	_repair_ticks_done += 1
+	# Deduct fractional cost each tick
+	var tick_cost := int(ceil(_repair_cost_per_tick))
+	if tick_cost > 0:
+		player.subtract_resources({"credits": tick_cost})
+	# Restore HP proportionally
+	var target_hp := int(
+		(
+			float(hp_max)
+			* (
+				1.0
+				- (
+					(float(_repair_ticks_total - _repair_ticks_done) / float(_repair_ticks_total))
+					* (1.0 - float(hp) / float(hp_max))
+				)
+			)
+		)
+	)
+	if hp < target_hp:
+		hp = mini(target_hp, hp_max)
+	if _repair_ticks_done >= _repair_ticks_total or hp >= hp_max:
+		hp = hp_max
+		is_repairing = false
+		_repair_ticks_done = 0
+		_repair_ticks_total = 0
+		_repair_cost_per_tick = 0.0
+
+
+## Toggle disabled state: halts production, darkens visual.
+## On under-construction structures this also pauses building.
+func toggle_disable() -> void:
+	is_disabled = not is_disabled
+	if is_disabled:
+		_apply_disabled_visual()
+		# Pause all production
+		if production_queue != null:
+			for el in production_queue.get_elements():
+				if not el.paused:
+					production_queue.toggle_pause(el.unit_prototype.resource_path)
+	else:
+		_remove_disabled_visual()
+		# Unpause all production
+		if production_queue != null:
+			for el in production_queue.get_elements():
+				if el.paused:
+					production_queue.toggle_pause(el.unit_prototype.resource_path)
+	MatchSignals.structure_disabled_changed.emit(self)
+
+
+func _apply_disabled_visual() -> void:
+	var geo = find_child("Geometry")
+	if geo == null:
+		return
+	for child in geo.find_children("*"):
+		if child is MeshInstance3D:
+			if child.material_override == null:
+				var mat := StandardMaterial3D.new()
+				mat.albedo_color = DISABLED_DARKEN
+				mat.transparency = BaseMaterial3D.TRANSPARENCY_DISABLED
+				child.material_override = mat
+
+
+func _remove_disabled_visual() -> void:
+	var geo = find_child("Geometry")
+	if geo == null:
+		return
+	for child in geo.find_children("*"):
+		if child is MeshInstance3D:
+			if (
+				child.material_override != null
+				and child.material_override is StandardMaterial3D
+				and child.material_override.albedo_color == DISABLED_DARKEN
+			):
+				child.material_override = null

@@ -41,6 +41,9 @@ var _queue = []
 func _process(delta):
 	if _queue.is_empty() or delta <= 0.0:
 		return
+	# Don't tick production while the parent structure is disabled or selling.
+	if _unit != null and (_unit.get("is_disabled") or _unit.get("is_selling")):
+		return
 	# Find the first non-paused element and tick it.
 	var current_queue_element = null
 	for el in _queue:

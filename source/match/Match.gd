@@ -370,6 +370,8 @@ func _execute_command(cmd: Dictionary):
 				return
 			if not _verify_unit_ownership(structure, cmd.player_id, "ENTITY_IS_QUEUED"):
 				return
+			if structure is Structure and structure.is_disabled:
+				return
 			var unit_prototype = load(cmd.data.unit_type)
 			if unit_prototype == null:
 				push_error("ENTITY_IS_QUEUED: cannot load %s" % cmd.data.unit_type)
@@ -443,6 +445,24 @@ func _execute_command(cmd: Dictionary):
 			# cancel_construction() refunds resources and queue_frees the structure
 			structure.cancel_construction()
 
+		Enums.CommandType.PAUSE_CONSTRUCTION:
+			var structure = _resolve_unit(cmd.data.entity_id, "PAUSE_CONSTRUCTION")
+			if structure == null:
+				return
+			if not _verify_unit_ownership(structure, cmd.player_id, "PAUSE_CONSTRUCTION"):
+				return
+			if not structure is Structure:
+				push_error(
+					"PAUSE_CONSTRUCTION: entity_id %s is not a Structure" % cmd.data.entity_id
+				)
+				return
+			if not structure.is_under_construction():
+				push_error(
+					"PAUSE_CONSTRUCTION: entity_id %s is already constructed" % cmd.data.entity_id
+				)
+				return
+			structure.pause_construction()
+
 		# ── RALLY POINTS ──────────────────────────────────────────────
 		Enums.CommandType.SET_RALLY_POINT:
 			var structure = _resolve_unit(cmd.data.entity_id, "SET_RALLY_POINT")
@@ -473,6 +493,40 @@ func _execute_command(cmd: Dictionary):
 				)
 				return
 			rally_point.target_unit = target_unit
+
+		# ── STRUCTURE ACTIONS ──────────────────────────────────────────
+		Enums.CommandType.SELL_ENTITY:
+			var structure = _resolve_unit(cmd.data.entity_id, "SELL_ENTITY")
+			if structure == null:
+				return
+			if not structure is Structure:
+				push_error("SELL_ENTITY: entity %s is not a Structure" % cmd.data.entity_id)
+				return
+			if not _verify_unit_ownership(structure, cmd.player_id, "SELL_ENTITY"):
+				return
+			structure.toggle_sell()
+
+		Enums.CommandType.REPAIR_ENTITY:
+			var structure = _resolve_unit(cmd.data.entity_id, "REPAIR_ENTITY")
+			if structure == null:
+				return
+			if not structure is Structure:
+				push_error("REPAIR_ENTITY: entity %s is not a Structure" % cmd.data.entity_id)
+				return
+			if not _verify_unit_ownership(structure, cmd.player_id, "REPAIR_ENTITY"):
+				return
+			structure.toggle_repair()
+
+		Enums.CommandType.DISABLE_ENTITY:
+			var structure = _resolve_unit(cmd.data.entity_id, "DISABLE_ENTITY")
+			if structure == null:
+				return
+			if not structure is Structure:
+				push_error("DISABLE_ENTITY: entity %s is not a Structure" % cmd.data.entity_id)
+				return
+			if not _verify_unit_ownership(structure, cmd.player_id, "DISABLE_ENTITY"):
+				return
+			structure.toggle_disable()
 
 		_:
 			push_error("Match: unknown command type %s — %s" % [cmd.type, cmd])

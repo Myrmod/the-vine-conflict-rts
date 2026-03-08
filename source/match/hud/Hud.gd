@@ -1,8 +1,9 @@
 extends CanvasLayer
 
 const TOOLTIP = preload("res://source/utils/Tooltip.tscn")
+const Structure = preload("res://source/match/units/Structure.gd")
 
-## Tab-switching hotkeys: Q W E R T and the key next to T.
+## Tab-switching hotkeys: Q W E R T Y.
 ## We use physical scancodes so this adapts to layout automatically:
 ## QWERTY → Q W E R T Y, QWERTZ → Q W E R T Z, AZERTY → A Z E R T Y
 const TAB_HOTKEY_PHYSICAL_KEYS: Array[Key] = [
@@ -13,6 +14,24 @@ const TAB_HOTKEY_PHYSICAL_KEYS: Array[Key] = [
 	KEY_T,
 	KEY_Y,
 ]
+
+## Labels for the physical tab keys (used in tooltips).
+const TAB_HOTKEY_LABELS: Array[String] = [
+	"Q",
+	"W",
+	"E",
+	"R",
+	"T",
+	"Z",
+]
+
+## Structure action hotkeys
+## Physical U → Repair, I → Sell, O → Disable
+const ACTION_HOTKEYS: Dictionary = {
+	KEY_U: Enums.CommandType.REPAIR_ENTITY,
+	KEY_I: Enums.CommandType.SELL_ENTITY,
+	KEY_O: Enums.CommandType.DISABLE_ENTITY,
+}
 
 ## TODO: in replay mode we change the UI
 @export var is_replay_mode: bool = false
@@ -84,30 +103,47 @@ func _ready() -> void:
 	production_tab_bar.tab_changed.connect(_on_production_tab_changed)
 	production_tab_bar_overflow.tab_changed.connect(_on_overflow_tab_changed)
 
+	# Show hotkey in tab tooltips
+	for i in range(production_tab_bar.tab_count):
+		if i < TAB_HOTKEY_LABELS.size():
+			var tab_name := production_tab_bar.get_tab_title(i)
+			production_tab_bar.set_tab_tooltip(i, "%s  [%s]" % [tab_name, TAB_HOTKEY_LABELS[i]])
+
 	MatchSignals.tick_advanced.connect(set_timer)
 	MatchSignals.unit_spawned.connect(_on_unit_changed)
 	MatchSignals.unit_died.connect(_on_unit_changed)
 	MatchSignals.unit_construction_finished.connect(_on_unit_changed)
+	MatchSignals.structure_disabled_changed.connect(_on_unit_changed)
 	MatchSignals.player_resource_changed.connect(update_resource_label)
 
 
 func _process(_delta: float) -> void:
 	# Update grid button timers every frame so the countdown stays current.
-	if _grid_observed_queue != null:
-		_update_all_grid_button_displays()
+	_update_all_grid_button_displays()
 
 
 func init_building_modification_buttons():
-	disable_button.mouse_entered.connect(_on_repair_button_mouse_entered)
-	disable_button.mouse_exited.connect(_on_repair_button_mouse_exited)
+	repair_button.pressed.connect(
+		func(): MatchSignals.structure_action_started.emit(Enums.CommandType.REPAIR_ENTITY)
+	)
+	sell_button.pressed.connect(
+		func(): MatchSignals.structure_action_started.emit(Enums.CommandType.SELL_ENTITY)
+	)
+	disable_button.pressed.connect(
+		func(): MatchSignals.structure_action_started.emit(Enums.CommandType.DISABLE_ENTITY)
+	)
+
+	repair_button.mouse_entered.connect(_on_action_button_hover.bind("Repair", "U"))
+	repair_button.mouse_exited.connect(_on_production_button_exit)
+	sell_button.mouse_entered.connect(_on_action_button_hover.bind("Sell", "I"))
+	sell_button.mouse_exited.connect(_on_production_button_exit)
+	disable_button.mouse_entered.connect(_on_action_button_hover.bind("Disable", "O"))
+	disable_button.mouse_exited.connect(_on_production_button_exit)
 
 
-func _on_repair_button_mouse_entered():
+func _on_action_button_hover(action_name: String, hotkey: String) -> void:
+	tooltip.set_content("%s  [%s]" % [action_name, hotkey], {})
 	tooltip.toggle(true)
-
-
-func _on_repair_button_mouse_exited():
-	tooltip.toggle(false)
 
 
 func set_timer():
@@ -225,6 +261,8 @@ func _find_producers_for_tab(tab_type: int) -> Array:
 			continue
 		if unit.is_under_construction():
 			continue
+		if "is_disabled" in unit and unit.is_disabled:
+			continue
 		if unit.produces.has(tab_type):
 			result.append(unit)
 	return result
@@ -240,6 +278,8 @@ func _find_all_producers() -> Array:
 		if unit.production_queue == null:
 			continue
 		if unit.is_under_construction():
+			continue
+		if "is_disabled" in unit and unit.is_disabled:
 			continue
 		result.append(unit)
 	return result
@@ -297,8 +337,7 @@ func _populate_production_grid(grid_data: Dictionary, tab_type: int) -> void:
 		var is_structure := UnitConstants.STRUCTURE_BLUEPRINTS.has(scene_path)
 		_grid_slot_is_structure[slot] = is_structure
 		if is_structure:
-			# Structures only need left-click (place), no queue interaction
-			button.pressed.connect(_on_production_button_pressed.bind(scene_path))
+			button.gui_input.connect(_on_structure_grid_button_gui_input.bind(scene_path))
 		else:
 			button.gui_input.connect(_on_grid_button_gui_input.bind(scene_path))
 
@@ -328,8 +367,15 @@ func _unhandled_key_input(event: InputEvent) -> void:
 	if not event is InputEventKey or not event.pressed:
 		return
 
-	# Tab-switching hotkeys (Q W E R T Y/Z) via physical keycode
+	# Tab-switching hotkeys (Q W E R) via physical keycode
 	var physical: Key = event.physical_keycode
+
+	# Structure action hotkeys (T, Y/Z, U)
+	if ACTION_HOTKEYS.has(physical):
+		MatchSignals.structure_action_started.emit(ACTION_HOTKEYS[physical])
+		get_viewport().set_input_as_handled()
+		return
+
 	for i in range(TAB_HOTKEY_PHYSICAL_KEYS.size()):
 		if physical == TAB_HOTKEY_PHYSICAL_KEYS[i]:
 			if i < production_tab_bar.tab_count:
@@ -351,14 +397,9 @@ func _unhandled_key_input(event: InputEvent) -> void:
 		if not hs.bindings.has(slot):
 			continue
 		if event.keycode == hs.bindings[slot] and not buttons[i].disabled:
-			if _grid_slot_is_structure.get(i, true):
-				# Structure: emit pressed as before
-				buttons[i].pressed.emit()
-			else:
-				# Unit: queue production at the active producer
-				var sp: String = _grid_slot_to_scene.get(i, "")
-				if sp != "":
-					_on_production_button_pressed(sp)
+			var sp: String = _grid_slot_to_scene.get(i, "")
+			if sp != "":
+				_on_production_button_pressed(sp)
 			get_viewport().set_input_as_handled()
 			return
 
@@ -461,7 +502,44 @@ func _update_grid_button_queue_display(button: Button, scene_path: String) -> vo
 	var count_label = button.get_node_or_null("CountLabel")
 	if time_label == null or count_label == null:
 		return
-	if _grid_observed_queue == null or scene_path == "":
+	if scene_path == "":
+		time_label.visible = false
+		count_label.visible = false
+		return
+
+	# ── Construction progress for structure slots ──
+	if UnitConstants.STRUCTURE_BLUEPRINTS.has(scene_path):
+		var building_count := 0
+		var best_progress := 0.0
+		var any_paused := false
+		for unit in get_tree().get_nodes_in_group("controlled_units"):
+			if not unit is Structure:
+				continue
+			var unit_scene: String = unit.get_script().resource_path.replace(".gd", ".tscn")
+			if unit_scene != scene_path:
+				continue
+			if unit.is_under_construction():
+				building_count += 1
+				if unit.is_construction_paused:
+					any_paused = true
+				if unit.construction_progress > best_progress:
+					best_progress = unit.construction_progress
+		if building_count > 0:
+			var pct := int(best_progress * 100.0)
+			time_label.text = ("%d%% ||" % pct if any_paused else "%d%%" % pct)
+			time_label.visible = true
+			if building_count > 1:
+				count_label.text = "x%d" % building_count
+				count_label.visible = true
+			else:
+				count_label.visible = false
+			return
+		time_label.visible = false
+		count_label.visible = false
+		return
+
+	# ── Production queue display for unit slots ──
+	if _grid_observed_queue == null:
 		time_label.visible = false
 		count_label.visible = false
 		return
@@ -496,6 +574,111 @@ func _update_grid_button_queue_display(button: Button, scene_path: String) -> vo
 		count_label.visible = true
 	else:
 		count_label.visible = false
+
+
+func _on_structure_grid_button_gui_input(event: InputEvent, scene_path: String) -> void:
+	if not event is InputEventMouseButton or not event.pressed:
+		return
+	# gui_input fires even on disabled buttons — block when no producer
+	if _active_producers.is_empty():
+		return
+	if event.button_index == MOUSE_BUTTON_LEFT:
+		# If a paused under-construction structure exists, resume it
+		# instead of placing a new one.
+		if _resume_paused_structure(scene_path):
+			return
+		_on_production_button_pressed(scene_path)
+	elif event.button_index == MOUSE_BUTTON_RIGHT:
+		_cancel_building_structure(scene_path)
+
+
+func _resume_paused_structure(scene_path: String) -> bool:
+	## Unpause the most-progressed paused structure of this type.
+	## Returns true if a command was sent, false if nothing to resume.
+	var best = null
+	var best_progress := -1.0
+	for unit in get_tree().get_nodes_in_group("controlled_units"):
+		if not unit is Structure:
+			continue
+		if not unit.is_under_construction():
+			continue
+		if not unit.is_construction_paused:
+			continue
+		var unit_scene: String = unit.get_script().resource_path.replace(".gd", ".tscn")
+		if unit_scene != scene_path:
+			continue
+		if unit.construction_progress > best_progress:
+			best_progress = unit.construction_progress
+			best = unit
+	if best == null:
+		return false
+	(
+		CommandBus
+		. push_command(
+			{
+				"tick": Match.tick + 1,
+				"type": Enums.CommandType.PAUSE_CONSTRUCTION,
+				"player_id": best.player.id,
+				"data": {"entity_id": best.id},
+			}
+		)
+	)
+	return true
+
+
+func _cancel_building_structure(scene_path: String) -> void:
+	# Collect all under-construction structures of this type.
+	var unpaused: Array = []
+	var paused: Array = []
+	for unit in get_tree().get_nodes_in_group("controlled_units"):
+		if not unit is Structure:
+			continue
+		if not unit.is_under_construction():
+			continue
+		var unit_scene: String = unit.get_script().resource_path.replace(".gd", ".tscn")
+		if unit_scene != scene_path:
+			continue
+		if unit.is_construction_paused:
+			paused.append(unit)
+		else:
+			unpaused.append(unit)
+
+	# 1st right-click: pause the least-progressed unpaused structure.
+	if not unpaused.is_empty():
+		var best = unpaused[0]
+		for u in unpaused:
+			if u.construction_progress < best.construction_progress:
+				best = u
+		(
+			CommandBus
+			. push_command(
+				{
+					"tick": Match.tick + 1,
+					"type": Enums.CommandType.PAUSE_CONSTRUCTION,
+					"player_id": best.player.id,
+					"data": {"entity_id": best.id},
+				}
+			)
+		)
+		return
+
+	# 2nd right-click: cancel the least-progressed paused structure.
+	if not paused.is_empty():
+		var best = paused[0]
+		for u in paused:
+			if u.construction_progress < best.construction_progress:
+				best = u
+		(
+			CommandBus
+			. push_command(
+				{
+					"tick": Match.tick + 1,
+					"type": Enums.CommandType.CANCEL_CONSTRUCTION,
+					"player_id": best.player.id,
+					"data": {"entity_id": best.id},
+				}
+			)
+		)
 
 
 func _on_grid_button_gui_input(event: InputEvent, scene_path: String) -> void:

@@ -54,6 +54,8 @@ func _remove_queue_element_nodes():
 
 func _detach_all():
 	for pq in _production_queues:
+		if not is_instance_valid(pq):
+			continue
 		if pq.element_enqueued.is_connected(_on_production_queue_element_enqueued):
 			pq.element_enqueued.disconnect(_on_production_queue_element_enqueued)
 		if pq.element_removed.is_connected(_on_production_queue_element_removed):
