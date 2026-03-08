@@ -79,3 +79,8 @@ enum ProductionTabGridSlots {
 	F11,
 	F12,
 }
+
+enum ResourceType {
+	CREDITS,
+	ENERGY,
+}

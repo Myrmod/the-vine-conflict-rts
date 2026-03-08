@@ -29,9 +29,9 @@ func _ready():
 
 func add_element(element) -> void:
 	queue_elements.append(element)
-	if is_inside_tree():
+	if is_inside_tree() and not element.changed.is_connected(_update_display):
 		element.changed.connect(_update_display)
-		_update_display()
+	_update_display()
 
 
 func remove_element(element) -> void:

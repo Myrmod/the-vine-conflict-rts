@@ -1,8 +1,8 @@
-extends Resource
-
 class_name MatchSettings
 
-enum Visibility {PER_PLAYER, ALL_PLAYERS, FULL}
+extends Resource
+
+enum Visibility { PER_PLAYER, ALL_PLAYERS, FULL }
 
 @export var players: Array[PlayerSettings] = []
 @export var visibility = Visibility.PER_PLAYER

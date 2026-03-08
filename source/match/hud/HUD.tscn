@@ -276,8 +276,9 @@ tab_5/icon = ExtResource("8_h6iyy")
 
 [node name="ProductionTabBarOverflow" type="TabBar" parent="RightMarginContainer/HBoxContainer/RightVBoxContainer/ProductionMenuTabs/VBoxContainer" unique_id=1371726651]
 layout_mode = 2
+theme_override_font_sizes/font_size = 16
 current_tab = 0
-max_tab_width = 20
+max_tab_width = 30
 tab_count = 11
 tab_0/title = "1"
 tab_1/title = "2"

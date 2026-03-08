@@ -18,4 +18,4 @@ func setup(a_player):
 
 
 func _on_player_resource_changed():
-	_resource_label.text = str(player.resource)
+	_resource_label.text = str(Player.credits)

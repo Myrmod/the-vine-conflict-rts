@@ -281,12 +281,15 @@ func _on_navigation_finished() -> void:
 
 
 func _apply_terrain_height_and_tilt(snap: bool = false) -> void:
+	var pos: Vector3 = Vector3.ONE
+	var terrain_y: float = 0.0
+
 	# Air units adjust height to stay above terrain
 	if terrain_move_type == NavigationConstants.TerrainMoveType.AIR:
 		if not _match or not _match.map:
 			return
-		var pos: Vector3 = _unit.global_transform.origin
-		var terrain_y: float = _match.map.get_height_at_world(pos)
+		pos = _unit.global_transform.origin
+		terrain_y = _match.map.get_height_at_world(pos)
 		var target_y: float = terrain_y + Air.Y
 		if snap:
 			_unit.global_transform.origin.y = target_y
@@ -303,8 +306,8 @@ func _apply_terrain_height_and_tilt(snap: bool = false) -> void:
 		return
 
 	var map: Variant = _match.map
-	var pos: Vector3 = _unit.global_transform.origin
-	var terrain_y: float = map.get_height_at_world(pos)
+	pos = _unit.global_transform.origin
+	terrain_y = map.get_height_at_world(pos)
 
 	# Set Y to terrain height
 	_unit.global_transform.origin.y = terrain_y

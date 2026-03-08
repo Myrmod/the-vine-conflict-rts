@@ -4,10 +4,17 @@ extends Node3D
 
 signal changed
 
-@export var resource = 10:
+# Maybe PlayerData.gd should be incorporated into this, feels duplicate?
+
+@export var credits = 10:
 	set(value):
-		resource = value
+		credits = value
 		emit_changed()
+		MatchSignals.player_resource_changed.emit(credits, Enums.ResourceType.CREDITS)
+@export var energy = 0:
+	set(value):
+		energy = value
+		MatchSignals.player_resource_changed.emit(energy, Enums.ResourceType.ENERGY)
 
 @export var color = Color.WHITE
 
@@ -18,7 +25,10 @@ var id: int
 # Default (0) is assigned by Play.gd: first player=team 0, second player=team 1, etc.
 # Custom team values can be set to create alliances or custom match configurations.
 var team: int = 0
-var faction: Enums.Faction = Enums.Faction.AMUNS
+var faction: Enums.Faction:
+	set(_faction):
+		faction = _faction
+
 var _color_material = null
 
 
@@ -65,3 +75,8 @@ func get_color_material():
 
 func emit_changed():
 	changed.emit()
+
+
+func initialize_resources(resources):
+	credits = resources["credits"]
+	energy = resources["energy"]

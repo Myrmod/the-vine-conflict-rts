@@ -73,7 +73,7 @@ func cancel(element):
 	var production_cost = (
 		UnitConstants.DEFAULT_PROPERTIES[element.unit_prototype.resource_path]["costs"]
 	)
-	_unit.player.add_resources(production_cost)
+	_unit.player.add_resources(production_cost, Enums.ResourceType.CREDITS)
 	_remove_element(element)
 
 

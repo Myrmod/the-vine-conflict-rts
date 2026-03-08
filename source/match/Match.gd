@@ -546,6 +546,9 @@ func _create_players_from_settings():
 		# to ensure playable matches. Custom team assignments override this (for alliances, etc.)
 		player.team = player_settings.team
 		player.faction = player_settings.faction
+
+		# set starting resources
+		player.initialize_resources(Factions.get_starting_resource())
 		_players.add_child(player)
 
 

@@ -76,7 +76,7 @@ func construct(progress):
 func cancel_construction():
 	var scene_path = get_script().resource_path.replace(".gd", ".tscn")
 	var construction_cost = UnitConstants.DEFAULT_PROPERTIES[scene_path]["costs"]
-	player.add_resources(construction_cost)
+	player.add_resources(construction_cost, Enums.ResourceType.CREDITS)
 	# Unregister before freeing so EntityRegistry doesn't hold stale references
 	EntityRegistry.unregister(self)
 	queue_free()

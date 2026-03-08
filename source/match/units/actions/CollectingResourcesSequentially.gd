@@ -64,7 +64,6 @@ func _exit_state(_a_state):
 
 
 func _enter_state(state):
-	print(state)
 	match state:
 		State.MOVING_TO_RESOURCE:
 			if (
@@ -115,8 +114,9 @@ func _set_cc_unit(cc_unit):
 
 
 func _transfer_collected_resources_to_player():
-	_unit.player.resource += _unit.resource
+	_unit.player.credits += _unit.resource
 	_unit.resource = 0
+	MatchSignals.player_resource_changed.emit(_unit.player.credits, Enums.ResourceType.CREDITS)
 
 
 func _find_closest_resource_unit_in_nearby_area():

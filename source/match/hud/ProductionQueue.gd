@@ -1,6 +1,4 @@
-extends MarginContainer
-
-class_name ProductionQueue
+class_name ProductionQueue extends MarginContainer
 
 const ProductionQueueElement = preload("res://source/match/hud/ProductionQueueElement.tscn")
 

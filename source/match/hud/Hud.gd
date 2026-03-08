@@ -2,7 +2,6 @@ extends CanvasLayer
 
 const TOOLTIP = preload("res://source/utils/Tooltip.tscn")
 
-
 ## Tab-switching hotkeys: Q W E R T and the key next to T.
 ## We use physical scancodes so this adapts to layout automatically:
 ## QWERTY → Q W E R T Y, QWERTZ → Q W E R T Z, AZERTY → A Z E R T Y
@@ -80,6 +79,7 @@ func _ready() -> void:
 	MatchSignals.unit_spawned.connect(_on_unit_changed)
 	MatchSignals.unit_died.connect(_on_unit_changed)
 	MatchSignals.unit_construction_finished.connect(_on_unit_changed)
+	MatchSignals.player_resource_changed.connect(update_resource_label)
 
 
 func init_building_modification_buttons():
@@ -110,6 +110,12 @@ func set_player_settings(settings: MatchSettings):
 	current_player = settings.players[settings.visible_player]
 
 	_set_player_faction()
+
+	# set starting resources
+	if Factions.get_starting_resource()["energy"] != 0:
+		energy_bar.value = Factions.get_starting_resource()["energy"]
+	else:
+		energy_bar.visible = false
 
 
 func _set_player_faction():
@@ -310,3 +316,16 @@ func _on_production_button_hover(
 
 func _on_production_button_exit() -> void:
 	tooltip.toggle(false)
+
+
+## resource is the updated value, not the delta
+func update_resource_label(resource: int, type: Enums.ResourceType):
+	match type:
+		Enums.ResourceType.CREDITS:
+			credits_label.text = str(resource) + "$"
+
+		Enums.ResourceType.ENERGY:
+			energy_bar.value = resource
+
+		_:
+			push_warning("Resource of unknown type updated: ", type)

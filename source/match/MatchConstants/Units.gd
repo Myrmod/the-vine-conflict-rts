@@ -36,7 +36,7 @@ const DEFAULT_PROPERTIES = {
 		"hp": 6,
 		"hp_max": 6,
 		"movement_domains": [Enums.MovementTypes.WATER],
-		"costs": {"resource": 2},
+		"costs": {"credits": 2, "energy": 0},
 		"build_time": 3.0,
 	},
 	"res://source/factions/the_amuns/units/Worker.tscn":
@@ -49,7 +49,7 @@ const DEFAULT_PROPERTIES = {
 		"hp_max": 6,
 		"resources_max": 500,
 		"resources_gather_rate": 250,
-		"costs": {"resource": 2},
+		"costs": {"credits": 2, "energy": 0},
 		"build_time": 3.0,
 	},
 	"res://source/factions/the_amuns/units/Helicopter.tscn":
@@ -68,7 +68,7 @@ const DEFAULT_PROPERTIES = {
 			Enums.MovementTypes.LAND,
 			Enums.MovementTypes.AIR,
 		],
-		"costs": {"resource": 1},
+		"costs": {"credits": 1, "energy": 0},
 		"build_time": 6.0,
 	},
 	"res://source/factions/the_amuns/units/Tank.tscn":
@@ -86,7 +86,7 @@ const DEFAULT_PROPERTIES = {
 		[
 			Enums.MovementTypes.LAND,
 		],
-		"costs": {"resource": 3},
+		"costs": {"credits": 3, "energy": 0},
 		"build_time": 6.0,
 	},
 	"res://source/factions/the_amuns/structures/CommandCenter.tscn":
@@ -98,7 +98,7 @@ const DEFAULT_PROPERTIES = {
 		"sight_range": 10.0,
 		"hp": 20,
 		"hp_max": 20,
-		"costs": {"resource": 8},
+		"costs": {"credits": 8, "energy": 0},
 		"build_time": 10.0,
 	},
 	"res://source/factions/the_amuns/structures/VehicleFactory.tscn":
@@ -110,7 +110,7 @@ const DEFAULT_PROPERTIES = {
 		"sight_range": 8.0,
 		"hp": 16,
 		"hp_max": 16,
-		"costs": {"resource": 6},
+		"costs": {"credits": 6, "energy": 0},
 		"build_time": 8.0,
 	},
 	"res://source/factions/the_amuns/structures/AircraftFactory.tscn":
@@ -122,7 +122,7 @@ const DEFAULT_PROPERTIES = {
 		"sight_range": 8.0,
 		"hp": 16,
 		"hp_max": 16,
-		"costs": {"resource": 4},
+		"costs": {"credits": 4, "energy": 0},
 		"build_time": 8.0,
 	},
 	"res://source/factions/the_amuns/structures/AntiGroundTurret.tscn":
@@ -140,7 +140,7 @@ const DEFAULT_PROPERTIES = {
 		[
 			Enums.MovementTypes.LAND,
 		],
-		"costs": {"resource": 2},
+		"costs": {"credits": 2, "energy": 0},
 		"build_time": 5.0,
 	},
 	"res://source/factions/the_amuns/structures/AntiAirTurret.tscn":
@@ -158,7 +158,7 @@ const DEFAULT_PROPERTIES = {
 		[
 			Enums.MovementTypes.AIR,
 		],
-		"costs": {"resource": 2},
+		"costs": {"credits": 2, "energy": 0},
 		"build_time": 5.0,
 	},
 	"res://source/factions/the_amuns/structures/Shipyard.tscn":
@@ -170,7 +170,7 @@ const DEFAULT_PROPERTIES = {
 		"sight_range": 8.0,
 		"hp": 16,
 		"hp_max": 16,
-		"costs": {"resource": 5},
+		"costs": {"credits": 5, "energy": 0},
 		"build_time": 8.0,
 	},
 	# the Legion
@@ -183,7 +183,7 @@ const DEFAULT_PROPERTIES = {
 		"sight_range": 10.0,
 		"hp": 20,
 		"hp_max": 20,
-		"costs": {"resource": 8},
+		"costs": {"credits": 8, "energy": 0},
 		"build_time": 10.0,
 	},
 	"res://source/factions/the_legion/units/Worker.tscn":
@@ -196,7 +196,7 @@ const DEFAULT_PROPERTIES = {
 		"hp_max": 6,
 		"resources_max": 500,
 		"resources_gather_rate": 250,
-		"costs": {"resource": 2},
+		"costs": {"credits": 2, "energy": 0},
 		"build_time": 3.0,
 	},
 	# the Radix
@@ -209,7 +209,7 @@ const DEFAULT_PROPERTIES = {
 		"sight_range": 10.0,
 		"hp": 20,
 		"hp_max": 20,
-		"costs": {"resource": 8},
+		"costs": {"credits": 8, "energy": 0},
 		"build_time": 10.0,
 	},
 	"res://source/factions/the_radix/units/Worker.tscn":
@@ -222,7 +222,7 @@ const DEFAULT_PROPERTIES = {
 		"hp_max": 6,
 		"resources_max": 500,
 		"resources_gather_rate": 250,
-		"costs": {"resource": 2},
+		"costs": {"credits": 2, "energy": 0},
 		"build_time": 3.0,
 	},
 	# the Remnants
@@ -235,7 +235,7 @@ const DEFAULT_PROPERTIES = {
 		"sight_range": 10.0,
 		"hp": 20,
 		"hp_max": 20,
-		"costs": {"resource": 8},
+		"costs": {"credits": 8, "energy": 0},
 		"build_time": 10.0,
 	},
 	"res://source/factions/the_remnants/units/Worker.tscn":
@@ -248,7 +248,7 @@ const DEFAULT_PROPERTIES = {
 		"hp_max": 6,
 		"resources_max": 500,
 		"resources_gather_rate": 250,
-		"costs": {"resource": 2},
+		"costs": {"credits": 2, "energy": 0},
 		"build_time": 3.0,
 	},
 }

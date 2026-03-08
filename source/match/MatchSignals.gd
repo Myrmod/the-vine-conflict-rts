@@ -28,6 +28,8 @@ signal not_enough_resources_for_construction(player)
 signal structure_placement_started
 signal structure_placement_ended
 
+signal player_resource_changed(credits: int, type: Enums.ResourceType)
+
 ## Set by StructurePlacementHandler before emitting structure_placement_started
 ## so BuildRadius nodes know which radius (land or water) to display.
 var current_placement_domains: Array = []
