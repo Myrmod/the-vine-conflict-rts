@@ -21,11 +21,16 @@ enum CommandType {
 	ENTITY_IS_QUEUED,  # Queue unit production at a structure
 	STRUCTURE_PLACED,  # Place a new structure on the map (deducts resources)
 	ENTITY_PRODUCTION_CANCELED,  # Cancel a queued unit in production queue
+	ENTITY_PRODUCTION_PAUSED,  # Pause/unpause production of a unit type
 	PRODUCTION_CANCEL_ALL,  # Cancel ALL queued units at a structure
 	ACTION_CANCEL,  # Cancel current unit action (set action = null)
 	CANCEL_CONSTRUCTION,  # Cancel an under-construction structure (refund + free)
 	SET_RALLY_POINT,  # Set a structure's rally point to a terrain position
 	SET_RALLY_POINT_TO_UNIT,  # Set a structure's rally point to follow a unit
+	REPAIR_ENTITY,
+	SELL_ENTITY,
+	DISABLE_ENTITY,
+	CAST_SUPPORT_POWER,
 }
 
 ## starts at 1 to avoid falsy 0 value

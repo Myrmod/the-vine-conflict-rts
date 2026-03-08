@@ -393,6 +393,15 @@ func _execute_command(cmd: Dictionary):
 					structure.production_queue.cancel(element)
 					break
 
+		Enums.CommandType.ENTITY_PRODUCTION_PAUSED:
+			var structure = _resolve_unit(cmd.data.entity_id, "ENTITY_PRODUCTION_PAUSED")
+			if structure == null:
+				return
+			if not _verify_unit_ownership(structure, cmd.player_id, "ENTITY_PRODUCTION_PAUSED"):
+				return
+			if structure.has_node("ProductionQueue"):
+				structure.production_queue.toggle_pause(cmd.data.unit_type)
+
 		Enums.CommandType.PRODUCTION_CANCEL_ALL:
 			var structure = _resolve_unit(cmd.data.entity_id, "PRODUCTION_CANCEL_ALL")
 			if structure == null:

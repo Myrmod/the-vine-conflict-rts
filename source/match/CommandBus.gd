@@ -31,7 +31,8 @@ extends Node
 
 # Command queue indexed by tick number.
 # Structure: { tick_number: [command_dict, command_dict, ...] }
-var commands := {} # int → Array[Dictionary]
+var commands := {}  # int → Array[Dictionary]
+
 
 # Clear all queued commands - used when starting a fresh live match
 func clear():
@@ -125,8 +126,7 @@ func _validate_command_schema(cmd: Dictionary) -> bool:
 			for entry in cmd.data.targets:
 				if not _validate_target_dict(entry, "MOVE", true):
 					return false
-		Enums.CommandType.MOVING_TO_UNIT, Enums.CommandType.FOLLOWING, \
-		Enums.CommandType.COLLECTING_RESOURCES_SEQUENTIALLY, Enums.CommandType.AUTO_ATTACKING:
+		Enums.CommandType.MOVING_TO_UNIT, Enums.CommandType.FOLLOWING, Enums.CommandType.COLLECTING_RESOURCES_SEQUENTIALLY, Enums.CommandType.AUTO_ATTACKING:
 			if not cmd.data.has("target_unit") or typeof(cmd.data.target_unit) != TYPE_INT:
 				push_error("CommandBus: command requires int data.target_unit")
 				return false
@@ -140,7 +140,10 @@ func _validate_command_schema(cmd: Dictionary) -> bool:
 			if not cmd.data.has("structure") or typeof(cmd.data.structure) != TYPE_INT:
 				push_error("CommandBus: CONSTRUCTING requires int data.structure")
 				return false
-			if not cmd.data.has("selected_constructors") or typeof(cmd.data.selected_constructors) != TYPE_ARRAY:
+			if (
+				not cmd.data.has("selected_constructors")
+				or typeof(cmd.data.selected_constructors) != TYPE_ARRAY
+			):
 				push_error("CommandBus: CONSTRUCTING requires Array data.selected_constructors")
 				return false
 			for entry in cmd.data.selected_constructors:
@@ -156,7 +159,10 @@ func _validate_command_schema(cmd: Dictionary) -> bool:
 				return false
 		Enums.CommandType.STRUCTURE_PLACED:
 			# Place a new structure. data.structure_prototype = scene path. Player comes from cmd.player_id.
-			if not cmd.data.has("structure_prototype") or typeof(cmd.data.structure_prototype) != TYPE_STRING:
+			if (
+				not cmd.data.has("structure_prototype")
+				or typeof(cmd.data.structure_prototype) != TYPE_STRING
+			):
 				push_error("CommandBus: STRUCTURE_PLACED requires String data.structure_prototype")
 				return false
 			if not cmd.data.has("transform") or typeof(cmd.data.transform) != TYPE_TRANSFORM3D:
@@ -168,6 +174,13 @@ func _validate_command_schema(cmd: Dictionary) -> bool:
 				return false
 			if not cmd.data.has("unit_type") or typeof(cmd.data.unit_type) != TYPE_STRING:
 				push_error("CommandBus: ENTITY_PRODUCTION_CANCELED requires String data.unit_type")
+				return false
+		Enums.CommandType.ENTITY_PRODUCTION_PAUSED:
+			if not cmd.data.has("entity_id") or typeof(cmd.data.entity_id) != TYPE_INT:
+				push_error("CommandBus: ENTITY_PRODUCTION_PAUSED requires int data.entity_id")
+				return false
+			if not cmd.data.has("unit_type") or typeof(cmd.data.unit_type) != TYPE_STRING:
+				push_error("CommandBus: ENTITY_PRODUCTION_PAUSED requires String data.unit_type")
 				return false
 		Enums.CommandType.PRODUCTION_CANCEL_ALL:
 			# Cancel all production at a structure. data.entity_id = structure ID.
@@ -202,6 +215,14 @@ func _validate_command_schema(cmd: Dictionary) -> bool:
 			if not cmd.data.has("target_unit") or typeof(cmd.data.target_unit) != TYPE_INT:
 				push_error("CommandBus: SET_RALLY_POINT_TO_UNIT requires int data.target_unit")
 				return false
+		Enums.CommandType.REPAIR_ENTITY:
+			print("command called validated", cmd.type)
+		Enums.CommandType.SELL_ENTITY:
+			print("command called validated", cmd.type)
+		Enums.CommandType.DISABLE_ENTITY:
+			print("command called validated", cmd.type)
+		Enums.CommandType.CAST_SUPPORT_POWER:
+			print("command called validated", cmd.type)
 		_:
 			push_error("CommandBus: unknown command type %s" % cmd.type)
 			return false
@@ -219,7 +240,9 @@ func _is_valid_command(cmd: Variant) -> bool:
 		push_error("CommandBus: command missing int type")
 		return false
 	if not cmd.has("player_id") or typeof(cmd.player_id) != TYPE_INT:
-		push_error("CommandBus: command missing int player_id (every command must identify its issuing player)")
+		push_error(
+			"CommandBus: command missing int player_id (every command must identify its issuing player)"
+		)
 		return false
 	if not cmd.has("data") or typeof(cmd.data) != TYPE_DICTIONARY:
 		push_error("CommandBus: command missing Dictionary data")
@@ -249,6 +272,7 @@ func push_command(cmd: Dictionary):
 	# Record for replay file so this exact command replays identically later
 	ReplayRecorder.record_command(cmd)
 
+
 func get_commands_for_tick(a_tick: int) -> Array:
 	# Returns all commands that should execute on this tick.
 	# During replay: reads from the loaded replay data (ReplayRecorder.replay.commands).
@@ -258,17 +282,20 @@ func get_commands_for_tick(a_tick: int) -> Array:
 	else:
 		return _live_commands_for_tick(a_tick)
 
+
 func _replay_commands_for_tick(a_tick: int) -> Array:
 	# Return commands for this tick from the tick-indexed map built by load_from_replay_array().
 	if not commands.has(a_tick):
 		return []
 	return commands[a_tick]
 
+
 func _live_commands_for_tick(a_tick: int) -> Array:
 	# Return commands queued for this tick during live gameplay.
 	if not commands.has(a_tick):
 		return []
 	return commands[a_tick]
+
 
 func load_from_replay_array(arr: Array):
 	# Bulk-load all commands from a replay file into the queue.

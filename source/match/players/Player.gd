@@ -17,6 +17,7 @@ signal changed
 		MatchSignals.player_resource_changed.emit(energy, Enums.ResourceType.ENERGY)
 
 @export var color = Color.WHITE
+@export var support_powers = {}
 
 var id: int
 # TEAM SYSTEM: Integer team identifier for team-based gameplay.
@@ -36,7 +37,7 @@ func _ready():
 	id = PlayerManager.add_player()
 
 
-func add_resources(resources):
+func add_resources(resources, _resource_type = null):
 	for resource in resources:
 		var current = get(resource)
 		if current == null:
