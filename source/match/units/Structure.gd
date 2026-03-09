@@ -38,9 +38,9 @@ var construction_progress: float:
 var _occupied_cell: Vector2i
 var _footprint: Vector2i = Vector2i(1, 1)
 var _sell_ticks_remaining: int = 0
-var _repair_ticks_total: int = 0
-var _repair_ticks_done: int = 0
+var _repair_hp_per_tick: float = 0.0
 var _repair_cost_per_tick: float = 0.0
+var _repair_hp_remainder: float = 0.0
 
 @onready var production_queue = find_child("ProductionQueue"):
 	set(_value):
@@ -265,63 +265,60 @@ func _remove_sell_bar() -> void:
 		bar.queue_free()
 
 
-## Toggle repair. Costs the missing-HP percentage of the build cost,
-## and takes the same percentage of the build time.
-func toggle_repair() -> void:
+## Toggle repair.  repair_rate_percentage defines the fraction of hp_max
+## restored per second (default 5 %).  Cost per second equals
+## repair_rate_percentage × total_damage_cost (so full-damage repair costs
+## the same total credits regardless of rate).
+func toggle_repair(repair_rate_percentage: float = 0.05) -> void:
 	if is_repairing:
 		is_repairing = false
-		_repair_ticks_done = 0
-		_repair_ticks_total = 0
+		_repair_hp_per_tick = 0.0
 		_repair_cost_per_tick = 0.0
+		_repair_hp_remainder = 0.0
 		return
 	if hp >= hp_max:
 		return  # already full
 	var scene_path = get_script().resource_path.replace(".gd", ".tscn")
 	var props = UnitConstants.DEFAULT_PROPERTIES.get(scene_path, {})
-	var build_time: float = props.get("build_time", 5.0)
 	var cost = props.get("costs", {})
 	var credit_cost: float = float(cost.get("credits", 0))
-	var missing_fraction: float = 1.0 - float(hp) / float(hp_max)
-	var total_repair_cost := credit_cost * missing_fraction
-	var repair_time := build_time * missing_fraction
-	var ticks := int(repair_time * MatchConstants.TICK_RATE)
-	if ticks < 1:
-		ticks = 1
-	if not player.has_resources({"credits": int(ceil(total_repair_cost))}):
-		return  # cannot afford
-	_repair_ticks_total = ticks
-	_repair_ticks_done = 0
-	_repair_cost_per_tick = total_repair_cost / float(ticks)
+	var missing_hp: float = float(hp_max - hp)
+	# HP restored per tick  (rate is per second, TICK_RATE ticks per second)
+	_repair_hp_per_tick = (repair_rate_percentage * float(hp_max)) / float(MatchConstants.TICK_RATE)
+	# Cost per tick: repair_rate_percentage of total damage cost, per second
+	var damage_cost: float = credit_cost * (missing_hp / float(hp_max))
+	_repair_cost_per_tick = (repair_rate_percentage * damage_cost) / float(MatchConstants.TICK_RATE)
+	# Check the player can afford at least the first tick
+	if not player.has_resources({"credits": int(ceil(_repair_cost_per_tick))}):
+		return
+	_repair_hp_remainder = 0.0
 	is_repairing = true
 
 
 func _tick_repair() -> void:
-	_repair_ticks_done += 1
-	# Deduct fractional cost each tick
+	# Deduct cost
 	var tick_cost := int(ceil(_repair_cost_per_tick))
 	if tick_cost > 0:
+		if not player.has_resources({"credits": tick_cost}):
+			# Out of money — stop repairing
+			is_repairing = false
+			_repair_hp_per_tick = 0.0
+			_repair_cost_per_tick = 0.0
+			_repair_hp_remainder = 0.0
+			return
 		player.subtract_resources({"credits": tick_cost})
-	# Restore HP proportionally
-	var target_hp := int(
-		(
-			float(hp_max)
-			* (
-				1.0
-				- (
-					(float(_repair_ticks_total - _repair_ticks_done) / float(_repair_ticks_total))
-					* (1.0 - float(hp) / float(hp_max))
-				)
-			)
-		)
-	)
-	if hp < target_hp:
-		hp = mini(target_hp, hp_max)
-	if _repair_ticks_done >= _repair_ticks_total or hp >= hp_max:
+	# Accumulate fractional HP and apply whole points
+	_repair_hp_remainder += _repair_hp_per_tick
+	var whole_hp := int(_repair_hp_remainder)
+	if whole_hp > 0:
+		_repair_hp_remainder -= float(whole_hp)
+		hp = mini(hp + whole_hp, hp_max)
+	if hp >= hp_max:
 		hp = hp_max
 		is_repairing = false
-		_repair_ticks_done = 0
-		_repair_ticks_total = 0
+		_repair_hp_per_tick = 0.0
 		_repair_cost_per_tick = 0.0
+		_repair_hp_remainder = 0.0
 
 
 ## Toggle disabled state: halts production, darkens visual.

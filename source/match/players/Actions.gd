@@ -15,6 +15,3 @@ const EntityIsQueued = preload("res://source/match/units/actions/EntityIsQueued.
 const CastSupportPowerAction = preload(
 	"res://source/match/players/actions/CastSupportPowerAction.gd"
 )
-const DisableAction = preload("res://source/match/players/actions/DisableAction.gd")
-const RepairAction = preload("res://source/match/players/actions/RepairAction.gd")
-const SellAction = preload("res://source/match/players/actions/SellAction.gd")

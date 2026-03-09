@@ -10,11 +10,11 @@ signal changed
 	set(value):
 		credits = value
 		emit_changed()
-		MatchSignals.player_resource_changed.emit(credits, Enums.ResourceType.CREDITS)
+		MatchSignals.player_resource_changed.emit(self, credits, Enums.ResourceType.CREDITS)
 @export var energy = 0:
 	set(value):
 		energy = value
-		MatchSignals.player_resource_changed.emit(energy, Enums.ResourceType.ENERGY)
+		MatchSignals.player_resource_changed.emit(self, energy, Enums.ResourceType.ENERGY)
 
 @export var color = Color.WHITE
 @export var support_powers = {}

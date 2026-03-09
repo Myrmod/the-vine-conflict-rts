@@ -38,6 +38,7 @@ const ACTION_HOTKEYS: Dictionary = {
 
 var tooltip: Tooltip
 var current_player: PlayerSettings
+var _visible_player_id: int = 0
 var _faction_grid_data: Dictionary = {}
 var _active_tab_type: int = Enums.ProductionTabType.STRUCTURE
 ## Structures owned by the local player that produce items for _active_tab_type
@@ -159,6 +160,7 @@ func set_replay_mode(mode: bool) -> void:
 
 func set_player_settings(settings: MatchSettings):
 	current_player = settings.players[settings.visible_player]
+	_visible_player_id = settings.visible_player
 
 	_set_player_faction()
 
@@ -789,7 +791,9 @@ func _grid_cancel_all_of_type(producer, scene_path: String) -> void:
 
 
 ## resource is the updated value, not the delta
-func update_resource_label(resource: int, type: Enums.ResourceType):
+func update_resource_label(player, resource: int, type: Enums.ResourceType):
+	if player.id != _visible_player_id:
+		return
 	match type:
 		Enums.ResourceType.CREDITS:
 			credits_label.text = str(resource) + "$"

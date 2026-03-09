@@ -28,7 +28,7 @@ signal not_enough_resources_for_construction(player)
 signal structure_placement_started
 signal structure_placement_ended
 
-signal player_resource_changed(credits: int, type: Enums.ResourceType)
+signal player_resource_changed(player, value: int, type: Enums.ResourceType)
 
 ## Structure action mode (repair / sell / disable)
 signal structure_action_started(action_type: Enums.CommandType)

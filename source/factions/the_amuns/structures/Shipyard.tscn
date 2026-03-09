@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://c5ye6ktpt21v"]
 
-[ext_resource type="Script" uid="uid://d3yg1sjwnjqo" path="res://source/factions/the_amuns/structures/Shipyard.gd" id="1_j7t71"]
+[ext_resource type="Script" path="res://source/factions/the_amuns/structures/Shipyard.gd" id="1_j7t71"]
 [ext_resource type="PackedScene" uid="uid://cgsi062w5fjia" path="res://source/match/units/traits/Highlight.tscn" id="1_r5i7t"]
 [ext_resource type="PackedScene" uid="uid://3c1h14nqdumt" path="res://source/match/units/traits/Selection.tscn" id="2_56ml3"]
 [ext_resource type="PackedScene" uid="uid://ckdoxcj48hgrw" path="res://source/factions/the_amuns/structures/structure-geometries/Shipyard.tscn" id="2_j7t71"]
@@ -10,6 +10,7 @@
 [ext_resource type="PackedScene" uid="uid://cd3v6508vjcu3" path="res://source/match/units/traits/ProductionQueue.tscn" id="9_c3qd5"]
 [ext_resource type="PackedScene" uid="uid://d4cm4yhtf11ur" path="res://source/match/units/traits/Targetability.tscn" id="9_qqlap"]
 [ext_resource type="PackedScene" uid="uid://b1gne72rgc7un" path="res://source/match/units/BuildRadius.tscn" id="10_lcmu4"]
+[ext_resource type="PackedScene" path="res://source/match/units/traits/NameTag.tscn" id="11_spb4d"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_spb4d"]
 size = Vector3(3, 2, 4)
@@ -55,3 +56,5 @@ radius = 1.5
 
 [node name="BuildRadius" parent="." unique_id=1664502028 instance=ExtResource("10_lcmu4")]
 radius_in_cells = 5
+
+[node name="NameTag" parent="." unique_id=723767494 instance=ExtResource("11_spb4d")]

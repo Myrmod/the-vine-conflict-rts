@@ -27,6 +27,7 @@ var radius:
 var movement_speed:
 	get = _get_movement_speed
 var sight_range = null
+var unit_name: String = ""
 ## Player or AI
 var player:
 	get:
@@ -197,15 +198,23 @@ func _setup_default_properties_from_constants():
 	var default_properties = UnitConstants.DEFAULT_PROPERTIES[get_script().resource_path.replace(
 		".gd", ".tscn"
 	)]
-	## Properties that may be pre-set in the scene/map editor and should
-	## not be overwritten by the constants table when already assigned.
-	var preserve_if_set := ["hp", "hp_max"]
+	## UnitConstants is the highest authority for all default properties.
+	## If hp was pre-set to less than hp_max (e.g. in the map editor),
+	## the unit/structure spawns damaged with that lower hp value.
+	var pre_set_hp = hp
+	# Apply non-hp properties via Object.set()
 	for property in default_properties:
-		if preserve_if_set.has(property):
-			var current = get(property)
-			if current != null:
-				continue
+		if property == "hp" or property == "hp_max":
+			continue
 		set(property, default_properties[property])
+	# Explicitly assign hp_max before hp through self. to guarantee
+	# setters fire and the HealthBar can compute the correct ratio.
+	if "hp_max" in default_properties:
+		self.hp_max = default_properties["hp_max"]
+	if "hp" in default_properties:
+		self.hp = default_properties["hp"]
+	if pre_set_hp != null and pre_set_hp < hp_max:
+		self.hp = pre_set_hp
 
 
 func _on_action_node_tree_exited(action_node):

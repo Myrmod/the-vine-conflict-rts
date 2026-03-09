@@ -9,6 +9,7 @@
 [ext_resource type="PackedScene" uid="uid://d4cm4yhtf11ur" path="res://source/match/units/traits/Targetability.tscn" id="7_6bghh"]
 [ext_resource type="PackedScene" uid="uid://cd66t0u7kf84j" path="res://source/match/units/traits/RotateRandomlyWhenLookingForTargetsIdle.tscn" id="8_hqxqv"]
 [ext_resource type="PackedScene" uid="uid://b1gne72rgc7un" path="res://source/match/units/BuildRadius.tscn" id="9_2sbfr"]
+[ext_resource type="PackedScene" path="res://source/match/units/traits/NameTag.tscn" id="10_tb4kb"]
 
 [sub_resource type="CylinderShape3D" id="CylinderShape3D_xa2u4"]
 height = 0.8
@@ -71,6 +72,8 @@ node_to_rotate = NodePath("../DetachTransform/Geometry/turret_double/tmpParent/t
 
 [node name="BuildRadius" parent="." unique_id=1664502028 instance=ExtResource("9_2sbfr")]
 radius_in_cells = 2
+
+[node name="NameTag" parent="." unique_id=328389730 instance=ExtResource("10_tb4kb")]
 
 [editable path="DetachTransform/Geometry"]
 [editable path="DetachTransform/Geometry/turret_double"]

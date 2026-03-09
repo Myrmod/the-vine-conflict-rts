@@ -29,6 +29,7 @@ const DEFAULT_PROPERTIES = {
 	# the Amuns
 	"res://source/factions/the_amuns/units/Drone.tscn":
 	{
+		"unit_name": "amuns_Drone",
 		"faction": Enums.Faction.AMUNS,
 		"production_tab_type": Enums.ProductionTabType.WATER,
 		"production_tab_grid_slot": Enums.ProductionTabGridSlots.F1,
@@ -41,6 +42,7 @@ const DEFAULT_PROPERTIES = {
 	},
 	"res://source/factions/the_amuns/units/Worker.tscn":
 	{
+		"unit_name": "amuns_Worker",
 		"faction": Enums.Faction.AMUNS,
 		"production_tab_type": Enums.ProductionTabType.VEHICLE,
 		"production_tab_grid_slot": Enums.ProductionTabGridSlots.F1,
@@ -54,6 +56,7 @@ const DEFAULT_PROPERTIES = {
 	},
 	"res://source/factions/the_amuns/units/Helicopter.tscn":
 	{
+		"unit_name": "amuns_Helicopter",
 		"faction": Enums.Faction.AMUNS,
 		"production_tab_type": Enums.ProductionTabType.AIR,
 		"production_tab_grid_slot": Enums.ProductionTabGridSlots.F1,
@@ -73,6 +76,7 @@ const DEFAULT_PROPERTIES = {
 	},
 	"res://source/factions/the_amuns/units/Tank.tscn":
 	{
+		"unit_name": "amuns_Tank",
 		"faction": Enums.Faction.AMUNS,
 		"production_tab_type": Enums.ProductionTabType.VEHICLE,
 		"production_tab_grid_slot": Enums.ProductionTabGridSlots.F2,
@@ -91,6 +95,7 @@ const DEFAULT_PROPERTIES = {
 	},
 	"res://source/factions/the_amuns/structures/CommandCenter.tscn":
 	{
+		"unit_name": "amuns_CommandCenter",
 		"faction": Enums.Faction.AMUNS,
 		"production_tab_type": Enums.ProductionTabType.STRUCTURE,
 		"production_tab_grid_slot": Enums.ProductionTabGridSlots.F4,
@@ -103,6 +108,7 @@ const DEFAULT_PROPERTIES = {
 	},
 	"res://source/factions/the_amuns/structures/VehicleFactory.tscn":
 	{
+		"unit_name": "amuns_VehicleFactory",
 		"faction": Enums.Faction.AMUNS,
 		"production_tab_type": Enums.ProductionTabType.STRUCTURE,
 		"production_tab_grid_slot": Enums.ProductionTabGridSlots.F1,
@@ -115,6 +121,7 @@ const DEFAULT_PROPERTIES = {
 	},
 	"res://source/factions/the_amuns/structures/AircraftFactory.tscn":
 	{
+		"unit_name": "amuns_AircraftFactory",
 		"faction": Enums.Faction.AMUNS,
 		"production_tab_type": Enums.ProductionTabType.STRUCTURE,
 		"production_tab_grid_slot": Enums.ProductionTabGridSlots.F2,
@@ -127,6 +134,7 @@ const DEFAULT_PROPERTIES = {
 	},
 	"res://source/factions/the_amuns/structures/AntiGroundTurret.tscn":
 	{
+		"unit_name": "amuns_AntiGroundTurret",
 		"faction": Enums.Faction.AMUNS,
 		"production_tab_type": Enums.ProductionTabType.DEFENCES,
 		"production_tab_grid_slot": Enums.ProductionTabGridSlots.F1,
@@ -145,6 +153,7 @@ const DEFAULT_PROPERTIES = {
 	},
 	"res://source/factions/the_amuns/structures/AntiAirTurret.tscn":
 	{
+		"unit_name": "amuns_AntiAirTurret",
 		"faction": Enums.Faction.AMUNS,
 		"production_tab_type": Enums.ProductionTabType.DEFENCES,
 		"production_tab_grid_slot": Enums.ProductionTabGridSlots.F2,
@@ -163,6 +172,7 @@ const DEFAULT_PROPERTIES = {
 	},
 	"res://source/factions/the_amuns/structures/Shipyard.tscn":
 	{
+		"unit_name": "amuns_Shipyard",
 		"faction": Enums.Faction.AMUNS,
 		"production_tab_type": Enums.ProductionTabType.STRUCTURE,
 		"production_tab_grid_slot": Enums.ProductionTabGridSlots.F3,
@@ -176,6 +186,7 @@ const DEFAULT_PROPERTIES = {
 	# the Legion
 	"res://source/factions/the_legion/structures/CommandCenter.tscn":
 	{
+		"unit_name": "legion_CommandCenter",
 		"faction": Enums.Faction.LEGION,
 		"production_tab_type": Enums.ProductionTabType.STRUCTURE,
 		"production_tab_grid_slot": Enums.ProductionTabGridSlots.F1,
@@ -188,6 +199,7 @@ const DEFAULT_PROPERTIES = {
 	},
 	"res://source/factions/the_legion/units/Worker.tscn":
 	{
+		"unit_name": "legion_Worker",
 		"faction": Enums.Faction.LEGION,
 		"production_tab_type": Enums.ProductionTabType.VEHICLE,
 		"production_tab_grid_slot": Enums.ProductionTabGridSlots.F1,
@@ -202,6 +214,7 @@ const DEFAULT_PROPERTIES = {
 	# the Radix
 	"res://source/factions/the_radix/structures/CommandCenter.tscn":
 	{
+		"unit_name": "radix_CommandCenter",
 		"faction": Enums.Faction.RADIX,
 		"production_tab_type": Enums.ProductionTabType.STRUCTURE,
 		"production_tab_grid_slot": Enums.ProductionTabGridSlots.F1,
@@ -214,6 +227,7 @@ const DEFAULT_PROPERTIES = {
 	},
 	"res://source/factions/the_radix/units/Worker.tscn":
 	{
+		"unit_name": "radix_Worker",
 		"faction": Enums.Faction.RADIX,
 		"production_tab_type": Enums.ProductionTabType.VEHICLE,
 		"production_tab_grid_slot": Enums.ProductionTabGridSlots.F1,
@@ -228,6 +242,7 @@ const DEFAULT_PROPERTIES = {
 	# the Remnants
 	"res://source/factions/the_remnants/structures/CommandCenter.tscn":
 	{
+		"unit_name": "remnants_CommandCenter",
 		"faction": Enums.Faction.REMNANTS,
 		"production_tab_type": Enums.ProductionTabType.STRUCTURE,
 		"production_tab_grid_slot": Enums.ProductionTabGridSlots.F1,
@@ -240,6 +255,7 @@ const DEFAULT_PROPERTIES = {
 	},
 	"res://source/factions/the_remnants/units/Worker.tscn":
 	{
+		"unit_name": "remnants_Worker",
 		"faction": Enums.Faction.REMNANTS,
 		"production_tab_type": Enums.ProductionTabType.STRUCTURE,
 		"production_tab_grid_slot": Enums.ProductionTabGridSlots.F1,

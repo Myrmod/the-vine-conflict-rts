@@ -609,7 +609,6 @@ func _create_players_from_settings():
 		# to ensure playable matches. Custom team assignments override this (for alliances, etc.)
 		player.team = player_settings.team
 		player.faction = player_settings.faction
-
 		# set starting resources
 		player.initialize_resources(Factions.get_starting_resource())
 		_players.add_child(player)
@@ -664,7 +663,9 @@ func _setup_player_units():
 # here player starting units are defined on a per faction basis
 func _spawn_player_units(player, spawn_transform):
 	var faction = Factions.get_faction_by_enum(player.faction)
-
+	var new_faction = faction.new()
+	var spawn_unit = faction.new().spawn_unit
+	var spawn_unit_instant = faction.new().spawn_unit.instantiate()
 	_setup_and_spawn_unit(faction.new().spawn_unit.instantiate(), spawn_transform, player, false)
 
 
