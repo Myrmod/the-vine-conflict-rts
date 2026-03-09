@@ -23,6 +23,9 @@ const DEFAULT_SIZE = Vector2i(100, 100)
 @export_range(1, 10) var texture_units_per_world_unit = 2  # px/m
 @export var fog_circle_color = Color(0.25, 0.25, 0.25)
 @export var shroud_circle_color = Color(1.0, 1.0, 1.0)
+## When true, the entire map starts as "explored" (semi-transparent fog)
+## instead of fully black shroud. Units still need vision to fully reveal areas.
+@export var start_explored: bool = true
 
 var _unit_to_circles_mapping = {}
 
@@ -36,9 +39,15 @@ var _unit_to_circles_mapping = {}
 func _ready():
 	if _fog_viewport.size == DEFAULT_SIZE:
 		resize(find_parent("Match").find_child("Map").size)
+	# Assign viewport texture in code to avoid _setup_local_to_scene() timing error
+	_screen_overlay.material_override.set_shader_parameter(
+		"world_visibility_texture", _combined_viewport.get_texture()
+	)
 	_screen_overlay.material_override.set_shader_parameter(
 		"texture_units_per_world_unit", texture_units_per_world_unit
 	)
+	if start_explored:
+		find_child("Background").color = fog_circle_color
 	_revealer.hide()
 	find_child("EditorOnlyCircle").queue_free()
 

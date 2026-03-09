@@ -31,15 +31,11 @@ shader_parameter/blurr_factor = 1.0
 shader_parameter/remove_alpha = false
 shader_parameter/overlay = true
 
-[sub_resource type="ViewportTexture" id="ViewportTexture_7yqgo"]
-viewport_path = NodePath("FogOfWar/CombinedViewport")
-
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_5rcuq"]
 resource_local_to_scene = true
 render_priority = 2
 shader = ExtResource("13_jo8b7")
 shader_parameter/color = Color(0, 0, 0, 1)
-shader_parameter/world_visibility_texture = SubResource("ViewportTexture_7yqgo")
 shader_parameter/texture_units_per_world_unit = 2
 shader_parameter/outer_margin_for_fade_out = 2.0
 shader_parameter/debug_texture_view = false
