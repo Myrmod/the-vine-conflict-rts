@@ -34,6 +34,7 @@ signal player_resource_changed(player, value: int, type: Enums.ResourceType)
 signal structure_action_started(action_type: Enums.CommandType)
 signal structure_action_ended
 signal structure_disabled_changed(unit)
+signal control_group_changed(group_id: int)
 
 ## Set by StructurePlacementHandler before emitting structure_placement_started
 ## so BuildRadius nodes know which radius (land or water) to display.

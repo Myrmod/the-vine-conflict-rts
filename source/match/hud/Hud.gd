@@ -118,9 +118,13 @@ func _ready() -> void:
 	MatchSignals.structure_disabled_changed.connect(_on_unit_changed)
 	MatchSignals.player_resource_changed.connect(update_resource_label)
 	MatchSignals.unit_selected.connect(_on_structure_selected)
+	MatchSignals.control_group_changed.connect(_on_control_group_changed)
+	MatchSignals.unit_died.connect(_on_unit_died_refresh_control_groups)
 
 	production_tab_bar.tab_clicked.connect(_on_production_tab_clicked)
 	production_tab_bar_overflow.tab_clicked.connect(_on_overflow_tab_clicked)
+
+	_init_control_group_buttons()
 
 
 func _process(_delta: float) -> void:
@@ -919,3 +923,68 @@ func update_resource_label(player, resource: int, type: Enums.ResourceType):
 
 		_:
 			push_warning("Resource of unknown type updated: ", type)
+
+
+# ── CONTROL GROUP HUD ──────────────────────────────────────────────────────
+
+
+func _init_control_group_buttons():
+	var group_handler = find_parent("Match").find_child("UnitGroupSelectionHandler")
+	for i in range(control_groups_container.get_child_count()):
+		var button: Button = control_groups_container.get_child(i)
+		button.visible = false
+		var group_id = i + 1
+		if group_id <= 9 and group_handler != null:
+			button.pressed.connect(group_handler.access_group.bind(group_id))
+
+
+func _on_control_group_changed(_group_id: int) -> void:
+	_refresh_control_group_buttons()
+
+
+func _on_unit_died_refresh_control_groups(_unit) -> void:
+	# Defer so group membership is updated before we check
+	_refresh_control_group_buttons.call_deferred()
+
+
+func _refresh_control_group_buttons() -> void:
+	var buttons = control_groups_container.get_children()
+	# Groups 1-9 map to buttons 0-8; button 9 (text "0") is unused
+	for i in range(buttons.size()):
+		var group_id = i + 1
+		if group_id > 9:
+			buttons[i].visible = false
+			continue
+		var group_name = "unit_group_%d" % group_id
+		var units = get_tree().get_nodes_in_group(group_name)
+		if units.is_empty():
+			buttons[i].visible = false
+			continue
+		# Only show if all units in the group are alive (still valid)
+		var all_alive = true
+		for unit in units:
+			if not is_instance_valid(unit):
+				all_alive = false
+				break
+		if not all_alive:
+			buttons[i].visible = false
+			continue
+		buttons[i].visible = true
+		buttons[i].text = "%d (%d)" % [group_id, units.size()]
+		# Set icon to the most common unit type in this group
+		var type_counts: Dictionary = {}
+		for unit in units:
+			var unit_type: String = unit.type if "type" in unit else ""
+			if unit_type != "":
+				type_counts[unit_type] = type_counts.get(unit_type, 0) + 1
+		var best_type := ""
+		var best_count := 0
+		for t in type_counts:
+			if type_counts[t] > best_count:
+				best_count = type_counts[t]
+				best_type = t
+		var icon_path := "res://assets/ui/icons/%s.png" % best_type
+		if best_type != "" and ResourceLoader.exists(icon_path):
+			buttons[i].icon = load(icon_path)
+		else:
+			buttons[i].icon = null
