@@ -14,6 +14,8 @@ var global_position_yless:
 		return global_position * Vector3(1, 0, 1)
 var id: int
 
+var in_player_vision: bool = false
+
 var _occupied_cell: Vector2i
 var _footprint: Vector2i = Vector2i(1, 1)
 var _type: Enums.OccupationType = Enums.OccupationType.RESOURCE
@@ -40,6 +42,8 @@ func _exit_tree():
 
 
 func _animate_decay():
+	if not in_player_vision:
+		return
 	var decay_animation = ResourceDecayAnimation.instantiate()
 	decay_animation.global_transform = global_transform
 	get_parent().add_child.call_deferred(decay_animation)

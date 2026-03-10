@@ -1,12 +1,15 @@
 extends PanelContainer
 
 const Unit = preload("res://source/match/units/Unit.gd")
+const Structure = preload("res://source/match/units/Structure.gd")
 const Moving = preload("res://source/match/units/actions/Moving.gd")
+const ResourceUnit = preload("res://source/match/units/non-player/ResourceUnit.gd")
 
 const GROUND_LEVEL_PLANE = Plane(Vector3.UP, 0)
 const MINIMAP_PIXELS_PER_WORLD_METER = 2
 
 var _unit_to_corresponding_node_mapping = {}
+var _orphaned_minimap_nodes = []
 var _camera_movement_active = false
 
 @onready var _match = find_parent("Match")
@@ -69,15 +72,52 @@ func _sync_real_units_with_minimap_representations():
 		get_tree().get_nodes_in_group("units") + get_tree().get_nodes_in_group("resource_units")
 	)
 	for unit in units_to_sync:
-		if not unit.visible:
-			continue
-		units_synced[unit] = 1
-		if not _unit_is_mapped(unit):
-			_map_unit(unit)
-		_sync_unit(unit)
+		if unit is ResourceUnit:
+			if unit.in_player_vision:
+				units_synced[unit] = 1
+				if not _unit_is_mapped(unit):
+					_map_unit(unit)
+				_sync_unit(unit)
+			else:
+				# Not in vision: keep existing dot frozen, mark as synced so it isn't removed
+				units_synced[unit] = 1
+				if not _unit_is_mapped(unit):
+					_map_unit(unit)
+					_sync_unit(unit)
+		elif unit is Structure:
+			if unit.visible:
+				units_synced[unit] = 1
+				if not _unit_is_mapped(unit):
+					_map_unit(unit)
+				_sync_unit(unit)
+			elif _unit_is_mapped(unit):
+				# Structure in fog: keep dot frozen
+				units_synced[unit] = 1
+		else:
+			if not unit.visible:
+				continue
+			units_synced[unit] = 1
+			if not _unit_is_mapped(unit):
+				_map_unit(unit)
+			_sync_unit(unit)
+	# Orphan minimap nodes for units destroyed outside vision
+	var units_to_cleanup = []
 	for mapped_unit in _unit_to_corresponding_node_mapping:
 		if not mapped_unit in units_synced:
-			_cleanup_mapping(mapped_unit)
+			if not is_instance_valid(mapped_unit):
+				_orphaned_minimap_nodes.append(
+					{
+						"node": _unit_to_corresponding_node_mapping[mapped_unit],
+						"position": _unit_to_corresponding_node_mapping[mapped_unit].position
+					}
+				)
+			units_to_cleanup.append(mapped_unit)
+	for unit in units_to_cleanup:
+		if is_instance_valid(unit):
+			_cleanup_mapping(unit)
+		else:
+			_unit_to_corresponding_node_mapping.erase(unit)
+	_check_orphaned_minimap_nodes()
 
 
 func _unit_is_mapped(unit):
@@ -106,6 +146,35 @@ func _sync_unit(unit):
 func _cleanup_mapping(unit):
 	_unit_to_corresponding_node_mapping[unit].queue_free()
 	_unit_to_corresponding_node_mapping.erase(unit)
+
+
+func _check_orphaned_minimap_nodes():
+	var visibility_handler = find_parent("Match").find_child("UnitVisibilityHandler")
+	if visibility_handler == null or visibility_handler._is_disabled():
+		for entry in _orphaned_minimap_nodes:
+			entry["node"].queue_free()
+		_orphaned_minimap_nodes.clear()
+		return
+	var revealed_units = get_tree().get_nodes_in_group("units").filter(
+		func(unit): return unit.is_in_group("revealed_units")
+	)
+	var to_remove = []
+	for entry in _orphaned_minimap_nodes:
+		var in_vision = false
+		for revealed_unit in revealed_units:
+			if revealed_unit.is_revealing() and revealed_unit.sight_range != null:
+				var orphan_world_pos = entry["position"] / MINIMAP_PIXELS_PER_WORLD_METER
+				var unit_pos = Vector2(
+					revealed_unit.global_position.x, revealed_unit.global_position.z
+				)
+				if unit_pos.distance_to(orphan_world_pos) <= revealed_unit.sight_range + 2.0:
+					in_vision = true
+					break
+		if in_vision:
+			to_remove.append(entry)
+	for entry in to_remove:
+		entry["node"].queue_free()
+		_orphaned_minimap_nodes.erase(entry)
 
 
 func _update_camera_indicator():

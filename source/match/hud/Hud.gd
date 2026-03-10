@@ -114,8 +114,13 @@ func _ready() -> void:
 	MatchSignals.unit_spawned.connect(_on_unit_changed)
 	MatchSignals.unit_died.connect(_on_unit_changed)
 	MatchSignals.unit_construction_finished.connect(_on_unit_changed)
+	MatchSignals.unit_construction_finished.connect(_on_structure_construction_finished)
 	MatchSignals.structure_disabled_changed.connect(_on_unit_changed)
 	MatchSignals.player_resource_changed.connect(update_resource_label)
+	MatchSignals.unit_selected.connect(_on_structure_selected)
+
+	production_tab_bar.tab_clicked.connect(_on_production_tab_clicked)
+	production_tab_bar_overflow.tab_clicked.connect(_on_overflow_tab_clicked)
 
 
 func _process(_delta: float) -> void:
@@ -198,6 +203,103 @@ func _on_overflow_tab_changed(tab_index: int) -> void:
 ## Called when any unit spawns, dies, or finishes construction — refresh if relevant
 func _on_unit_changed(_unit) -> void:
 	_refresh_tab()
+
+
+## When a controlled structure is selected, switch to its first production tab
+func _on_structure_selected(unit) -> void:
+	if not unit is Structure:
+		return
+	if not unit.is_in_group("controlled_units"):
+		return
+	if unit.produces.is_empty():
+		return
+	if unit.is_under_construction():
+		return
+	var tab_type: int = unit.produces[0]
+	if tab_type != _active_tab_type:
+		production_tab_bar.current_tab = tab_type
+	# Select this structure in the overflow if it's among the producers
+	var producers = _find_producers_for_tab(tab_type)
+	var idx = producers.find(unit)
+	if idx >= 0 and idx != _active_producer_index:
+		_active_producer_index = idx
+		if production_tab_bar_overflow.tab_count > idx:
+			production_tab_bar_overflow.current_tab = idx
+		else:
+			_update_observed_producer()
+
+
+## When a selected structure finishes construction, switch to its production tab
+func _on_structure_construction_finished(unit) -> void:
+	if not unit is Structure:
+		return
+	if not unit.is_in_group("selected_units"):
+		return
+	if not unit.is_in_group("controlled_units"):
+		return
+	if unit.produces.is_empty():
+		return
+	var tab_type: int = unit.produces[0]
+	if tab_type != _active_tab_type:
+		production_tab_bar.current_tab = tab_type
+	var producers = _find_producers_for_tab(tab_type)
+	var idx = producers.find(unit)
+	if idx >= 0:
+		_active_producer_index = idx
+		if production_tab_bar_overflow.tab_count > idx:
+			production_tab_bar_overflow.current_tab = idx
+		else:
+			_update_observed_producer()
+
+
+## Double-click on production tab → move camera to active structure
+var _last_tab_click_time: int = 0
+var _last_tab_click_index: int = -1
+var _last_tab_hotkey_time: int = 0
+var _last_tab_hotkey_index: int = -1
+const TAB_DOUBLE_CLICK_MS = 500
+
+
+func _on_production_tab_clicked(tab_index: int) -> void:
+	var now = Time.get_ticks_msec()
+	if tab_index == _last_tab_click_index and now - _last_tab_click_time <= TAB_DOUBLE_CLICK_MS:
+		_move_camera_to_active_producer()
+		_last_tab_click_index = -1
+		_last_tab_click_time = 0
+	else:
+		_last_tab_click_index = tab_index
+		_last_tab_click_time = now
+
+
+## Double-click on overflow tab → move camera to that structure
+var _last_overflow_click_time: int = 0
+var _last_overflow_click_index: int = -1
+
+
+func _on_overflow_tab_clicked(tab_index: int) -> void:
+	var now = Time.get_ticks_msec()
+	if (
+		tab_index == _last_overflow_click_index
+		and now - _last_overflow_click_time <= TAB_DOUBLE_CLICK_MS
+	):
+		_move_camera_to_active_producer()
+		_last_overflow_click_index = -1
+		_last_overflow_click_time = 0
+	else:
+		_last_overflow_click_index = tab_index
+		_last_overflow_click_time = now
+
+
+func _move_camera_to_active_producer() -> void:
+	if _active_producers.is_empty():
+		return
+	var idx := clampi(_active_producer_index, 0, _active_producers.size() - 1)
+	var structure = _active_producers[idx]
+	if structure == null or not is_instance_valid(structure):
+		return
+	var camera = get_viewport().get_camera_3d()
+	if camera and camera.has_method("set_position_safely"):
+		camera.set_position_safely(structure.global_position)
 
 
 ## Master refresh: updates overflow bar + production grid for the active tab type
@@ -381,13 +483,27 @@ func _unhandled_key_input(event: InputEvent) -> void:
 	for i in range(TAB_HOTKEY_PHYSICAL_KEYS.size()):
 		if physical == TAB_HOTKEY_PHYSICAL_KEYS[i]:
 			if i < production_tab_bar.tab_count:
+				var now = Time.get_ticks_msec()
 				if production_tab_bar.current_tab == i:
-					# Double-press: cycle to next overflow producer
-					if _active_producers.size() > 1:
+					if (
+						i == _last_tab_hotkey_index
+						and now - _last_tab_hotkey_time <= TAB_DOUBLE_CLICK_MS
+					):
+						_move_camera_to_active_producer()
+						_last_tab_hotkey_index = -1
+						_last_tab_hotkey_time = 0
+					elif _active_producers.size() > 1:
 						var next := (_active_producer_index + 1) % _active_producers.size()
 						production_tab_bar_overflow.current_tab = next
+						_last_tab_hotkey_index = i
+						_last_tab_hotkey_time = now
+					else:
+						_last_tab_hotkey_index = i
+						_last_tab_hotkey_time = now
 				else:
 					production_tab_bar.current_tab = i
+					_last_tab_hotkey_index = -1
+					_last_tab_hotkey_time = 0
 			get_viewport().set_input_as_handled()
 			return
 
