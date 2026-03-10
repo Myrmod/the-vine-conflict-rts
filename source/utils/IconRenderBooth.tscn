@@ -1,8 +1,8 @@
-[gd_scene load_steps=35 format=4 uid="uid://c8mbc86v208ov"]
+[gd_scene format=4 uid="uid://c8mbc86v208ov"]
 
-[ext_resource type="Script" path="res://source/utils/IconRenderBooth.gd" id="1_r5pdx"]
-[ext_resource type="Material" uid="uid://822ai1mlwg5d" path="res://source/match/resources/materials/resource.material.tres" id="2_67sfm"]
-[ext_resource type="PackedScene" uid="uid://bxx81l3t16rrs" path="res://source/factions/the_amuns/structures/structure-geometries/CommandCenter.tscn" id="4_7kjwd"]
+[ext_resource type="Script" uid="uid://d06ip0cydwcai" path="res://source/utils/IconRenderBooth.gd" id="1_r5pdx"]
+[ext_resource type="Material" uid="uid://822ai1mlwg5d" path="res://source/match/resources/materials/resource_a.material.tres" id="2_67sfm"]
+[ext_resource type="PackedScene" uid="uid://bxx81l3t16rrs" path="res://source/factions/the_remnants/structures/structure-geometries/CommandCenter.tscn" id="4_7kjwd"]
 [ext_resource type="PackedScene" uid="uid://bmiqncjpgsw2e" path="res://source/factions/the_amuns/structures/structure-geometries/AntiGroundTurret.tscn" id="5_0vjy6"]
 [ext_resource type="PackedScene" uid="uid://cm3iqdsdeo625" path="res://source/factions/the_amuns/structures/structure-geometries/AntiAirTurret.tscn" id="6_a5m0n"]
 [ext_resource type="PackedScene" uid="uid://bklfapayb1ryk" path="res://source/factions/the_amuns/structures/structure-geometries/AircraftFactory.tscn" id="7_l62dt"]
@@ -13,6 +13,7 @@
 [ext_resource type="PackedScene" uid="uid://cmvtt1w71wso2" path="res://assets/models/kenney-spacekit/craft_speederA.glb" id="12_crnju"]
 [ext_resource type="PackedScene" uid="uid://j5umsiiyb8a7" path="res://assets/models/kenney-spacekit/rover.glb" id="13_p31ce"]
 [ext_resource type="Texture2D" uid="uid://dvbs0b0b4cnew" path="res://assets/ui/icons/texture_01.png" id="14_1issp"]
+
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_edvyk"]
 sky_horizon_color = Color(0.64625, 0.65575, 0.67075, 1)

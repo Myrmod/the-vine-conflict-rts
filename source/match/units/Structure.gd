@@ -17,6 +17,13 @@ const SELL_BAR_SCENE = preload("res://source/match/units/traits/SellBar.tscn")
 ## Set from Units.DEFAULT_PROPERTIES via _setup_default_properties_from_constants().
 var produces: Array = []
 
+## Energy this structure provides when constructed (e.g. PowerPlant).
+var energy_provided: int = 0
+## Energy this structure requires when constructed.
+var energy_required: int = 0
+## Scene paths of structures that must be built before this one can be placed.
+var structure_requirements: Array = []
+
 ## ── Structure action state ──────────────────────────────
 ## Disabled: production halted, visually darkened.
 var is_disabled: bool = false
@@ -130,6 +137,12 @@ func _exit_tree():
 		MatchGlobal.map.clear_area(_occupied_cell, _footprint)
 
 
+func _handle_unit_death():
+	if is_constructed():
+		_remove_energy_from_player()
+	super()
+
+
 func is_constructed():
 	return _construction_progress >= 1.0
 
@@ -205,6 +218,7 @@ func _cancel_orphaned_constructions() -> void:
 func _finish_construction():
 	_self_constructing = false
 	_change_geometry_material(null)
+	_apply_energy_to_player()
 	if is_inside_tree():
 		constructed.emit()
 		MatchSignals.unit_construction_finished.emit(self)
@@ -214,6 +228,24 @@ func _change_geometry_material(material):
 	for child in find_child("Geometry").find_children("*"):
 		if "material_override" in child:
 			child.material_override = material
+
+
+## Apply this structure's energy contribution/consumption to its player.
+func _apply_energy_to_player() -> void:
+	if player == null:
+		return
+	var delta := energy_provided - energy_required
+	if delta != 0:
+		player.energy += delta
+
+
+## Reverse this structure's energy contribution/consumption from its player.
+func _remove_energy_from_player() -> void:
+	if player == null:
+		return
+	var delta := energy_provided - energy_required
+	if delta != 0:
+		player.energy -= delta
 
 
 # ── Structure action helpers ─────────────────────────────
@@ -237,6 +269,7 @@ func toggle_sell() -> void:
 func _complete_sell() -> void:
 	is_selling = false
 	_remove_sell_bar()
+	_remove_energy_from_player()
 	var scene_path = get_script().resource_path.replace(".gd", ".tscn")
 	var cost = UnitConstants.DEFAULT_PROPERTIES.get(scene_path, {}).get("costs", {})
 	# Refund 50 %

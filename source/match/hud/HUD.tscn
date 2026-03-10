@@ -17,7 +17,7 @@
 [ext_resource type="PackedScene" uid="uid://nnsih72ih7qr" path="res://source/match/hud/ProductionQueue.tscn" id="14_vwivv"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_h6iyy"]
-bg_color = Color(0, 1, 0, 1)
+bg_color = Color(0.71584404, 0.9491611, 1.92523e-06, 1)
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_vwivv"]
 bg_color = Color(1, 0, 0, 1)
@@ -119,8 +119,22 @@ theme_override_font_sizes/font_size = 9
 theme_override_styles/background = SubResource("StyleBoxFlat_h6iyy")
 theme_override_styles/fill = SubResource("StyleBoxFlat_vwivv")
 step = 1.0
-value = 60.0
 fill_mode = 3
+show_percentage = false
+
+[node name="EnergyLabel" type="Label" parent="RightMarginContainer/HBoxContainer/LeftVBoxContainer/MarginContainer/EnergyBar" unique_id=1442420648]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -20.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_font_sizes/font_size = 9
+text = "0"
+horizontal_alignment = 1
+vertical_alignment = 1
 
 [node name="RightVBoxContainer" type="VBoxContainer" parent="RightMarginContainer/HBoxContainer" unique_id=1324083492]
 layout_mode = 2

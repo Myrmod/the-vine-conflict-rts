@@ -10,7 +10,7 @@
 [ext_resource type="PackedScene" uid="uid://b8jwlpdvxgrr6" path="res://source/match/units/traits/RallyPoint.tscn" id="8_h714l"]
 [ext_resource type="PackedScene" uid="uid://cd3v6508vjcu3" path="res://source/match/units/traits/ProductionQueue.tscn" id="9_3s532"]
 [ext_resource type="PackedScene" uid="uid://b1gne72rgc7un" path="res://source/match/units/BuildRadius.tscn" id="10_jykje"]
-[ext_resource type="PackedScene" path="res://source/match/units/traits/NameTag.tscn" id="11_46phu"]
+[ext_resource type="PackedScene" uid="uid://dde6yvuax0g4" path="res://source/match/units/traits/NameTag.tscn" id="11_46phu"]
 
 [sub_resource type="CylinderShape3D" id="CylinderShape3D_2mws5"]
 height = 1.0

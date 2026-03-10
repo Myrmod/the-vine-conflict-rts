@@ -71,6 +71,8 @@ var unit_ability_container: HBoxContainer = $UnitInfoVBoxContainer/MarginContain
 @onready
 var energy_bar: ProgressBar = $RightMarginContainer/HBoxContainer/LeftVBoxContainer/MarginContainer/EnergyBar
 @onready
+var energy_label: Label = $RightMarginContainer/HBoxContainer/LeftVBoxContainer/MarginContainer/EnergyBar/EnergyLabel
+@onready
 var minimap: PanelContainer = $RightMarginContainer/HBoxContainer/RightVBoxContainer/MapMarginContainer/Minimap
 
 # BuildingModificationMenuTabs
@@ -188,10 +190,9 @@ func set_player_settings(settings: MatchSettings):
 	_set_player_faction()
 
 	# set starting resources
-	if Factions.get_starting_resource()["energy"] != 0:
-		energy_bar.value = Factions.get_starting_resource()["energy"]
-	else:
-		energy_bar.visible = false
+	energy_bar.max_value = 0
+	energy_bar.value = 0
+	energy_bar.visible = false
 
 	# TODO: implement for relevant factions
 	secondary_resource_label.visible = false
@@ -437,8 +438,9 @@ func _populate_production_grid(grid_data: Dictionary, tab_type: int) -> void:
 		var scene_path: String = entry.get("scene_path", "")
 		var unit_name := scene_path.get_file().get_basename()
 		var icon_path := "res://assets/ui/icons/%s.png" % unit_name
-		# Disable when no producer structure exists for this tab
-		button.disabled = not has_producer
+		# Disable when no producer or structure requirements not met
+		var reqs_met := _check_structure_requirements(entry)
+		button.disabled = not has_producer or not reqs_met
 		button.expand_icon = true
 		if ResourceLoader.exists(icon_path):
 			button.icon = load(icon_path)
@@ -933,10 +935,50 @@ func update_resource_label(player, resource: int, type: Enums.ResourceType):
 			credits_label.text = str(resource) + "$"
 
 		Enums.ResourceType.ENERGY:
+			var total_provided := _calculate_total_energy_provided()
+			energy_bar.max_value = total_provided
 			energy_bar.value = resource
+			energy_bar.visible = total_provided > 0
+			energy_label.text = "%d / %d" % [resource, total_provided]
 
 		_:
 			push_warning("Resource of unknown type updated: ", type)
+
+
+## Sum energy_provided across all constructed, controlled structures.
+func _calculate_total_energy_provided() -> int:
+	var total := 0
+	for unit in get_tree().get_nodes_in_group("controlled_units"):
+		if not unit is Structure:
+			continue
+		if unit.is_under_construction():
+			continue
+		if "energy_provided" in unit:
+			total += unit.energy_provided
+	return total
+
+
+## Check whether all structure_requirements for a grid entry are met.
+## Returns true if the entry has no requirements or all are satisfied.
+func _check_structure_requirements(entry: Dictionary) -> bool:
+	var reqs: Array = entry.get("structure_requirements", [])
+	if reqs.is_empty():
+		return true
+	var controlled = get_tree().get_nodes_in_group("controlled_units")
+	for req_path in reqs:
+		var found := false
+		for unit in controlled:
+			if not unit is Structure:
+				continue
+			if unit.is_under_construction():
+				continue
+			var unit_scene: String = unit.get_script().resource_path.replace(".gd", ".tscn")
+			if unit_scene == req_path:
+				found = true
+				break
+		if not found:
+			return false
+	return true
 
 
 # ── CONTROL GROUP HUD ──────────────────────────────────────────────────────

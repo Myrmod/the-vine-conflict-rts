@@ -18,6 +18,10 @@ const STRUCTURE_BLUEPRINTS = {
 	# the Legion
 	"res://source/factions/the_legion/structures/CommandCenter.tscn":
 	"res://source/factions/the_legion/structures/structure-geometries/CommandCenter.tscn",
+	"res://source/factions/the_legion/structures/PowerPlant.tscn":
+	"res://source/factions/the_legion/structures/structure-geometries/PowerPlant.tscn",
+	"res://source/factions/the_legion/structures/Barracks.tscn":
+	"res://source/factions/the_legion/structures/structure-geometries/Barracks.tscn",
 	# the Radix
 	"res://source/factions/the_radix/structures/CommandCenter.tscn":
 	"res://source/factions/the_radix/structures/structure-geometries/CommandCenter.tscn",
@@ -37,7 +41,7 @@ const DEFAULT_PROPERTIES = {
 		"hp": 6,
 		"hp_max": 6,
 		"movement_domains": [Enums.MovementTypes.WATER],
-		"costs": {"credits": 2, "energy": 0},
+		"costs": {"credits": 2},
 		"build_time": 3.0,
 	},
 	"res://source/factions/the_amuns/units/Worker.tscn":
@@ -51,7 +55,7 @@ const DEFAULT_PROPERTIES = {
 		"hp_max": 6,
 		"resources_max": 500,
 		"resources_gather_rate": 250,
-		"costs": {"credits": 2, "energy": 0},
+		"costs": {"credits": 2},
 		"build_time": 3.0,
 	},
 	"res://source/factions/the_amuns/units/Helicopter.tscn":
@@ -71,7 +75,7 @@ const DEFAULT_PROPERTIES = {
 			Enums.MovementTypes.LAND,
 			Enums.MovementTypes.AIR,
 		],
-		"costs": {"credits": 1, "energy": 0},
+		"costs": {"credits": 1},
 		"build_time": 6.0,
 	},
 	"res://source/factions/the_amuns/units/Tank.tscn":
@@ -96,7 +100,7 @@ const DEFAULT_PROPERTIES = {
 		{
 			"laser": 0.5,
 		},
-		"costs": {"credits": 3, "energy": 0},
+		"costs": {"credits": 3},
 		"build_time": 6.0,
 	},
 	"res://source/factions/the_amuns/structures/CommandCenter.tscn":
@@ -109,7 +113,7 @@ const DEFAULT_PROPERTIES = {
 		"sight_range": 10.0,
 		"hp": 20,
 		"hp_max": 20,
-		"costs": {"credits": 8, "energy": 0},
+		"costs": {"credits": 8},
 		"build_time": 10.0,
 	},
 	"res://source/factions/the_amuns/structures/VehicleFactory.tscn":
@@ -122,7 +126,7 @@ const DEFAULT_PROPERTIES = {
 		"sight_range": 8.0,
 		"hp": 16,
 		"hp_max": 16,
-		"costs": {"credits": 6, "energy": 0},
+		"costs": {"credits": 6},
 		"build_time": 8.0,
 	},
 	"res://source/factions/the_amuns/structures/AircraftFactory.tscn":
@@ -135,7 +139,7 @@ const DEFAULT_PROPERTIES = {
 		"sight_range": 8.0,
 		"hp": 16,
 		"hp_max": 16,
-		"costs": {"credits": 4, "energy": 0},
+		"costs": {"credits": 4},
 		"build_time": 8.0,
 	},
 	"res://source/factions/the_amuns/structures/AntiGroundTurret.tscn":
@@ -154,7 +158,7 @@ const DEFAULT_PROPERTIES = {
 		[
 			Enums.MovementTypes.LAND,
 		],
-		"costs": {"credits": 2, "energy": 0},
+		"costs": {"credits": 2},
 		"build_time": 5.0,
 	},
 	"res://source/factions/the_amuns/structures/AntiAirTurret.tscn":
@@ -173,7 +177,7 @@ const DEFAULT_PROPERTIES = {
 		[
 			Enums.MovementTypes.AIR,
 		],
-		"costs": {"credits": 2, "energy": 0},
+		"costs": {"credits": 2},
 		"build_time": 5.0,
 	},
 	"res://source/factions/the_amuns/structures/Shipyard.tscn":
@@ -186,7 +190,7 @@ const DEFAULT_PROPERTIES = {
 		"sight_range": 8.0,
 		"hp": 16,
 		"hp_max": 16,
-		"costs": {"credits": 5, "energy": 0},
+		"costs": {"credits": 5},
 		"build_time": 8.0,
 	},
 	# the Legion
@@ -195,13 +199,46 @@ const DEFAULT_PROPERTIES = {
 		"unit_name": "legion_CommandCenter",
 		"faction": Enums.Faction.LEGION,
 		"production_tab_type": Enums.ProductionTabType.STRUCTURE,
-		"production_tab_grid_slot": Enums.ProductionTabGridSlots.F1,
+		"production_tab_grid_slot": Enums.ProductionTabGridSlots.F3,
 		"produces": [Enums.ProductionTabType.STRUCTURE, Enums.ProductionTabType.DEFENCES],
 		"sight_range": 10.0,
 		"hp": 20,
 		"hp_max": 20,
-		"costs": {"credits": 8, "energy": 0},
+		"costs": {"credits": 8},
+		"energy_required": 0,
 		"build_time": 10.0,
+	},
+	"res://source/factions/the_legion/structures/PowerPlant.tscn":
+	{
+		"unit_name": "legion_PowerPlant",
+		"faction": Enums.Faction.LEGION,
+		"production_tab_type": Enums.ProductionTabType.STRUCTURE,
+		"production_tab_grid_slot": Enums.ProductionTabGridSlots.F1,
+		"sight_range": 6.0,
+		"hp": 8,
+		"hp_max": 8,
+		"costs": {"credits": 4},
+		"energy_provided": 5,
+		"build_time": 5.0,
+	},
+	"res://source/factions/the_legion/structures/Barracks.tscn":
+	{
+		"unit_name": "legion_Barracks",
+		"faction": Enums.Faction.LEGION,
+		"production_tab_type": Enums.ProductionTabType.STRUCTURE,
+		"production_tab_grid_slot": Enums.ProductionTabGridSlots.F2,
+		"sight_range": 8.0,
+		"hp": 10,
+		"hp_max": 10,
+		"produces": [Enums.ProductionTabType.INFANTRY],
+		"costs": {"credits": 4},
+		"energy_required": 5,
+		"structure_requirements":
+		[
+			"res://source/factions/the_legion/structures/CommandCenter.tscn",
+			"res://source/factions/the_legion/structures/PowerPlant.tscn",
+		],
+		"build_time": 6.0,
 	},
 	"res://source/factions/the_legion/units/Worker.tscn":
 	{
@@ -214,7 +251,7 @@ const DEFAULT_PROPERTIES = {
 		"hp_max": 6,
 		"resources_max": 500,
 		"resources_gather_rate": 250,
-		"costs": {"credits": 2, "energy": 0},
+		"costs": {"credits": 2},
 		"build_time": 3.0,
 	},
 	# the Radix
@@ -228,7 +265,7 @@ const DEFAULT_PROPERTIES = {
 		"sight_range": 10.0,
 		"hp": 20,
 		"hp_max": 20,
-		"costs": {"credits": 8, "energy": 0},
+		"costs": {"credits": 8},
 		"build_time": 10.0,
 	},
 	"res://source/factions/the_radix/units/Worker.tscn":
@@ -242,7 +279,7 @@ const DEFAULT_PROPERTIES = {
 		"hp_max": 6,
 		"resources_max": 500,
 		"resources_gather_rate": 250,
-		"costs": {"credits": 2, "energy": 0},
+		"costs": {"credits": 2},
 		"build_time": 3.0,
 	},
 	# the Remnants
@@ -256,7 +293,7 @@ const DEFAULT_PROPERTIES = {
 		"sight_range": 10.0,
 		"hp": 20,
 		"hp_max": 20,
-		"costs": {"credits": 8, "energy": 0},
+		"costs": {"credits": 8},
 		"build_time": 10.0,
 	},
 	"res://source/factions/the_remnants/units/Worker.tscn":
@@ -270,7 +307,7 @@ const DEFAULT_PROPERTIES = {
 		"hp_max": 6,
 		"resources_max": 500,
 		"resources_gather_rate": 250,
-		"costs": {"credits": 2, "energy": 0},
+		"costs": {"credits": 2},
 		"build_time": 3.0,
 	},
 }
