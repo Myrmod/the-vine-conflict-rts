@@ -67,7 +67,7 @@ var unit_portrait_viewport: SubViewport = $UnitInfoVBoxContainer/UnitPortraitMar
 var unit_portrait_panel: PanelContainer = $UnitInfoVBoxContainer/UnitPortraitMarginContainer/UnitPortrait
 @onready
 var unit_ability_container: HBoxContainer = $UnitInfoVBoxContainer/MarginContainer/AbilityHBoxContainer
-@onready var support_powers_container: GridContainer = $"LeftMarginContainer/Support Powers"
+@onready var support_powers_container: GridContainer = $LeftMarginContainer/SupportPowers
 @onready
 var energy_bar: ProgressBar = $RightMarginContainer/HBoxContainer/LeftVBoxContainer/MarginContainer/EnergyBar
 @onready
@@ -136,6 +136,9 @@ func _ready() -> void:
 	unit_portrait_panel.mouse_exited.connect(_on_portrait_hover_exit)
 	_init_ability_buttons()
 	_init_control_group_buttons()
+
+	support_powers_container.visible = false
+	super_weapons_container.visible = false
 
 
 func _process(_delta: float) -> void:

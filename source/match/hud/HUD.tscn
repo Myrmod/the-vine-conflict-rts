@@ -12,7 +12,7 @@
 [ext_resource type="Texture2D" uid="uid://bwepu16qqrrj5" path="res://assets/ui/icons/vehicle_icon.png" id="6_7jbih"]
 [ext_resource type="Texture2D" uid="uid://c8ooprujl2jo" path="res://assets/ui/icons/air_icon.png" id="7_7a2ul"]
 [ext_resource type="Texture2D" uid="uid://naaatm5st4hc" path="res://assets/ui/icons/ship_icon.png" id="8_h6iyy"]
-[ext_resource type="Script" path="res://source/match/hud/UnitPortrait.gd" id="12_7a2ul"]
+[ext_resource type="Script" uid="uid://3pwkiuhj67x1" path="res://source/match/hud/UnitPortrait.gd" id="12_7a2ul"]
 [ext_resource type="Texture2D" uid="uid://bqp6cemj1sw4" path="res://assets/ui/icons/Tank.png" id="12_h6iyy"]
 [ext_resource type="PackedScene" uid="uid://nnsih72ih7qr" path="res://source/match/hud/ProductionQueue.tscn" id="14_vwivv"]
 
@@ -432,68 +432,68 @@ offset_top = 250.0
 offset_right = 134.0
 offset_bottom = 724.0
 
-[node name="Support Powers" type="GridContainer" parent="LeftMarginContainer" unique_id=246080715]
+[node name="SupportPowers" type="GridContainer" parent="LeftMarginContainer" unique_id=246080715]
 layout_mode = 2
 theme_override_constants/h_separation = 2
 theme_override_constants/v_separation = 2
 columns = 2
 
-[node name="SupportPower1" type="Button" parent="LeftMarginContainer/Support Powers" unique_id=282940955]
+[node name="SupportPower1" type="Button" parent="LeftMarginContainer/SupportPowers" unique_id=282940955]
 custom_minimum_size = Vector2(66, 66)
 layout_mode = 2
 text = "button"
 
-[node name="SupportPower2" type="Button" parent="LeftMarginContainer/Support Powers" unique_id=2013566479]
+[node name="SupportPower2" type="Button" parent="LeftMarginContainer/SupportPowers" unique_id=2013566479]
 custom_minimum_size = Vector2(66, 66)
 layout_mode = 2
 text = "button"
 
-[node name="SupportPower3" type="Button" parent="LeftMarginContainer/Support Powers" unique_id=1171722319]
+[node name="SupportPower3" type="Button" parent="LeftMarginContainer/SupportPowers" unique_id=1171722319]
 custom_minimum_size = Vector2(66, 66)
 layout_mode = 2
 text = "button"
 
-[node name="SupportPower4" type="Button" parent="LeftMarginContainer/Support Powers" unique_id=1531187050]
+[node name="SupportPower4" type="Button" parent="LeftMarginContainer/SupportPowers" unique_id=1531187050]
 custom_minimum_size = Vector2(66, 66)
 layout_mode = 2
 text = "button"
 
-[node name="SupportPower5" type="Button" parent="LeftMarginContainer/Support Powers" unique_id=1204347182]
+[node name="SupportPower5" type="Button" parent="LeftMarginContainer/SupportPowers" unique_id=1204347182]
 custom_minimum_size = Vector2(66, 66)
 layout_mode = 2
 text = "button"
 
-[node name="SupportPower6" type="Button" parent="LeftMarginContainer/Support Powers" unique_id=332706113]
+[node name="SupportPower6" type="Button" parent="LeftMarginContainer/SupportPowers" unique_id=332706113]
 custom_minimum_size = Vector2(66, 66)
 layout_mode = 2
 text = "button"
 
-[node name="SupportPower7" type="Button" parent="LeftMarginContainer/Support Powers" unique_id=502590068]
+[node name="SupportPower7" type="Button" parent="LeftMarginContainer/SupportPowers" unique_id=502590068]
 custom_minimum_size = Vector2(66, 66)
 layout_mode = 2
 text = "button"
 
-[node name="SupportPower8" type="Button" parent="LeftMarginContainer/Support Powers" unique_id=396071801]
+[node name="SupportPower8" type="Button" parent="LeftMarginContainer/SupportPowers" unique_id=396071801]
 custom_minimum_size = Vector2(66, 66)
 layout_mode = 2
 text = "button"
 
-[node name="SupportPower9" type="Button" parent="LeftMarginContainer/Support Powers" unique_id=1927447543]
+[node name="SupportPower9" type="Button" parent="LeftMarginContainer/SupportPowers" unique_id=1927447543]
 custom_minimum_size = Vector2(66, 66)
 layout_mode = 2
 text = "button"
 
-[node name="SupportPower10" type="Button" parent="LeftMarginContainer/Support Powers" unique_id=1234360236]
+[node name="SupportPower10" type="Button" parent="LeftMarginContainer/SupportPowers" unique_id=1234360236]
 custom_minimum_size = Vector2(66, 66)
 layout_mode = 2
 text = "button"
 
-[node name="SupportPower11" type="Button" parent="LeftMarginContainer/Support Powers" unique_id=1612709386]
+[node name="SupportPower11" type="Button" parent="LeftMarginContainer/SupportPowers" unique_id=1612709386]
 custom_minimum_size = Vector2(66, 66)
 layout_mode = 2
 text = "button"
 
-[node name="SupportPower12" type="Button" parent="LeftMarginContainer/Support Powers" unique_id=180655160]
+[node name="SupportPower12" type="Button" parent="LeftMarginContainer/SupportPowers" unique_id=180655160]
 custom_minimum_size = Vector2(66, 66)
 layout_mode = 2
 text = "button"
@@ -572,7 +572,9 @@ layout_mode = 2
 stretch = true
 
 [node name="UnitPortraitViewport" type="SubViewport" parent="UnitInfoVBoxContainer/UnitPortraitMarginContainer/UnitPortrait/SubViewportContainer" unique_id=1117391200]
-size = Vector2i(260, 260)
+handle_input_locally = false
+size = Vector2i(2, 2)
+render_target_update_mode = 0
 script = ExtResource("12_7a2ul")
 
 [node name="ProductionQueue" parent="." unique_id=2096746681 instance=ExtResource("14_vwivv")]
