@@ -84,12 +84,18 @@ const DEFAULT_PROPERTIES = {
 		"hp": 10,
 		"hp_max": 10,
 		"attack_damage": 2,
+		"attack_type": "laser",
 		"attack_interval": 0.75,
 		"attack_range": 5.0,
+		"rotation_speed": 1,
 		"attack_domains":
 		[
 			Enums.MovementTypes.LAND,
 		],
+		"armor":
+		{
+			"laser": 0.5,
+		},
 		"costs": {"credits": 3, "energy": 0},
 		"build_time": 6.0,
 	},
@@ -101,7 +107,7 @@ const DEFAULT_PROPERTIES = {
 		"production_tab_grid_slot": Enums.ProductionTabGridSlots.F4,
 		"produces": [Enums.ProductionTabType.STRUCTURE, Enums.ProductionTabType.DEFENCES],
 		"sight_range": 10.0,
-		"hp": 10,
+		"hp": 20,
 		"hp_max": 20,
 		"costs": {"credits": 8, "energy": 0},
 		"build_time": 10.0,

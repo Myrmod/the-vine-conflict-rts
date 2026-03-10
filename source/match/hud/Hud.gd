@@ -45,6 +45,8 @@ var _active_tab_type: int = Enums.ProductionTabType.STRUCTURE
 var _active_producers: Array = []
 ## Index into _active_producers for the currently selected producer
 var _active_producer_index: int = 0
+## Unit currently shown in the portrait
+var _portrait_unit: Node = null
 
 ## Currently observed production queue for grid button display
 var _grid_observed_queue = null
@@ -58,8 +60,11 @@ var _grid_slot_is_structure: Dictionary = {}
 @onready var super_weapons_container: GridContainer = $SuperWeaponsHBoxContainer
 @onready var game_timer_richtext_label: RichTextLabel = $GameTimer/Panel/BoxContainer/RichTextLabel
 @onready var production_queue: ProductionQueue = $ProductionQueue
+@onready var unit_info_container: VBoxContainer = $UnitInfoVBoxContainer
 @onready
-var unit_portrait_viewport: SubViewport = $UnitInfoVBoxContainer/UnitPortraitMarginContainer/UnitPortrait/MarginContainer/UnitPortraitViewport
+var unit_portrait_viewport: SubViewport = $UnitInfoVBoxContainer/UnitPortraitMarginContainer/UnitPortrait/SubViewportContainer/UnitPortraitViewport
+@onready
+var unit_portrait_panel: PanelContainer = $UnitInfoVBoxContainer/UnitPortraitMarginContainer/UnitPortrait
 @onready
 var unit_ability_container: HBoxContainer = $UnitInfoVBoxContainer/MarginContainer/AbilityHBoxContainer
 @onready var support_powers_container: GridContainer = $"LeftMarginContainer/Support Powers"
@@ -118,12 +123,18 @@ func _ready() -> void:
 	MatchSignals.structure_disabled_changed.connect(_on_unit_changed)
 	MatchSignals.player_resource_changed.connect(update_resource_label)
 	MatchSignals.unit_selected.connect(_on_structure_selected)
+	MatchSignals.unit_selected.connect(_on_unit_selected_portrait)
+	MatchSignals.unit_deselected.connect(_on_unit_deselected_portrait)
+	MatchSignals.unit_died.connect(_on_unit_died_portrait)
 	MatchSignals.control_group_changed.connect(_on_control_group_changed)
 	MatchSignals.unit_died.connect(_on_unit_died_refresh_control_groups)
 
 	production_tab_bar.tab_clicked.connect(_on_production_tab_clicked)
 	production_tab_bar_overflow.tab_clicked.connect(_on_overflow_tab_clicked)
 
+	unit_portrait_panel.mouse_entered.connect(_on_portrait_hover)
+	unit_portrait_panel.mouse_exited.connect(_on_portrait_hover_exit)
+	_init_ability_buttons()
 	_init_control_group_buttons()
 
 
@@ -988,3 +999,107 @@ func _refresh_control_group_buttons() -> void:
 			buttons[i].icon = load(icon_path)
 		else:
 			buttons[i].icon = null
+
+
+# ── UNIT PORTRAIT & ABILITIES ──────────────────────────────────────────────
+
+
+func _on_unit_selected_portrait(unit) -> void:
+	_portrait_unit = unit
+	unit_info_container.visible = true
+	unit_portrait_viewport.show_unit(unit)
+	_update_ability_buttons(unit)
+
+
+func _on_unit_deselected_portrait(unit) -> void:
+	if unit != _portrait_unit:
+		return
+	var remaining = get_tree().get_nodes_in_group("selected_units")
+	if not remaining.is_empty():
+		_on_unit_selected_portrait(remaining[0])
+	else:
+		_portrait_unit = null
+		unit_portrait_viewport.clear()
+		_hide_ability_buttons()
+		unit_info_container.visible = false
+
+
+func _on_unit_died_portrait(unit) -> void:
+	if unit == _portrait_unit:
+		_portrait_unit = null
+		unit_portrait_viewport.clear()
+		_hide_ability_buttons()
+		unit_info_container.visible = false
+
+
+func _on_portrait_hover() -> void:
+	if _portrait_unit == null or not is_instance_valid(_portrait_unit):
+		return
+	var stats := _build_unit_stats(_portrait_unit)
+	var title: String = (
+		_portrait_unit.unit_name if "unit_name" in _portrait_unit else _portrait_unit.type
+	)
+	tooltip.set_content(title, stats)
+	tooltip.toggle(true)
+
+
+func _on_portrait_hover_exit() -> void:
+	tooltip.toggle(false)
+
+
+func _build_unit_stats(unit) -> Dictionary:
+	var scene_path: String = unit.get_script().resource_path.replace(".gd", ".tscn")
+	var props: Dictionary = UnitConstants.DEFAULT_PROPERTIES.get(scene_path, {})
+	var stats := {}
+	if props.has("hp_max"):
+		stats["HP"] = "%d / %d" % [unit.hp, props["hp_max"]]
+	if props.has("armor"):
+		var armor_parts: Array = []
+		for atk_type in props["armor"]:
+			armor_parts.append("%s %d%%" % [atk_type, int(props["armor"][atk_type] * 100)])
+		stats["Armor"] = ", ".join(armor_parts)
+	if props.has("attack_damage"):
+		stats["ATK Damage"] = str(props["attack_damage"])
+	if props.has("attack_type"):
+		stats["ATK Type"] = str(props["attack_type"])
+	if props.has("attack_interval"):
+		stats["ATK Interval"] = "%ss" % props["attack_interval"]
+	if props.has("attack_range"):
+		stats["ATK Range"] = str(props["attack_range"])
+	if props.has("attack_domains"):
+		var domain_names: Array = []
+		for d in props["attack_domains"]:
+			domain_names.append(Enums.MovementTypes.keys()[d])
+		stats["Targets"] = ", ".join(domain_names)
+	if props.has("sight_range"):
+		stats["Sight"] = str(props["sight_range"])
+	if props.has("rotation_speed"):
+		stats["Rotation"] = str(props["rotation_speed"])
+	return stats
+
+
+func _init_ability_buttons() -> void:
+	for i in range(unit_ability_container.get_child_count()):
+		var button: Button = unit_ability_container.get_child(i)
+		button.visible = false
+		button.pressed.connect(_on_ability_pressed.bind(i + 1))
+
+
+func _update_ability_buttons(_unit) -> void:
+	for i in range(unit_ability_container.get_child_count()):
+		var button: Button = unit_ability_container.get_child(i)
+		button.visible = true
+
+
+func _hide_ability_buttons() -> void:
+	for i in range(unit_ability_container.get_child_count()):
+		unit_ability_container.get_child(i).visible = false
+
+
+func _on_ability_pressed(ability_index: int) -> void:
+	if _portrait_unit == null or not is_instance_valid(_portrait_unit):
+		return
+	var uname: String = (
+		_portrait_unit.unit_name if "unit_name" in _portrait_unit else _portrait_unit.type
+	)
+	print("ability %d of unit %s has been called" % [ability_index, uname])

@@ -499,6 +499,7 @@ layout_mode = 2
 text = "button"
 
 [node name="UnitInfoVBoxContainer" type="VBoxContainer" parent="." unique_id=564800106]
+visible = false
 anchors_preset = 2
 anchor_top = 1.0
 anchor_bottom = 1.0
@@ -566,16 +567,12 @@ theme_override_constants/margin_bottom = 0
 [node name="UnitPortrait" type="PanelContainer" parent="UnitInfoVBoxContainer/UnitPortraitMarginContainer" unique_id=1618984652]
 layout_mode = 2
 
-[node name="MarginContainer" type="MarginContainer" parent="UnitInfoVBoxContainer/UnitPortraitMarginContainer/UnitPortrait" unique_id=438381242]
+[node name="SubViewportContainer" type="SubViewportContainer" parent="UnitInfoVBoxContainer/UnitPortraitMarginContainer/UnitPortrait" unique_id=438381242]
 layout_mode = 2
-theme_override_constants/margin_left = 5
-theme_override_constants/margin_top = 5
-theme_override_constants/margin_right = 5
-theme_override_constants/margin_bottom = 5
+stretch = true
 
-[node name="UnitPortraitViewport" type="SubViewport" parent="UnitInfoVBoxContainer/UnitPortraitMarginContainer/UnitPortrait/MarginContainer" unique_id=1117391200]
-disable_3d = true
-size = Vector2i(100, 100)
+[node name="UnitPortraitViewport" type="SubViewport" parent="UnitInfoVBoxContainer/UnitPortraitMarginContainer/UnitPortrait/SubViewportContainer" unique_id=1117391200]
+size = Vector2i(260, 260)
 script = ExtResource("12_7a2ul")
 
 [node name="ProductionQueue" parent="." unique_id=2096746681 instance=ExtResource("14_vwivv")]
