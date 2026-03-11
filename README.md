@@ -13,5 +13,12 @@ Everyone is free to fix bugs or perform refactoring just by opening PR. As for f
 ## Credits
  - goldman
 
-### Core contributors
+## Core contributors
  - Myrmod
+
+## Installing Proprietary Assets
+
+This repository contains placeholder assets.
+If you want to use the real assets, then you have to ask. We needed to do that due to licencing issues.
+
+The assets need to be placed under `assets_override`. The path is defined in the requiring .tscn files.
