@@ -1,9 +1,26 @@
 # Map Editor Quick Reference
 
 ## Keyboard Shortcuts
+
+### General
 - **Ctrl+Z**: Undo
 - **Ctrl+Y** or **Ctrl+Shift+Z**: Redo
 - **V**: Toggle View Mode (Game ↔ Collision)
+
+### Camera
+- **W / Up Arrow**: Pan forward
+- **S / Down Arrow**: Pan backward
+- **A / Left Arrow**: Pan left
+- **D / Right Arrow**: Pan right
+- **Mouse Wheel**: Zoom in/out
+- **Middle Mouse + Drag**: Orbit (yaw)
+- **Home**: Reset camera
+
+### Entity Brush
+- **R**: Rotate 90°
+- **Ctrl + Mouse Wheel**: Rotate (15° steps)
+- **Shift + Mouse Wheel**: Scale (0.1 steps)
+- **Alt + Click**: Free placement (not snapped to grid)
 
 ## Brush Types
 1. **Paint Collision** - Paint blocked/walkable tiles (Red = blocked, Green = walkable)

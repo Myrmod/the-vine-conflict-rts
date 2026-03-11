@@ -696,6 +696,12 @@ func _input(event):
 func _try_paint_at_mouse(mouse_pos: Vector2):
 	if not current_brush:
 		return
+	# Alt held = free placement for entity brushes
+	if Input.is_key_pressed(KEY_ALT) and current_brush is EntityBrush:
+		var world_pos = _raycast_mouse_to_world_2d(mouse_pos)
+		if world_pos != null:
+			current_brush.apply_free(world_pos)
+		return
 	var grid_pos: Variant = _raycast_mouse_to_grid(mouse_pos)
 	if grid_pos == null:
 		return
@@ -705,6 +711,16 @@ func _try_paint_at_mouse(mouse_pos: Vector2):
 func _update_cursor_at_mouse(mouse_pos: Vector2):
 	"""Move the editor cursor to the hovered grid cell."""
 	if not editor_cursor:
+		return
+	# Alt held = free placement for entity brushes
+	if Input.is_key_pressed(KEY_ALT) and current_brush is EntityBrush:
+		var world_pos = _raycast_mouse_to_world_2d(mouse_pos)
+		if world_pos == null:
+			editor_cursor.set_visible_cursor(false)
+			_hide_entity_ghost()
+			return
+		editor_cursor.set_visible_cursor(false)
+		_update_entity_ghost(world_pos)
 		return
 	var grid_pos: Variant = _raycast_mouse_to_grid(mouse_pos)
 	if grid_pos == null:
@@ -751,8 +767,9 @@ var _entity_ghost_path: String = ""
 var _entity_ghost_material: String = ""
 
 
-func _update_entity_ghost(grid_pos: Vector2i):
-	"""Show a transparent ghost of the entity being placed at the cursor."""
+func _update_entity_ghost(pos):
+	"""Show a transparent ghost of the entity being placed at the cursor.
+	pos can be Vector2i (grid-snapped) or Vector2 (free placement)."""
 	if not current_brush is EntityBrush:
 		_hide_entity_ghost()
 		return
@@ -785,8 +802,9 @@ func _update_entity_ghost(grid_pos: Vector2i):
 		_entity_ghost_material = brush.material_path
 
 	if _entity_ghost and is_instance_valid(_entity_ghost):
-		var height_y: float = current_map.get_height_at(grid_pos) if current_map else 0.0
-		_entity_ghost.position = Vector3(grid_pos.x, height_y, grid_pos.y)
+		var grid_cell: Vector2 = Vector2i(floor(pos.x), floor(pos.y)) if pos is Vector2 else pos
+		var height_y: float = current_map.get_height_at(grid_cell) if current_map else 0.0
+		_entity_ghost.position = Vector3(pos.x, height_y, pos.y)
 		_entity_ghost.rotation.y = brush.rotation
 		var s = brush.entity_scale
 		_entity_ghost.scale = Vector3(s, s, s)
@@ -890,6 +908,35 @@ func _raycast_mouse_to_grid(mouse_pos: Vector2) -> Variant:
 func _world_to_grid(p: Vector3) -> Vector2i:
 	var s = FeatureFlags.grid_cell_size
 	return Vector2i(floor(p.x / s), floor(p.z / s))
+
+
+func _raycast_mouse_to_world_2d(mouse_pos: Vector2) -> Variant:
+	"""Raycast from mouse position to the ground plane. Returns Vector2 (float) or null."""
+	if not editor_viewport or not camera:
+		return null
+
+	var rect = viewport_container.get_global_rect()
+	if not rect.has_point(mouse_pos):
+		return null
+
+	var local_pos = mouse_pos - rect.position
+
+	var ray_origin = camera.project_ray_origin(local_pos)
+	var ray_dir = camera.project_ray_normal(local_pos)
+	var ray_end = ray_origin + ray_dir * 1000.0
+
+	var space_state = editor_viewport.world_3d.direct_space_state
+
+	var query = PhysicsRayQueryParameters3D.create(ray_origin, ray_end)
+	query.collide_with_bodies = true
+	query.collide_with_areas = true
+
+	var hit = space_state.intersect_ray(query)
+	if hit.is_empty():
+		return null
+
+	var hit_pos: Vector3 = hit.position
+	return Vector2(hit_pos.x, hit_pos.z)
 
 
 func undo():

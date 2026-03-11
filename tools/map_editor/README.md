@@ -37,9 +37,26 @@ The editor starts with a default 50x50 map. You can:
 3. Click/drag on the viewport to paint
 
 ### Keyboard Shortcuts
+
+#### General
 - **Ctrl+Z**: Undo
 - **Ctrl+Shift+Z** or **Ctrl+Y**: Redo
 - **V**: Toggle collision view
+
+#### Camera
+- **W / Up Arrow**: Pan camera forward
+- **S / Down Arrow**: Pan camera backward
+- **A / Left Arrow**: Pan camera left
+- **D / Right Arrow**: Pan camera right
+- **Mouse Wheel**: Zoom in/out
+- **Middle Mouse + Drag**: Orbit camera (yaw)
+- **Home**: Reset camera to default
+
+#### Entity Brush
+- **R**: Rotate entity 90°
+- **Ctrl + Mouse Wheel**: Rotate entity (15° steps)
+- **Shift + Mouse Wheel**: Scale entity (0.1 steps)
+- **Alt + Click**: Free placement (not snapped to grid)
 
 ### Saving Maps
 Maps are saved in two formats:

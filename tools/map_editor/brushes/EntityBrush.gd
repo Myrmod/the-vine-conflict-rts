@@ -70,6 +70,48 @@ func apply(cell_pos: Vector2i):
 	brush_applied.emit(affected_positions)
 
 
+func apply_free(world_pos: Vector2):
+	"""Place entity at an exact world position (not grid-snapped)."""
+	if scene_path.is_empty():
+		push_warning("EntityBrush: No entity scene path set")
+		return
+
+	var grid_cell := Vector2i(floor(world_pos.x), floor(world_pos.y))
+	if not can_apply(grid_cell):
+		return
+
+	# Validate terrain type at the grid cell
+	if map_resource:
+		var cell_type = map_resource.get_cell_type_at(grid_cell)
+		if (
+			cell_type == MapResource.CELL_SLOPE
+			and Enums.PlacementTypes.SLOPE not in _placement_domains
+		):
+			push_warning("Cannot place entity on a slope (entity does not allow slope placement)")
+			return
+		if (
+			cell_type == MapResource.CELL_WATER
+			and Enums.PlacementTypes.WATER not in _placement_domains
+		):
+			push_warning("Cannot place entity on water (entity does not allow water placement)")
+			return
+
+	var cmd = PlaceEntityCommand.new(
+		map_resource,
+		[] as Array[Vector2i],
+		scene_path,
+		player_id,
+		rotation,
+		entity_scale,
+		material_path
+	)
+	cmd.free_position = world_pos
+
+	command_stack.push_command(cmd)
+
+	brush_applied.emit([grid_cell] as Array[Vector2i])
+
+
 func set_entity(path: String):
 	scene_path = path
 	_refresh_placement_domains()

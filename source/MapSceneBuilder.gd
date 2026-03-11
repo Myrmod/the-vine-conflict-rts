@@ -107,10 +107,11 @@ static func _add_entities(
 			continue
 
 		var inst = scene.instantiate()
-		var pos: Vector2i = entity.get("pos", Vector2i.ZERO)
+		var pos = entity.get("pos", Vector2i.ZERO)
 		var rot: float = entity.get("rotation", 0.0)
 		var scl: float = entity.get("entity_scale", 1.0)
-		var height_y: float = map_resource.get_height_at(pos)
+		var grid_cell: Vector2 = Vector2i(floor(pos.x), floor(pos.y)) if pos is Vector2 else pos
+		var height_y: float = map_resource.get_height_at(grid_cell)
 		var basis := Basis(Vector3.UP, rot)
 		if not is_equal_approx(scl, 1.0):
 			basis = basis.scaled(Vector3(scl, scl, scl))
