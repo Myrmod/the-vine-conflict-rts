@@ -9,6 +9,8 @@ var positions: Array[Vector2i]
 var scene_path: String
 var player_id: int
 var rotation: float
+var entity_scale: float
+var material_path: String
 
 # For undo: store what was at these positions before
 var removed_entities: Array[Dictionary] = []
@@ -19,13 +21,17 @@ func _init(
 	affected_positions: Array[Vector2i],
 	path: String,
 	player: int,
-	rot: float = 0.0
+	rot: float = 0.0,
+	scl: float = 1.0,
+	mat_path: String = ""
 ):
 	map_resource = map_res
 	positions = affected_positions.duplicate()
 	scene_path = path
 	player_id = player
 	rotation = rot
+	entity_scale = scl
+	material_path = mat_path
 
 	# Store what will be removed for undo
 	_store_removed_entities()
@@ -54,7 +60,7 @@ func execute():
 		)
 
 		# Place new entity
-		map_resource.add_entity(scene_path, pos, player_id, rotation)
+		map_resource.add_entity(scene_path, pos, player_id, rotation, entity_scale, material_path)
 
 
 func undo():

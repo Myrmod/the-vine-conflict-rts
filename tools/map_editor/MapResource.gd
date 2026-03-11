@@ -293,13 +293,25 @@ func is_height_edge(pos: Vector2i) -> bool:
 # ============================================================
 
 
-func add_entity(scene_path: String, grid_pos: Vector2i, player_id: int, rotation: float = 0.0):
+func add_entity(
+	scene_path: String,
+	grid_pos: Vector2i,
+	player_id: int,
+	rotation: float = 0.0,
+	entity_scale: float = 1.0,
+	material_path: String = ""
+):
 	if not _is_in_bounds(grid_pos):
 		return
 
-	placed_entities.append(
-		{"scene_path": scene_path, "pos": grid_pos, "player": player_id, "rotation": rotation}
-	)
+	var entity_data := {
+		"scene_path": scene_path, "pos": grid_pos, "player": player_id, "rotation": rotation
+	}
+	if not is_equal_approx(entity_scale, 1.0):
+		entity_data["entity_scale"] = entity_scale
+	if not material_path.is_empty():
+		entity_data["material_path"] = material_path
+	placed_entities.append(entity_data)
 
 
 func _remove_out_of_bounds_placements():

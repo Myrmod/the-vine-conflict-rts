@@ -123,16 +123,24 @@ size_flags_vertical = 3
 custom_minimum_size = Vector2(301, 0)
 layout_mode = 2
 
-[node name="Label" type="Label" parent="VBoxContainer/MainArea/LeftPalette" unique_id=687302326]
+[node name="ScrollContainer" type="ScrollContainer" parent="VBoxContainer/MainArea/LeftPalette"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="ScrollContent" type="VBoxContainer" parent="VBoxContainer/MainArea/LeftPalette/ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Label" type="Label" parent="VBoxContainer/MainArea/LeftPalette/ScrollContainer/ScrollContent" unique_id=687302326]
 layout_mode = 2
 text = "Palette"
 
-[node name="PaletteSelect" type="TabContainer" parent="VBoxContainer/MainArea/LeftPalette" unique_id=277663447]
+[node name="PaletteSelect" type="TabContainer" parent="VBoxContainer/MainArea/LeftPalette/ScrollContainer/ScrollContent" unique_id=277663447]
 layout_mode = 2
 current_tab = 0
 script = ExtResource("2_entity_palette")
 
-[node name="Environment" type="MarginContainer" parent="VBoxContainer/MainArea/LeftPalette/PaletteSelect" unique_id=804728807]
+[node name="Environment" type="MarginContainer" parent="VBoxContainer/MainArea/LeftPalette/ScrollContainer/ScrollContent/PaletteSelect" unique_id=804728807]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
@@ -142,61 +150,61 @@ theme_override_constants/margin_right = 10
 theme_override_constants/margin_bottom = 10
 metadata/_tab_index = 0
 
-[node name="EnvironmentPalette" type="VBoxContainer" parent="VBoxContainer/MainArea/LeftPalette/PaletteSelect/Environment" unique_id=2127682396]
+[node name="EnvironmentPalette" type="VBoxContainer" parent="VBoxContainer/MainArea/LeftPalette/ScrollContainer/ScrollContent/PaletteSelect/Environment" unique_id=2127682396]
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="HighGroundContainer" type="FoldableContainer" parent="VBoxContainer/MainArea/LeftPalette/PaletteSelect/Environment/EnvironmentPalette" unique_id=1935564008]
+[node name="HighGroundContainer" type="FoldableContainer" parent="VBoxContainer/MainArea/LeftPalette/ScrollContainer/ScrollContent/PaletteSelect/Environment/EnvironmentPalette" unique_id=1935564008]
 layout_mode = 2
 title = "High ground"
 
-[node name="VBoxContainer" type="VBoxContainer" parent="VBoxContainer/MainArea/LeftPalette/PaletteSelect/Environment/EnvironmentPalette/HighGroundContainer" unique_id=332097653]
+[node name="VBoxContainer" type="VBoxContainer" parent="VBoxContainer/MainArea/LeftPalette/ScrollContainer/ScrollContent/PaletteSelect/Environment/EnvironmentPalette/HighGroundContainer" unique_id=332097653]
 layout_mode = 2
 
-[node name="Button" type="Button" parent="VBoxContainer/MainArea/LeftPalette/PaletteSelect/Environment/EnvironmentPalette/HighGroundContainer/VBoxContainer" unique_id=1623579744]
+[node name="Button" type="Button" parent="VBoxContainer/MainArea/LeftPalette/ScrollContainer/ScrollContent/PaletteSelect/Environment/EnvironmentPalette/HighGroundContainer/VBoxContainer" unique_id=1623579744]
 layout_mode = 2
 text = "Test Button"
 
-[node name="ObjectsContainer" type="FoldableContainer" parent="VBoxContainer/MainArea/LeftPalette/PaletteSelect/Environment/EnvironmentPalette" unique_id=1321707504]
+[node name="ObjectsContainer" type="FoldableContainer" parent="VBoxContainer/MainArea/LeftPalette/ScrollContainer/ScrollContent/PaletteSelect/Environment/EnvironmentPalette" unique_id=1321707504]
 layout_mode = 2
 folded = true
 title = "Objects"
 
-[node name="VBoxContainer" type="VBoxContainer" parent="VBoxContainer/MainArea/LeftPalette/PaletteSelect/Environment/EnvironmentPalette/ObjectsContainer" unique_id=2012060010]
+[node name="VBoxContainer" type="VBoxContainer" parent="VBoxContainer/MainArea/LeftPalette/ScrollContainer/ScrollContent/PaletteSelect/Environment/EnvironmentPalette/ObjectsContainer" unique_id=2012060010]
 visible = false
 layout_mode = 2
 
-[node name="Button" type="Button" parent="VBoxContainer/MainArea/LeftPalette/PaletteSelect/Environment/EnvironmentPalette/ObjectsContainer/VBoxContainer" unique_id=1777046724]
+[node name="Button" type="Button" parent="VBoxContainer/MainArea/LeftPalette/ScrollContainer/ScrollContent/PaletteSelect/Environment/EnvironmentPalette/ObjectsContainer/VBoxContainer" unique_id=1777046724]
 layout_mode = 2
 text = "Test Button"
 
-[node name="NormalGroundContainer" type="FoldableContainer" parent="VBoxContainer/MainArea/LeftPalette/PaletteSelect/Environment/EnvironmentPalette" unique_id=1027875116]
+[node name="NormalGroundContainer" type="FoldableContainer" parent="VBoxContainer/MainArea/LeftPalette/ScrollContainer/ScrollContent/PaletteSelect/Environment/EnvironmentPalette" unique_id=1027875116]
 layout_mode = 2
 folded = true
 title = "Normal ground"
 
-[node name="VBoxContainer" type="VBoxContainer" parent="VBoxContainer/MainArea/LeftPalette/PaletteSelect/Environment/EnvironmentPalette/NormalGroundContainer" unique_id=322854379]
+[node name="VBoxContainer" type="VBoxContainer" parent="VBoxContainer/MainArea/LeftPalette/ScrollContainer/ScrollContent/PaletteSelect/Environment/EnvironmentPalette/NormalGroundContainer" unique_id=322854379]
 visible = false
 layout_mode = 2
 
-[node name="Button" type="Button" parent="VBoxContainer/MainArea/LeftPalette/PaletteSelect/Environment/EnvironmentPalette/NormalGroundContainer/VBoxContainer" unique_id=635039106]
+[node name="Button" type="Button" parent="VBoxContainer/MainArea/LeftPalette/ScrollContainer/ScrollContent/PaletteSelect/Environment/EnvironmentPalette/NormalGroundContainer/VBoxContainer" unique_id=635039106]
 layout_mode = 2
 text = "Test Button"
 
-[node name="WaterContainer" type="FoldableContainer" parent="VBoxContainer/MainArea/LeftPalette/PaletteSelect/Environment/EnvironmentPalette" unique_id=1863790125]
+[node name="WaterContainer" type="FoldableContainer" parent="VBoxContainer/MainArea/LeftPalette/ScrollContainer/ScrollContent/PaletteSelect/Environment/EnvironmentPalette" unique_id=1863790125]
 layout_mode = 2
 folded = true
 title = "Water"
 
-[node name="VBoxContainer" type="VBoxContainer" parent="VBoxContainer/MainArea/LeftPalette/PaletteSelect/Environment/EnvironmentPalette/WaterContainer" unique_id=974091285]
+[node name="VBoxContainer" type="VBoxContainer" parent="VBoxContainer/MainArea/LeftPalette/ScrollContainer/ScrollContent/PaletteSelect/Environment/EnvironmentPalette/WaterContainer" unique_id=974091285]
 visible = false
 layout_mode = 2
 
-[node name="Button" type="Button" parent="VBoxContainer/MainArea/LeftPalette/PaletteSelect/Environment/EnvironmentPalette/WaterContainer/VBoxContainer" unique_id=1285250171]
+[node name="Button" type="Button" parent="VBoxContainer/MainArea/LeftPalette/ScrollContainer/ScrollContent/PaletteSelect/Environment/EnvironmentPalette/WaterContainer/VBoxContainer" unique_id=1285250171]
 layout_mode = 2
 text = "Test Button"
 
-[node name="Factions" type="MarginContainer" parent="VBoxContainer/MainArea/LeftPalette/PaletteSelect" unique_id=683948864]
+[node name="Factions" type="MarginContainer" parent="VBoxContainer/MainArea/LeftPalette/ScrollContainer/ScrollContent/PaletteSelect" unique_id=683948864]
 visible = false
 layout_mode = 2
 size_flags_horizontal = 3
@@ -207,74 +215,74 @@ theme_override_constants/margin_right = 10
 theme_override_constants/margin_bottom = 10
 metadata/_tab_index = 1
 
-[node name="EntityPalette" type="VBoxContainer" parent="VBoxContainer/MainArea/LeftPalette/PaletteSelect/Factions" unique_id=1895605345]
+[node name="EntityPalette" type="VBoxContainer" parent="VBoxContainer/MainArea/LeftPalette/ScrollContainer/ScrollContent/PaletteSelect/Factions" unique_id=1895605345]
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="NeutralContainer" type="FoldableContainer" parent="VBoxContainer/MainArea/LeftPalette/PaletteSelect/Factions/EntityPalette" unique_id=909035994]
+[node name="NeutralContainer" type="FoldableContainer" parent="VBoxContainer/MainArea/LeftPalette/ScrollContainer/ScrollContent/PaletteSelect/Factions/EntityPalette" unique_id=909035994]
 layout_mode = 2
 title = "Neutral"
 
-[node name="VBoxContainer" type="VBoxContainer" parent="VBoxContainer/MainArea/LeftPalette/PaletteSelect/Factions/EntityPalette/NeutralContainer" unique_id=1433596192]
+[node name="VBoxContainer" type="VBoxContainer" parent="VBoxContainer/MainArea/LeftPalette/ScrollContainer/ScrollContent/PaletteSelect/Factions/EntityPalette/NeutralContainer" unique_id=1433596192]
 layout_mode = 2
 
-[node name="Button" type="Button" parent="VBoxContainer/MainArea/LeftPalette/PaletteSelect/Factions/EntityPalette/NeutralContainer/VBoxContainer" unique_id=1360166780]
+[node name="Button" type="Button" parent="VBoxContainer/MainArea/LeftPalette/ScrollContainer/ScrollContent/PaletteSelect/Factions/EntityPalette/NeutralContainer/VBoxContainer" unique_id=1360166780]
 layout_mode = 2
 text = "Test Button"
 
-[node name="TheAmunsContainer" type="FoldableContainer" parent="VBoxContainer/MainArea/LeftPalette/PaletteSelect/Factions/EntityPalette" unique_id=1022574296]
+[node name="TheAmunsContainer" type="FoldableContainer" parent="VBoxContainer/MainArea/LeftPalette/ScrollContainer/ScrollContent/PaletteSelect/Factions/EntityPalette" unique_id=1022574296]
 layout_mode = 2
 folded = true
 title = "The Amuns"
 
-[node name="VBoxContainer" type="VBoxContainer" parent="VBoxContainer/MainArea/LeftPalette/PaletteSelect/Factions/EntityPalette/TheAmunsContainer" unique_id=2050963586]
+[node name="VBoxContainer" type="VBoxContainer" parent="VBoxContainer/MainArea/LeftPalette/ScrollContainer/ScrollContent/PaletteSelect/Factions/EntityPalette/TheAmunsContainer" unique_id=2050963586]
 visible = false
 layout_mode = 2
 
-[node name="Button" type="Button" parent="VBoxContainer/MainArea/LeftPalette/PaletteSelect/Factions/EntityPalette/TheAmunsContainer/VBoxContainer" unique_id=2001061542]
+[node name="Button" type="Button" parent="VBoxContainer/MainArea/LeftPalette/ScrollContainer/ScrollContent/PaletteSelect/Factions/EntityPalette/TheAmunsContainer/VBoxContainer" unique_id=2001061542]
 layout_mode = 2
 text = "Test Button"
 
-[node name="FoldableContainer3" type="FoldableContainer" parent="VBoxContainer/MainArea/LeftPalette/PaletteSelect/Factions/EntityPalette" unique_id=1888542167]
+[node name="FoldableContainer3" type="FoldableContainer" parent="VBoxContainer/MainArea/LeftPalette/ScrollContainer/ScrollContent/PaletteSelect/Factions/EntityPalette" unique_id=1888542167]
 layout_mode = 2
 folded = true
 title = "temp"
 
-[node name="VBoxContainer" type="VBoxContainer" parent="VBoxContainer/MainArea/LeftPalette/PaletteSelect/Factions/EntityPalette/FoldableContainer3" unique_id=1968570845]
+[node name="VBoxContainer" type="VBoxContainer" parent="VBoxContainer/MainArea/LeftPalette/ScrollContainer/ScrollContent/PaletteSelect/Factions/EntityPalette/FoldableContainer3" unique_id=1968570845]
 visible = false
 layout_mode = 2
 
-[node name="Button" type="Button" parent="VBoxContainer/MainArea/LeftPalette/PaletteSelect/Factions/EntityPalette/FoldableContainer3/VBoxContainer" unique_id=176083191]
+[node name="Button" type="Button" parent="VBoxContainer/MainArea/LeftPalette/ScrollContainer/ScrollContent/PaletteSelect/Factions/EntityPalette/FoldableContainer3/VBoxContainer" unique_id=176083191]
 layout_mode = 2
 text = "Test Button"
 
-[node name="FoldableContainer4" type="FoldableContainer" parent="VBoxContainer/MainArea/LeftPalette/PaletteSelect/Factions/EntityPalette" unique_id=721262705]
+[node name="FoldableContainer4" type="FoldableContainer" parent="VBoxContainer/MainArea/LeftPalette/ScrollContainer/ScrollContent/PaletteSelect/Factions/EntityPalette" unique_id=721262705]
 layout_mode = 2
 folded = true
 title = "temp"
 
-[node name="VBoxContainer" type="VBoxContainer" parent="VBoxContainer/MainArea/LeftPalette/PaletteSelect/Factions/EntityPalette/FoldableContainer4" unique_id=2014213877]
+[node name="VBoxContainer" type="VBoxContainer" parent="VBoxContainer/MainArea/LeftPalette/ScrollContainer/ScrollContent/PaletteSelect/Factions/EntityPalette/FoldableContainer4" unique_id=2014213877]
 visible = false
 layout_mode = 2
 
-[node name="Button" type="Button" parent="VBoxContainer/MainArea/LeftPalette/PaletteSelect/Factions/EntityPalette/FoldableContainer4/VBoxContainer" unique_id=1898339656]
+[node name="Button" type="Button" parent="VBoxContainer/MainArea/LeftPalette/ScrollContainer/ScrollContent/PaletteSelect/Factions/EntityPalette/FoldableContainer4/VBoxContainer" unique_id=1898339656]
 layout_mode = 2
 text = "Test Button"
 
-[node name="FoldableContainer5" type="FoldableContainer" parent="VBoxContainer/MainArea/LeftPalette/PaletteSelect/Factions/EntityPalette" unique_id=698685229]
+[node name="FoldableContainer5" type="FoldableContainer" parent="VBoxContainer/MainArea/LeftPalette/ScrollContainer/ScrollContent/PaletteSelect/Factions/EntityPalette" unique_id=698685229]
 layout_mode = 2
 folded = true
 title = "temp"
 
-[node name="VBoxContainer" type="VBoxContainer" parent="VBoxContainer/MainArea/LeftPalette/PaletteSelect/Factions/EntityPalette/FoldableContainer5" unique_id=1891343577]
+[node name="VBoxContainer" type="VBoxContainer" parent="VBoxContainer/MainArea/LeftPalette/ScrollContainer/ScrollContent/PaletteSelect/Factions/EntityPalette/FoldableContainer5" unique_id=1891343577]
 visible = false
 layout_mode = 2
 
-[node name="Button" type="Button" parent="VBoxContainer/MainArea/LeftPalette/PaletteSelect/Factions/EntityPalette/FoldableContainer5/VBoxContainer" unique_id=847074998]
+[node name="Button" type="Button" parent="VBoxContainer/MainArea/LeftPalette/ScrollContainer/ScrollContent/PaletteSelect/Factions/EntityPalette/FoldableContainer5/VBoxContainer" unique_id=847074998]
 layout_mode = 2
 text = "Test Button"
 
-[node name="Textures" type="MarginContainer" parent="VBoxContainer/MainArea/LeftPalette/PaletteSelect" unique_id=1315734546]
+[node name="Textures" type="MarginContainer" parent="VBoxContainer/MainArea/LeftPalette/ScrollContainer/ScrollContent/PaletteSelect" unique_id=1315734546]
 visible = false
 layout_mode = 2
 size_flags_horizontal = 3
@@ -285,33 +293,33 @@ theme_override_constants/margin_right = 10
 theme_override_constants/margin_bottom = 10
 metadata/_tab_index = 2
 
-[node name="TexturePalette" type="VBoxContainer" parent="VBoxContainer/MainArea/LeftPalette/PaletteSelect/Textures" unique_id=386711233]
+[node name="TexturePalette" type="VBoxContainer" parent="VBoxContainer/MainArea/LeftPalette/ScrollContainer/ScrollContent/PaletteSelect/Textures" unique_id=386711233]
 layout_mode = 2
 size_flags_horizontal = 3
 script = ExtResource("3_c1img")
 
-[node name="GridContainer" type="GridContainer" parent="VBoxContainer/MainArea/LeftPalette/PaletteSelect/Textures/TexturePalette" unique_id=1379265558]
+[node name="GridContainer" type="GridContainer" parent="VBoxContainer/MainArea/LeftPalette/ScrollContainer/ScrollContent/PaletteSelect/Textures/TexturePalette" unique_id=1379265558]
 layout_mode = 2
 columns = 2
 
-[node name="Button" type="TextureButton" parent="VBoxContainer/MainArea/LeftPalette/PaletteSelect/Textures/TexturePalette/GridContainer" unique_id=72641563]
+[node name="Button" type="TextureButton" parent="VBoxContainer/MainArea/LeftPalette/ScrollContainer/ScrollContent/PaletteSelect/Textures/TexturePalette/GridContainer" unique_id=72641563]
 custom_minimum_size = Vector2(90, 90)
 layout_mode = 2
 
-[node name="Brushsettings" type="VBoxContainer" parent="VBoxContainer/MainArea/LeftPalette" unique_id=1506579842]
+[node name="Brushsettings" type="VBoxContainer" parent="VBoxContainer/MainArea/LeftPalette/ScrollContainer/ScrollContent" unique_id=1506579842]
 layout_mode = 2
 
-[node name="Label" type="Label" parent="VBoxContainer/MainArea/LeftPalette/Brushsettings" unique_id=935307413]
+[node name="Label" type="Label" parent="VBoxContainer/MainArea/LeftPalette/ScrollContainer/ScrollContent/Brushsettings" unique_id=935307413]
 layout_mode = 2
 text = "Brush settings"
 
-[node name="MarginContainer" type="MarginContainer" parent="VBoxContainer/MainArea/LeftPalette/Brushsettings" unique_id=1826137274]
+[node name="MarginContainer" type="MarginContainer" parent="VBoxContainer/MainArea/LeftPalette/ScrollContainer/ScrollContent/Brushsettings" unique_id=1826137274]
 layout_mode = 2
 
-[node name="VBoxContainer" type="VBoxContainer" parent="VBoxContainer/MainArea/LeftPalette/Brushsettings/MarginContainer" unique_id=468634052]
+[node name="VBoxContainer" type="VBoxContainer" parent="VBoxContainer/MainArea/LeftPalette/ScrollContainer/ScrollContent/Brushsettings/MarginContainer" unique_id=468634052]
 layout_mode = 2
 
-[node name="BrushForm" type="OptionButton" parent="VBoxContainer/MainArea/LeftPalette/Brushsettings/MarginContainer/VBoxContainer" unique_id=633604237]
+[node name="BrushForm" type="OptionButton" parent="VBoxContainer/MainArea/LeftPalette/ScrollContainer/ScrollContent/Brushsettings/MarginContainer/VBoxContainer" unique_id=633604237]
 layout_mode = 2
 selected = 0
 item_count = 2
@@ -320,7 +328,7 @@ popup/item_0/id = 0
 popup/item_1/text = "Square"
 popup/item_1/id = 1
 
-[node name="BrushSize" type="SpinBox" parent="VBoxContainer/MainArea/LeftPalette/Brushsettings/MarginContainer/VBoxContainer" unique_id=764435510]
+[node name="BrushSize" type="SpinBox" parent="VBoxContainer/MainArea/LeftPalette/ScrollContainer/ScrollContent/Brushsettings/MarginContainer/VBoxContainer" unique_id=764435510]
 layout_mode = 2
 value = 5.0
 prefix = "Brush size:"

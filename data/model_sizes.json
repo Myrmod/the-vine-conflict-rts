@@ -1,0 +1,117 @@
+{
+	"RockPack1/Models/meshes/Cliff_models_boulder1_mesh.res": [
+		5.671,
+		2.027,
+		3.49
+	],
+	"RockPack1/Models/meshes/Cliff_models_boulder2_mesh.res": [
+		4.199,
+		2.033,
+		2.263
+	],
+	"RockPack1/Models/meshes/Cliff_models_boulder3_mesh.res": [
+		3.367,
+		2.131,
+		2.155
+	],
+	"RockPack1/Models/meshes/Cliff_models_boulder4_mesh.res": [
+		4.343,
+		2.023,
+		2.519
+	],
+	"RockPack1/Models/meshes/Cliff_models_boulder5_mesh.res": [
+		3.375,
+		1.959,
+		2.363
+	],
+	"RockPack1/Models/meshes/Cliff_models_boulder6_mesh.res": [
+		3.197,
+		1.766,
+		2.414
+	],
+	"RockPack1/Models/meshes/Cliff_models_cliff1_mesh.res": [
+		8.19,
+		9.413,
+		3.572
+	],
+	"RockPack1/Models/meshes/Cliff_models_cliff2_mesh.res": [
+		7.637,
+		10.123,
+		5.291
+	],
+	"RockPack1/Models/meshes/Cliff_models_cliff3_mesh.res": [
+		6.845,
+		9.157,
+		3.794
+	],
+	"RockPack1/Models/meshes/Cliff_models_cliff4_mesh.res": [
+		4.111,
+		9.007,
+		3.439
+	],
+	"RockPack1/Models/meshes/Cliff_models_cliff5_mesh.res": [
+		9.097,
+		4.344,
+		7.032
+	],
+	"RockPack1/Models/meshes/Cliff_models_cliff6_mesh.res": [
+		9.285,
+		9.369,
+		5.639
+	],
+	"RockPack1/Models/meshes/Cliff_models_cliff7_mesh.res": [
+		12.627,
+		9.538,
+		5.444
+	],
+	"RockPack1/Models/meshes/Cliff_models_cliff8_mesh.res": [
+		10.808,
+		9.048,
+		5.7
+	],
+	"RockPack1/Models/meshes/Cliff_models_pile1_mesh.res": [
+		3.005,
+		0.491,
+		3.61
+	],
+	"RockPack1/Models/meshes/Cliff_models_pile2_mesh.res": [
+		3.236,
+		0.382,
+		3.215
+	],
+	"RockPack1/Models/meshes/Cliff_models_rock1_mesh.res": [
+		0.729,
+		0.473,
+		0.67
+	],
+	"RockPack1/Models/meshes/Cliff_models_rock2_mesh.res": [
+		0.459,
+		0.409,
+		0.55
+	],
+	"RockPack1/Models/meshes/Cliff_models_rock3_mesh.res": [
+		0.772,
+		0.427,
+		0.664
+	],
+	"RockPack1/Models/meshes/Cliff_models_rock4_mesh.res": [
+		0.645,
+		0.422,
+		0.637
+	],
+	"models/kenney-spacekit/hangar_smallA.glb": [
+		2.0,
+		1.0,
+		2.0
+	],
+	"models/kenney-spacekit/platform_small.glb": [
+		1.0,
+		0.1,
+		1.0
+	],
+	"models/kenney-spacekit/supports_low.glb": [
+		0.825,
+		0.5,
+		0.825
+	]
+}

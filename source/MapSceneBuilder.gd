@@ -109,8 +109,16 @@ static func _add_entities(
 		var inst = scene.instantiate()
 		var pos: Vector2i = entity.get("pos", Vector2i.ZERO)
 		var rot: float = entity.get("rotation", 0.0)
+		var scl: float = entity.get("entity_scale", 1.0)
 		var height_y: float = map_resource.get_height_at(pos)
-		inst.transform = Transform3D(Basis(Vector3.UP, rot), Vector3(pos.x, height_y, pos.y))
+		var basis := Basis(Vector3.UP, rot)
+		if not is_equal_approx(scl, 1.0):
+			basis = basis.scaled(Vector3(scl, scl, scl))
+		inst.transform = Transform3D(basis, Vector3(pos.x, height_y, pos.y))
+
+		var mat_path: String = entity.get("material_path", "")
+		if not mat_path.is_empty():
+			_apply_material_to_model_holders(inst, mat_path)
 
 		# Decide parent: resource nodes go under Resources, everything else under Decorations
 		if "ResourceNode" in scene_path or "resource" in scene_path.to_lower():
@@ -118,6 +126,14 @@ static func _add_entities(
 		else:
 			decorations_parent.add_child(inst)
 		inst.owner = owner_node
+
+
+static func _apply_material_to_model_holders(node: Node, mat_path: String) -> void:
+	"""Set material_path on all ModelHolder children before they enter the tree."""
+	if node is ModelHolder:
+		node.material_path = mat_path
+	for child in node.get_children():
+		_apply_material_to_model_holders(child, mat_path)
 
 
 static func initialize_terrain_from_meta(map_node: Node3D):

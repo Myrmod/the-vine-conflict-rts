@@ -47,6 +47,10 @@ var spawn_preview_nodes: Array[Node3D] = []
 # Symmetry axis visual guide
 var _symmetry_line_mesh: MeshInstance3D = null
 
+# Material selector for decorations
+var _material_option: OptionButton = null
+var _material_paths: Array[String] = []
+
 # Camera control – orthogonal isometric to match in-game camera
 var camera: Camera3D
 var camera_angle: float = -30.0  # fixed pitch matching IsometricCamera3D
@@ -111,9 +115,11 @@ func _setup_ui_connections():
 	"""Set up UI button connections"""
 	# Get UI elements from scene
 	var toolbar = get_node_or_null("VBoxContainer/Toolbar")
-	var palette_select = get_node_or_null("VBoxContainer/MainArea/LeftPalette/PaletteSelect")
+	var palette_select = get_node_or_null(
+		"VBoxContainer/MainArea/LeftPalette/ScrollContainer/ScrollContent/PaletteSelect"
+	)
 	var texture_select = get_node_or_null(
-		"VBoxContainer/MainArea/LeftPalette/PaletteSelect/Textures/TexturePalette"
+		"VBoxContainer/MainArea/LeftPalette/ScrollContainer/ScrollContent/PaletteSelect/Textures/TexturePalette"
 	)
 	status_label = get_node_or_null("VBoxContainer/StatusBar/StatusLabel")
 
@@ -162,7 +168,9 @@ func _setup_ui_connections():
 			popup.id_pressed.connect(_on_view_menu_item_selected.bind(popup))
 
 	# Brush settings
-	var brush_settings = get_node_or_null("VBoxContainer/MainArea/LeftPalette/Brushsettings")
+	var brush_settings = get_node_or_null(
+		"VBoxContainer/MainArea/LeftPalette/ScrollContainer/ScrollContent/Brushsettings"
+	)
 	if brush_settings:
 		var brush_form = brush_settings.get_node_or_null("MarginContainer/VBoxContainer/BrushForm")
 		var brush_size_spin = brush_settings.get_node_or_null(
@@ -177,6 +185,28 @@ func _setup_ui_connections():
 			brush_size_spin.step = 1
 			brush_size_spin.value = 1
 			brush_size_spin.value_changed.connect(_on_brush_size_changed)
+
+		# Material selector for decorations
+		var vbox = brush_settings.get_node_or_null("MarginContainer/VBoxContainer")
+		if vbox:
+			var mat_label := Label.new()
+			mat_label.name = "MaterialLabel"
+			mat_label.text = "Material"
+			vbox.add_child(mat_label)
+
+			_material_option = OptionButton.new()
+			_material_option.name = "MaterialOption"
+			_material_paths = _scan_material_paths()
+			_material_option.add_item("(Default)", 0)
+			for i in range(_material_paths.size()):
+				var label_text = _material_paths[i].get_file().get_basename()
+				_material_option.add_item(label_text, i + 1)
+			_material_option.item_selected.connect(_on_material_selected)
+			vbox.add_child(_material_option)
+
+			# Hidden by default, shown when entity brush is active
+			mat_label.visible = false
+			_material_option.visible = false
 
 
 func _on_file_menu_item_selected(id: int):
@@ -221,6 +251,13 @@ func _on_palette_entity_selected(scene_path: String):
 
 	# Force ghost recreation for the new entity
 	_hide_entity_ghost()
+
+	# Show material selector and sync with brush
+	_show_material_selector(true)
+	if _material_option:
+		_material_option.select(0)
+	if current_brush is EntityBrush:
+		current_brush.set_material_path("")
 
 	# Update brush info
 	var brush_info = get_node_or_null("VBoxContainer/Toolbar/BrushInfo")
@@ -426,6 +463,52 @@ func _on_brush_size_changed(value: float):
 		status_label.text = "Brush size: " + str(int(value))
 
 
+func _on_material_selected(index: int):
+	"""Handle material selection from the material OptionButton."""
+	if current_brush is EntityBrush:
+		if index == 0:
+			current_brush.set_material_path("")
+		else:
+			current_brush.set_material_path(_material_paths[index - 1])
+		_hide_entity_ghost()
+
+
+func _scan_material_paths() -> Array[String]:
+	"""Scan res://assets_overide/RockPack1/Materials/ for .tres material files.
+	Returns relative paths (e.g. RockPack1/Materials/X.tres) for ModelHolder compatibility."""
+	var paths: Array[String] = []
+	var dir_path := "res://assets_overide/RockPack1/Materials/"
+	var relative_prefix := "RockPack1/Materials/"
+	var dir := DirAccess.open(dir_path)
+	if dir == null:
+		push_warning("Cannot open material directory: " + dir_path)
+		return paths
+	dir.list_dir_begin()
+	while true:
+		var file_name := dir.get_next()
+		if file_name == "":
+			break
+		if not dir.current_is_dir() and file_name.ends_with(".tres"):
+			paths.append(relative_prefix + file_name)
+	dir.list_dir_end()
+	paths.sort()
+	return paths
+
+
+func _show_material_selector(is_visible: bool):
+	"""Show or hide the material selector label and option button."""
+	var brush_settings = get_node_or_null(
+		"VBoxContainer/MainArea/LeftPalette/ScrollContainer/ScrollContent/Brushsettings"
+	)
+	if not brush_settings:
+		return
+	var mat_label = brush_settings.get_node_or_null("MarginContainer/VBoxContainer/MaterialLabel")
+	if mat_label:
+		mat_label.visible = is_visible
+	if _material_option:
+		_material_option.visible = is_visible
+
+
 func _create_brush(brush_type: BrushType):
 	"""Create and set the current brush"""
 	# Preserve current size/shape settings across brush switches
@@ -439,6 +522,10 @@ func _create_brush(brush_type: BrushType):
 
 	# Clear entity ghost when switching brushes
 	_hide_entity_ghost()
+
+	# Hide material selector for non-entity brushes
+	if brush_type != BrushType.PLACE_ENTITY:
+		_show_material_selector(false)
 
 	match brush_type:
 		BrushType.PAINT_COLLISION:
@@ -560,10 +647,25 @@ func _input(event):
 	if event is InputEventMouseButton:
 		# Only process viewport mouse events when the cursor is over the viewport
 		var _over_viewport := _is_mouse_over_viewport(event.position)
-		if event.button_index == MOUSE_BUTTON_WHEEL_UP and event.pressed and _over_viewport:
+		var _is_scroll_up = (
+			event.button_index == MOUSE_BUTTON_WHEEL_UP and event.pressed and _over_viewport
+		)
+		var _is_scroll_down = (
+			event.button_index == MOUSE_BUTTON_WHEEL_DOWN and event.pressed and _over_viewport
+		)
+
+		if (_is_scroll_up or _is_scroll_down) and event.ctrl_pressed:
+			# Ctrl + Mouse Wheel → rotate entity brush (15° steps)
+			var direction = -1.0 if _is_scroll_up else 1.0
+			_rotate_entity_brush(15.0 * direction)
+		elif (_is_scroll_up or _is_scroll_down) and event.shift_pressed:
+			# Shift + Mouse Wheel → scale entity brush (0.1 steps)
+			var direction = 1.0 if _is_scroll_up else -1.0
+			_scale_entity_brush(0.1 * direction)
+		elif _is_scroll_up:
 			camera_size = maxf(camera_size_min, camera_size - camera_zoom_speed)
 			_update_camera_position()
-		elif event.button_index == MOUSE_BUTTON_WHEEL_DOWN and event.pressed and _over_viewport:
+		elif _is_scroll_down:
 			camera_size = minf(camera_size_max, camera_size + camera_zoom_speed)
 			_update_camera_position()
 		elif event.button_index == MOUSE_BUTTON_MIDDLE:
@@ -624,7 +726,16 @@ func _rotate_entity_brush(degrees: float):
 	if current_brush is EntityBrush:
 		current_brush.set_rotation(current_brush.rotation + deg_to_rad(degrees))
 		_update_brush_info_label()
-		_update_entity_ghost_rotation()
+		_update_entity_ghost_transform()
+
+
+func _scale_entity_brush(delta: float):
+	"""Change the current entity brush scale by delta (clamped to 0.1 .. 10.0)."""
+	if current_brush is EntityBrush:
+		var new_scale = clampf(current_brush.entity_scale + delta, 0.1, 10.0)
+		current_brush.set_entity_scale(new_scale)
+		_update_brush_info_label()
+		_update_entity_ghost_transform()
 
 
 func _update_brush_info_label():
@@ -637,6 +748,7 @@ func _update_brush_info_label():
 
 var _entity_ghost: Node3D = null
 var _entity_ghost_path: String = ""
+var _entity_ghost_material: String = ""
 
 
 func _update_entity_ghost(grid_pos: Vector2i):
@@ -650,30 +762,43 @@ func _update_entity_ghost(grid_pos: Vector2i):
 		_hide_entity_ghost()
 		return
 
-	# Recreate ghost if entity changed
-	if _entity_ghost_path != brush.scene_path:
+	# Recreate ghost if entity or material changed
+	if _entity_ghost_path != brush.scene_path or _entity_ghost_material != brush.material_path:
 		_hide_entity_ghost()
 		var packed = load(brush.scene_path)
 		if not packed:
 			return
 		_entity_ghost = packed.instantiate()
 		_entity_ghost.name = "EntityGhost"
-		# Make it transparent
-		_apply_ghost_material(_entity_ghost)
-		viewport_3d.add_child(_entity_ghost)
+
+		if not brush.material_path.is_empty():
+			_apply_material_to_model_holders(_entity_ghost, brush.material_path)
+			# Add the ghost to the tree first so ModelHolder._ready() runs and loads the material
+			viewport_3d.add_child(_entity_ghost)
+			# Then apply transparency on top of the real material
+			_apply_ghost_transparency(_entity_ghost)
+		else:
+			_apply_ghost_material(_entity_ghost)
+			viewport_3d.add_child(_entity_ghost)
+
 		_entity_ghost_path = brush.scene_path
+		_entity_ghost_material = brush.material_path
 
 	if _entity_ghost and is_instance_valid(_entity_ghost):
 		var height_y: float = current_map.get_height_at(grid_pos) if current_map else 0.0
 		_entity_ghost.position = Vector3(grid_pos.x, height_y, grid_pos.y)
 		_entity_ghost.rotation.y = brush.rotation
+		var s = brush.entity_scale
+		_entity_ghost.scale = Vector3(s, s, s)
 		_entity_ghost.visible = true
 
 
-func _update_entity_ghost_rotation():
-	"""Update the ghost rotation to match the brush without repositioning."""
+func _update_entity_ghost_transform():
+	"""Update the ghost rotation and scale to match the brush without repositioning."""
 	if _entity_ghost and is_instance_valid(_entity_ghost) and current_brush is EntityBrush:
 		_entity_ghost.rotation.y = current_brush.rotation
+		var s = current_brush.entity_scale
+		_entity_ghost.scale = Vector3(s, s, s)
 
 
 func _hide_entity_ghost():
@@ -682,6 +807,7 @@ func _hide_entity_ghost():
 		_entity_ghost.queue_free()
 		_entity_ghost = null
 		_entity_ghost_path = ""
+		_entity_ghost_material = ""
 
 
 func _apply_ghost_material(node: Node):
@@ -694,6 +820,33 @@ func _apply_ghost_material(node: Node):
 	for child in node.find_children("*"):
 		if child is MeshInstance3D:
 			child.material_override = ghost_mat
+
+
+func _apply_ghost_transparency(node: Node):
+	"""Make existing materials semi-transparent for ghost preview."""
+	for child in node.find_children("*"):
+		if child is MeshInstance3D:
+			var base_mat: Material = child.material_override
+			if base_mat == null:
+				base_mat = (
+					child.mesh.surface_get_material(0)
+					if child.mesh and child.mesh.get_surface_count() > 0
+					else null
+				)
+			if base_mat and base_mat is StandardMaterial3D:
+				var mat: StandardMaterial3D = base_mat.duplicate()
+				mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+				mat.albedo_color.a = 0.6
+				mat.no_depth_test = true
+				child.material_override = mat
+			else:
+				# Fallback to generic ghost material
+				var ghost_mat := StandardMaterial3D.new()
+				ghost_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+				ghost_mat.albedo_color = Color(0.4, 0.8, 1.0, 0.4)
+				ghost_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+				ghost_mat.no_depth_test = true
+				child.material_override = ghost_mat
 
 
 func _is_mouse_over_viewport(mouse_pos: Vector2) -> bool:
@@ -785,8 +938,21 @@ func _refresh_entity_previews():
 		inst.position = Vector3(entity.pos.x, height_y, entity.pos.y)
 		if entity.has("rotation"):
 			inst.rotation.y = entity.rotation
+		if entity.has("entity_scale"):
+			var s = entity.entity_scale
+			inst.scale = Vector3(s, s, s)
+		if entity.has("material_path"):
+			_apply_material_to_model_holders(inst, entity.material_path)
 		visual_layer.add_child(inst)
 		entity_preview_nodes[entity.pos] = inst
+
+
+func _apply_material_to_model_holders(node: Node, mat_path: String) -> void:
+	"""Set material_path on all ModelHolder children before they enter the tree."""
+	if node is ModelHolder:
+		node.material_path = mat_path
+	for child in node.get_children():
+		_apply_material_to_model_holders(child, mat_path)
 
 
 # --- Spawn point preview rendering ---
@@ -843,7 +1009,10 @@ func set_view_mode(mode: ViewMode):
 	view_mode = mode
 
 	if visual_layer and collision_layer:
-		visual_layer.visible = (mode == ViewMode.GAME_VIEW)
+		# Keep visual_layer always visible so entity/spawn previews remain on screen.
+		# Only toggle the terrain system and collision overlay.
+		if terrain_system:
+			terrain_system.visible = (mode == ViewMode.GAME_VIEW)
 		collision_layer.visible = (mode == ViewMode.COLLISION_VIEW)
 	else:
 		push_warning("Warning: Visual or collision layer not found for view mode toggle")

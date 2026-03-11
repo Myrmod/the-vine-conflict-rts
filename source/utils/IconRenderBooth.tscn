@@ -7,13 +7,8 @@
 [ext_resource type="PackedScene" uid="uid://cm3iqdsdeo625" path="res://source/factions/the_amuns/structures/structure-geometries/AntiAirTurret.tscn" id="6_a5m0n"]
 [ext_resource type="PackedScene" uid="uid://bklfapayb1ryk" path="res://source/factions/the_amuns/structures/structure-geometries/AircraftFactory.tscn" id="7_l62dt"]
 [ext_resource type="PackedScene" uid="uid://inepf56pyube" path="res://source/factions/the_amuns/structures/structure-geometries/VehicleFactory.tscn" id="8_j4wnw"]
-[ext_resource type="PackedScene" uid="uid://bm8n8g2h8yi1p" path="res://assets/models/kenney-spacekit/craft_cargoB.glb" id="9_l3ayu"]
-[ext_resource type="PackedScene" uid="uid://chmayxp3itowx" path="res://assets/models/kenney-spacekit/craft_miner.glb" id="10_unqbo"]
-[ext_resource type="PackedScene" uid="uid://d1ekv61cse3bl" path="res://assets/models/kenney-spacekit/craft_racer.glb" id="11_ssv8t"]
-[ext_resource type="PackedScene" uid="uid://cmvtt1w71wso2" path="res://assets/models/kenney-spacekit/craft_speederA.glb" id="12_crnju"]
-[ext_resource type="PackedScene" uid="uid://j5umsiiyb8a7" path="res://assets/models/kenney-spacekit/rover.glb" id="13_p31ce"]
 [ext_resource type="Texture2D" uid="uid://dvbs0b0b4cnew" path="res://assets/ui/icons/texture_01.png" id="14_1issp"]
-
+[ext_resource type="Script" uid="uid://bysf721q4x37n" path="res://source/generic-scenes-and-nodes/3d/ModelHolder.gd" id="1_model_holder"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_edvyk"]
 sky_horizon_color = Color(0.64625, 0.65575, 0.67075, 1)
@@ -321,10 +316,14 @@ fov = 20.0
 [node name="Geometry" type="Node3D" parent="RenderBooth/Tank"]
 transform = Transform3D(0.6, 0, 0, 0, 0.6, 0, 0, 0, 0.6, 0, 0, 0)
 
-[node name="craft_cargoB" parent="RenderBooth/Tank/Geometry" instance=ExtResource("9_l3ayu")]
+[node name="craft_cargoB" type="Node3D" parent="RenderBooth/Tank/Geometry"]
+script = ExtResource("1_model_holder")
+model_path = "models/kenney-spacekit/craft_cargoB.glb"
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, -0.107278, -1.5)
 
-[node name="craft_miner" parent="RenderBooth/Tank/Geometry" instance=ExtResource("10_unqbo")]
+[node name="craft_miner" type="Node3D" parent="RenderBooth/Tank/Geometry"]
+script = ExtResource("1_model_holder")
+model_path = "models/kenney-spacekit/craft_miner.glb"
 transform = Transform3D(0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, -1.4, 0.586939, -1.66923)
 
 [node name="ProjectileOrigin" type="Marker3D" parent="RenderBooth/Tank/Geometry"]
@@ -340,7 +339,9 @@ fov = 20.0
 [node name="Geometry" type="Node3D" parent="RenderBooth/Helicopter"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.54, 0)
 
-[node name="craft_racer" parent="RenderBooth/Helicopter/Geometry" instance=ExtResource("11_ssv8t")]
+[node name="craft_racer" type="Node3D" parent="RenderBooth/Helicopter/Geometry"]
+script = ExtResource("1_model_holder")
+model_path = "models/kenney-spacekit/craft_racer.glb"
 transform = Transform3D(0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, -1.4, 0, -1.05)
 
 [node name="ProjectileOrigin" type="Marker3D" parent="RenderBooth/Helicopter/Geometry"]
@@ -375,7 +376,9 @@ fov = 20.0
 [node name="Geometry2" type="Node3D" parent="RenderBooth/Drone"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.505, 0)
 
-[node name="craft_speederA" parent="RenderBooth/Drone/Geometry2" instance=ExtResource("12_crnju")]
+[node name="craft_speederA" type="Node3D" parent="RenderBooth/Drone/Geometry2"]
+script = ExtResource("1_model_holder")
+model_path = "models/kenney-spacekit/craft_speederA.glb"
 transform = Transform3D(0.3, 0, 0, 0, 0.3, 0, 0, 0, 0.3, -0.6, 0, -0.45)
 
 [node name="Worker" type="Node3D" parent="RenderBooth"]
@@ -388,7 +391,9 @@ fov = 20.0
 [node name="Geometry" type="Node3D" parent="RenderBooth/Worker"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.02, 0)
 
-[node name="rover" parent="RenderBooth/Worker/Geometry" instance=ExtResource("13_p31ce")]
+[node name="rover" type="Node3D" parent="RenderBooth/Worker/Geometry"]
+script = ExtResource("1_model_holder")
+model_path = "models/kenney-spacekit/rover.glb"
 transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, -4, 0, -3)
 
 [editable path="RenderBooth/CommandCenter/Geometry"]

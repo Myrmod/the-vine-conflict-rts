@@ -2,13 +2,13 @@
 
 [ext_resource type="Script" uid="uid://d2f4g6j8l0n3p" path="res://source/factions/the_legion/units/Worker.gd" id="1_hapsg"]
 [ext_resource type="PackedScene" uid="uid://cgsi062w5fjia" path="res://source/match/units/traits/Highlight.tscn" id="2_bt6lt"]
-[ext_resource type="PackedScene" uid="uid://j5umsiiyb8a7" path="res://assets/models/kenney-spacekit/rover.glb" id="2_ef11q"]
 [ext_resource type="PackedScene" uid="uid://3c1h14nqdumt" path="res://source/match/units/traits/Selection.tscn" id="3_yl7si"]
 [ext_resource type="PackedScene" uid="uid://ivlo0e66qocl" path="res://source/match/units/traits/Movement.tscn" id="4_lmprj"]
 [ext_resource type="PackedScene" uid="uid://c3ssj2p6voauk" path="res://source/match/units/traits/HealthBar.tscn" id="5_50cqd"]
 [ext_resource type="PackedScene" uid="uid://d4cm4yhtf11ur" path="res://source/match/units/traits/Targetability.tscn" id="7_i4ri4"]
 [ext_resource type="PackedScene" uid="uid://cbbjmres24kgm" path="res://source/match/units/traits/Sparkling.tscn" id="8_pqovx"]
 [ext_resource type="PackedScene" path="res://source/match/units/traits/NameTag.tscn" id="9_sjnup"]
+[ext_resource type="Script" uid="uid://bysf721q4x37n" path="res://source/generic-scenes-and-nodes/3d/ModelHolder.gd" id="1_model_holder"]
 
 [sub_resource type="CylinderShape3D" id="CylinderShape3D_hiufi"]
 height = 0.6
@@ -21,7 +21,9 @@ script = ExtResource("1_hapsg")
 [node name="Geometry" type="Node3D" parent="." unique_id=1188657987]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.02, 0)
 
-[node name="rover" parent="Geometry" unique_id=292683291 instance=ExtResource("2_ef11q")]
+[node name="rover" type="Node3D" parent="Geometry"]
+script = ExtResource("1_model_holder")
+model_path = "models/kenney-spacekit/rover.glb"
 transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, -4, 0, -3)
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=1079311517]

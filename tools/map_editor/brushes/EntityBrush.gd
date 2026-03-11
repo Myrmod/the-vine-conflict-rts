@@ -9,6 +9,8 @@ extends EditorBrush
 var scene_path: String = ""
 var player_id: int = 0
 var rotation: float = 0.0
+var entity_scale: float = 1.0
+var material_path: String = ""
 
 # Cached placement domains from the loaded scene
 var _placement_domains: Array = []
@@ -54,7 +56,13 @@ func apply(cell_pos: Vector2i):
 	var affected_positions = get_affected_positions(cell_pos)
 
 	var cmd = PlaceEntityCommand.new(
-		map_resource, affected_positions, scene_path, player_id, rotation
+		map_resource,
+		affected_positions,
+		scene_path,
+		player_id,
+		rotation,
+		entity_scale,
+		material_path
 	)
 
 	command_stack.push_command(cmd)
@@ -73,6 +81,14 @@ func set_player(player: int):
 
 func set_rotation(rot: float):
 	rotation = rot
+
+
+func set_entity_scale(s: float):
+	entity_scale = s
+
+
+func set_material_path(path: String):
+	material_path = path
 
 
 func _refresh_placement_domains():
@@ -116,7 +132,9 @@ func get_brush_name() -> String:
 		return "Entity (None Selected)"
 	var entity_name = scene_path.get_file().get_basename()
 	var rot_deg := int(rad_to_deg(rotation)) % 360
-	return "Entity: %s  rot: %d°" % [entity_name, rot_deg]
+	if is_equal_approx(entity_scale, 1.0):
+		return "Entity: %s  rot: %d°" % [entity_name, rot_deg]
+	return "Entity: %s  rot: %d°  scale: %.1f" % [entity_name, rot_deg, entity_scale]
 
 
 func get_cursor_color() -> Color:
