@@ -233,6 +233,37 @@ func _validate_command_schema(cmd: Dictionary) -> bool:
 				return false
 		Enums.CommandType.CAST_SUPPORT_POWER:
 			print("command called validated", cmd.type)
+
+		Enums.CommandType.ATTACK_MOVE, Enums.CommandType.MOVE_NO_ATTACK:
+			# data.targets: Array of {unit: int, pos: Vector3}
+			if not cmd.data.has("targets") or typeof(cmd.data.targets) != TYPE_ARRAY:
+				push_error("CommandBus: ATTACK_MOVE/MOVE_NO_ATTACK requires Array data.targets")
+				return false
+			for entry in cmd.data.targets:
+				if not _validate_target_dict(entry, "ATTACK_MOVE/MOVE_NO_ATTACK", true):
+					return false
+
+		Enums.CommandType.STOP, Enums.CommandType.HOLD_POSITION:
+			# data.targets: Array of {unit: int}
+			if not cmd.data.has("targets") or typeof(cmd.data.targets) != TYPE_ARRAY:
+				push_error("CommandBus: STOP/HOLD_POSITION requires Array data.targets")
+				return false
+			for entry in cmd.data.targets:
+				if not _validate_target_dict(entry, "STOP/HOLD_POSITION", false):
+					return false
+
+		Enums.CommandType.PATROL:
+			# data.targets: Array of {unit: int, pos: Vector3}, data.patrol_origin: Vector3
+			if not cmd.data.has("targets") or typeof(cmd.data.targets) != TYPE_ARRAY:
+				push_error("CommandBus: PATROL requires Array data.targets")
+				return false
+			for entry in cmd.data.targets:
+				if not _validate_target_dict(entry, "PATROL", true):
+					return false
+			if not cmd.data.has("patrol_origin") or typeof(cmd.data.patrol_origin) != TYPE_VECTOR3:
+				push_error("CommandBus: PATROL requires Vector3 data.patrol_origin")
+				return false
+
 		_:
 			push_error("CommandBus: unknown command type %s" % cmd.type)
 			return false

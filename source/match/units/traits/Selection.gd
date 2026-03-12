@@ -77,6 +77,15 @@ func _update_circle_params():
 
 func _on_input_event(_camera, event, _click_position, _click_normal, _shape_idx):
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
+		if MatchSignals.active_command_mode != Enums.UnitCommandMode.NORMAL:
+			var camera = get_viewport().get_camera_3d()
+			if camera != null:
+				var match_node = _unit.get_parent()
+				var map = match_node.map if match_node != null and "map" in match_node else null
+				var pos = camera.get_terrain_ray_intersection(event.position, map)
+				if pos != null:
+					MatchSignals.terrain_targeted.emit(pos)
+			return
 		if _selected and Input.is_action_pressed("shift_selecting"):
 			deselect()
 			return

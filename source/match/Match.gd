@@ -232,7 +232,11 @@ func _execute_command(cmd: Dictionary):
 				if parsed["pos"] == null:
 					push_error("MOVE command: target entry missing 'pos' (%s)" % str(entry))
 					continue
-				unit.action = Actions.Moving.new(parsed["pos"])
+				unit._stopped = false
+				if cmd.data.get("queued", false) and unit.action != null:
+					unit._enqueue_command(cmd.type, {"pos": parsed["pos"]})
+				else:
+					unit.action = Actions.Moving.new(parsed["pos"])
 
 		Enums.CommandType.MOVING_TO_UNIT:
 			var target_unit = _resolve_unit(cmd.data.target_unit, "MOVING_TO_UNIT.target")
@@ -558,15 +562,119 @@ func _execute_command(cmd: Dictionary):
 				return
 			structure.toggle_disable()
 
+		# ── NEW UNIT COMMANDS ─────────────────────────────────────────
+		Enums.CommandType.ATTACK_MOVE:
+			for entry in cmd.data.targets:
+				var parsed = _parse_target_entry(entry, "ATTACK_MOVE")
+				if parsed.is_empty():
+					continue
+				var unit = _resolve_unit(parsed["unit_id"], "ATTACK_MOVE")
+				if unit == null:
+					continue
+				if not _verify_unit_ownership(unit, cmd.player_id, "ATTACK_MOVE"):
+					continue
+				if parsed["pos"] == null:
+					push_error("ATTACK_MOVE: target entry missing 'pos'")
+					continue
+				unit._stopped = false
+				if cmd.data.get("queued", false) and unit.action != null:
+					unit._enqueue_command(cmd.type, {"pos": parsed["pos"]})
+				else:
+					unit.action = Actions.AttackMoving.new(parsed["pos"])
+
+		Enums.CommandType.STOP:
+			for entry in cmd.data.targets:
+				var parsed = _parse_target_entry(entry, "STOP")
+				if parsed.is_empty():
+					continue
+				var unit = _resolve_unit(parsed["unit_id"], "STOP")
+				if unit == null:
+					continue
+				if not _verify_unit_ownership(unit, cmd.player_id, "STOP"):
+					continue
+				unit._stopped = true
+				if unit.has_node("UnitCommandQueue"):
+					unit.get_node("UnitCommandQueue").clear()
+				unit.action = null
+
+		Enums.CommandType.HOLD_POSITION:
+			for entry in cmd.data.targets:
+				var parsed = _parse_target_entry(entry, "HOLD_POSITION")
+				if parsed.is_empty():
+					continue
+				var unit = _resolve_unit(parsed["unit_id"], "HOLD_POSITION")
+				if unit == null:
+					continue
+				if not _verify_unit_ownership(unit, cmd.player_id, "HOLD_POSITION"):
+					continue
+				unit._stopped = false
+				if cmd.data.get("queued", false) and unit.action != null:
+					unit._enqueue_command(cmd.type, {})
+				else:
+					unit.action = Actions.HoldPosition.new()
+
+		Enums.CommandType.MOVE_NO_ATTACK:
+			for entry in cmd.data.targets:
+				var parsed = _parse_target_entry(entry, "MOVE_NO_ATTACK")
+				if parsed.is_empty():
+					continue
+				var unit = _resolve_unit(parsed["unit_id"], "MOVE_NO_ATTACK")
+				if unit == null:
+					continue
+				if not _verify_unit_ownership(unit, cmd.player_id, "MOVE_NO_ATTACK"):
+					continue
+				if parsed["pos"] == null:
+					push_error("MOVE_NO_ATTACK: target entry missing 'pos'")
+					continue
+				unit._stopped = false
+				if cmd.data.get("queued", false) and unit.action != null:
+					unit._enqueue_command(cmd.type, {"pos": parsed["pos"]})
+				else:
+					# Move without attack: set stopped so idle action doesn't trigger after arrival
+					unit._stopped = true
+					unit.action = Actions.Moving.new(parsed["pos"])
+
+		Enums.CommandType.PATROL:
+			for entry in cmd.data.targets:
+				var parsed = _parse_target_entry(entry, "PATROL")
+				if parsed.is_empty():
+					continue
+				var unit = _resolve_unit(parsed["unit_id"], "PATROL")
+				if unit == null:
+					continue
+				if not _verify_unit_ownership(unit, cmd.player_id, "PATROL"):
+					continue
+				if parsed["pos"] == null:
+					push_error("PATROL: target entry missing 'pos'")
+					continue
+				unit._stopped = false
+				var origin = cmd.data.get("patrol_origin", unit.global_position)
+				if cmd.data.get("queued", false) and unit.action != null:
+					unit._enqueue_command(cmd.type, {"pos": parsed["pos"], "patrol_origin": origin})
+				else:
+					unit.action = Actions.Patrolling.new(origin, parsed["pos"])
+
 		_:
 			push_error("Match: unknown command type %s — %s" % [cmd.type, cmd])
 
 
 func _unhandled_input(event):
-	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
-		if Input.is_action_pressed("shift_selecting"):
+	if event is InputEventMouseButton and event.pressed:
+		# Right-click cancels active command mode
+		if (
+			event.button_index == MOUSE_BUTTON_RIGHT
+			and MatchSignals.active_command_mode != Enums.UnitCommandMode.NORMAL
+		):
+			MatchSignals.active_command_mode = Enums.UnitCommandMode.NORMAL
+			MatchSignals.command_mode_changed.emit(Enums.UnitCommandMode.NORMAL)
 			return
-		MatchSignals.deselect_all_units.emit()
+		if event.button_index == MOUSE_BUTTON_LEFT:
+			# Don't deselect during command mode clicks or shift-select
+			if MatchSignals.active_command_mode != Enums.UnitCommandMode.NORMAL:
+				return
+			if Input.is_action_pressed("shift_selecting"):
+				return
+			MatchSignals.deselect_all_units.emit()
 
 
 func _set_map(a_map):

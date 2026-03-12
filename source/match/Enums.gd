@@ -32,6 +32,11 @@ enum CommandType {
 	SELL_ENTITY,
 	DISABLE_ENTITY,
 	CAST_SUPPORT_POWER,
+	ATTACK_MOVE,  # Move to position, attacking enemies encountered en route
+	STOP,  # Cancel all actions + clear queue, become truly idle
+	HOLD_POSITION,  # Stay put, attack enemies in range only (no chase)
+	MOVE_NO_ATTACK,  # Move to position, ignore enemies entirely
+	PATROL,  # Move between two points repeatedly, engaging enemies
 }
 
 ## starts at 1 to avoid falsy 0 value
@@ -39,6 +44,15 @@ enum OccupationType {
 	STRUCTURE = 1,
 	RESOURCE = 2,
 	RESOURCE_SPAWNER = 3,
+}
+
+## Command mode for unit orders. NORMAL is the default (right-click = move/attack).
+## Other modes are activated by hotkey and consume the next left-click.
+enum UnitCommandMode {
+	NORMAL,
+	ATTACK_MOVE,
+	MOVE,
+	PATROL,
 }
 
 enum MovementTypes {

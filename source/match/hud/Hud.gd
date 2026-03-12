@@ -2,36 +2,39 @@ extends CanvasLayer
 
 const TOOLTIP = preload("res://source/utils/Tooltip.tscn")
 const Structure = preload("res://source/match/units/Structure.gd")
-
-## Tab-switching hotkeys: Q W E R T Y.
-## We use physical scancodes so this adapts to layout automatically:
-## QWERTY → Q W E R T Y, QWERTZ → Q W E R T Z, AZERTY → A Z E R T Y
-const TAB_HOTKEY_PHYSICAL_KEYS: Array[Key] = [
-	KEY_Q,
-	KEY_W,
-	KEY_E,
-	KEY_R,
-	KEY_T,
-	KEY_Y,
+const _COMMAND_CURSOR = preload("res://assets/ui/icons/cross-hair_icon.png")
+const _COMMAND_DEFS: Array[Dictionary] = [
+	{
+		"name": "Attack Move",
+		"key": "attack_move",
+		"desc": "Move to target, engaging enemies on the way",
+	},
+	{
+		"name": "Stop",
+		"key": "stop",
+		"desc": "Stop and cancel current orders",
+	},
+	{
+		"name": "Hold Position",
+		"key": "hold_position",
+		"desc": "Stay in place, attack enemies in range",
+	},
+	{
+		"name": "Move",
+		"key": "move",
+		"desc": "Move to target without attacking",
+	},
+	{
+		"name": "Patrol",
+		"key": "patrol",
+		"desc": "Patrol between current position and target",
+	},
+	{
+		"name": "All Army",
+		"key": "select_all_army",
+		"desc": "Select all army units (Shift: on screen only)",
+	},
 ]
-
-## Labels for the physical tab keys (used in tooltips).
-const TAB_HOTKEY_LABELS: Array[String] = [
-	"Q",
-	"W",
-	"E",
-	"R",
-	"T",
-	"Z",
-]
-
-## Structure action hotkeys
-## Physical U → Repair, I → Sell, O → Disable
-const ACTION_HOTKEYS: Dictionary = {
-	KEY_U: Enums.CommandType.REPAIR_ENTITY,
-	KEY_I: Enums.CommandType.SELL_ENTITY,
-	KEY_O: Enums.CommandType.DISABLE_ENTITY,
-}
 
 ## TODO: in replay mode we change the UI
 @export var is_replay_mode: bool = false
@@ -47,6 +50,7 @@ var _active_producers: Array = []
 var _active_producer_index: int = 0
 ## Unit currently shown in the portrait
 var _portrait_unit: Node = null
+var _command_buttons: Array[Button] = []
 
 ## Currently observed production queue for grid button display
 var _grid_observed_queue = null
@@ -112,10 +116,12 @@ func _ready() -> void:
 	production_tab_bar_overflow.tab_changed.connect(_on_overflow_tab_changed)
 
 	# Show hotkey in tab tooltips
+	var hs_ready = Globals.hotkey_settings
 	for i in range(production_tab_bar.tab_count):
-		if i < TAB_HOTKEY_LABELS.size():
+		if i < hs_ready.TAB_NAMES.size():
 			var tab_name := production_tab_bar.get_tab_title(i)
-			production_tab_bar.set_tab_tooltip(i, "%s  [%s]" % [tab_name, TAB_HOTKEY_LABELS[i]])
+			var key_label := hs_ready.get_key_label(hs_ready.TAB_NAMES[i])
+			production_tab_bar.set_tab_tooltip(i, "%s  [%s]" % [tab_name, key_label])
 
 	MatchSignals.tick_advanced.connect(set_timer)
 	MatchSignals.unit_spawned.connect(_on_unit_changed)
@@ -141,6 +147,7 @@ func _ready() -> void:
 
 	support_powers_container.visible = false
 	super_weapons_container.visible = false
+	MatchSignals.command_mode_changed.connect(_on_command_mode_changed)
 
 
 func _process(_delta: float) -> void:
@@ -159,11 +166,18 @@ func init_building_modification_buttons():
 		func(): MatchSignals.structure_action_started.emit(Enums.CommandType.DISABLE_ENTITY)
 	)
 
-	repair_button.mouse_entered.connect(_on_action_button_hover.bind("Repair", "U"))
+	var hs = Globals.hotkey_settings
+	repair_button.mouse_entered.connect(
+		_on_action_button_hover.bind("Repair", hs.get_key_label("repair"))
+	)
 	repair_button.mouse_exited.connect(_on_production_button_exit)
-	sell_button.mouse_entered.connect(_on_action_button_hover.bind("Sell", "I"))
+	sell_button.mouse_entered.connect(
+		_on_action_button_hover.bind("Sell", hs.get_key_label("sell"))
+	)
 	sell_button.mouse_exited.connect(_on_production_button_exit)
-	disable_button.mouse_entered.connect(_on_action_button_hover.bind("Disable", "O"))
+	disable_button.mouse_entered.connect(
+		_on_action_button_hover.bind("Disable", hs.get_key_label("disable"))
+	)
 	disable_button.mouse_exited.connect(_on_production_button_exit)
 
 
@@ -560,17 +574,34 @@ func _unhandled_key_input(event: InputEvent) -> void:
 	if not event is InputEventKey or not event.pressed:
 		return
 
-	# Tab-switching hotkeys (Q W E R) via physical keycode
 	var physical: Key = event.physical_keycode
+	var hs = Globals.hotkey_settings
 
-	# Structure action hotkeys (T, Y/Z, U)
-	if ACTION_HOTKEYS.has(physical):
-		MatchSignals.structure_action_started.emit(ACTION_HOTKEYS[physical])
+	# Escape / right-click cancels active command mode
+	if physical == KEY_ESCAPE and MatchSignals.active_command_mode != Enums.UnitCommandMode.NORMAL:
+		MatchSignals.active_command_mode = Enums.UnitCommandMode.NORMAL
+		MatchSignals.command_mode_changed.emit(Enums.UnitCommandMode.NORMAL)
 		get_viewport().set_input_as_handled()
 		return
 
-	for i in range(TAB_HOTKEY_PHYSICAL_KEYS.size()):
-		if physical == TAB_HOTKEY_PHYSICAL_KEYS[i]:
+	# Unit command hotkeys (immediate or mode-setting)
+	if _handle_unit_command_hotkey(physical, event, hs):
+		get_viewport().set_input_as_handled()
+		return
+
+	# Structure action hotkeys (from HotkeySettings)
+	for action_name in hs.STRUCTURE_ACTION_NAMES:
+		if physical == hs.structure_action_bindings.get(action_name, -1):
+			var cmd_type = _structure_action_name_to_command(action_name)
+			if cmd_type >= 0:
+				MatchSignals.structure_action_started.emit(cmd_type)
+			get_viewport().set_input_as_handled()
+			return
+
+	# Tab-switching hotkeys (from HotkeySettings)
+	for i in range(hs.TAB_NAMES.size()):
+		var tab_name = hs.TAB_NAMES[i]
+		if physical == hs.tab_bindings.get(tab_name, -1):
 			if i < production_tab_bar.tab_count:
 				var now = Time.get_ticks_msec()
 				if production_tab_bar.current_tab == i:
@@ -597,7 +628,6 @@ func _unhandled_key_input(event: InputEvent) -> void:
 			return
 
 	# Production grid hotkeys
-	var hs = Globals.hotkey_settings
 	var buttons = production_grid.get_children()
 	for i in range(buttons.size()):
 		var slot = hs.SLOT_NAMES[i]
@@ -609,6 +639,103 @@ func _unhandled_key_input(event: InputEvent) -> void:
 				_on_production_button_pressed(sp)
 			get_viewport().set_input_as_handled()
 			return
+
+
+func _handle_unit_command_hotkey(physical: Key, event: InputEventKey, hs: HotkeySettings) -> bool:
+	if physical == hs.unit_command_bindings.get("stop", -1):
+		var uac = _find_unit_actions_controller()
+		if uac:
+			uac.push_stop_command()
+		return true
+	if physical == hs.unit_command_bindings.get("hold_position", -1):
+		var uac = _find_unit_actions_controller()
+		if uac:
+			uac.push_hold_position_command()
+		return true
+	var mode_map := {
+		hs.unit_command_bindings.get("attack_move", -1): Enums.UnitCommandMode.ATTACK_MOVE,
+		hs.unit_command_bindings.get("move", -1): Enums.UnitCommandMode.MOVE,
+		hs.unit_command_bindings.get("patrol", -1): Enums.UnitCommandMode.PATROL,
+	}
+	if mode_map.has(physical):
+		var mode = mode_map[physical]
+		MatchSignals.active_command_mode = mode
+		MatchSignals.command_mode_changed.emit(mode)
+		return true
+	if physical == hs.unit_command_bindings.get("select_all_army", -1):
+		if event.shift_pressed:
+			_select_all_on_screen()
+		else:
+			_select_all_army()
+		return true
+	return false
+
+
+func _select_all_army() -> void:
+	MatchSignals.deselect_all_units.emit()
+	for unit in get_tree().get_nodes_in_group("controlled_units"):
+		if unit is Unit and unit.type != "Worker" and not unit is Structure:
+			var sel = unit.find_child("Selection")
+			if sel:
+				sel.select()
+
+
+func _select_all_on_screen() -> void:
+	MatchSignals.deselect_all_units.emit()
+	var camera = get_viewport().get_camera_3d()
+	if camera == null:
+		return
+	for unit in get_tree().get_nodes_in_group("controlled_units"):
+		if not unit is Unit or unit.type == "Worker" or unit is Structure:
+			continue
+		if not camera.is_position_behind(unit.global_position):
+			var screen_pos = camera.unproject_position(unit.global_position)
+			var vp_size = get_viewport().get_visible_rect().size
+			if (
+				screen_pos.x >= 0
+				and screen_pos.x <= vp_size.x
+				and screen_pos.y >= 0
+				and screen_pos.y <= vp_size.y
+			):
+				var sel = unit.find_child("Selection")
+				if sel:
+					sel.select()
+
+
+func _find_unit_actions_controller():
+	var match_node = find_parent("Match")
+	if match_node == null:
+		return null
+	for player in get_tree().get_nodes_in_group("players"):
+		var uac = player.find_child("UnitActionsController")
+		if uac != null:
+			return uac
+	return null
+
+
+func _on_command_mode_changed(mode: int) -> void:
+	if mode == Enums.UnitCommandMode.NORMAL:
+		Input.set_custom_mouse_cursor(null)
+	else:
+		(
+			Input
+			. set_custom_mouse_cursor(
+				_COMMAND_CURSOR,
+				Input.CURSOR_ARROW,
+				Vector2(16, 16),
+			)
+		)
+
+
+static func _structure_action_name_to_command(action_name: String) -> int:
+	match action_name:
+		"repair":
+			return Enums.CommandType.REPAIR_ENTITY
+		"sell":
+			return Enums.CommandType.SELL_ENTITY
+		"disable":
+			return Enums.CommandType.DISABLE_ENTITY
+	return -1
 
 
 static func _disconnect_all(sig: Signal) -> void:
@@ -1283,27 +1410,64 @@ func _build_unit_stats(unit) -> Dictionary:
 
 
 func _init_ability_buttons() -> void:
-	for i in range(unit_ability_container.get_child_count()):
-		var button: Button = unit_ability_container.get_child(i)
-		button.visible = false
-		button.pressed.connect(_on_ability_pressed.bind(i + 1))
-
-
-func _update_ability_buttons(_unit) -> void:
-	for i in range(unit_ability_container.get_child_count()):
-		var button: Button = unit_ability_container.get_child(i)
-		button.visible = true
-
-
-func _hide_ability_buttons() -> void:
+	# Hide the original placeholder ability buttons
 	for i in range(unit_ability_container.get_child_count()):
 		unit_ability_container.get_child(i).visible = false
 
+	# Create unit command buttons
+	var hs = Globals.hotkey_settings
+	for def in _COMMAND_DEFS:
+		var btn = Button.new()
+		btn.custom_minimum_size = Vector2(31, 31)
+		btn.text = hs.get_key_label(def["key"])
+		btn.visible = false
+		btn.pressed.connect(_on_command_button_pressed.bind(def["key"]))
+		btn.mouse_entered.connect(_on_command_button_hover.bind(def))
+		btn.mouse_exited.connect(_on_production_button_exit)
+		unit_ability_container.add_child(btn)
+		_command_buttons.append(btn)
 
-func _on_ability_pressed(ability_index: int) -> void:
-	if _portrait_unit == null or not is_instance_valid(_portrait_unit):
-		return
-	var uname: String = (
-		_portrait_unit.unit_name if "unit_name" in _portrait_unit else _portrait_unit.type
+
+func _update_ability_buttons(unit) -> void:
+	var is_structure = unit is Structure
+	for btn in _command_buttons:
+		btn.visible = not is_structure
+
+
+func _hide_ability_buttons() -> void:
+	for btn in _command_buttons:
+		btn.visible = false
+
+
+func _on_command_button_hover(def: Dictionary) -> void:
+	var hs = Globals.hotkey_settings
+	var hotkey = hs.get_key_label(def["key"])
+	(
+		tooltip
+		. set_content(
+			"%s  [%s]" % [def["name"], hotkey],
+			{"": def["desc"]},
+		)
 	)
-	print("ability %d of unit %s has been called" % [ability_index, uname])
+	tooltip.toggle(true)
+
+
+func _on_command_button_pressed(key: String) -> void:
+	match key:
+		"stop":
+			var uac = _find_unit_actions_controller()
+			if uac:
+				uac.push_stop_command()
+		"hold_position":
+			var uac = _find_unit_actions_controller()
+			if uac:
+				uac.push_hold_position_command()
+		"attack_move":
+			MatchSignals.active_command_mode = (Enums.UnitCommandMode.ATTACK_MOVE)
+			MatchSignals.command_mode_changed.emit(Enums.UnitCommandMode.ATTACK_MOVE)
+		"move":
+			MatchSignals.active_command_mode = (Enums.UnitCommandMode.MOVE)
+			MatchSignals.command_mode_changed.emit(Enums.UnitCommandMode.MOVE)
+		"patrol":
+			MatchSignals.active_command_mode = (Enums.UnitCommandMode.PATROL)
+			MatchSignals.command_mode_changed.emit(Enums.UnitCommandMode.PATROL)

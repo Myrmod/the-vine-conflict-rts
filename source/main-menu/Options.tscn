@@ -161,141 +161,289 @@ custom_minimum_size = Vector2(200, 0)
 layout_mode = 2
 
 [node name="Controls" type="ScrollContainer" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer" unique_id=1977574795]
-clip_contents = false
+custom_minimum_size = Vector2(0, 956)
 layout_mode = 2
 metadata/_tab_index = 2
 
-[node name="VBoxContainer" type="VBoxContainer" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Controls" unique_id=1964752525]
+[node name="MarginContainer" type="MarginContainer" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Controls" unique_id=615485444]
+layout_mode = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 10
+
+[node name="VBoxContainer" type="VBoxContainer" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Controls/MarginContainer" unique_id=1964752525]
 layout_mode = 2
 theme_override_constants/separation = 10
 
-[node name="PresetContainer" type="HBoxContainer" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Controls/VBoxContainer" unique_id=405178589]
+[node name="PresetContainer" type="HBoxContainer" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Controls/MarginContainer/VBoxContainer" unique_id=405178589]
 layout_mode = 2
 
-[node name="Label" type="Label" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Controls/VBoxContainer/PresetContainer" unique_id=1412147590]
+[node name="Label" type="Label" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Controls/MarginContainer/VBoxContainer/PresetContainer" unique_id=1412147590]
 layout_mode = 2
 text = "Hotkey Preset:"
 
-[node name="PresetSelect" type="OptionButton" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Controls/VBoxContainer/PresetContainer" unique_id=1534821611]
+[node name="PresetSelect" type="OptionButton" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Controls/MarginContainer/VBoxContainer/PresetContainer" unique_id=1534821611]
 layout_mode = 2
-item_count = 4
-popup/item_0/text = "Custom"
-popup/item_0/id = 0
-popup/item_1/text = "QWER"
-popup/item_1/id = 1
-popup/item_2/text = "Number Row"
-popup/item_2/id = 2
-popup/item_3/text = "Function Keys"
-popup/item_3/id = 3
 
-[node name="HintLabel" type="Label" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Controls/VBoxContainer" unique_id=1445082096]
+[node name="HintLabel" type="Label" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Controls/MarginContainer/VBoxContainer" unique_id=1445082096]
 layout_mode = 2
 text = "Click a slot button below, then press a key to rebind it."
 horizontal_alignment = 1
 
-[node name="HotkeyGrid" type="GridContainer" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Controls/VBoxContainer" unique_id=456057631]
+[node name="HotkeyGrid" type="GridContainer" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Controls/MarginContainer/VBoxContainer" unique_id=456057631]
 layout_mode = 2
 theme_override_constants/h_separation = 8
 theme_override_constants/v_separation = 8
 columns = 4
 
-[node name="Slot1Label" type="Label" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Controls/VBoxContainer/HotkeyGrid" unique_id=1569672719]
+[node name="Slot1Label" type="Label" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Controls/MarginContainer/VBoxContainer/HotkeyGrid" unique_id=1569672719]
 layout_mode = 2
 text = "F1:"
 
-[node name="Slot1Button" type="Button" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Controls/VBoxContainer/HotkeyGrid" unique_id=529909948]
+[node name="Slot1Button" type="Button" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Controls/MarginContainer/VBoxContainer/HotkeyGrid" unique_id=529909948]
 custom_minimum_size = Vector2(80, 30)
 layout_mode = 2
 
-[node name="Slot2Label" type="Label" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Controls/VBoxContainer/HotkeyGrid" unique_id=558523875]
+[node name="Slot2Label" type="Label" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Controls/MarginContainer/VBoxContainer/HotkeyGrid" unique_id=558523875]
 layout_mode = 2
 text = "F2:"
 
-[node name="Slot2Button" type="Button" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Controls/VBoxContainer/HotkeyGrid" unique_id=880887571]
+[node name="Slot2Button" type="Button" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Controls/MarginContainer/VBoxContainer/HotkeyGrid" unique_id=880887571]
 custom_minimum_size = Vector2(80, 30)
 layout_mode = 2
 
-[node name="Slot3Label" type="Label" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Controls/VBoxContainer/HotkeyGrid" unique_id=61621012]
+[node name="Slot3Label" type="Label" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Controls/MarginContainer/VBoxContainer/HotkeyGrid" unique_id=61621012]
 layout_mode = 2
 text = "F3:"
 
-[node name="Slot3Button" type="Button" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Controls/VBoxContainer/HotkeyGrid" unique_id=1562306558]
+[node name="Slot3Button" type="Button" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Controls/MarginContainer/VBoxContainer/HotkeyGrid" unique_id=1562306558]
 custom_minimum_size = Vector2(80, 30)
 layout_mode = 2
 
-[node name="Slot4Label" type="Label" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Controls/VBoxContainer/HotkeyGrid" unique_id=1682249025]
+[node name="Slot4Label" type="Label" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Controls/MarginContainer/VBoxContainer/HotkeyGrid" unique_id=1682249025]
 layout_mode = 2
 text = "F4:"
 
-[node name="Slot4Button" type="Button" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Controls/VBoxContainer/HotkeyGrid" unique_id=1569715374]
+[node name="Slot4Button" type="Button" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Controls/MarginContainer/VBoxContainer/HotkeyGrid" unique_id=1569715374]
 custom_minimum_size = Vector2(80, 30)
 layout_mode = 2
 
-[node name="Slot5Label" type="Label" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Controls/VBoxContainer/HotkeyGrid" unique_id=1882780994]
+[node name="Slot5Label" type="Label" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Controls/MarginContainer/VBoxContainer/HotkeyGrid" unique_id=1882780994]
 layout_mode = 2
 text = "F5:"
 
-[node name="Slot5Button" type="Button" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Controls/VBoxContainer/HotkeyGrid" unique_id=601979887]
+[node name="Slot5Button" type="Button" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Controls/MarginContainer/VBoxContainer/HotkeyGrid" unique_id=601979887]
 custom_minimum_size = Vector2(80, 30)
 layout_mode = 2
 
-[node name="Slot6Label" type="Label" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Controls/VBoxContainer/HotkeyGrid" unique_id=1859367116]
+[node name="Slot6Label" type="Label" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Controls/MarginContainer/VBoxContainer/HotkeyGrid" unique_id=1859367116]
 layout_mode = 2
 text = "F6:"
 
-[node name="Slot6Button" type="Button" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Controls/VBoxContainer/HotkeyGrid" unique_id=58080158]
+[node name="Slot6Button" type="Button" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Controls/MarginContainer/VBoxContainer/HotkeyGrid" unique_id=58080158]
 custom_minimum_size = Vector2(80, 30)
 layout_mode = 2
 
-[node name="Slot7Label" type="Label" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Controls/VBoxContainer/HotkeyGrid" unique_id=259489446]
+[node name="Slot7Label" type="Label" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Controls/MarginContainer/VBoxContainer/HotkeyGrid" unique_id=259489446]
 layout_mode = 2
 text = "F7:"
 
-[node name="Slot7Button" type="Button" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Controls/VBoxContainer/HotkeyGrid" unique_id=1709811355]
+[node name="Slot7Button" type="Button" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Controls/MarginContainer/VBoxContainer/HotkeyGrid" unique_id=1709811355]
 custom_minimum_size = Vector2(80, 30)
 layout_mode = 2
 
-[node name="Slot8Label" type="Label" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Controls/VBoxContainer/HotkeyGrid" unique_id=85886949]
+[node name="Slot8Label" type="Label" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Controls/MarginContainer/VBoxContainer/HotkeyGrid" unique_id=85886949]
 layout_mode = 2
 text = "F8:"
 
-[node name="Slot8Button" type="Button" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Controls/VBoxContainer/HotkeyGrid" unique_id=368889975]
+[node name="Slot8Button" type="Button" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Controls/MarginContainer/VBoxContainer/HotkeyGrid" unique_id=368889975]
 custom_minimum_size = Vector2(80, 30)
 layout_mode = 2
 
-[node name="Slot9Label" type="Label" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Controls/VBoxContainer/HotkeyGrid" unique_id=1014052404]
+[node name="Slot9Label" type="Label" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Controls/MarginContainer/VBoxContainer/HotkeyGrid" unique_id=1014052404]
 layout_mode = 2
 text = "F9:"
 
-[node name="Slot9Button" type="Button" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Controls/VBoxContainer/HotkeyGrid" unique_id=635225115]
+[node name="Slot9Button" type="Button" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Controls/MarginContainer/VBoxContainer/HotkeyGrid" unique_id=635225115]
 custom_minimum_size = Vector2(80, 30)
 layout_mode = 2
 
-[node name="Slot10Label" type="Label" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Controls/VBoxContainer/HotkeyGrid" unique_id=1965743821]
+[node name="Slot10Label" type="Label" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Controls/MarginContainer/VBoxContainer/HotkeyGrid" unique_id=1965743821]
 layout_mode = 2
 text = "F10:"
 
-[node name="Slot10Button" type="Button" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Controls/VBoxContainer/HotkeyGrid" unique_id=1163425589]
+[node name="Slot10Button" type="Button" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Controls/MarginContainer/VBoxContainer/HotkeyGrid" unique_id=1163425589]
 custom_minimum_size = Vector2(80, 30)
 layout_mode = 2
 
-[node name="Slot11Label" type="Label" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Controls/VBoxContainer/HotkeyGrid" unique_id=751710385]
+[node name="Slot11Label" type="Label" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Controls/MarginContainer/VBoxContainer/HotkeyGrid" unique_id=751710385]
 layout_mode = 2
 text = "F11:"
 
-[node name="Slot11Button" type="Button" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Controls/VBoxContainer/HotkeyGrid" unique_id=1052254372]
+[node name="Slot11Button" type="Button" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Controls/MarginContainer/VBoxContainer/HotkeyGrid" unique_id=1052254372]
 custom_minimum_size = Vector2(80, 30)
 layout_mode = 2
 
-[node name="Slot12Label" type="Label" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Controls/VBoxContainer/HotkeyGrid" unique_id=1111073505]
+[node name="Slot12Label" type="Label" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Controls/MarginContainer/VBoxContainer/HotkeyGrid" unique_id=1111073505]
 layout_mode = 2
 text = "F12:"
 
-[node name="Slot12Button" type="Button" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Controls/VBoxContainer/HotkeyGrid" unique_id=610800081]
+[node name="Slot12Button" type="Button" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Controls/MarginContainer/VBoxContainer/HotkeyGrid" unique_id=610800081]
+custom_minimum_size = Vector2(80, 30)
+layout_mode = 2
+
+[node name="TabsLabel" type="Label" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Controls/MarginContainer/VBoxContainer" unique_id=64220225]
+layout_mode = 2
+text = "Production Tabs"
+
+[node name="TabsGrid" type="GridContainer" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Controls/MarginContainer/VBoxContainer" unique_id=1131520408]
+layout_mode = 2
+theme_override_constants/h_separation = 8
+theme_override_constants/v_separation = 8
+columns = 4
+
+[node name="Tab1Label" type="Label" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Controls/MarginContainer/VBoxContainer/TabsGrid" unique_id=614039542]
+layout_mode = 2
+text = "Tab 1:"
+
+[node name="Tab1Button" type="Button" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Controls/MarginContainer/VBoxContainer/TabsGrid" unique_id=1061627172]
+custom_minimum_size = Vector2(80, 30)
+layout_mode = 2
+
+[node name="Tab2Label" type="Label" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Controls/MarginContainer/VBoxContainer/TabsGrid" unique_id=1080369611]
+layout_mode = 2
+text = "Tab 2:"
+
+[node name="Tab2Button" type="Button" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Controls/MarginContainer/VBoxContainer/TabsGrid" unique_id=2024804808]
+custom_minimum_size = Vector2(80, 30)
+layout_mode = 2
+
+[node name="Tab3Label" type="Label" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Controls/MarginContainer/VBoxContainer/TabsGrid" unique_id=1477816685]
+layout_mode = 2
+text = "Tab 3:"
+
+[node name="Tab3Button" type="Button" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Controls/MarginContainer/VBoxContainer/TabsGrid" unique_id=765047121]
+custom_minimum_size = Vector2(80, 30)
+layout_mode = 2
+
+[node name="Tab4Label" type="Label" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Controls/MarginContainer/VBoxContainer/TabsGrid" unique_id=613448995]
+layout_mode = 2
+text = "Tab 4:"
+
+[node name="Tab4Button" type="Button" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Controls/MarginContainer/VBoxContainer/TabsGrid" unique_id=1183647082]
+custom_minimum_size = Vector2(80, 30)
+layout_mode = 2
+
+[node name="Tab5Label" type="Label" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Controls/MarginContainer/VBoxContainer/TabsGrid" unique_id=1482306060]
+layout_mode = 2
+text = "Tab 5:"
+
+[node name="Tab5Button" type="Button" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Controls/MarginContainer/VBoxContainer/TabsGrid" unique_id=1777222896]
+custom_minimum_size = Vector2(80, 30)
+layout_mode = 2
+
+[node name="Tab6Label" type="Label" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Controls/MarginContainer/VBoxContainer/TabsGrid" unique_id=1808935259]
+layout_mode = 2
+text = "Tab 6:"
+
+[node name="Tab6Button" type="Button" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Controls/MarginContainer/VBoxContainer/TabsGrid" unique_id=905230343]
+custom_minimum_size = Vector2(80, 30)
+layout_mode = 2
+
+[node name="CommandsLabel" type="Label" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Controls/MarginContainer/VBoxContainer" unique_id=1733488525]
+layout_mode = 2
+text = "Unit Commands"
+
+[node name="CommandsGrid" type="GridContainer" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Controls/MarginContainer/VBoxContainer" unique_id=1875461837]
+layout_mode = 2
+theme_override_constants/h_separation = 8
+theme_override_constants/v_separation = 8
+columns = 4
+
+[node name="AttackMoveLabel" type="Label" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Controls/MarginContainer/VBoxContainer/CommandsGrid" unique_id=1363072745]
+layout_mode = 2
+text = "Attack Move:"
+
+[node name="AttackMoveButton" type="Button" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Controls/MarginContainer/VBoxContainer/CommandsGrid" unique_id=360514755]
+custom_minimum_size = Vector2(80, 30)
+layout_mode = 2
+
+[node name="StopLabel" type="Label" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Controls/MarginContainer/VBoxContainer/CommandsGrid" unique_id=22019605]
+layout_mode = 2
+text = "Stop:"
+
+[node name="StopButton" type="Button" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Controls/MarginContainer/VBoxContainer/CommandsGrid" unique_id=530689660]
+custom_minimum_size = Vector2(80, 30)
+layout_mode = 2
+
+[node name="HoldPositionLabel" type="Label" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Controls/MarginContainer/VBoxContainer/CommandsGrid" unique_id=603660102]
+layout_mode = 2
+text = "Hold Position:"
+
+[node name="HoldPositionButton" type="Button" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Controls/MarginContainer/VBoxContainer/CommandsGrid" unique_id=1553404660]
+custom_minimum_size = Vector2(80, 30)
+layout_mode = 2
+
+[node name="MoveLabel" type="Label" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Controls/MarginContainer/VBoxContainer/CommandsGrid" unique_id=122453124]
+layout_mode = 2
+text = "Move:"
+
+[node name="MoveButton" type="Button" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Controls/MarginContainer/VBoxContainer/CommandsGrid" unique_id=1962733229]
+custom_minimum_size = Vector2(80, 30)
+layout_mode = 2
+
+[node name="PatrolLabel" type="Label" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Controls/MarginContainer/VBoxContainer/CommandsGrid" unique_id=1123443390]
+layout_mode = 2
+text = "Patrol:"
+
+[node name="PatrolButton" type="Button" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Controls/MarginContainer/VBoxContainer/CommandsGrid" unique_id=1525870529]
+custom_minimum_size = Vector2(80, 30)
+layout_mode = 2
+
+[node name="SelectAllArmyLabel" type="Label" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Controls/MarginContainer/VBoxContainer/CommandsGrid" unique_id=1774031269]
+layout_mode = 2
+text = "Select All Army:"
+
+[node name="SelectAllArmyButton" type="Button" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Controls/MarginContainer/VBoxContainer/CommandsGrid" unique_id=1383276990]
+custom_minimum_size = Vector2(80, 30)
+layout_mode = 2
+
+[node name="ActionsLabel" type="Label" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Controls/MarginContainer/VBoxContainer" unique_id=1120097632]
+layout_mode = 2
+text = "Structure Actions"
+
+[node name="ActionsGrid" type="GridContainer" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Controls/MarginContainer/VBoxContainer" unique_id=608173047]
+layout_mode = 2
+theme_override_constants/h_separation = 8
+theme_override_constants/v_separation = 8
+columns = 4
+
+[node name="RepairLabel" type="Label" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Controls/MarginContainer/VBoxContainer/ActionsGrid" unique_id=594685688]
+layout_mode = 2
+text = "Repair:"
+
+[node name="RepairButton" type="Button" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Controls/MarginContainer/VBoxContainer/ActionsGrid" unique_id=1551272477]
+custom_minimum_size = Vector2(80, 30)
+layout_mode = 2
+
+[node name="SellLabel" type="Label" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Controls/MarginContainer/VBoxContainer/ActionsGrid" unique_id=1674826447]
+layout_mode = 2
+text = "Sell:"
+
+[node name="SellButton" type="Button" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Controls/MarginContainer/VBoxContainer/ActionsGrid" unique_id=1436529261]
+custom_minimum_size = Vector2(80, 30)
+layout_mode = 2
+
+[node name="DisableLabel" type="Label" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Controls/MarginContainer/VBoxContainer/ActionsGrid" unique_id=1712396486]
+layout_mode = 2
+text = "Disable:"
+
+[node name="DisableButton" type="Button" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Controls/MarginContainer/VBoxContainer/ActionsGrid" unique_id=1886857201]
 custom_minimum_size = Vector2(80, 30)
 layout_mode = 2
 
 [connection signal="pressed" from="PanelContainer/MarginContainer/VBoxContainer/HBoxContainer/Button" to="." method="_on_back_button_pressed"]
 [connection signal="item_selected" from="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Video/VBoxContainer/PanelContainer/MarginContainer/VBoxContainer/Screen" to="." method="_on_screen_item_selected"]
 [connection signal="pressed" from="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Video/VBoxContainer/PanelContainer2/MarginContainer/VBoxContainer/MouseMovementRestricted" to="." method="_on_mouse_movement_restricted_pressed"]
-[connection signal="item_selected" from="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Controls/VBoxContainer/PresetContainer/PresetSelect" to="." method="_on_preset_selected"]
+[connection signal="item_selected" from="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Controls/MarginContainer/VBoxContainer/PresetContainer/PresetSelect" to="." method="_on_preset_selected"]

@@ -1,34 +1,73 @@
 extends Control
 
+## Maps HotkeySettings slot names to scene button node names.
+const _SLOT_TO_NODE := {
+	"tab_1": "Tab1Button",
+	"tab_2": "Tab2Button",
+	"tab_3": "Tab3Button",
+	"tab_4": "Tab4Button",
+	"tab_5": "Tab5Button",
+	"tab_6": "Tab6Button",
+	"attack_move": "AttackMoveButton",
+	"stop": "StopButton",
+	"hold_position": "HoldPositionButton",
+	"move": "MoveButton",
+	"patrol": "PatrolButton",
+	"select_all_army": "SelectAllArmyButton",
+	"repair": "RepairButton",
+	"sell": "SellButton",
+	"disable": "DisableButton",
+}
+
+var _all_buttons: Dictionary = {}
+var _awaiting_slot: String = ""
+var _preset_names: Array[String] = []
+
 @onready var _screen = find_child("Screen")
 @onready var _mouse_movement_restricted = find_child("MouseMovementRestricted")
 @onready var _preset_select: OptionButton = find_child("PresetSelect")
-@onready var _hotkey_grid: GridContainer = find_child("HotkeyGrid")
-
-var _hotkey_buttons: Array[Button] = []
-var _awaiting_slot: String = ""
 
 
 func _ready():
 	_mouse_movement_restricted.button_pressed = (Globals.options.mouse_restricted)
 	_screen.selected = Globals.options.screen
-	_setup_hotkey_buttons()
+	_populate_preset_dropdown()
+	_setup_all_hotkey_buttons()
 	_refresh_hotkey_labels()
 
 
-func _setup_hotkey_buttons() -> void:
+func _populate_preset_dropdown() -> void:
+	var presets = HotkeySettings.get_presets()
+	_preset_names.clear()
+	_preset_select.clear()
+	_preset_select.add_item("Custom", 0)
+	var idx := 1
+	for preset_name in presets:
+		if preset_name == "Custom":
+			continue
+		_preset_names.append(preset_name)
+		_preset_select.add_item(preset_name, idx)
+		idx += 1
+
+
+func _setup_all_hotkey_buttons() -> void:
+	# Production grid slots (F1–F12)
 	for i in range(12):
 		var slot_name = HotkeySettings.SLOT_NAMES[i]
 		var btn: Button = find_child("Slot%dButton" % (i + 1))
-		_hotkey_buttons.append(btn)
 		btn.pressed.connect(_on_hotkey_slot_pressed.bind(slot_name, btn))
+		_all_buttons[slot_name] = btn
+	# Extra categories (tabs, commands, actions)
+	for slot_name in _SLOT_TO_NODE:
+		var btn: Button = find_child(_SLOT_TO_NODE[slot_name])
+		btn.pressed.connect(_on_hotkey_slot_pressed.bind(slot_name, btn))
+		_all_buttons[slot_name] = btn
 
 
 func _refresh_hotkey_labels() -> void:
 	var hs = Globals.hotkey_settings
-	for i in range(12):
-		var slot = HotkeySettings.SLOT_NAMES[i]
-		_hotkey_buttons[i].text = hs.get_key_label(slot)
+	for slot_name in _all_buttons:
+		_all_buttons[slot_name].text = hs.get_key_label(slot_name)
 
 
 func _on_hotkey_slot_pressed(slot: String, btn: Button) -> void:
@@ -44,7 +83,7 @@ func _unhandled_key_input(event: InputEvent) -> void:
 	if not event.pressed:
 		return
 	var key_event: InputEventKey = event
-	Globals.hotkey_settings.set_binding(_awaiting_slot, key_event.keycode)
+	Globals.hotkey_settings.set_binding(_awaiting_slot, key_event.physical_keycode)
 	Globals.hotkey_settings.save()
 	_awaiting_slot = ""
 	_refresh_hotkey_labels()
@@ -55,8 +94,7 @@ func _unhandled_key_input(event: InputEvent) -> void:
 func _on_preset_selected(index: int) -> void:
 	if index == 0:
 		return  # "Custom" — do nothing
-	var preset_names = HotkeySettings.get_presets().keys()
-	var preset_name = preset_names[index - 1]
+	var preset_name = _preset_names[index - 1]
 	Globals.hotkey_settings.apply_preset(preset_name)
 	Globals.hotkey_settings.save()
 	_refresh_hotkey_labels()

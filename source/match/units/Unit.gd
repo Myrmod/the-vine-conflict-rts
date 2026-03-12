@@ -46,6 +46,14 @@ var type:
 var id: int
 
 var _action_locked = false
+## When true, unit is "stopped" — no default idle action will be assigned.
+## Set by the STOP command, cleared when any explicit command is given.
+var _stopped: bool = false
+## Script to instantiate as the default idle action (e.g., WaitingForTargets).
+## Set by subclass _ready() or by UnitConstants default_idle_action_scene property.
+var default_idle_action_scene: Script = null
+
+const UnitCommandQueue = preload("res://source/match/units/UnitCommandQueue.gd")
 
 @onready var _match = find_parent("Match")
 
@@ -60,6 +68,10 @@ func _ready():
 	_setup_default_properties_from_constants()
 	assert(_safety_checks())
 	id = EntityRegistry.register(self)
+	# Add command queue for shift-queued orders
+	var queue = UnitCommandQueue.new()
+	queue.name = "UnitCommandQueue"
+	add_child(queue)
 
 
 func is_revealing():
@@ -220,3 +232,52 @@ func _setup_default_properties_from_constants():
 func _on_action_node_tree_exited(action_node):
 	assert(action_node == action, "unexpected action released")
 	action = null
+	_assign_default_action()
+
+
+## Assigns the default idle action if the unit has one and isn't stopped.
+## Called when an action completes (queue_free) and the unit becomes idle.
+func _assign_default_action():
+	if _stopped:
+		return
+	# Check command queue first — execute next queued order if available
+	var queue_node = get_node_or_null("UnitCommandQueue")
+	if queue_node != null and queue_node.size() > 0:
+		_execute_queued_command(queue_node.dequeue())
+		return
+	if default_idle_action_scene != null and action == null:
+		action = default_idle_action_scene.new()
+
+
+## Enqueue a command for later execution (shift-queue).
+func _enqueue_command(cmd_type: int, data: Dictionary) -> void:
+	var queue_node = get_node_or_null("UnitCommandQueue")
+	if queue_node != null:
+		queue_node.enqueue({"type": cmd_type, "data": data})
+
+
+## Execute a queued command by instantiating the appropriate action.
+func _execute_queued_command(cmd: Dictionary) -> void:
+	if cmd.is_empty():
+		return
+	_stopped = false
+	match cmd.type:
+		Enums.CommandType.MOVE:
+			action = Actions.Moving.new(cmd.data.pos)
+		Enums.CommandType.ATTACK_MOVE:
+			action = Actions.AttackMoving.new(cmd.data.pos)
+		Enums.CommandType.HOLD_POSITION:
+			action = Actions.HoldPosition.new()
+		Enums.CommandType.MOVE_NO_ATTACK:
+			_stopped = true
+			action = Actions.Moving.new(cmd.data.pos)
+		Enums.CommandType.PATROL:
+			var origin = cmd.data.get("patrol_origin", global_position)
+			action = Actions.Patrolling.new(origin, cmd.data.pos)
+		Enums.CommandType.STOP:
+			_stopped = true
+			var queue_node = get_node_or_null("UnitCommandQueue")
+			if queue_node != null:
+				queue_node.clear()
+		_:
+			push_warning("Unit: unknown queued command type %s" % cmd.type)

@@ -21,11 +21,14 @@ func update_shape_from_map_size(map_size: Vector2):
 
 
 func _on_input_event(_camera, event, _click_position, _click_normal, _shape_idx):
-	if (
-		event is InputEventMouseButton
-		and event.button_index == MOUSE_BUTTON_RIGHT
-		and event.pressed
-	):
+	if not event is InputEventMouseButton or not event.pressed:
+		return
+	# Right-click always targets terrain (standard move/interact)
+	# Left-click targets terrain only when a command mode is active (attack-move, move, patrol)
+	var is_right_click = event.button_index == MOUSE_BUTTON_RIGHT
+	var is_left_click = event.button_index == MOUSE_BUTTON_LEFT
+	var command_mode_active = MatchSignals.active_command_mode != Enums.UnitCommandMode.NORMAL
+	if is_right_click or (is_left_click and command_mode_active):
 		var camera = get_viewport().get_camera_3d()
 		var match_node = get_parent()
 		var map = match_node.map if match_node != null else null

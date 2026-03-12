@@ -26,7 +26,7 @@ func _ready():
 	MatchSignals.navigate_unit_to_rally_point.connect(_on_navigate_unit_to_rally_point)
 
 
-func _try_navigating_selected_units_towards_position(target_point):
+func _try_navigating_selected_units_towards_position(target_point, queued: bool = false):
 	# Filter selected units to find which ones can move to the target terrain position.
 	# Checks: unit belongs to human player, unit supports terrain movement, Moving action is applicable
 	var terrain_units_to_move = get_tree().get_nodes_in_group("selected_units").filter(
@@ -64,7 +64,10 @@ func _try_navigating_selected_units_towards_position(target_point):
 			"type": Enums.CommandType.MOVE,
 			"player_id": _player.id,
 			"data":
-			{"targets": new_unit_targets.map(func(t): return {"unit": t[0].id, "pos": t[1]})}
+			{
+				"targets": new_unit_targets.map(func(t): return {"unit": t[0].id, "pos": t[1]}),
+				"queued": queued,
+			}
 		}
 	)
 
@@ -300,8 +303,134 @@ func _try_setting_rally_point_to_unit(unit, target_unit):
 
 
 func _on_terrain_targeted(position):
-	_try_navigating_selected_units_towards_position(position)
+	var mode = MatchSignals.active_command_mode
+	if mode != Enums.UnitCommandMode.NORMAL:
+		_handle_command_mode_click(position, mode)
+		MatchSignals.active_command_mode = Enums.UnitCommandMode.NORMAL
+		MatchSignals.command_mode_changed.emit(Enums.UnitCommandMode.NORMAL)
+		return
+	var is_queued = Input.is_key_pressed(KEY_SHIFT)
+	_try_navigating_selected_units_towards_position(position, is_queued)
 	_try_setting_rally_points(position)
+
+
+func _handle_command_mode_click(position: Vector3, mode: int):
+	var is_queued = Input.is_key_pressed(KEY_SHIFT)
+	var movable_units = _get_movable_selected_units()
+	if movable_units.is_empty():
+		return
+	match mode:
+		Enums.UnitCommandMode.ATTACK_MOVE:
+			_push_positional_command(
+				Enums.CommandType.ATTACK_MOVE, movable_units, position, is_queued
+			)
+		Enums.UnitCommandMode.MOVE:
+			_push_positional_command(
+				Enums.CommandType.MOVE_NO_ATTACK, movable_units, position, is_queued
+			)
+		Enums.UnitCommandMode.PATROL:
+			_push_patrol_command(movable_units, position, is_queued)
+
+
+func _get_movable_selected_units() -> Array:
+	return get_tree().get_nodes_in_group("selected_units").filter(
+		func(unit):
+			return unit.is_in_group("controlled_units") and Actions.Moving.is_applicable(unit)
+	)
+
+
+func _push_positional_command(cmd_type: int, units: Array, target_point: Vector3, queued: bool):
+	var terrain_units = units.filter(
+		func(u): return u.get_nav_domain() == NavigationConstants.Domain.TERRAIN
+	)
+	var air_units = units.filter(
+		func(u): return u.get_nav_domain() == NavigationConstants.Domain.AIR
+	)
+	var targets = MatchUtils.Movement.crowd_moved_to_new_pivot(terrain_units, target_point)
+	targets += MatchUtils.Movement.crowd_moved_to_new_pivot(air_units, target_point)
+	CommandBus.push_command(
+		{
+			"tick": Match.tick + 1,
+			"type": cmd_type,
+			"player_id": _player.id,
+			"data":
+			{
+				"targets": targets.map(func(t): return {"unit": t[0].id, "pos": t[1]}),
+				"queued": queued,
+			}
+		}
+	)
+
+
+func _push_patrol_command(units: Array, target_point: Vector3, queued: bool):
+	var terrain_units = units.filter(
+		func(u): return u.get_nav_domain() == NavigationConstants.Domain.TERRAIN
+	)
+	var air_units = units.filter(
+		func(u): return u.get_nav_domain() == NavigationConstants.Domain.AIR
+	)
+	var targets = MatchUtils.Movement.crowd_moved_to_new_pivot(terrain_units, target_point)
+	targets += MatchUtils.Movement.crowd_moved_to_new_pivot(air_units, target_point)
+	# Patrol origin: use the crowd pivot of the selected units as point_a
+	var all_units = terrain_units + air_units
+	var origin = (
+		MatchUtils.Movement.calculate_aabb_crowd_pivot_yless(all_units)
+		if not all_units.is_empty()
+		else target_point
+	)
+	CommandBus.push_command(
+		{
+			"tick": Match.tick + 1,
+			"type": Enums.CommandType.PATROL,
+			"player_id": _player.id,
+			"data":
+			{
+				"targets": targets.map(func(t): return {"unit": t[0].id, "pos": t[1]}),
+				"patrol_origin": origin,
+				"queued": queued,
+			}
+		}
+	)
+
+
+func push_stop_command():
+	var selected = get_tree().get_nodes_in_group("selected_units").filter(
+		func(unit): return unit.is_in_group("controlled_units")
+	)
+	if selected.is_empty():
+		return
+	CommandBus.push_command(
+		{
+			"tick": Match.tick + 1,
+			"type": Enums.CommandType.STOP,
+			"player_id": _player.id,
+			"data":
+			{
+				"targets": selected.map(func(u): return {"unit": u.id}),
+			}
+		}
+	)
+
+
+func push_hold_position_command():
+	var selected = get_tree().get_nodes_in_group("selected_units").filter(
+		func(unit): return unit.is_in_group("controlled_units")
+	)
+	if selected.is_empty():
+		return
+	var is_queued = Input.is_key_pressed(KEY_SHIFT)
+	CommandBus.push_command(
+		{
+			"tick": Match.tick + 1,
+			"type": Enums.CommandType.HOLD_POSITION,
+			"player_id": _player.id,
+			"data":
+			{
+				"targets": selected.map(func(u): return {"unit": u.id}),
+				"queued": is_queued,
+			}
+		}
+	)
 
 
 func _on_unit_targeted(unit):

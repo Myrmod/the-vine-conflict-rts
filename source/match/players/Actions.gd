@@ -10,6 +10,10 @@ const CollectingResourcesSequentially = preload(
 const AutoAttacking = preload("res://source/match/units/actions/AutoAttacking.gd")
 const Constructing = preload("res://source/match/units/actions/Constructing.gd")
 const EntityIsQueued = preload("res://source/match/units/actions/EntityIsQueued.gd")
+const AttackMoving = preload("res://source/match/units/actions/AttackMoving.gd")
+const HoldPosition = preload("res://source/match/units/actions/HoldPosition.gd")
+const Patrolling = preload("res://source/match/units/actions/Patrolling.gd")
+const WaitingForTargets = preload("res://source/match/units/actions/WaitingForTargets.gd")
 
 # player actions
 const CastSupportPowerAction = preload(
