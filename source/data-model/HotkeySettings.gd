@@ -112,7 +112,7 @@ static func _ensure_preset_dir() -> void:
 		DirAccess.make_dir_recursive_absolute(PRESETS_DIR)
 
 	_seed_default_preset(
-		"Function Keys",
+		"FunctionKeys",
 		{
 			"F1": KEY_F1,
 			"F2": KEY_F2,
