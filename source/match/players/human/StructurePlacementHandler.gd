@@ -25,6 +25,8 @@ var _pending_structure_prototype = null
 var _pending_structure_placement_domains = []
 var _blueprint_rotating = false
 var _free_placement_mode = false
+var _off_field_deploy = false
+var _is_trickle = false
 
 @onready var _player = get_parent()
 @onready var _match = find_parent("Match")
@@ -104,7 +106,7 @@ func _blueprint_rotation_started():
 func _calculate_blueprint_position_validity():
 	if _active_bluprint_out_of_map():
 		return BlueprintPositionValidity.OUT_OF_MAP
-	if not _player_has_enough_resources():
+	if not _off_field_deploy and not _is_trickle and not _player_has_enough_resources():
 		return BlueprintPositionValidity.NOT_ENOUGH_RESOURCES
 	if (
 		FeatureFlags.use_grid_based_placement
@@ -273,14 +275,14 @@ func _cancel_structure_placement():
 		_active_blueprint_node = null
 		# Reset to grid mode for next placement
 		_free_placement_mode = false
+		_off_field_deploy = false
+		_is_trickle = false
 		MatchSignals.structure_placement_ended.emit()
 
 
 func _finish_structure_placement():
-	if _player_has_enough_resources():
-		# Resources are NOT deducted here — Match._execute_command() handles that
-		# when STRUCTURE_PLACED executes. This ensures replay determinism: the same
-		# resource deduction happens at the exact same tick during playback.
+	var can_place = _off_field_deploy or _is_trickle or _player_has_enough_resources()
+	if can_place:
 		(
 			CommandBus
 			. push_command(
@@ -293,6 +295,8 @@ func _finish_structure_placement():
 						"structure_prototype": _pending_structure_prototype.resource_path,
 						"transform": _active_blueprint_node.global_transform,
 						"self_constructing": true,
+						"off_field_deploy": _off_field_deploy,
+						"trickle": _is_trickle,
 					}
 				}
 			)
@@ -373,4 +377,8 @@ func _snap_rotation_to_90_degrees():
 
 
 func _on_structure_placement_request(structure_prototype):
+	_off_field_deploy = MatchSignals.pending_off_field_deploy
+	_is_trickle = MatchSignals.pending_trickle
+	MatchSignals.pending_off_field_deploy = false
+	MatchSignals.pending_trickle = false
 	_start_structure_placement(structure_prototype)

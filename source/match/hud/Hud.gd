@@ -177,6 +177,8 @@ func set_timer():
 		game_timer_richtext_label.text = Utils.seconds_to_time(
 			Match.tick / MatchConstants.TICK_RATE
 		)
+	# Refresh grid displays periodically so trickle/off-field progress is visible
+	_update_all_grid_button_displays()
 
 
 func set_replay_mode(mode: bool) -> void:
@@ -472,9 +474,7 @@ func _populate_production_grid(grid_data: Dictionary, tab_type: int) -> void:
 func _on_production_button_pressed(scene_path: String) -> void:
 	var is_structure := UnitConstants.STRUCTURE_BLUEPRINTS.has(scene_path)
 	if is_structure:
-		var prototype = load(scene_path)
-		if prototype:
-			MatchSignals.place_structure.emit(prototype)
+		_try_produce_structure(scene_path)
 	else:
 		if _active_producers.is_empty():
 			return
@@ -485,6 +485,75 @@ func _on_production_button_pressed(scene_path: String) -> void:
 		ProductionQueue._generate_unit_production_command(
 			producer.id, scene_path, producer.player.id
 		)
+
+
+## Shared entry-point for placing / queueing a structure.
+## Handles OFF_FIELD queuing, ON_FIELD direct placement, and
+## the max_concurrent_structures limit for both modes.
+func _try_produce_structure(scene_path: String) -> void:
+	if _active_producers.is_empty():
+		return
+	# If a paused under-construction structure exists, resume it first.
+	if _resume_paused_structure(scene_path):
+		return
+	var idx := clampi(_active_producer_index, 0, _active_producers.size() - 1)
+	var producer = _active_producers[idx]
+	if producer == null or not is_instance_valid(producer):
+		return
+	var prod_type: int = (
+		producer.get("structure_production_type")
+		if producer != null
+		else Enums.StructureProductionType.CONSTRUCT_ON_FIELD_AND_TRICKLE
+	)
+	var max_conc: int = producer.get("max_concurrent_structures") if producer != null else 1
+	# Determine the production tab of the structure being placed
+	var target_tab: int = UnitConstants.DEFAULT_PROPERTIES.get(scene_path, {}).get(
+		"production_tab_type", -1
+	)
+	if _is_off_field(prod_type):
+		# OFF_FIELD: deploy a ready structure, or queue for production
+		if producer._ready_structures.has(scene_path):
+			producer._ready_structures.erase(scene_path)
+			MatchSignals.pending_off_field_deploy = true
+			MatchSignals.pending_trickle = false
+			var prototype = load(scene_path)
+			if prototype:
+				MatchSignals.place_structure.emit(prototype)
+		else:
+			var in_progress := 0
+			if producer.production_queue != null:
+				in_progress += (producer.production_queue.structure_count_in_queue_for_tab(
+					target_tab
+				))
+			for rs in producer._ready_structures:
+				var rs_tab = UnitConstants.DEFAULT_PROPERTIES.get(rs, {}).get(
+					"production_tab_type", -1
+				)
+				if rs_tab == target_tab:
+					in_progress += 1
+			if in_progress < max_conc and producer.production_queue != null:
+				ProductionQueue._generate_unit_production_command(
+					producer.id, scene_path, producer.player.id
+				)
+	else:
+		# ON_FIELD: enforce concurrent limit per tab, then place
+		var under_construction_count := 0
+		for unit in get_tree().get_nodes_in_group("controlled_units"):
+			if not (unit is Structure and unit.is_under_construction()):
+				continue
+			var upath: String = unit.scene_file_path
+			var utab = UnitConstants.DEFAULT_PROPERTIES.get(upath, {}).get(
+				"production_tab_type", -1
+			)
+			if utab == target_tab:
+				under_construction_count += 1
+		if under_construction_count < max_conc:
+			var is_trickle := _is_trickle(prod_type)
+			MatchSignals.pending_trickle = is_trickle
+			MatchSignals.pending_off_field_deploy = false
+			var prototype = load(scene_path)
+			if prototype:
+				MatchSignals.place_structure.emit(prototype)
 
 
 func _unhandled_key_input(event: InputEvent) -> void:
@@ -635,6 +704,67 @@ func _update_all_grid_button_displays() -> void:
 		_update_grid_button_queue_display(button, scene_path)
 
 
+func _update_structure_slot_display(
+	time_label: Label, count_label: Label, scene_path: String
+) -> void:
+	# Check for OFF_FIELD production in the active producer's queue
+	if not _active_producers.is_empty():
+		var pidx := clampi(_active_producer_index, 0, _active_producers.size() - 1)
+		var producer = _active_producers[pidx]
+		if producer != null and is_instance_valid(producer):
+			var prod_type: int = (
+				producer.get("structure_production_type")
+				if producer != null
+				else Enums.StructureProductionType.CONSTRUCT_ON_FIELD_AND_TRICKLE
+			)
+			if _is_off_field(prod_type):
+				if producer._ready_structures.has(scene_path):
+					time_label.text = tr("READY")
+					time_label.visible = true
+					count_label.visible = false
+					return
+				if producer.production_queue != null:
+					for el in producer.production_queue.get_elements():
+						if el.unit_prototype.resource_path == scene_path:
+							var pct := int(el.progress() * 100.0)
+							time_label.text = "%d%%" % pct
+							time_label.visible = true
+							count_label.visible = false
+							return
+				time_label.visible = false
+				count_label.visible = false
+				return
+
+	# ON_FIELD: check under-construction structures in the world
+	var building_count := 0
+	var best_progress := 0.0
+	var any_paused := false
+	for unit in get_tree().get_nodes_in_group("controlled_units"):
+		if not unit is Structure:
+			continue
+		var unit_scene: String = unit.get_script().resource_path.replace(".gd", ".tscn")
+		if unit_scene != scene_path:
+			continue
+		if unit.is_under_construction():
+			building_count += 1
+			if unit.is_construction_paused:
+				any_paused = true
+			if unit.construction_progress > best_progress:
+				best_progress = unit.construction_progress
+	if building_count > 0:
+		var pct := int(best_progress * 100.0)
+		time_label.text = ("%d%% ||" % pct if any_paused else "%d%%" % pct)
+		time_label.visible = true
+		if building_count > 1:
+			count_label.text = "x%d" % building_count
+			count_label.visible = true
+		else:
+			count_label.visible = false
+		return
+	time_label.visible = false
+	count_label.visible = false
+
+
 func _update_grid_button_queue_display(button: Button, scene_path: String) -> void:
 	var time_label = button.get_node_or_null("TimeLabel")
 	var count_label = button.get_node_or_null("CountLabel")
@@ -647,33 +777,7 @@ func _update_grid_button_queue_display(button: Button, scene_path: String) -> vo
 
 	# ── Construction progress for structure slots ──
 	if UnitConstants.STRUCTURE_BLUEPRINTS.has(scene_path):
-		var building_count := 0
-		var best_progress := 0.0
-		var any_paused := false
-		for unit in get_tree().get_nodes_in_group("controlled_units"):
-			if not unit is Structure:
-				continue
-			var unit_scene: String = unit.get_script().resource_path.replace(".gd", ".tscn")
-			if unit_scene != scene_path:
-				continue
-			if unit.is_under_construction():
-				building_count += 1
-				if unit.is_construction_paused:
-					any_paused = true
-				if unit.construction_progress > best_progress:
-					best_progress = unit.construction_progress
-		if building_count > 0:
-			var pct := int(best_progress * 100.0)
-			time_label.text = ("%d%% ||" % pct if any_paused else "%d%%" % pct)
-			time_label.visible = true
-			if building_count > 1:
-				count_label.text = "x%d" % building_count
-				count_label.visible = true
-			else:
-				count_label.visible = false
-			return
-		time_label.visible = false
-		count_label.visible = false
+		_update_structure_slot_display(time_label, count_label, scene_path)
 		return
 
 	# ── Production queue display for unit slots ──
@@ -721,11 +825,7 @@ func _on_structure_grid_button_gui_input(event: InputEvent, scene_path: String) 
 	if _active_producers.is_empty():
 		return
 	if event.button_index == MOUSE_BUTTON_LEFT:
-		# If a paused under-construction structure exists, resume it
-		# instead of placing a new one.
-		if _resume_paused_structure(scene_path):
-			return
-		_on_production_button_pressed(scene_path)
+		_try_produce_structure(scene_path)
 	elif event.button_index == MOUSE_BUTTON_RIGHT:
 		_cancel_building_structure(scene_path)
 
@@ -765,7 +865,40 @@ func _resume_paused_structure(scene_path: String) -> bool:
 
 
 func _cancel_building_structure(scene_path: String) -> void:
-	# Collect all under-construction structures of this type.
+	# Check if the active producer uses OFF_FIELD mode
+	if not _active_producers.is_empty():
+		var idx := clampi(_active_producer_index, 0, _active_producers.size() - 1)
+		var producer = _active_producers[idx]
+		if producer != null and is_instance_valid(producer):
+			var prod_type: int = (
+				producer.get("structure_production_type")
+				if producer != null
+				else Enums.StructureProductionType.CONSTRUCT_ON_FIELD_AND_TRICKLE
+			)
+			if _is_off_field(prod_type):
+				# OFF_FIELD: cancel from ready list or production queue
+				if producer._ready_structures.has(scene_path):
+					producer._ready_structures.erase(scene_path)
+					_update_all_grid_button_displays()
+					return
+				if producer.production_queue != null:
+					for el in producer.production_queue.get_elements():
+						if el.unit_prototype.resource_path == scene_path:
+							(
+								CommandBus
+								. push_command(
+									{
+										"tick": Match.tick + 1,
+										"type": Enums.CommandType.ENTITY_PRODUCTION_CANCELED,
+										"player_id": producer.player.id,
+										"data": {"entity_id": producer.id, "unit_type": scene_path},
+									}
+								)
+							)
+							return
+				return
+
+	# ON_FIELD: pause/cancel structures on the map
 	var unpaused: Array = []
 	var paused: Array = []
 	for unit in get_tree().get_nodes_in_group("controlled_units"):
@@ -981,6 +1114,28 @@ func _check_structure_requirements(entry: Dictionary) -> bool:
 	return true
 
 
+## Returns true if the production type is OFF_FIELD (structure built in queue before placement).
+static func _is_off_field(prod_type) -> bool:
+	return (
+		prod_type
+		in [
+			Enums.StructureProductionType.CONSTRUCT_OFF_FIELD_AND_TRICKLE,
+			Enums.StructureProductionType.CONSTRUCT_OFF_FIELD_AND_DONT_TRICKLE,
+		]
+	)
+
+
+## Returns true if the production type uses trickle cost.
+static func _is_trickle(prod_type) -> bool:
+	return (
+		prod_type
+		in [
+			Enums.StructureProductionType.CONSTRUCT_ON_FIELD_AND_TRICKLE,
+			Enums.StructureProductionType.CONSTRUCT_OFF_FIELD_AND_TRICKLE,
+		]
+	)
+
+
 # ── CONTROL GROUP HUD ──────────────────────────────────────────────────────
 
 
@@ -1081,9 +1236,13 @@ func _on_portrait_hover() -> void:
 	if _portrait_unit == null or not is_instance_valid(_portrait_unit):
 		return
 	var stats := _build_unit_stats(_portrait_unit)
-	var title: String = (
-		_portrait_unit.unit_name if "unit_name" in _portrait_unit else _portrait_unit.type
-	)
+	var title: String = ""
+	if "unit_name" in _portrait_unit:
+		title = _portrait_unit.unit_name
+	elif "type" in _portrait_unit:
+		title = _portrait_unit.type
+	else:
+		title = _portrait_unit.name
 	tooltip.set_content(title, stats)
 	tooltip.toggle(true)
 

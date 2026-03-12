@@ -17,6 +17,16 @@ const SELL_BAR_SCENE = preload("res://source/match/units/traits/SellBar.tscn")
 ## Set from Units.DEFAULT_PROPERTIES via _setup_default_properties_from_constants().
 var produces: Array = []
 
+## How structures produced by this building are constructed.
+## Only meaningful on structures that produce STRUCTURE tab items (e.g. CommandCenter).
+var structure_production_type: int = Enums.StructureProductionType.CONSTRUCT_ON_FIELD_AND_TRICKLE
+
+## Maximum number of structures that can be produced concurrently.
+var max_concurrent_structures: int = 1
+
+## Completed off-field structures waiting to be placed (scene paths).
+var _ready_structures: Array = []
+
 ## Energy this structure provides when constructed (e.g. PowerPlant).
 var energy_provided: int = 0
 ## Energy this structure requires when constructed.
@@ -38,6 +48,11 @@ var _construction_progress = 1.0
 var _self_constructing = false
 var _self_construction_speed = 0.0
 
+## Trickle cost state — set by Match.gd for ON_FIELD+TRICKLE structures.
+## When non-empty, resources are deducted proportionally during construction.
+var _trickle_cost: Dictionary = {}
+var _trickle_cost_deducted: float = 0.0
+
 ## Public read access to construction progress (0.0 → 1.0).
 var construction_progress: float:
 	get:
@@ -58,7 +73,6 @@ func _ready():
 	super()
 	var map = MatchGlobal.map
 	if map == null:
-		push_error("Structure: MatchGlobal.map is null")
 		return
 
 	_occupied_cell = map.world_to_cell(global_position)
@@ -74,7 +88,11 @@ func _process(delta):
 		and not is_construction_paused
 		and _has_active_structure_producer()
 	):
-		construct(delta * _self_construction_speed)
+		var progress = delta * _self_construction_speed
+		if not _trickle_cost.is_empty():
+			if not _try_deduct_trickle(progress):
+				return
+		construct(progress)
 
 
 func _on_tick_advanced() -> void:
@@ -106,6 +124,32 @@ func mark_as_under_construction(self_constructing = false):
 	hp = 1
 
 
+## Deduct the trickle share of construction cost for the given progress fraction.
+## Returns false if the player can't afford it (construction should pause).
+func _try_deduct_trickle(progress: float) -> bool:
+	if player == null:
+		return true
+	var target_progress = minf(_construction_progress + progress, 1.0)
+	# Check affordability first
+	for key in _trickle_cost:
+		var total_for_key: int = _trickle_cost[key]
+		var already: int = int(_trickle_cost_deducted * total_for_key)
+		var wanted: int = int(target_progress * total_for_key)
+		var delta_cost: int = wanted - already
+		if delta_cost > 0 and not player.has_resources({key: delta_cost}):
+			return false
+	# Deduct
+	for key in _trickle_cost:
+		var total_for_key: int = _trickle_cost[key]
+		var already: int = int(_trickle_cost_deducted * total_for_key)
+		var wanted: int = int(target_progress * total_for_key)
+		var delta_cost: int = wanted - already
+		if delta_cost > 0:
+			player.subtract_resources({key: delta_cost})
+	_trickle_cost_deducted = target_progress
+	return true
+
+
 func construct(progress):
 	assert(is_under_construction(), "structure must be under construction")
 
@@ -124,10 +168,12 @@ func pause_construction() -> void:
 
 
 func cancel_construction():
-	var scene_path = get_script().resource_path.replace(".gd", ".tscn")
-	var construction_cost = UnitConstants.DEFAULT_PROPERTIES[scene_path]["costs"]
-	player.add_resources(construction_cost, Enums.ResourceType.CREDITS)
-	# Unregister before freeing so EntityRegistry doesn't hold stale references
+	# Only refund for non-trickle (upfront cost) builds.
+	# Trickle builds only deducted what was spent — nothing to refund.
+	if _trickle_cost.is_empty():
+		var scene_path = get_script().resource_path.replace(".gd", ".tscn")
+		var construction_cost = UnitConstants.DEFAULT_PROPERTIES[scene_path]["costs"]
+		player.add_resources(construction_cost, Enums.ResourceType.CREDITS)
 	EntityRegistry.unregister(self)
 	queue_free()
 

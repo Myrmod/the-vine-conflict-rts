@@ -129,9 +129,9 @@ func _serialize_players(players: Array[PlayerSettings]) -> Array:
 	return serialized
 
 
-func _restore_players(players_data: Array) -> Array[Resource]:
+func _restore_players(players_data: Array) -> Array[PlayerSettings]:
 	# Convert player dictionaries back to PlayerSettings Resource objects
-	var restored_players: Array[Resource] = []
+	var restored_players: Array[PlayerSettings] = []
 	for index in range(players_data.size()):
 		var player_data = players_data[index]
 		var player_settings = PlayerSettings.new()

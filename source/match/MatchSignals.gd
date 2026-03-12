@@ -42,3 +42,8 @@ var current_placement_domains: Array = []
 
 ## Currently active structure action type, or -1 if none.
 var current_structure_action: int = -1
+
+## Set by Hud before emitting place_structure so StructurePlacementHandler
+## knows whether this is an off-field deploy or a trickle placement.
+var pending_off_field_deploy: bool = false
+var pending_trickle: bool = false

@@ -18,6 +18,9 @@ class ProductionQueueElement:
 		set(value):
 			paused = value
 			emit_changed()
+	## When non-empty, cost trickles over build_time instead of being deducted upfront.
+	var trickle_cost: Dictionary = {}
+	var trickle_deducted: float = 0.0
 
 	func progress():
 		return (time_total - time_left) / time_total
@@ -52,6 +55,14 @@ func _process(delta):
 			break
 	if current_queue_element == null:
 		return
+	# Trickle cost: deduct proportional resources before progressing
+	if not current_queue_element.trickle_cost.is_empty():
+		var new_time = max(0.0, current_queue_element.time_left - delta)
+		var target_progress = (
+			(current_queue_element.time_total - new_time) / current_queue_element.time_total
+		)
+		if not _try_deduct_queue_trickle(current_queue_element, target_progress):
+			return  # can't afford, pause production
 	current_queue_element.time_left = max(0.0, current_queue_element.time_left - delta)
 	if current_queue_element.time_left == 0.0:
 		_remove_element(current_queue_element)
@@ -67,19 +78,20 @@ func get_elements():
 
 
 func produce(unit_prototype, _ignore_limit = false):
-	var production_cost = UnitConstants.DEFAULT_PROPERTIES[unit_prototype.resource_path]["costs"]
-	if not _unit.player.has_resources(production_cost):
-		MatchSignals.not_enough_resources_for_production.emit(_unit.player)
-		return
-	_unit.player.subtract_resources(production_cost)
+	var scene_path = unit_prototype.resource_path
+	var production_cost = UnitConstants.DEFAULT_PROPERTIES[scene_path]["costs"]
+	var is_trickle = _is_off_field_trickle(scene_path)
+	if not is_trickle:
+		if not _unit.player.has_resources(production_cost):
+			MatchSignals.not_enough_resources_for_production.emit(_unit.player)
+			return
+		_unit.player.subtract_resources(production_cost)
 	var queue_element = ProductionQueueElement.new()
 	queue_element.unit_prototype = unit_prototype
-	queue_element.time_total = (
-		UnitConstants.DEFAULT_PROPERTIES[unit_prototype.resource_path]["build_time"]
-	)
-	queue_element.time_left = (
-		UnitConstants.DEFAULT_PROPERTIES[unit_prototype.resource_path]["build_time"]
-	)
+	queue_element.time_total = (UnitConstants.DEFAULT_PROPERTIES[scene_path]["build_time"])
+	queue_element.time_left = (UnitConstants.DEFAULT_PROPERTIES[scene_path]["build_time"])
+	if is_trickle:
+		queue_element.trickle_cost = production_cost.duplicate()
 	_enqueue_element(queue_element)
 	MatchSignals.unit_production_started.emit(unit_prototype, _unit)
 
@@ -94,8 +106,10 @@ func cancel(element):
 		return
 	var type_path = element.unit_prototype.resource_path
 	var type_is_paused = element.paused
-	var production_cost = UnitConstants.DEFAULT_PROPERTIES[type_path]["costs"]
-	_unit.player.add_resources(production_cost, Enums.ResourceType.CREDITS)
+	# Only refund for non-trickle elements (trickle only deducted what was spent)
+	if element.trickle_cost.is_empty():
+		var production_cost = UnitConstants.DEFAULT_PROPERTIES[type_path]["costs"]
+		_unit.player.add_resources(production_cost, Enums.ResourceType.CREDITS)
 	_remove_element(element)
 	# If the cancelled element's type was paused and a new element becomes the
 	# front, pause it so production does not auto-continue.
@@ -127,6 +141,12 @@ func _remove_element(element):
 
 
 func _finalize_production(former_queue_element):
+	var scene_path = former_queue_element.unit_prototype.resource_path
+	# Off-field structures: add to ready list instead of spawning
+	if _is_off_field_structure(scene_path):
+		_unit._ready_structures.append(scene_path)
+		MatchSignals.unit_production_finished.emit(null, _unit)
+		return
 	var produced_unit = former_queue_element.unit_prototype.instantiate()
 	var placement_position = (
 		UnitPlacementUtils
@@ -158,3 +178,67 @@ func _finalize_production(former_queue_element):
 	var rally_point = _unit.find_child("RallyPoint")
 	if rally_point != null:
 		MatchSignals.navigate_unit_to_rally_point.emit(produced_unit, rally_point)
+
+
+## Returns true if the given scene_path is a structure produced off-field by this producer.
+func _is_off_field_structure(scene_path: String) -> bool:
+	if not UnitConstants.STRUCTURE_BLUEPRINTS.has(scene_path):
+		return false
+	if _unit == null:
+		return false
+	var prod_type = _unit.get("structure_production_type")
+	if prod_type == null:
+		return false
+	return (
+		prod_type
+		in [
+			Enums.StructureProductionType.CONSTRUCT_OFF_FIELD_AND_TRICKLE,
+			Enums.StructureProductionType.CONSTRUCT_OFF_FIELD_AND_DONT_TRICKLE,
+		]
+	)
+
+
+## Returns true if the given scene_path is an off-field structure that should trickle cost.
+func _is_off_field_trickle(scene_path: String) -> bool:
+	if not UnitConstants.STRUCTURE_BLUEPRINTS.has(scene_path):
+		return false
+	if _unit == null:
+		return false
+	var prod_type = _unit.get("structure_production_type")
+	return prod_type == Enums.StructureProductionType.CONSTRUCT_OFF_FIELD_AND_TRICKLE
+
+
+## Deduct trickle share of cost for a queue element. Returns false if can't afford.
+func _try_deduct_queue_trickle(element: ProductionQueueElement, target_progress: float) -> bool:
+	if _unit == null or _unit.player == null:
+		return true
+	for key in element.trickle_cost:
+		var total_for_key: int = element.trickle_cost[key]
+		var already: int = int(element.trickle_deducted * total_for_key)
+		var wanted: int = int(target_progress * total_for_key)
+		var delta_cost: int = wanted - already
+		if delta_cost > 0 and not _unit.player.has_resources({key: delta_cost}):
+			return false
+	for key in element.trickle_cost:
+		var total_for_key: int = element.trickle_cost[key]
+		var already: int = int(element.trickle_deducted * total_for_key)
+		var wanted: int = int(target_progress * total_for_key)
+		var delta_cost: int = wanted - already
+		if delta_cost > 0:
+			_unit.player.subtract_resources({key: delta_cost})
+	element.trickle_deducted = target_progress
+	return true
+
+
+## Returns the number of structure elements in the queue whose
+## production_tab_type matches the given tab.
+func structure_count_in_queue_for_tab(tab: int) -> int:
+	var count := 0
+	for el in _queue:
+		var path: String = el.unit_prototype.resource_path
+		if not UnitConstants.STRUCTURE_BLUEPRINTS.has(path):
+			continue
+		var props = UnitConstants.DEFAULT_PROPERTIES.get(path, {})
+		if props.get("production_tab_type", -1) == tab:
+			count += 1
+	return count

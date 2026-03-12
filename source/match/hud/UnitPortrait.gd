@@ -24,7 +24,7 @@ func show_unit(unit: Node3D) -> void:
 	var r: float = BASE_RADIUS
 	if "radius" in unit and unit.radius != null:
 		r = unit.radius
-	_size_scale = r / BASE_RADIUS
+	_size_scale = maxf(r / BASE_RADIUS, 0.01)
 	_local_camera.size = BASE_SIZE * _size_scale
 	_update_camera()
 
@@ -38,8 +38,12 @@ func _update_camera() -> void:
 		return
 	var pos := _portrait_unit.global_position
 	var dir := CAM_OFFSET.normalized()
-	_local_camera.global_position = (pos + dir * BASE_DIST * _size_scale)
-	_local_camera.look_at(pos + Vector3(0, 0.15 * _size_scale, 0))
+	var cam_pos := pos + dir * BASE_DIST * _size_scale
+	var look_target := pos + Vector3(0, 0.15 * _size_scale, 0)
+	if cam_pos.is_equal_approx(look_target):
+		return
+	_local_camera.global_position = cam_pos
+	_local_camera.look_at(look_target)
 
 
 func _process(_delta: float) -> void:

@@ -155,6 +155,14 @@ func _resolve_player(player_id: int, context: String):
 
 # Verify that a unit belongs to the commanding player. Returns true if valid.
 func _verify_unit_ownership(unit, player_id: int, context: String) -> bool:
+	if not "player" in unit or unit.player == null:
+		push_warning(
+			(
+				"%s: entity %s has no player (is %s)"
+				% [context, unit.id, unit.get_script().resource_path.get_file()]
+			)
+		)
+		return false
 	if unit.player.id != player_id:
 		push_warning(
 			(
@@ -326,9 +334,11 @@ func _execute_command(cmd: Dictionary):
 				unit.action = Actions.Constructing.new(structure)
 
 		# ── STRUCTURE PLACEMENT ───────────────────────────────────────
-		# Places a new structure on the map. Resources are deducted HERE — not by the producer.
-		# This ensures replay determinism: during replay the same resource deduction happens
-		# at the same tick regardless of which controller originally requested it.
+		# Places a new structure on the map. Cost handling depends on the
+		# structure_production_type of the producing structure:
+		#   TRICKLE:       no upfront cost — structure deducts resources over build_time
+		#   DONT_TRICKLE:  full cost deducted here before spawning
+		#   OFF_FIELD:     cost already paid during queue construction; quick 0.5 s build
 		Enums.CommandType.STRUCTURE_PLACED:
 			var player = _resolve_player(cmd.player_id, "STRUCTURE_PLACED")
 			if player == null:
@@ -338,28 +348,48 @@ func _execute_command(cmd: Dictionary):
 				push_error("STRUCTURE_PLACED: cannot load %s" % cmd.data.structure_prototype)
 				return
 			var self_constructing = cmd.data.get("self_constructing", false)
-			# Deduct construction cost (the single authority for resource changes)
+			var off_field_deploy = cmd.data.get("off_field_deploy", false)
+			var is_trickle = cmd.data.get("trickle", false)
 			var construction_cost = (
 				UnitConstants
 				. DEFAULT_PROPERTIES
 				. get(cmd.data.structure_prototype, {})
 				. get("costs", null)
 			)
-			if construction_cost != null:
-				if not player.has_resources(construction_cost):
-					# This is expected in a tick-based system: the AI checks resources before queuing
-					# the command, but another command may have spent them by the time this executes.
-					push_warning(
-						(
-							"STRUCTURE_PLACED: player %s cannot afford %s"
-							% [player.id, cmd.data.structure_prototype]
+			if off_field_deploy:
+				# Cost already handled during queue production. Deploy with quick build.
+				var unit = structure_prototype.instantiate()
+				MatchSignals.setup_and_spawn_unit.emit(unit, cmd.data.transform, player, true)
+				if unit is Structure:
+					unit._self_construction_speed = 2.0  # 0.5 s build
+			elif is_trickle:
+				# ON_FIELD + TRICKLE: no upfront cost — structure trickles during construction
+				var unit = structure_prototype.instantiate()
+				if unit is Structure and construction_cost != null:
+					unit._trickle_cost = construction_cost.duplicate()
+				MatchSignals.setup_and_spawn_unit.emit(unit, cmd.data.transform, player, true)
+			else:
+				# DONT_TRICKLE: deduct full cost upfront (also used by AI)
+				if construction_cost != null:
+					if not player.has_resources(construction_cost):
+						push_warning(
+							(
+								"STRUCTURE_PLACED: player %s cannot afford %s"
+								% [player.id, cmd.data.structure_prototype]
+							)
 						)
+						return
+					player.subtract_resources(construction_cost)
+				(
+					MatchSignals
+					. setup_and_spawn_unit
+					. emit(
+						structure_prototype.instantiate(),
+						cmd.data.transform,
+						player,
+						self_constructing,
 					)
-					return
-				player.subtract_resources(construction_cost)
-			MatchSignals.setup_and_spawn_unit.emit(
-				structure_prototype.instantiate(), cmd.data.transform, player, self_constructing
-			)
+				)
 
 		# ── PRODUCTION ────────────────────────────────────────────────
 		# Queues a unit for production. Resources are checked and deducted by the

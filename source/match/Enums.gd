@@ -71,6 +71,17 @@ enum ProductionTabType {
 	WATER,
 }
 
+enum StructureProductionType {
+	## allows placement on the map, while required resources get used as the building is being constructed
+	CONSTRUCT_ON_FIELD_AND_TRICKLE,
+	## allows placement on the map, while required resources get used fully before the construction begins
+	CONSTRUCT_ON_FIELD_AND_DONT_TRICKLE,
+	## allows placement on the map after construction finishes, while required resources get used as the building is being constructed
+	CONSTRUCT_OFF_FIELD_AND_TRICKLE,
+	## allows placement on the map after construction finishes, while required resources get used fully before the construction begins
+	CONSTRUCT_OFF_FIELD_AND_DONT_TRICKLE,
+}
+
 enum ProductionTabGridSlots {
 	F1,
 	F2,
