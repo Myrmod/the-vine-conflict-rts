@@ -62,6 +62,13 @@ resource_units=""
 
 timers/tooltip_delay_sec=0.0
 
+[importer_defaults]
+
+animation_library={
+&"animation/import_rest_as_RESET": true,
+&"animation/trimming": true
+}
+
 [input]
 
 toggle_god_mode={

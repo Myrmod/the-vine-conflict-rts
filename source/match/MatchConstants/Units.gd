@@ -258,6 +258,31 @@ const DEFAULT_PROPERTIES = {
 		"costs": {"credits": 2},
 		"build_time": 3.0,
 	},
+	"res://source/factions/the_legion/units/Soldier.tscn":
+	{
+		"unit_name": "legion_Soldier",
+		"faction": Enums.Faction.LEGION,
+		"production_tab_type": Enums.ProductionTabType.INFANTRY,
+		"production_tab_grid_slot": Enums.ProductionTabGridSlots.F1,
+		"sight_range": 8.0,
+		"hp": 5,
+		"hp_max": 5,
+		"attack_damage": 1,
+		"attack_type": "laser",
+		"attack_interval": 0.55,
+		"attack_range": 4.0,
+		"rotation_speed": 1,
+		"attack_domains":
+		[
+			Enums.MovementTypes.LAND,
+		],
+		"armor":
+		{
+			"laser": 0.5,
+		},
+		"costs": {"credits": 2},
+		"build_time": 3.0,
+	},
 	# the Radix
 	"res://source/factions/the_radix/structures/CommandCenter.tscn":
 	{

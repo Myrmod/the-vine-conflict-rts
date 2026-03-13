@@ -11,6 +11,12 @@ signal action_updated
 const MATERIAL_ALBEDO_TO_REPLACE = Color(0.99, 0.81, 0.48)
 const MATERIAL_ALBEDO_TO_REPLACE_EPSILON = 0.05
 
+const UnitCommandQueue = preload("res://source/match/units/UnitCommandQueue.gd")
+
+const PRODUCTION_TYPE_FALLBACK_MODELS := {
+	Enums.ProductionTabType.INFANTRY: "models/FallbackInfantry/soldier_final_animations_fbx.glb",
+}
+
 var hp = null:
 	set = _set_hp
 var hp_max = null:
@@ -53,8 +59,6 @@ var _stopped: bool = false
 ## Set by subclass _ready() or by UnitConstants default_idle_action_scene property.
 var default_idle_action_scene: Script = null
 
-const UnitCommandQueue = preload("res://source/match/units/UnitCommandQueue.gd")
-
 @onready var _match = find_parent("Match")
 
 
@@ -66,6 +70,7 @@ func _ready():
 	_player_ref = get_parent()
 	_setup_color()
 	_setup_default_properties_from_constants()
+	_setup_model_fallback()
 	assert(_safety_checks())
 	id = EntityRegistry.register(self)
 	# Add command queue for shift-queued orders
@@ -204,6 +209,21 @@ func _handle_unit_death():
 	EntityRegistry.unregister(self)
 	tree_exited.connect(func(): MatchSignals.unit_died.emit(self))
 	queue_free()
+
+
+func _setup_model_fallback():
+	var props = UnitConstants.DEFAULT_PROPERTIES.get(
+		get_script().resource_path.replace(".gd", ".tscn"), {}
+	)
+	var tab_type = props.get("production_tab_type", -1)
+	if not PRODUCTION_TYPE_FALLBACK_MODELS.has(tab_type):
+		return
+	var fallback_path: String = PRODUCTION_TYPE_FALLBACK_MODELS[tab_type]
+	for child in get_children():
+		if child is ModelHolder:
+			var source: String = child.get_loaded_source()
+			if source == "" or source == "fallback":
+				child.load_model(fallback_path)
 
 
 func _setup_default_properties_from_constants():
