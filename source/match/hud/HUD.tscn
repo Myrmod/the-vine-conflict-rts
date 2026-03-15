@@ -15,6 +15,7 @@
 [ext_resource type="Script" uid="uid://3pwkiuhj67x1" path="res://source/match/hud/UnitPortrait.gd" id="12_7a2ul"]
 [ext_resource type="Texture2D" uid="uid://bqp6cemj1sw4" path="res://assets/ui/icons/Tank.png" id="12_h6iyy"]
 [ext_resource type="PackedScene" uid="uid://nnsih72ih7qr" path="res://source/match/hud/ProductionQueue.tscn" id="14_vwivv"]
+[ext_resource type="Texture2D" uid="uid://b2fkcfpnug3jv" path="res://assets/ui/icons/cross-hair_icon.png" id="15_0twml"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_h6iyy"]
 bg_color = Color(0.71584404, 0.9491611, 1.92523e-06, 1)
@@ -513,7 +514,6 @@ layout_mode = 2
 text = "button"
 
 [node name="UnitInfoVBoxContainer" type="VBoxContainer" parent="." unique_id=564800106]
-visible = false
 anchors_preset = 2
 anchor_top = 1.0
 anchor_bottom = 1.0
@@ -523,73 +523,154 @@ grow_vertical = 0
 size_flags_vertical = 3
 alignment = 2
 
-[node name="MarginContainer" type="MarginContainer" parent="UnitInfoVBoxContainer" unique_id=1728872896]
+[node name="UnitAbilityHBoxContainerWrapper" type="MarginContainer" parent="UnitInfoVBoxContainer" unique_id=974541396]
+modulate = Color(1, 1, 1, 0)
 layout_mode = 2
 theme_override_constants/margin_left = 4
 theme_override_constants/margin_right = 4
 
-[node name="AbilityHBoxContainer" type="HBoxContainer" parent="UnitInfoVBoxContainer/MarginContainer" unique_id=153531005]
+[node name="UnitAbilityHBoxContainer" type="HBoxContainer" parent="UnitInfoVBoxContainer/UnitAbilityHBoxContainerWrapper" unique_id=1737608812]
 layout_mode = 2
 theme_override_constants/separation = 2
 
-[node name="Ability1" type="Button" parent="UnitInfoVBoxContainer/MarginContainer/AbilityHBoxContainer" unique_id=607927580]
+[node name="Ability1" type="Button" parent="UnitInfoVBoxContainer/UnitAbilityHBoxContainerWrapper/UnitAbilityHBoxContainer" unique_id=575697280]
 custom_minimum_size = Vector2(31, 31)
 layout_mode = 2
 text = "1"
 
-[node name="Ability2" type="Button" parent="UnitInfoVBoxContainer/MarginContainer/AbilityHBoxContainer" unique_id=1538405282]
+[node name="Ability2" type="Button" parent="UnitInfoVBoxContainer/UnitAbilityHBoxContainerWrapper/UnitAbilityHBoxContainer" unique_id=1492006837]
 custom_minimum_size = Vector2(31, 31)
 layout_mode = 2
 text = "2"
 
-[node name="Ability3" type="Button" parent="UnitInfoVBoxContainer/MarginContainer/AbilityHBoxContainer" unique_id=1697442583]
+[node name="Ability3" type="Button" parent="UnitInfoVBoxContainer/UnitAbilityHBoxContainerWrapper/UnitAbilityHBoxContainer" unique_id=780911887]
 custom_minimum_size = Vector2(31, 31)
 layout_mode = 2
 text = "3"
 
-[node name="Ability4" type="Button" parent="UnitInfoVBoxContainer/MarginContainer/AbilityHBoxContainer" unique_id=466593365]
+[node name="Ability4" type="Button" parent="UnitInfoVBoxContainer/UnitAbilityHBoxContainerWrapper/UnitAbilityHBoxContainer" unique_id=1648020665]
 custom_minimum_size = Vector2(31, 31)
 layout_mode = 2
 text = "4"
 
-[node name="Ability5" type="Button" parent="UnitInfoVBoxContainer/MarginContainer/AbilityHBoxContainer" unique_id=607972499]
+[node name="Ability5" type="Button" parent="UnitInfoVBoxContainer/UnitAbilityHBoxContainerWrapper/UnitAbilityHBoxContainer" unique_id=503611032]
 custom_minimum_size = Vector2(31, 31)
 layout_mode = 2
 text = "5"
 
-[node name="Ability6" type="Button" parent="UnitInfoVBoxContainer/MarginContainer/AbilityHBoxContainer" unique_id=1306698043]
+[node name="Ability6" type="Button" parent="UnitInfoVBoxContainer/UnitAbilityHBoxContainerWrapper/UnitAbilityHBoxContainer" unique_id=1580697723]
 custom_minimum_size = Vector2(31, 31)
 layout_mode = 2
 text = "6"
 
-[node name="Ability7" type="Button" parent="UnitInfoVBoxContainer/MarginContainer/AbilityHBoxContainer" unique_id=866629169]
+[node name="Ability7" type="Button" parent="UnitInfoVBoxContainer/UnitAbilityHBoxContainerWrapper/UnitAbilityHBoxContainer" unique_id=547529569]
 custom_minimum_size = Vector2(31, 31)
 layout_mode = 2
 text = "7"
 
-[node name="Ability8" type="Button" parent="UnitInfoVBoxContainer/MarginContainer/AbilityHBoxContainer" unique_id=1366265430]
+[node name="Ability8" type="Button" parent="UnitInfoVBoxContainer/UnitAbilityHBoxContainerWrapper/UnitAbilityHBoxContainer" unique_id=28384582]
 custom_minimum_size = Vector2(31, 31)
 layout_mode = 2
 text = "8"
 
-[node name="UnitPortraitMarginContainer" type="MarginContainer" parent="UnitInfoVBoxContainer" unique_id=328713539]
-custom_minimum_size = Vector2(0, 270)
+[node name="HBoxContainer" type="HBoxContainer" parent="UnitInfoVBoxContainer" unique_id=1117296313]
 layout_mode = 2
+
+[node name="UnitPortraitMarginContainer" type="MarginContainer" parent="UnitInfoVBoxContainer/HBoxContainer" unique_id=328713539]
+custom_minimum_size = Vector2(200, 200)
+layout_mode = 2
+size_flags_horizontal = 0
+size_flags_vertical = 0
 theme_override_constants/margin_left = 0
 theme_override_constants/margin_bottom = 0
 
-[node name="UnitPortrait" type="PanelContainer" parent="UnitInfoVBoxContainer/UnitPortraitMarginContainer" unique_id=1618984652]
+[node name="UnitPortrait" type="PanelContainer" parent="UnitInfoVBoxContainer/HBoxContainer/UnitPortraitMarginContainer" unique_id=1618984652]
 layout_mode = 2
 
-[node name="SubViewportContainer" type="SubViewportContainer" parent="UnitInfoVBoxContainer/UnitPortraitMarginContainer/UnitPortrait" unique_id=438381242]
+[node name="SubViewportContainer" type="SubViewportContainer" parent="UnitInfoVBoxContainer/HBoxContainer/UnitPortraitMarginContainer/UnitPortrait" unique_id=438381242]
 layout_mode = 2
 stretch = true
 
-[node name="UnitPortraitViewport" type="SubViewport" parent="UnitInfoVBoxContainer/UnitPortraitMarginContainer/UnitPortrait/SubViewportContainer" unique_id=1117391200]
+[node name="UnitPortraitViewport" type="SubViewport" parent="UnitInfoVBoxContainer/HBoxContainer/UnitPortraitMarginContainer/UnitPortrait/SubViewportContainer" unique_id=1117391200]
 handle_input_locally = false
-size = Vector2i(270, 270)
-render_target_update_mode = 0
+size = Vector2i(200, 200)
+render_target_update_mode = 4
 script = ExtResource("12_7a2ul")
+
+[node name="UnitInformation" type="VBoxContainer" parent="UnitInfoVBoxContainer/HBoxContainer" unique_id=1455967614]
+layout_mode = 2
+
+[node name="Hitpoints" type="RichTextLabel" parent="UnitInfoVBoxContainer/HBoxContainer/UnitInformation" unique_id=591684686]
+custom_minimum_size = Vector2(130, 0)
+layout_mode = 2
+bbcode_enabled = true
+fit_content = true
+scroll_active = false
+
+[node name="AttackAndArmor" type="HBoxContainer" parent="UnitInfoVBoxContainer/HBoxContainer/UnitInformation" unique_id=543203956]
+layout_mode = 2
+
+[node name="ArmorButton" type="Button" parent="UnitInfoVBoxContainer/HBoxContainer/UnitInformation/AttackAndArmor" unique_id=577161602]
+custom_minimum_size = Vector2(31, 31)
+layout_mode = 2
+icon = ExtResource("4_7phom")
+
+[node name="AttackButton" type="Button" parent="UnitInfoVBoxContainer/HBoxContainer/UnitInformation/AttackAndArmor" unique_id=1001784294]
+custom_minimum_size = Vector2(31, 31)
+layout_mode = 2
+icon = ExtResource("15_0twml")
+
+[node name="StatusEffects" type="HBoxContainer" parent="UnitInfoVBoxContainer/HBoxContainer/UnitInformation" unique_id=1238938045]
+layout_mode = 2
+
+[node name="AbilityHBoxContainerWrapper" type="MarginContainer" parent="UnitInfoVBoxContainer" unique_id=1728872896]
+layout_mode = 2
+theme_override_constants/margin_left = 4
+theme_override_constants/margin_right = 4
+
+[node name="AbilityHBoxContainer" type="HBoxContainer" parent="UnitInfoVBoxContainer/AbilityHBoxContainerWrapper" unique_id=153531005]
+layout_mode = 2
+theme_override_constants/separation = 2
+
+[node name="Ability1" type="Button" parent="UnitInfoVBoxContainer/AbilityHBoxContainerWrapper/AbilityHBoxContainer" unique_id=607927580]
+custom_minimum_size = Vector2(31, 31)
+layout_mode = 2
+text = "1"
+
+[node name="Ability2" type="Button" parent="UnitInfoVBoxContainer/AbilityHBoxContainerWrapper/AbilityHBoxContainer" unique_id=1538405282]
+custom_minimum_size = Vector2(31, 31)
+layout_mode = 2
+text = "2"
+
+[node name="Ability3" type="Button" parent="UnitInfoVBoxContainer/AbilityHBoxContainerWrapper/AbilityHBoxContainer" unique_id=1697442583]
+custom_minimum_size = Vector2(31, 31)
+layout_mode = 2
+text = "3"
+
+[node name="Ability4" type="Button" parent="UnitInfoVBoxContainer/AbilityHBoxContainerWrapper/AbilityHBoxContainer" unique_id=466593365]
+custom_minimum_size = Vector2(31, 31)
+layout_mode = 2
+text = "4"
+
+[node name="Ability5" type="Button" parent="UnitInfoVBoxContainer/AbilityHBoxContainerWrapper/AbilityHBoxContainer" unique_id=607972499]
+custom_minimum_size = Vector2(31, 31)
+layout_mode = 2
+text = "5"
+
+[node name="Ability6" type="Button" parent="UnitInfoVBoxContainer/AbilityHBoxContainerWrapper/AbilityHBoxContainer" unique_id=1306698043]
+custom_minimum_size = Vector2(31, 31)
+layout_mode = 2
+text = "6"
+
+[node name="Ability7" type="Button" parent="UnitInfoVBoxContainer/AbilityHBoxContainerWrapper/AbilityHBoxContainer" unique_id=866629169]
+custom_minimum_size = Vector2(31, 31)
+layout_mode = 2
+text = "7"
+
+[node name="Ability8" type="Button" parent="UnitInfoVBoxContainer/AbilityHBoxContainerWrapper/AbilityHBoxContainer" unique_id=1366265430]
+custom_minimum_size = Vector2(31, 31)
+layout_mode = 2
+text = "8"
 
 [node name="ProductionQueue" parent="." unique_id=2096746681 instance=ExtResource("14_vwivv")]
 anchors_preset = 7

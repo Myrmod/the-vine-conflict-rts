@@ -11,11 +11,19 @@ var opacity_tween: Tween = null
 @onready
 var _title_label: RichTextLabel = $PanelContainer/TooltipContentContainer/VBoxContainer/RichTextLabel
 @onready
+var _description_label: RichTextLabel = $PanelContainer/TooltipContentContainer/VBoxContainer/DescriptionLabel
+@onready
 var _stats_grid: GridContainer = $PanelContainer/TooltipContentContainer/VBoxContainer/GridContainer
 
 
-func set_content(title: String, stats: Dictionary = {}) -> void:
+func set_content(title: String, stats: Dictionary = {}, description: String = "") -> void:
 	_title_label.text = "[b]%s[/b]" % title
+	if description != "":
+		_description_label.text = description
+		_description_label.visible = true
+	else:
+		_description_label.text = ""
+		_description_label.visible = false
 	var labels = _stats_grid.get_children()
 	# Hide all stat labels first
 	for child in labels:

@@ -94,8 +94,9 @@ func _fire_laser(from: Vector3, to: Vector3, config: Dictionary) -> void:
 	var damage: float = config.get("damage", 0.0)
 	var aoe_radius: float = config.get("aoe_radius", 0.0)
 	var source_player: Node = config.get("source_player")
+	var attack_type: String = config.get("attack_type", "")
 	if damage > 0.0:
-		_apply_damage(target_unit, to, damage, aoe_radius, source_player)
+		_apply_damage(target_unit, to, damage, aoe_radius, source_player, attack_type)
 
 	_spawn_impact(to + Vector3(0, 0.15, 0), config.get("color", Color(0.3, 0.6, 1.0)))
 
@@ -262,7 +263,8 @@ func _on_projectile_arrival(p: Dictionary) -> void:
 			p.current_pos,
 			damage,
 			p.get("aoe_radius", 0.0),
-			p.get("source_player")
+			p.get("source_player"),
+			p.get("attack_type", ""),
 		)
 	var sound_end: AudioStream = p.get("sound_end")
 	if sound_end:
@@ -275,7 +277,11 @@ func _apply_damage(
 	damage: float,
 	aoe_radius: float,
 	source_player = null,
+	attack_type: String = "",
 ) -> void:
+	var damage_type: int = Enums.DamageTypes.TRUE
+	if attack_type != "":
+		damage_type = Enums.DamageTypes.get(attack_type.to_upper(), Enums.DamageTypes.TRUE)
 	if aoe_radius > 0.0:
 		for unit: Node3D in get_tree().get_nodes_in_group("units"):
 			if not is_instance_valid(unit) or unit.hp <= 0:
@@ -284,12 +290,19 @@ func _apply_damage(
 				continue
 			var dist: float = unit.global_position.distance_to(impact_pos)
 			if dist <= aoe_radius:
-				unit.hp -= damage
+				unit.hp -= _reduce_damage(damage, damage_type, unit)
 				MatchSignals.unit_damaged.emit(unit)
 	else:
 		if primary_target and is_instance_valid(primary_target) and damage > 0.0:
-			primary_target.hp -= damage
+			primary_target.hp -= _reduce_damage(damage, damage_type, primary_target)
 			MatchSignals.unit_damaged.emit(primary_target)
+
+
+func _reduce_damage(damage: float, damage_type: int, target) -> float:
+	if damage_type == Enums.DamageTypes.TRUE:
+		return damage
+	var reduction: float = target.armor.get(damage_type, 0.0)
+	return damage * (1.0 - reduction)
 
 
 func _rebuild_traveling_multimeshes() -> void:

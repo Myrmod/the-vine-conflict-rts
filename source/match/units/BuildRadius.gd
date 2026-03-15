@@ -78,12 +78,20 @@ func _on_structure_constructed():
 
 ## Returns world-space cell coordinates covered by this build radius.
 ## GlobalBuildGrid calls this during placement to collect all cells to display.
+## When placement_domains includes WATER, water cells (expanded radius) are included.
+## When it includes LAND, land cells (normal radius) are included.
+## Both sets are merged when the structure supports both domains.
 func get_world_cells(placement_domains: Array) -> Array[Vector2i]:
 	var parent_pos: Vector3 = get_parent().global_position
 	var origin := Vector2i(int(floor(parent_pos.x)), int(floor(parent_pos.z)))
 
 	var cells: Array[Vector2i]
-	if Enums.PlacementTypes.WATER in placement_domains:
+	var has_water: bool = Enums.PlacementTypes.WATER in placement_domains
+	var has_land: bool = Enums.PlacementTypes.LAND in placement_domains
+	if has_water and not has_land:
+		cells = _water_cells
+	elif has_water and has_land:
+		# Merge both sets; water_cells is a superset of land_cells so just use it
 		cells = _water_cells
 	else:
 		cells = _land_cells

@@ -168,11 +168,14 @@ func _placement_domains_match_terrain() -> bool:
 		return Enums.PlacementTypes.LAND in _pending_structure_placement_domains
 
 
-## Returns the PlacementTypes domain for the structure being placed.
-## Used to check the correct build radius (land or water).
+## Returns the PlacementTypes domain based on the actual terrain at the blueprint position.
+## Used to check the correct build radius (land uses normal, water uses expanded).
 func _get_placement_domain() -> Enums.PlacementTypes:
-	if Enums.PlacementTypes.WATER in _pending_structure_placement_domains:
-		return Enums.PlacementTypes.WATER
+	var map = _match.map if _match != null else null
+	if map != null and not map.cell_type_grid.is_empty():
+		var cell_type = map.get_cell_type_at_world(_active_blueprint_node.global_position)
+		if cell_type == MapResource.CELL_WATER:
+			return Enums.PlacementTypes.WATER
 	return Enums.PlacementTypes.LAND
 
 

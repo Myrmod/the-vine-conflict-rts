@@ -48,6 +48,22 @@ func _update_display():
 	var time_label := find_child("TimeLabel") as Label
 	var count_label := find_child("CountLabel") as Label
 
+	# Check for completed (ready to deploy) elements first
+	var has_completed := false
+	for el in queue_elements:
+		if el.completed:
+			has_completed = true
+			break
+	if has_completed:
+		time_label.text = tr("READY")
+		time_label.visible = true
+		if queue_elements.size() > 1:
+			count_label.text = "x%d" % queue_elements.size()
+			count_label.visible = true
+		else:
+			count_label.visible = false
+		return
+
 	# Show remaining time for the element with the least time left
 	# that is actually producing in its own queue.
 	var best_element = null
@@ -106,8 +122,26 @@ func _on_right_click():
 		_on_cancel_production()
 
 
-## Left-click: if this type has a paused element, resume it. Otherwise focus camera.
+## Left-click: if a completed off-field structure, deploy it.
+## If this type has a paused element, resume it. Otherwise focus camera.
 func _on_left_click():
+	# Deploy completed off-field structure
+	var completed_el = null
+	for el in queue_elements:
+		if el.completed:
+			completed_el = el
+			break
+	if completed_el != null:
+		var src_queue = element_to_source.get(completed_el)
+		if src_queue != null:
+			src_queue.deploy_completed(unit_type_path)
+			MatchSignals.pending_off_field_deploy = true
+			MatchSignals.pending_trickle = false
+			var prototype = load(unit_type_path)
+			if prototype:
+				MatchSignals.place_structure.emit(prototype)
+		return
+
 	var has_paused := false
 	for el in queue_elements:
 		if el.paused:

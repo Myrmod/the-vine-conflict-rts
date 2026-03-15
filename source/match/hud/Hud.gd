@@ -8,6 +8,7 @@ const _COMMAND_DEFS: Array[Dictionary] = [
 		"name": "Attack Move",
 		"key": "attack_move",
 		"desc": "Move to target, engaging enemies on the way",
+		"movement": true,
 	},
 	{
 		"name": "Stop",
@@ -23,16 +24,19 @@ const _COMMAND_DEFS: Array[Dictionary] = [
 		"name": "Move",
 		"key": "move",
 		"desc": "Move to target without attacking",
+		"movement": true,
 	},
 	{
 		"name": "Patrol",
 		"key": "patrol",
 		"desc": "Patrol between current position and target",
+		"movement": true,
 	},
 	{
 		"name": "Reverse Move",
 		"key": "reverse_move",
 		"desc": "Move backwards to target without turning around",
+		"movement": true,
 	},
 	{
 		"name": "All Army",
@@ -56,6 +60,7 @@ var _active_producers: Array = []
 var _active_producer_index: int = 0
 ## Unit currently shown in the portrait
 var _portrait_unit: Node = null
+var _portrait_hp_connection: Callable
 var _command_buttons: Array[Button] = []
 
 ## Currently observed production queue for grid button display
@@ -72,11 +77,13 @@ var _grid_slot_is_structure: Dictionary = {}
 @onready var production_queue: ProductionQueue = $ProductionQueue
 @onready var unit_info_container: VBoxContainer = $UnitInfoVBoxContainer
 @onready
-var unit_portrait_viewport: SubViewport = $UnitInfoVBoxContainer/UnitPortraitMarginContainer/UnitPortrait/SubViewportContainer/UnitPortraitViewport
+var unit_portrait_viewport: SubViewport = $UnitInfoVBoxContainer/HBoxContainer/UnitPortraitMarginContainer/UnitPortrait/SubViewportContainer/UnitPortraitViewport
 @onready
-var unit_portrait_panel: PanelContainer = $UnitInfoVBoxContainer/UnitPortraitMarginContainer/UnitPortrait
+var unit_portrait_panel: PanelContainer = $UnitInfoVBoxContainer/HBoxContainer/UnitPortraitMarginContainer/UnitPortrait
 @onready
-var unit_ability_container: HBoxContainer = $UnitInfoVBoxContainer/MarginContainer/AbilityHBoxContainer
+var unit_specific_ability_h_box_container: HBoxContainer = $UnitInfoVBoxContainer/UnitAbilityHBoxContainerWrapper/UnitAbilityHBoxContainer
+@onready
+var unit_ability_container: HBoxContainer = $UnitInfoVBoxContainer/AbilityHBoxContainerWrapper/AbilityHBoxContainer
 @onready var support_powers_container: GridContainer = $LeftMarginContainer/SupportPowers
 @onready
 var energy_bar: ProgressBar = $RightMarginContainer/HBoxContainer/LeftVBoxContainer/MarginContainer/EnergyBar
@@ -84,6 +91,14 @@ var energy_bar: ProgressBar = $RightMarginContainer/HBoxContainer/LeftVBoxContai
 var energy_label: Label = $RightMarginContainer/HBoxContainer/LeftVBoxContainer/MarginContainer/EnergyBar/EnergyLabel
 @onready
 var minimap: PanelContainer = $RightMarginContainer/HBoxContainer/RightVBoxContainer/MapMarginContainer/Minimap
+@onready
+var hitpoints: RichTextLabel = $UnitInfoVBoxContainer/HBoxContainer/UnitInformation/Hitpoints
+@onready
+var attack_button: Button = $UnitInfoVBoxContainer/HBoxContainer/UnitInformation/AttackAndArmor/AttackButton
+@onready
+var armor_button: Button = $UnitInfoVBoxContainer/HBoxContainer/UnitInformation/AttackAndArmor/ArmorButton
+@onready
+var status_effects: HBoxContainer = $UnitInfoVBoxContainer/HBoxContainer/UnitInformation/StatusEffects
 
 # BuildingModificationMenuTabs
 @onready
@@ -531,26 +546,25 @@ func _try_produce_structure(scene_path: String) -> void:
 		"production_tab_type", -1
 	)
 	if _is_off_field(prod_type):
-		# OFF_FIELD: deploy a ready structure, or queue for production
-		if producer._ready_structures.has(scene_path):
-			producer._ready_structures.erase(scene_path)
+		# OFF_FIELD: deploy a completed structure, unpause a paused one, or queue new
+		if (
+			producer.production_queue != null
+			and producer.production_queue.has_completed(scene_path)
+		):
+			producer.production_queue.deploy_completed(scene_path)
 			MatchSignals.pending_off_field_deploy = true
 			MatchSignals.pending_trickle = false
 			var prototype = load(scene_path)
 			if prototype:
 				MatchSignals.place_structure.emit(prototype)
+		elif producer.production_queue != null and _resume_paused_off_field(producer, scene_path):
+			pass  # unpaused via command
 		else:
 			var in_progress := 0
 			if producer.production_queue != null:
 				in_progress += (producer.production_queue.structure_count_in_queue_for_tab(
 					target_tab
 				))
-			for rs in producer._ready_structures:
-				var rs_tab = UnitConstants.DEFAULT_PROPERTIES.get(rs, {}).get(
-					"production_tab_type", -1
-				)
-				if rs_tab == target_tab:
-					in_progress += 1
 			if in_progress < max_conc and producer.production_queue != null:
 				ProductionQueue._generate_unit_production_command(
 					producer.id, scene_path, producer.player.id
@@ -852,7 +866,10 @@ func _update_structure_slot_display(
 				else Enums.StructureProductionType.CONSTRUCT_ON_FIELD_AND_TRICKLE
 			)
 			if _is_off_field(prod_type):
-				if producer._ready_structures.has(scene_path):
+				if (
+					producer.production_queue != null
+					and producer.production_queue.has_completed(scene_path)
+				):
 					time_label.text = tr("READY")
 					time_label.visible = true
 					count_label.visible = false
@@ -861,7 +878,7 @@ func _update_structure_slot_display(
 					for el in producer.production_queue.get_elements():
 						if el.unit_prototype.resource_path == scene_path:
 							var pct := int(el.progress() * 100.0)
-							time_label.text = "%d%%" % pct
+							time_label.text = ("%d%% ||" % pct if el.paused else "%d%%" % pct)
 							time_label.visible = true
 							count_label.visible = false
 							return
@@ -998,6 +1015,25 @@ func _resume_paused_structure(scene_path: String) -> bool:
 	return true
 
 
+## Unpause a paused off-field queue element of this type. Returns true if found.
+func _resume_paused_off_field(producer, scene_path: String) -> bool:
+	for el in producer.production_queue.get_elements():
+		if el.unit_prototype.resource_path == scene_path and el.paused:
+			(
+				CommandBus
+				. push_command(
+					{
+						"tick": Match.tick + 1,
+						"type": Enums.CommandType.ENTITY_PRODUCTION_PAUSED,
+						"player_id": producer.player.id,
+						"data": {"entity_id": producer.id, "unit_type": scene_path},
+					}
+				)
+			)
+			return true
+	return false
+
+
 func _cancel_building_structure(scene_path: String) -> void:
 	# Check if the active producer uses OFF_FIELD mode
 	if not _active_producers.is_empty():
@@ -1010,14 +1046,45 @@ func _cancel_building_structure(scene_path: String) -> void:
 				else Enums.StructureProductionType.CONSTRUCT_ON_FIELD_AND_TRICKLE
 			)
 			if _is_off_field(prod_type):
-				# OFF_FIELD: cancel from ready list or production queue
-				if producer._ready_structures.has(scene_path):
-					producer._ready_structures.erase(scene_path)
-					_update_all_grid_button_displays()
-					return
+				# OFF_FIELD: check queue for completed, producing, or paused elements
 				if producer.production_queue != null:
+					# First: try to cancel a completed (ready) element
 					for el in producer.production_queue.get_elements():
-						if el.unit_prototype.resource_path == scene_path:
+						if el.unit_prototype.resource_path == scene_path and el.completed:
+							(
+								CommandBus
+								. push_command(
+									{
+										"tick": Match.tick + 1,
+										"type": Enums.CommandType.ENTITY_PRODUCTION_CANCELED,
+										"player_id": producer.player.id,
+										"data": {"entity_id": producer.id, "unit_type": scene_path},
+									}
+								)
+							)
+							return
+					# Second: pause an active (non-paused, non-completed) element
+					for el in producer.production_queue.get_elements():
+						if (
+							el.unit_prototype.resource_path == scene_path
+							and not el.paused
+							and not el.completed
+						):
+							(
+								CommandBus
+								. push_command(
+									{
+										"tick": Match.tick + 1,
+										"type": Enums.CommandType.ENTITY_PRODUCTION_PAUSED,
+										"player_id": producer.player.id,
+										"data": {"entity_id": producer.id, "unit_type": scene_path},
+									}
+								)
+							)
+							return
+					# Third: cancel a paused element
+					for el in producer.production_queue.get_elements():
+						if el.unit_prototype.resource_path == scene_path and el.paused:
 							(
 								CommandBus
 								. push_command(
@@ -1339,10 +1406,15 @@ func _refresh_control_group_buttons() -> void:
 
 
 func _on_unit_selected_portrait(unit) -> void:
+	_disconnect_portrait_hp()
 	_portrait_unit = unit
 	unit_info_container.visible = true
 	unit_portrait_viewport.show_unit(unit)
 	_update_ability_buttons(unit)
+	_update_unit_info_panel()
+	if _portrait_unit.has_signal("hp_changed"):
+		_portrait_hp_connection = _update_unit_info_panel
+		_portrait_unit.hp_changed.connect(_portrait_hp_connection)
 
 
 func _on_unit_deselected_portrait(unit) -> void:
@@ -1352,24 +1424,29 @@ func _on_unit_deselected_portrait(unit) -> void:
 	if not remaining.is_empty():
 		_on_unit_selected_portrait(remaining[0])
 	else:
+		_disconnect_portrait_hp()
 		_portrait_unit = null
 		unit_portrait_viewport.clear()
 		_hide_ability_buttons()
+		_clear_unit_info_panel()
 		unit_info_container.visible = false
 
 
 func _on_unit_died_portrait(unit) -> void:
 	if unit == _portrait_unit:
+		_disconnect_portrait_hp()
 		_portrait_unit = null
 		unit_portrait_viewport.clear()
 		_hide_ability_buttons()
+		_clear_unit_info_panel()
 		unit_info_container.visible = false
 
 
 func _on_portrait_hover() -> void:
 	if _portrait_unit == null or not is_instance_valid(_portrait_unit):
 		return
-	var stats := _build_unit_stats(_portrait_unit)
+	var scene_path: String = _portrait_unit.get_script().resource_path.replace(".gd", ".tscn")
+	var props: Dictionary = UnitConstants.DEFAULT_PROPERTIES.get(scene_path, {})
 	var title: String = ""
 	if "unit_name" in _portrait_unit:
 		title = _portrait_unit.unit_name
@@ -1377,7 +1454,8 @@ func _on_portrait_hover() -> void:
 		title = _portrait_unit.type
 	else:
 		title = _portrait_unit.name
-	tooltip.set_content(title, stats)
+	var description: String = props.get("description", "")
+	tooltip.set_content(title, {}, description)
 	tooltip.toggle(true)
 
 
@@ -1394,7 +1472,10 @@ func _build_unit_stats(unit) -> Dictionary:
 	if props.has("armor"):
 		var armor_parts: Array = []
 		for atk_type in props["armor"]:
-			armor_parts.append("%s %d%%" % [atk_type, int(props["armor"][atk_type] * 100)])
+			var type_name: String = (
+				Enums.DamageTypes.keys()[atk_type] if atk_type is int else str(atk_type)
+			)
+			armor_parts.append("%s %d%%" % [type_name, int(props["armor"][atk_type] * 100)])
 		stats["Armor"] = ", ".join(armor_parts)
 	if props.has("attack_damage"):
 		stats["ATK Damage"] = str(props["attack_damage"])
@@ -1430,6 +1511,7 @@ func _init_ability_buttons() -> void:
 		btn.custom_minimum_size = Vector2(31, 31)
 		btn.text = hs.get_key_label(def["key"])
 		btn.visible = false
+		btn.set_meta("is_movement", def.get("movement", false))
 		btn.pressed.connect(_on_command_button_pressed.bind(def["key"]))
 		btn.mouse_entered.connect(_on_command_button_hover.bind(def))
 		btn.mouse_exited.connect(_on_production_button_exit)
@@ -1440,7 +1522,10 @@ func _init_ability_buttons() -> void:
 func _update_ability_buttons(unit) -> void:
 	var is_structure = unit is Structure
 	for btn in _command_buttons:
-		btn.visible = not is_structure
+		if is_structure:
+			btn.visible = not btn.get_meta("is_movement", false)
+		else:
+			btn.visible = true
 
 
 func _hide_ability_buttons() -> void:
@@ -1483,3 +1568,82 @@ func _on_command_button_pressed(key: String) -> void:
 		"reverse_move":
 			MatchSignals.active_command_mode = (Enums.UnitCommandMode.REVERSE_MOVE)
 			MatchSignals.command_mode_changed.emit(Enums.UnitCommandMode.REVERSE_MOVE)
+
+
+func _disconnect_portrait_hp() -> void:
+	if _portrait_unit and is_instance_valid(_portrait_unit) and _portrait_hp_connection:
+		if (
+			_portrait_unit.has_signal("hp_changed")
+			and _portrait_unit.hp_changed.is_connected(_portrait_hp_connection)
+		):
+			_portrait_unit.hp_changed.disconnect(_portrait_hp_connection)
+	_portrait_hp_connection = Callable()
+
+
+func _update_unit_info_panel() -> void:
+	if _portrait_unit == null or not is_instance_valid(_portrait_unit):
+		return
+	var scene_path: String = _portrait_unit.get_script().resource_path.replace(".gd", ".tscn")
+	var props: Dictionary = UnitConstants.DEFAULT_PROPERTIES.get(scene_path, {})
+
+	# Hitpoints
+	var hp_cur: int = _portrait_unit.hp if _portrait_unit.hp != null else 0
+	var hp_max_val: int = _portrait_unit.hp_max if _portrait_unit.hp_max != null else 0
+	hitpoints.bbcode_enabled = true
+	hitpoints.text = "[b]%d[/b] / %d" % [hp_cur, hp_max_val]
+	hitpoints.modulate.a = 1.0 if hp_max_val > 0 else 0.0
+
+	# Attack button
+	if props.has("attack_damage"):
+		attack_button.visible = true
+		var atk_tooltip: String = "Attack Damage: %s" % str(props["attack_damage"])
+		if props.has("attack_type"):
+			atk_tooltip += "\nType: %s" % str(props["attack_type"])
+		if props.has("attack_interval"):
+			atk_tooltip += "\nInterval: %ss" % str(props["attack_interval"])
+		if props.has("attack_range"):
+			atk_tooltip += "\nRange: %s" % str(props["attack_range"])
+		if props.has("attack_domains"):
+			var domain_names: Array = []
+			for d in props["attack_domains"]:
+				domain_names.append(Enums.MovementTypes.keys()[d])
+			atk_tooltip += "\nTargets: %s" % ", ".join(domain_names)
+		attack_button.tooltip_text = atk_tooltip
+		attack_button.modulate.a = 1.0
+	else:
+		attack_button.modulate.a = 0.0
+
+	# Armor button
+	if props.has("armor") and not props["armor"].is_empty():
+		var armor_tooltip_parts: Array = []
+		for atk_type in props["armor"]:
+			var reduction: int = int(props["armor"][atk_type] * 100)
+			var type_name: String = (
+				Enums.DamageTypes.keys()[atk_type] if atk_type is int else str(atk_type)
+			)
+			armor_tooltip_parts.append("%s: %d%% damage reduction" % [type_name, reduction])
+		armor_button.tooltip_text = "Armor\n" + "\n".join(armor_tooltip_parts)
+		armor_button.modulate.a = 1.0
+	else:
+		armor_button.modulate.a = 0.0
+
+	# Status effects (placeholder — empty for now)
+	for child in status_effects.get_children():
+		child.queue_free()
+
+	# Unit-specific abilities (invisible when empty)
+	var ability_wrapper: MarginContainer = unit_specific_ability_h_box_container.get_parent()
+	ability_wrapper.modulate.a = (
+		1.0 if unit_specific_ability_h_box_container.get_child_count() > 0 else 0.0
+	)
+
+
+func _clear_unit_info_panel() -> void:
+	hitpoints.text = ""
+	hitpoints.modulate.a = 0.0
+	attack_button.modulate.a = 0.0
+	armor_button.modulate.a = 0.0
+	for child in status_effects.get_children():
+		child.queue_free()
+	var ability_wrapper: MarginContainer = unit_specific_ability_h_box_container.get_parent()
+	ability_wrapper.modulate.a = 0.0

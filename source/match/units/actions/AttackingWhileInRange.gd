@@ -78,6 +78,7 @@ func _hit_target() -> void:
 	config["damage"] = _unit.attack_damage
 	config["target_unit"] = _target_unit
 	config["source_player"] = _unit.player
+	config["attack_type"] = _unit.attack_type
 	Projectile.fire(_unit.projectile_type, from, to, config)
 	_schedule_hit()
 

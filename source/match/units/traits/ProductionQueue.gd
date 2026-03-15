@@ -18,6 +18,11 @@ class ProductionQueueElement:
 		set(value):
 			paused = value
 			emit_changed()
+	## True when this off-field structure has finished production and awaits placement.
+	var completed := false:
+		set(value):
+			completed = value
+			emit_changed()
 	## When non-empty, cost trickles over build_time instead of being deducted upfront.
 	var trickle_cost: Dictionary = {}
 	var trickle_deducted: float = 0.0
@@ -26,12 +31,12 @@ class ProductionQueueElement:
 		return (time_total - time_left) / time_total
 
 	## Returns true when this element is actively counting down
-	## (i.e. first non-paused element in the queue).
+	## (i.e. first non-paused, non-completed element in the queue).
 	func is_producing(queue_array: Array) -> bool:
-		if paused:
+		if paused or completed:
 			return false
 		for el in queue_array:
-			if not el.paused:
+			if not el.paused and not el.completed:
 				return el == self
 		return false
 
@@ -47,26 +52,35 @@ func _process(delta):
 	# Don't tick production while the parent structure is disabled or selling.
 	if _unit != null and (_unit.get("is_disabled") or _unit.get("is_selling")):
 		return
-	# Find the first non-paused element and tick it.
+	# Find the first non-paused, non-completed element and tick it.
 	var current_queue_element = null
 	for el in _queue:
-		if not el.paused:
+		if not el.paused and not el.completed:
 			current_queue_element = el
 			break
 	if current_queue_element == null:
 		return
+	# Slow production by 25% when player energy is negative
+	var effective_delta: float = delta
+	if _unit != null and _unit.player != null and _unit.player.energy < 0:
+		effective_delta *= 0.75
 	# Trickle cost: deduct proportional resources before progressing
 	if not current_queue_element.trickle_cost.is_empty():
-		var new_time = max(0.0, current_queue_element.time_left - delta)
+		var new_time = max(0.0, current_queue_element.time_left - effective_delta)
 		var target_progress = (
 			(current_queue_element.time_total - new_time) / current_queue_element.time_total
 		)
 		if not _try_deduct_queue_trickle(current_queue_element, target_progress):
 			return  # can't afford, pause production
-	current_queue_element.time_left = max(0.0, current_queue_element.time_left - delta)
+	current_queue_element.time_left = max(0.0, current_queue_element.time_left - effective_delta)
 	if current_queue_element.time_left == 0.0:
-		_remove_element(current_queue_element)
-		_finalize_production(current_queue_element)
+		var scene_path = current_queue_element.unit_prototype.resource_path
+		if _is_off_field_structure(scene_path):
+			current_queue_element.completed = true
+			MatchSignals.unit_production_finished.emit(null, _unit)
+		else:
+			_remove_element(current_queue_element)
+			_finalize_production(current_queue_element)
 
 
 func size():
@@ -101,13 +115,31 @@ func cancel_all():
 		cancel(element)
 
 
+## Remove a completed off-field structure from the queue (player is deploying it).
+func deploy_completed(scene_path: String) -> bool:
+	for el in _queue:
+		if el.completed and el.unit_prototype.resource_path == scene_path:
+			_remove_element(el)
+			return true
+	return false
+
+
+## Returns true if any element with the given scene_path is completed.
+func has_completed(scene_path: String) -> bool:
+	for el in _queue:
+		if el.completed and el.unit_prototype.resource_path == scene_path:
+			return true
+	return false
+
+
 func cancel(element):
 	if not element in _queue:
 		return
 	var type_path = element.unit_prototype.resource_path
 	var type_is_paused = element.paused
-	# Only refund for non-trickle elements (trickle only deducted what was spent)
-	if element.trickle_cost.is_empty():
+	# No refund for completed off-field structures (already fully paid)
+	# No refund for trickle elements (only deducted what was spent)
+	if not element.completed and element.trickle_cost.is_empty():
 		var production_cost = UnitConstants.DEFAULT_PROPERTIES[type_path]["costs"]
 		_unit.player.add_resources(production_cost, Enums.ResourceType.CREDITS)
 	_remove_element(element)

@@ -124,3 +124,19 @@ enum Projectile {
 	ROCKET,
 	BULLETS,
 }
+
+enum DamageTypes {
+	TRUE,  # this will not be affected by armor
+	CANNON,
+	CORROSIVE,
+	CRUSH,
+	EXPLOSIVE,
+	FIRE,
+	LASER,
+	MELEE,
+	PLASMA,
+	PRISM,
+	RIFLE,
+	ROCKET,
+	TESLA,
+}

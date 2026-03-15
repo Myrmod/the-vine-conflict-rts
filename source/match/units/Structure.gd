@@ -88,7 +88,8 @@ func _process(delta):
 		and not is_construction_paused
 		and _has_active_structure_producer()
 	):
-		var progress = delta * _self_construction_speed
+		var speed_mult := 0.75 if player != null and player.energy < 0 else 1.0
+		var progress = delta * _self_construction_speed * speed_mult
 		if not _trickle_cost.is_empty():
 			if not _try_deduct_trickle(progress):
 				return

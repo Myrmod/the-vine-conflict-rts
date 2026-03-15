@@ -48,6 +48,14 @@ text = "[img]res://assets/ui/icons/defences_icon.png[/img][b] Armor[/b]"
 fit_content = true
 scroll_active = false
 
+[node name="DescriptionLabel" type="RichTextLabel" parent="PanelContainer/TooltipContentContainer/VBoxContainer"]
+layout_mode = 2
+mouse_filter = 2
+mouse_behavior_recursive = 2
+bbcode_enabled = true
+fit_content = true
+scroll_active = false
+
 [node name="GridContainer" type="GridContainer" parent="PanelContainer/TooltipContentContainer/VBoxContainer" unique_id=717377126]
 layout_mode = 2
 columns = 3

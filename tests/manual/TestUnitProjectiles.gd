@@ -52,16 +52,18 @@ func _ready() -> void:
 		add_child(label)
 
 		# Unit model — instantiate the real scene, strip scripts to avoid Match dependencies
+		var wrapper: Node3D = Node3D.new()
+		wrapper.position = from_pos
+		add_child(wrapper)
 		var unit_scene: PackedScene = load(scene_path)
 		if unit_scene:
-			var wrapper: Node3D = Node3D.new()
-			wrapper.position = from_pos
-			add_child(wrapper)
 			var unit_instance: Node3D = unit_scene.instantiate()
 			_strip_scripts(unit_instance)
 			_apply_fallback_models(unit_instance, props)
 			wrapper.add_child(unit_instance)
-			wrapper.look_at(to_pos, Vector3.UP)
+		wrapper.look_at(to_pos, Vector3.UP)
+		# Rotate projectile_origin by the unit's facing so it matches in-game behavior
+		projectile_origin = wrapper.basis * projectile_origin
 
 		# Target marker
 		var target_mesh: MeshInstance3D = MeshInstance3D.new()

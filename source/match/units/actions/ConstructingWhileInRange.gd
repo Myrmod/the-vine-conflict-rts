@@ -2,7 +2,7 @@ extends "res://source/match/units/actions/Action.gd"
 
 var _target_unit = null
 
-@onready var _unit = Utils.NodeEx.find_parent_with_group(self , "units")
+@onready var _unit = Utils.NodeEx.find_parent_with_group(self, "units")
 
 
 func _init(target_unit):
@@ -20,10 +20,8 @@ func _exit_tree():
 
 
 func _process(delta):
-	if (
-		not MatchUtils.Movement.units_adhere(_unit, _target_unit)
-		or _target_unit.is_constructed()
-	):
+	if not MatchUtils.Movement.units_adhere(_unit, _target_unit) or _target_unit.is_constructed():
 		queue_free()
 		return
-	_target_unit.construct(delta * UnitConstants.STRUCTURE_CONSTRUCTING_SPEED)
+	var speed_mult := 0.75 if _unit.player != null and _unit.player.energy < 0 else 1.0
+	_target_unit.construct(delta * UnitConstants.STRUCTURE_CONSTRUCTING_SPEED * speed_mult)
