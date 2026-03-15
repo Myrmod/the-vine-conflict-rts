@@ -1,5 +1,3 @@
-class_name UnitConstants
-
 const PRODUCTION_QUEUE_LIMIT = 5
 const STRUCTURE_BLUEPRINTS = {
 	# the Amuns
@@ -70,6 +68,7 @@ const DEFAULT_PROPERTIES = {
 		"attack_damage": 1,
 		"attack_interval": 1.0,
 		"attack_range": 5.0,
+		"projectile_type": Enums.Projectile.ROCKET,
 		"attack_domains":
 		[
 			Enums.MovementTypes.LAND,
@@ -88,9 +87,11 @@ const DEFAULT_PROPERTIES = {
 		"hp": 10,
 		"hp_max": 10,
 		"attack_damage": 2,
-		"attack_type": "laser",
+		"attack_type": "cannon",
 		"attack_interval": 0.75,
 		"attack_range": 5.0,
+		"projectile_type": Enums.Projectile.CANNON,
+		"can_reverse_move": true,
 		"rotation_speed": 1,
 		"attack_domains":
 		[
@@ -156,6 +157,7 @@ const DEFAULT_PROPERTIES = {
 		"attack_damage": 2,
 		"attack_interval": 1.0,
 		"attack_range": 8.0,
+		"projectile_type": Enums.Projectile.CANNON,
 		"attack_domains":
 		[
 			Enums.MovementTypes.LAND,
@@ -175,6 +177,7 @@ const DEFAULT_PROPERTIES = {
 		"attack_damage": 2,
 		"attack_interval": 0.75,
 		"attack_range": 8.0,
+		"projectile_type": Enums.Projectile.ROCKET,
 		"attack_domains":
 		[
 			Enums.MovementTypes.AIR,
@@ -271,6 +274,15 @@ const DEFAULT_PROPERTIES = {
 		"attack_type": "laser",
 		"attack_interval": 0.55,
 		"attack_range": 4.0,
+		"projectile_type": Enums.Projectile.LASER,
+		"projectile_origin": Vector3(0.0, 0.35, -0.4),
+		"projectile_config":
+		{
+			"color": Color("1034a6ff"),
+			"laser_count": 2,
+			"laser_width": 0.03,
+			"laser_duration": 0.25,
+		},
 		"rotation_speed": 1,
 		"attack_domains":
 		[
@@ -342,17 +354,7 @@ const DEFAULT_PROPERTIES = {
 		"build_time": 3.0,
 	},
 }
-const PROJECTILES = {
-	# the Amuns
-	"res://source/factions/the_amuns/units/Helicopter.tscn":
-	"res://source/match/units/projectiles/Rocket.tscn",
-	"res://source/factions/the_amuns/units/Tank.tscn":
-	"res://source/match/units/projectiles/CannonShell.tscn",
-	"res://source/factions/the_amuns/structures/AntiGroundTurret.tscn":
-	"res://source/match/units/projectiles/CannonShell.tscn",
-	"res://source/factions/the_amuns/structures/AntiAirTurret.tscn":
-	"res://source/match/units/projectiles/Rocket.tscn"
-}
+
 const ADHERENCE_MARGIN_M = 0.3  # TODO: try lowering while fixing a 'push' problem
 const NEW_RESOURCE_SEARCH_RADIUS_M = 30
 const MOVING_UNIT_RADIUS_MAX_M = 1.0

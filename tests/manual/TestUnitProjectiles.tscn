@@ -1,0 +1,27 @@
+[gd_scene format=3 uid="uid://b0ugbqyarwam8"]
+
+[ext_resource type="Script" uid="uid://b1mjvxs0mh3kx" path="res://tests/manual/TestUnitProjectiles.gd" id="1"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_1"]
+albedo_color = Color(0.35, 0.42, 0.28, 1)
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_1"]
+size = Vector2(100, 100)
+
+[node name="TestUnitProjectiles" type="Node3D" unique_id=1404718760]
+script = ExtResource("1")
+
+[node name="Ground" type="MeshInstance3D" parent="." unique_id=821114034]
+material_override = SubResource("StandardMaterial3D_1")
+mesh = SubResource("PlaneMesh_1")
+
+[node name="Camera3D" type="Camera3D" parent="." unique_id=1509109850]
+transform = Transform3D(1, 0, 0, 0, 0.866025, 0.5, 0, -0.5, 0.866025, 10, 15, 15)
+projection = 1
+current = true
+size = 20.0
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=167076485]
+transform = Transform3D(1, 0, 0, 0, 0.866025, 0.5, 0, -0.5, 0.866025, 0, 10, 0)
+light_energy = 0.8
+shadow_enabled = true

@@ -44,7 +44,7 @@ var is_repairing: bool = false
 ## Construction paused: first right-click in grid stops progress.
 var is_construction_paused: bool = false
 
-var _construction_progress = 1.0
+var _construction_progress: float = 1.0
 var _self_constructing = false
 var _self_construction_speed = 0.0
 

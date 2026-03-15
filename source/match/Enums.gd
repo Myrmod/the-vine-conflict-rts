@@ -37,6 +37,7 @@ enum CommandType {
 	HOLD_POSITION,  # Stay put, attack enemies in range only (no chase)
 	MOVE_NO_ATTACK,  # Move to position, ignore enemies entirely
 	PATROL,  # Move between two points repeatedly, engaging enemies
+	REVERSE_MOVE,  # Move to position backwards (no rotation)
 }
 
 ## starts at 1 to avoid falsy 0 value
@@ -53,6 +54,7 @@ enum UnitCommandMode {
 	ATTACK_MOVE,
 	MOVE,
 	PATROL,
+	REVERSE_MOVE,
 }
 
 enum MovementTypes {
@@ -114,4 +116,11 @@ enum ProductionTabGridSlots {
 enum ResourceType {
 	CREDITS,
 	ENERGY,
+}
+
+enum Projectile {
+	LASER,
+	CANNON,
+	ROCKET,
+	BULLETS,
 }

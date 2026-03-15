@@ -75,7 +75,6 @@ func _ready():
 
 func _preload_scenes():
 	var scene_paths = []
-	scene_paths += UnitConstants.PROJECTILES.values()
 	scene_paths += UnitConstants.STRUCTURE_BLUEPRINTS.keys()
 	for scene_path in scene_paths:
 		Globals.cache[scene_path] = load(scene_path)

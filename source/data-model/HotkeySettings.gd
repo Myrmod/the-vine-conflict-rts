@@ -30,6 +30,7 @@ const UNIT_COMMAND_NAMES = [
 	"hold_position",
 	"move",
 	"patrol",
+	"reverse_move",
 	"select_all_army",
 ]
 const STRUCTURE_ACTION_NAMES = ["repair", "sell", "disable"]
@@ -76,6 +77,7 @@ static func get_default_unit_command_bindings() -> Dictionary:
 		"hold_position": KEY_H,
 		"move": KEY_M,
 		"patrol": KEY_P,
+		"reverse_move": KEY_B,
 		"select_all_army": KEY_QUOTELEFT,
 	}
 

@@ -40,6 +40,9 @@ var _previously_set_global_transform_of_unit: Variant = null
 
 var _passive_movement_detected: bool = false
 
+## When true, the unit moves without rotating (reverse gear). Set by ReverseMoving action.
+var reverse_moving: bool = false
+
 @onready var _match: Match = find_parent("Match") as Match
 @onready var _unit: Node3D = get_parent() as Node3D
 
@@ -251,7 +254,9 @@ func _update_passive_movement_tracking(safe_velocity: Vector3) -> void:
 
 func _on_velocity_computed(safe_velocity: Vector3) -> void:
 	_update_stuck_prevention(safe_velocity)
-	_rotate_in_direction(safe_velocity * Vector3(1, 0, 1))
+
+	if not reverse_moving:
+		_rotate_in_direction(safe_velocity * Vector3(1, 0, 1))
 
 	var new_pos: Vector3 = _unit.global_transform.origin.move_toward(
 		_unit.global_transform.origin + safe_velocity, _interim_speed

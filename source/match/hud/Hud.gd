@@ -30,9 +30,15 @@ const _COMMAND_DEFS: Array[Dictionary] = [
 		"desc": "Patrol between current position and target",
 	},
 	{
+		"name": "Reverse Move",
+		"key": "reverse_move",
+		"desc": "Move backwards to target without turning around",
+	},
+	{
 		"name": "All Army",
 		"key": "select_all_army",
 		"desc": "Select all army units (Shift: on screen only)",
+		"options_only": true,
 	},
 ]
 
@@ -656,6 +662,7 @@ func _handle_unit_command_hotkey(physical: Key, event: InputEventKey, hs: Hotkey
 		hs.unit_command_bindings.get("attack_move", -1): Enums.UnitCommandMode.ATTACK_MOVE,
 		hs.unit_command_bindings.get("move", -1): Enums.UnitCommandMode.MOVE,
 		hs.unit_command_bindings.get("patrol", -1): Enums.UnitCommandMode.PATROL,
+		hs.unit_command_bindings.get("reverse_move", -1): Enums.UnitCommandMode.REVERSE_MOVE,
 	}
 	if mode_map.has(physical):
 		var mode = mode_map[physical]
@@ -1417,6 +1424,8 @@ func _init_ability_buttons() -> void:
 	# Create unit command buttons
 	var hs = Globals.hotkey_settings
 	for def in _COMMAND_DEFS:
+		if def.get("options_only", false):
+			continue
 		var btn = Button.new()
 		btn.custom_minimum_size = Vector2(31, 31)
 		btn.text = hs.get_key_label(def["key"])
@@ -1471,3 +1480,6 @@ func _on_command_button_pressed(key: String) -> void:
 		"patrol":
 			MatchSignals.active_command_mode = (Enums.UnitCommandMode.PATROL)
 			MatchSignals.command_mode_changed.emit(Enums.UnitCommandMode.PATROL)
+		"reverse_move":
+			MatchSignals.active_command_mode = (Enums.UnitCommandMode.REVERSE_MOVE)
+			MatchSignals.command_mode_changed.emit(Enums.UnitCommandMode.REVERSE_MOVE)

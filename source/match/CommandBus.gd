@@ -234,7 +234,7 @@ func _validate_command_schema(cmd: Dictionary) -> bool:
 		Enums.CommandType.CAST_SUPPORT_POWER:
 			print("command called validated", cmd.type)
 
-		Enums.CommandType.ATTACK_MOVE, Enums.CommandType.MOVE_NO_ATTACK:
+		Enums.CommandType.ATTACK_MOVE, Enums.CommandType.MOVE_NO_ATTACK, Enums.CommandType.REVERSE_MOVE:
 			# data.targets: Array of {unit: int, pos: Vector3}
 			if not cmd.data.has("targets") or typeof(cmd.data.targets) != TYPE_ARRAY:
 				push_error("CommandBus: ATTACK_MOVE/MOVE_NO_ATTACK requires Array data.targets")

@@ -131,6 +131,40 @@ func _try_ordering_selected_workers_to_construct_structure(potential_structure):
 	)
 
 
+func _force_attack_selected_units_on(target_unit):
+	var attackers = get_tree().get_nodes_in_group("selected_units").filter(
+		func(unit):
+			return (
+				unit.is_in_group("controlled_units")
+				and unit.attack_range != null
+				and unit.attack_range > 0
+				and unit != target_unit
+			)
+	)
+	if attackers.is_empty():
+		return
+	CommandBus.push_command(
+		{
+			"tick": Match.tick + 1,
+			"type": Enums.CommandType.AUTO_ATTACKING,
+			"player_id": _player.id,
+			"data":
+			{
+				"targets":
+				attackers.map(
+					func(unit): return {
+						"unit": unit.id,
+						"pos": unit.global_position,
+						"rot": unit.global_rotation
+					}
+				),
+				"target_unit": target_unit.id,
+				"force": true,
+			}
+		}
+	)
+
+
 func _navigate_selected_units_towards_unit(target_unit):
 	var at_least_one_unit_navigated = false
 	for unit in get_tree().get_nodes_in_group("selected_units"):
@@ -330,6 +364,14 @@ func _handle_command_mode_click(position: Vector3, mode: int):
 			)
 		Enums.UnitCommandMode.PATROL:
 			_push_patrol_command(movable_units, position, is_queued)
+		Enums.UnitCommandMode.REVERSE_MOVE:
+			var reverse_units = movable_units.filter(
+				func(u): return Actions.ReverseMoving.is_applicable(u)
+			)
+			if not reverse_units.is_empty():
+				_push_positional_command(
+					Enums.CommandType.REVERSE_MOVE, reverse_units, position, is_queued
+				)
 
 
 func _get_movable_selected_units() -> Array:
@@ -434,6 +476,16 @@ func push_hold_position_command():
 
 
 func _on_unit_targeted(unit):
+	var mode = MatchSignals.active_command_mode
+	if mode == Enums.UnitCommandMode.ATTACK_MOVE:
+		# Force-attack the clicked unit (even allies)
+		_force_attack_selected_units_on(unit)
+		MatchSignals.active_command_mode = Enums.UnitCommandMode.NORMAL
+		MatchSignals.command_mode_changed.emit(Enums.UnitCommandMode.NORMAL)
+		var targetability = unit.find_child("Targetability")
+		if targetability != null:
+			targetability.animate()
+		return
 	if _navigate_selected_units_towards_unit(unit):
 		var targetability = unit.find_child("Targetability")
 		if targetability != null:

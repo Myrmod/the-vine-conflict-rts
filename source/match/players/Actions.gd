@@ -13,6 +13,7 @@ const EntityIsQueued = preload("res://source/match/units/actions/EntityIsQueued.
 const AttackMoving = preload("res://source/match/units/actions/AttackMoving.gd")
 const HoldPosition = preload("res://source/match/units/actions/HoldPosition.gd")
 const Patrolling = preload("res://source/match/units/actions/Patrolling.gd")
+const ReverseMoving = preload("res://source/match/units/actions/ReverseMoving.gd")
 const WaitingForTargets = preload("res://source/match/units/actions/WaitingForTargets.gd")
 
 # player actions

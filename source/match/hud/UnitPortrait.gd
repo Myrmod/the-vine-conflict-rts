@@ -15,6 +15,7 @@ func _ready():
 	_local_camera.projection = Camera3D.PROJECTION_ORTHOGONAL
 	_local_camera.size = BASE_SIZE
 	_local_camera.current = true
+	_local_camera.cull_mask = 1  # layer 1 only — excludes UI overlay layer (2)
 	add_child(_local_camera)
 
 

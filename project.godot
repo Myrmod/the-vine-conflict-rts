@@ -35,6 +35,8 @@ EntityRegistry="*uid://ih1cm60v3gld"
 GameData="*uid://ufpaci6ywatp"
 CommandType="*uid://fjmnrbmh4ujk"
 MatchGlobal="*uid://u8dmif40cejc"
+Projectile="*res://source/match/units/projectiles/Projectile.tscn"
+UnitConstants="*uid://cn83tjsuqp5kv"
 
 [debug]
 

@@ -16,6 +16,7 @@ func _ready():
 	_update_circle_params()
 	if Engine.is_editor_hint():
 		return
+	_set_visual_layer(_circle, 2)
 	MatchSignals.deselect_all_units.connect(deselect)
 	_unit.input_event.connect(_on_input_event)
 	_circle.hide()
@@ -78,15 +79,25 @@ func _update_circle_params():
 func _on_input_event(_camera, event, _click_position, _click_normal, _shape_idx):
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
 		if MatchSignals.active_command_mode != Enums.UnitCommandMode.NORMAL:
-			var camera = get_viewport().get_camera_3d()
-			if camera != null:
-				var match_node = _unit.get_parent()
-				var map = match_node.map if match_node != null and "map" in match_node else null
-				var pos = camera.get_terrain_ray_intersection(event.position, map)
-				if pos != null:
-					MatchSignals.terrain_targeted.emit(pos)
+			if MatchSignals.active_command_mode == Enums.UnitCommandMode.ATTACK_MOVE:
+				MatchSignals.unit_targeted.emit(_unit)
+			else:
+				var camera = get_viewport().get_camera_3d()
+				if camera != null:
+					var match_node = _unit.get_parent()
+					var map = match_node.map if match_node != null and "map" in match_node else null
+					var pos = camera.get_terrain_ray_intersection(event.position, map)
+					if pos != null:
+						MatchSignals.terrain_targeted.emit(pos)
 			return
 		if _selected and Input.is_action_pressed("shift_selecting"):
 			deselect()
 			return
 		select()
+
+
+func _set_visual_layer(node: Node, layer: int) -> void:
+	for child in node.get_children():
+		if child is VisualInstance3D:
+			child.layers = layer
+		_set_visual_layer(child, layer)

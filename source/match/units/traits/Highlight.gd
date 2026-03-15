@@ -17,6 +17,7 @@ func _ready():
 	_update_circle_params()
 	if Engine.is_editor_hint():
 		return
+	_set_visual_layer(_circle, 2)
 	_unit.mouse_entered.connect(_activate)
 	_unit.mouse_exited.connect(_deactivate)
 	_circle.hide()
@@ -77,3 +78,10 @@ func _deactivate():
 func _update():
 	_update_circle_color()
 	_circle.visible = _forced or _activated
+
+
+func _set_visual_layer(node: Node, layer: int) -> void:
+	for child in node.get_children():
+		if child is VisualInstance3D:
+			child.layers = layer
+		_set_visual_layer(child, layer)

@@ -19,6 +19,7 @@ func _ready():
 	_update_circle_params()
 	if Engine.is_editor_hint():
 		return
+	_set_visual_layer(_circle, 2)
 	_unit.input_event.connect(_on_input_event)
 	_circle.hide()
 
@@ -34,11 +35,11 @@ func animate():
 	_tween = get_tree().create_tween()
 	(
 		_tween
-		.tween_property(
+		. tween_property(
 			_circle, "radius", _circle.radius * RADIUS_DEVIATION_FACTOR, ANIMATION_DURATION_S
 		)
-		.set_ease(Tween.EASE_IN)
-		.set_trans(Tween.TRANS_LINEAR)
+		. set_ease(Tween.EASE_IN)
+		. set_trans(Tween.TRANS_LINEAR)
 	)
 	_tween.tween_callback(_circle.hide).set_delay(ANIMATION_DURATION_S)
 
@@ -78,3 +79,10 @@ func _on_input_event(_camera, event, _click_position, _click_normal, _shape_idx)
 		and event.pressed
 	):
 		MatchSignals.unit_targeted.emit(_unit)
+
+
+func _set_visual_layer(node: Node, layer: int) -> void:
+	for child in node.get_children():
+		if child is VisualInstance3D:
+			child.layers = layer
+		_set_visual_layer(child, layer)

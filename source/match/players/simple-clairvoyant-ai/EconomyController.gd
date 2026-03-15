@@ -145,7 +145,9 @@ func _enforce_number_of_workers():
 
 
 func _construct_cc():
-	var construction_cost = UnitConstants.DEFAULT_PROPERTIES[CommandCenterScene.resource_path]
+	var construction_cost = (
+		UnitConstants.DEFAULT_PROPERTIES[CommandCenterScene.resource_path]["costs"]
+	)
 	# Pre-check resources as an optimistic filter. The authoritative check happens in
 	# Match._execute_command() — between queueing and execution another command may
 	# spend the resources, which Match handles gracefully.

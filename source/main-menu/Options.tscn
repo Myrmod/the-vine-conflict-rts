@@ -401,6 +401,14 @@ text = "Patrol:"
 custom_minimum_size = Vector2(80, 30)
 layout_mode = 2
 
+[node name="ReverseMoveLabel" type="Label" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Controls/MarginContainer/VBoxContainer/CommandsGrid"]
+layout_mode = 2
+text = "Reverse Move:"
+
+[node name="ReverseMoveButton" type="Button" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Controls/MarginContainer/VBoxContainer/CommandsGrid"]
+custom_minimum_size = Vector2(80, 30)
+layout_mode = 2
+
 [node name="SelectAllArmyLabel" type="Label" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Controls/MarginContainer/VBoxContainer/CommandsGrid" unique_id=1774031269]
 layout_mode = 2
 text = "Select All Army:"

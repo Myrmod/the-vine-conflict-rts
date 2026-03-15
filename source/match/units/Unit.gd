@@ -25,6 +25,10 @@ var attack_damage = null
 var attack_interval = null
 var attack_range = null
 var attack_domains = []
+var projectile_type: int = -1
+var projectile_config: Dictionary = {}
+var projectile_origin: Vector3 = Vector3.ZERO
+var can_reverse_move: bool = false
 var movement_domains: Array[Enums.MovementTypes] = []
 var _player_ref
 
@@ -294,6 +298,8 @@ func _execute_queued_command(cmd: Dictionary) -> void:
 		Enums.CommandType.PATROL:
 			var origin = cmd.data.get("patrol_origin", global_position)
 			action = Actions.Patrolling.new(origin, cmd.data.pos)
+		Enums.CommandType.REVERSE_MOVE:
+			action = Actions.ReverseMoving.new(cmd.data.pos)
 		Enums.CommandType.STOP:
 			_stopped = true
 			var queue_node = get_node_or_null("UnitCommandQueue")

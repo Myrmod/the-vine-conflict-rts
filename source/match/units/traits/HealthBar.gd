@@ -20,6 +20,7 @@ func _ready():
 	if Engine.is_editor_hint():
 		return
 	hide()
+	_actual_bar.layers = 2
 	_recalulate_bar_value()
 	_unit.selected.connect(_on_unit_selected)
 	_unit.deselected.connect(_on_unit_deselected)

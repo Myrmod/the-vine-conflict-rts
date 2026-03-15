@@ -13,6 +13,7 @@ const _SLOT_TO_NODE := {
 	"hold_position": "HoldPositionButton",
 	"move": "MoveButton",
 	"patrol": "PatrolButton",
+	"reverse_move": "ReverseMoveButton",
 	"select_all_army": "SelectAllArmyButton",
 	"repair": "RepairButton",
 	"sell": "SellButton",

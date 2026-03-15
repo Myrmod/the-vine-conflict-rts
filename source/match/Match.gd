@@ -289,6 +289,7 @@ func _execute_command(cmd: Dictionary):
 			var target_unit = _resolve_unit(cmd.data.target_unit, "AUTO_ATTACKING.target")
 			if target_unit == null:
 				return
+			var force: bool = cmd.data.get("force", false)
 			for entry in cmd.data.targets:
 				var parsed = _parse_target_entry(entry, "AUTO_ATTACKING")
 				if parsed.is_empty():
@@ -298,13 +299,15 @@ func _execute_command(cmd: Dictionary):
 					continue
 				if not _verify_unit_ownership(unit, cmd.player_id, "AUTO_ATTACKING"):
 					continue
-				if not Actions.AutoAttacking.is_applicable(unit, target_unit):
+				if not force and not Actions.AutoAttacking.is_applicable(unit, target_unit):
 					push_warning(
 						(
 							"AUTO_ATTACKING: unit %s cannot attack target %s (no attack_range or wrong domain)"
 							% [parsed["unit_id"], cmd.data.target_unit]
 						)
 					)
+					continue
+				elif force and (unit.attack_range == null or unit.attack_range <= 0):
 					continue
 				unit.action = Actions.AutoAttacking.new(target_unit)
 
@@ -653,6 +656,27 @@ func _execute_command(cmd: Dictionary):
 					unit._enqueue_command(cmd.type, {"pos": parsed["pos"], "patrol_origin": origin})
 				else:
 					unit.action = Actions.Patrolling.new(origin, parsed["pos"])
+
+		Enums.CommandType.REVERSE_MOVE:
+			for entry in cmd.data.targets:
+				var parsed = _parse_target_entry(entry, "REVERSE_MOVE")
+				if parsed.is_empty():
+					continue
+				var unit = _resolve_unit(parsed["unit_id"], "REVERSE_MOVE")
+				if unit == null:
+					continue
+				if not _verify_unit_ownership(unit, cmd.player_id, "REVERSE_MOVE"):
+					continue
+				if parsed["pos"] == null:
+					push_error("REVERSE_MOVE: target entry missing 'pos'")
+					continue
+				if not Actions.ReverseMoving.is_applicable(unit):
+					continue
+				unit._stopped = false
+				if cmd.data.get("queued", false) and unit.action != null:
+					unit._enqueue_command(cmd.type, {"pos": parsed["pos"]})
+				else:
+					unit.action = Actions.ReverseMoving.new(parsed["pos"])
 
 		_:
 			push_error("Match: unknown command type %s — %s" % [cmd.type, cmd])
