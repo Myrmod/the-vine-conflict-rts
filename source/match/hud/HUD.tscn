@@ -514,6 +514,7 @@ layout_mode = 2
 text = "button"
 
 [node name="UnitInfoVBoxContainer" type="VBoxContainer" parent="." unique_id=564800106]
+visible = false
 anchors_preset = 2
 anchor_top = 1.0
 anchor_bottom = 1.0
@@ -594,7 +595,7 @@ stretch = true
 [node name="UnitPortraitViewport" type="SubViewport" parent="UnitInfoVBoxContainer/HBoxContainer/UnitPortraitMarginContainer/UnitPortrait/SubViewportContainer" unique_id=1117391200]
 handle_input_locally = false
 size = Vector2i(200, 200)
-render_target_update_mode = 4
+render_target_update_mode = 0
 script = ExtResource("12_7a2ul")
 
 [node name="UnitInformation" type="VBoxContainer" parent="UnitInfoVBoxContainer/HBoxContainer" unique_id=1455967614]
