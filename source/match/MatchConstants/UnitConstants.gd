@@ -69,6 +69,11 @@ const DEFAULT_PROPERTIES = {
 		"attack_interval": 1.0,
 		"attack_range": 5.0,
 		"projectile_type": Enums.Projectile.ROCKET,
+		"projectile_config":
+		{
+			"sound_start": preload("res://assets/sound_effects/rocket1_start.mp3"),
+			"sound_end": preload("res://assets/sound_effects/rocket1_end.mp3"),
+		},
 		"attack_domains":
 		[
 			Enums.MovementTypes.LAND,
@@ -91,6 +96,10 @@ const DEFAULT_PROPERTIES = {
 		"attack_interval": 0.75,
 		"attack_range": 5.0,
 		"projectile_type": Enums.Projectile.CANNON,
+		"projectile_config":
+		{
+			"sound_start": preload("res://assets/sound_effects/autocannon-20mm.mp3"),
+		},
 		"can_reverse_move": true,
 		"rotation_speed": 1,
 		"attack_domains":
@@ -158,6 +167,11 @@ const DEFAULT_PROPERTIES = {
 		"attack_interval": 1.0,
 		"attack_range": 8.0,
 		"projectile_type": Enums.Projectile.CANNON,
+		"projectile_config":
+		{
+			"sound_start": preload("res://assets/sound_effects/rocket1_start.mp3"),
+			"sound_end": preload("res://assets/sound_effects/rocket1_end.mp3"),
+		},
 		"attack_domains":
 		[
 			Enums.MovementTypes.LAND,
@@ -178,6 +192,11 @@ const DEFAULT_PROPERTIES = {
 		"attack_interval": 0.75,
 		"attack_range": 8.0,
 		"projectile_type": Enums.Projectile.ROCKET,
+		"projectile_config":
+		{
+			"sound_start": preload("res://assets/sound_effects/rocket1_start.mp3"),
+			"sound_end": preload("res://assets/sound_effects/rocket1_end.mp3"),
+		},
 		"attack_domains":
 		[
 			Enums.MovementTypes.AIR,
@@ -282,6 +301,7 @@ const DEFAULT_PROPERTIES = {
 			"laser_count": 2,
 			"laser_width": 0.03,
 			"laser_duration": 0.25,
+			"sound_start": preload("res://assets/sound_effects/laser-shot.mp3"),
 		},
 		"rotation_speed": 1,
 		"attack_domains":

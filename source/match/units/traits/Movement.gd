@@ -255,7 +255,9 @@ func _update_passive_movement_tracking(safe_velocity: Vector3) -> void:
 func _on_velocity_computed(safe_velocity: Vector3) -> void:
 	_update_stuck_prevention(safe_velocity)
 
-	if not reverse_moving:
+	if reverse_moving:
+		_rotate_in_direction(-safe_velocity * Vector3(1, 0, 1))
+	else:
 		_rotate_in_direction(safe_velocity * Vector3(1, 0, 1))
 
 	var new_pos: Vector3 = _unit.global_transform.origin.move_toward(

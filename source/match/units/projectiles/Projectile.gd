@@ -17,10 +17,14 @@ extends Node3D
 ##   laser_count    : int     – rapid-fire pulse count for LASER (default 1)
 ##   laser_width    : float   – beam width for LASER (default 0.06)
 ##   laser_duration : float   – how long each pulse is visible (default 0.12)
+##   sound_start    : AudioStream – sound played at fire position (optional)
+##   sound_end      : AudioStream – sound played at impact position (optional; if omitted, no impact sound)
 ##   aoe_radius     : float   – area of effect radius; damages all enemies within range (default 0.0 = single target)
 
 const LASER_SHADER = preload("res://source/match/units/projectiles/laser_beam.gdshader")
 const IMPACT_SHADER = preload("res://source/match/units/projectiles/laser_impact.gdshader")
+
+const SOUND_POOL_SIZE: int = 16
 
 # ── active data ──────────────────────────────────────────────────────────────
 
@@ -38,6 +42,11 @@ var _bullets_mmi: MultiMeshInstance3D
 
 var _impact_particles: GPUParticles3D
 
+# ── audio pool ───────────────────────────────────────────────────────────────
+
+var _audio_pool: Array[AudioStreamPlayer3D] = []
+var _audio_pool_index: int = 0
+
 # ── default visuals ──────────────────────────────────────────────────────────
 
 var _laser_material: ShaderMaterial
@@ -54,6 +63,7 @@ func _ready() -> void:
 	_setup_cannon_multimesh()
 	_setup_rocket_multimesh()
 	_setup_bullets_multimesh()
+	_setup_audio_pool()
 
 
 func _process(delta: float) -> void:
@@ -88,6 +98,13 @@ func _fire_laser(from: Vector3, to: Vector3, config: Dictionary) -> void:
 		_apply_damage(target_unit, to, damage, aoe_radius, source_player)
 
 	_spawn_impact(to + Vector3(0, 0.15, 0), config.get("color", Color(0.3, 0.6, 1.0)))
+
+	var sound_start: AudioStream = config.get("sound_start")
+	if sound_start:
+		_play_sound(sound_start, from)
+	var sound_end: AudioStream = config.get("sound_end")
+	if sound_end:
+		_play_sound(sound_end, to)
 
 	var laser_count: int = config.get("laser_count", 1)
 	var duration: float = config.get("laser_duration", 0.25)
@@ -185,9 +202,14 @@ func _fire_traveling(
 				"total_distance": total_dist,
 				"color": config.get("color", _default_color_for(type)),
 				"size": config.get("size", 1.0),
+				"sound_end": config.get("sound_end"),
 			}
 		)
 	)
+
+	var sound_start: AudioStream = config.get("sound_start")
+	if sound_start:
+		_play_sound(sound_start, from)
 
 
 func _update_traveling(delta: float) -> void:
@@ -242,6 +264,9 @@ func _on_projectile_arrival(p: Dictionary) -> void:
 			p.get("aoe_radius", 0.0),
 			p.get("source_player")
 		)
+	var sound_end: AudioStream = p.get("sound_end")
+	if sound_end:
+		_play_sound(sound_end, p.current_pos)
 
 
 func _apply_damage(
@@ -450,6 +475,25 @@ func _setup_bullets_multimesh() -> void:
 	_bullets_mmi.material_override = _bullets_material
 	_bullets_mmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	add_child(_bullets_mmi)
+
+
+func _setup_audio_pool() -> void:
+	for i: int in SOUND_POOL_SIZE:
+		var player: AudioStreamPlayer3D = AudioStreamPlayer3D.new()
+		player.max_db = 0.0
+		player.unit_size = 10.0
+		player.max_distance = 80.0
+		player.bus = &"Master"
+		add_child(player)
+		_audio_pool.append(player)
+
+
+func _play_sound(stream: AudioStream, pos: Vector3) -> void:
+	var player: AudioStreamPlayer3D = _audio_pool[_audio_pool_index]
+	_audio_pool_index = (_audio_pool_index + 1) % SOUND_POOL_SIZE
+	player.stream = stream
+	player.global_position = pos
+	player.play()
 
 
 # ── utility ──────────────────────────────────────────────────────────────────
