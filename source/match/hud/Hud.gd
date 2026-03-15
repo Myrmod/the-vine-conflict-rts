@@ -1168,9 +1168,11 @@ func _on_grid_button_gui_input(event: InputEvent, scene_path: String) -> void:
 		if _grid_has_paused_elements(scene_path):
 			_grid_toggle_pause(producer, scene_path)
 		else:
-			ProductionQueue._generate_unit_production_command(
-				producer.id, scene_path, producer.player.id
-			)
+			var count := 5 if event.shift_pressed else 1
+			for i in count:
+				ProductionQueue._generate_unit_production_command(
+					producer.id, scene_path, producer.player.id
+				)
 	elif event.button_index == MOUSE_BUTTON_RIGHT:
 		if event.shift_pressed:
 			_grid_cancel_all_of_type(producer, scene_path)
