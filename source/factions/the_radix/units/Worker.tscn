@@ -42,12 +42,9 @@ radius = 0.6
 path_desired_distance = 0.31
 target_desired_distance = 0.31
 path_height_offset = 0.6
-path_max_distance = 0.31
 radius = 0.6
-neighbor_distance = 8.0
-max_neighbors = 40
-time_horizon_agents = 3.0
 speed = 2.5
+turn_speed = 5.0
 
 [node name="HealthBar" parent="." unique_id=1547880231 instance=ExtResource("5_50cqd")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)

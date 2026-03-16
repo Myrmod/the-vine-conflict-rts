@@ -13,15 +13,18 @@ func _ready():
 	_target_unit.tree_exited.connect(queue_free)
 	_target_unit.constructed.connect(queue_free)
 	_unit.get_node("Sparkling").enable()
+	MatchSignals.tick_advanced.connect(_on_tick_advanced)
 
 
 func _exit_tree():
 	_unit.get_node("Sparkling").disable()
 
 
-func _process(delta):
+func _on_tick_advanced():
 	if not MatchUtils.Movement.units_adhere(_unit, _target_unit) or _target_unit.is_constructed():
 		queue_free()
 		return
 	var speed_mult := 0.75 if _unit.player != null and _unit.player.energy < 0 else 1.0
-	_target_unit.construct(delta * UnitConstants.STRUCTURE_CONSTRUCTING_SPEED * speed_mult)
+	_target_unit.construct(
+		MatchConstants.TICK_DELTA * UnitConstants.STRUCTURE_CONSTRUCTING_SPEED * speed_mult
+	)

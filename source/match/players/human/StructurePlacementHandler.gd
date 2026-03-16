@@ -27,6 +27,7 @@ var _blueprint_rotating = false
 var _free_placement_mode = false
 var _off_field_deploy = false
 var _is_trickle = false
+var _off_field_producer_id: int = -1
 
 @onready var _player = get_parent()
 @onready var _match = find_parent("Match")
@@ -280,6 +281,7 @@ func _cancel_structure_placement():
 		_free_placement_mode = false
 		_off_field_deploy = false
 		_is_trickle = false
+		_off_field_producer_id = -1
 		MatchSignals.structure_placement_ended.emit()
 
 
@@ -300,6 +302,7 @@ func _finish_structure_placement():
 						"self_constructing": true,
 						"off_field_deploy": _off_field_deploy,
 						"trickle": _is_trickle,
+						"producer_id": _off_field_producer_id,
 					}
 				}
 			)
@@ -356,12 +359,12 @@ func _toggle_free_placement_mode():
 		_set_blueprint_position_based_on_mouse_pos()
 
 
-func _snap_to_grid(position: Vector3) -> Vector3:
+func _snap_to_grid(_position: Vector3) -> Vector3:
 	var grid_size = FeatureFlags.grid_cell_size
 	return Vector3(
-		round(position.x / grid_size) * grid_size,
-		position.y,
-		round(position.z / grid_size) * grid_size
+		floor(_position.x / grid_size) * grid_size + grid_size * 0.5,
+		_position.y,
+		floor(_position.z / grid_size) * grid_size + grid_size * 0.5
 	)
 
 
@@ -382,6 +385,8 @@ func _snap_rotation_to_90_degrees():
 func _on_structure_placement_request(structure_prototype):
 	_off_field_deploy = MatchSignals.pending_off_field_deploy
 	_is_trickle = MatchSignals.pending_trickle
+	_off_field_producer_id = MatchSignals.pending_off_field_producer_id
 	MatchSignals.pending_off_field_deploy = false
 	MatchSignals.pending_trickle = false
+	MatchSignals.pending_off_field_producer_id = -1
 	_start_structure_placement(structure_prototype)

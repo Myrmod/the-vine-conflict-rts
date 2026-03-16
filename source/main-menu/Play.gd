@@ -183,6 +183,10 @@ func _align_player_controls_visibility_to_map(map):
 		var play_select = player_settings_instance.find_child("PlaySelect")
 		if player_index == 0:
 			play_select.selected = Constants.PlayerType.HUMAN
+			var pname: String = Globals.options.player_name.strip_edges()
+			play_select.set_item_text(
+				Constants.PlayerType.HUMAN, pname if not pname.is_empty() else "Human"
+			)
 		elif player_index == 1:
 			play_select.selected = Constants.PlayerType.SIMPLE_CLAIRVOYANT_AI
 		play_select.item_selected.connect(_on_player_selected.bind(player_index))

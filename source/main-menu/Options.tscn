@@ -134,6 +134,46 @@ layout_mode = 2
 focus_mode = 0
 text = "Mouse movement restricted to the game window"
 
+[node name="PanelContainer3" type="PanelContainer" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Video/VBoxContainer"]
+layout_mode = 2
+
+[node name="MarginContainer" type="MarginContainer" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Video/VBoxContainer/PanelContainer3"]
+layout_mode = 2
+theme_override_constants/margin_left = 5
+theme_override_constants/margin_top = 5
+theme_override_constants/margin_right = 5
+theme_override_constants/margin_bottom = 5
+
+[node name="VBoxContainer" type="VBoxContainer" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Video/VBoxContainer/PanelContainer3/MarginContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Video/VBoxContainer/PanelContainer3/MarginContainer/VBoxContainer"]
+layout_mode = 2
+text = "Profile"
+horizontal_alignment = 1
+
+[node name="Panel" type="Panel" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Video/VBoxContainer/PanelContainer3/MarginContainer/VBoxContainer/Label"]
+show_behind_parent = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="NameRow" type="HBoxContainer" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Video/VBoxContainer/PanelContainer3/MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Video/VBoxContainer/PanelContainer3/MarginContainer/VBoxContainer/NameRow"]
+layout_mode = 2
+text = "Player Name:"
+
+[node name="PlayerNameInput" type="LineEdit" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Video/VBoxContainer/PanelContainer3/MarginContainer/VBoxContainer/NameRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+placeholder_text = "Player"
+max_length = 32
+
 [node name="Audio" type="ScrollContainer" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer" unique_id=1246592285]
 visible = false
 custom_minimum_size = Vector2(0, 956)
@@ -454,4 +494,5 @@ layout_mode = 2
 [connection signal="pressed" from="PanelContainer/MarginContainer/VBoxContainer/HBoxContainer/Button" to="." method="_on_back_button_pressed"]
 [connection signal="item_selected" from="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Video/VBoxContainer/PanelContainer/MarginContainer/VBoxContainer/Screen" to="." method="_on_screen_item_selected"]
 [connection signal="pressed" from="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Video/VBoxContainer/PanelContainer2/MarginContainer/VBoxContainer/MouseMovementRestricted" to="." method="_on_mouse_movement_restricted_pressed"]
+[connection signal="text_changed" from="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Video/VBoxContainer/PanelContainer3/MarginContainer/VBoxContainer/NameRow/PlayerNameInput" to="." method="_on_player_name_changed"]
 [connection signal="item_selected" from="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Controls/MarginContainer/VBoxContainer/PresetContainer/PresetSelect" to="." method="_on_preset_selected"]

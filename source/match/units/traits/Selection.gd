@@ -58,10 +58,11 @@ func _set_width(a_width):
 
 
 func _update_circle_color():
-	if _unit.is_in_group("controlled_units"):
-		_circle.color = MatchConstants.OWNED_PLAYER_CIRCLE_COLOR
-	elif _unit.is_in_group("adversary_units"):
-		_circle.color = MatchConstants.ADVERSARY_PLAYER_CIRCLE_COLOR
+	if _unit.is_in_group("controlled_units") or _unit.is_in_group("adversary_units"):
+		if "player" in _unit and _unit.player != null:
+			_circle.color = _unit.player.color
+		else:
+			_circle.color = MatchConstants.DEFAULT_CIRCLE_COLOR
 	elif _unit.is_in_group("resource_units"):
 		_circle.color = MatchConstants.RESOURCE_CIRCLE_COLOR
 	else:

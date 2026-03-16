@@ -126,6 +126,12 @@ var production_grid: GridContainer = $RightMarginContainer/HBoxContainer/RightVB
 @onready
 var control_groups_container: VBoxContainer = $RightMarginContainer/HBoxContainer/RightVBoxContainer/HBoxContainer/ControlGroupsVBoxContainer
 
+# Ping overlay
+@onready var ping_container: VBoxContainer = $PingContainer
+var _ping_labels: Dictionary = {}
+const _PING_UPDATE_TICKS = 10  # update every 1s at TICK_RATE 10
+var _ping_tick_counter: int = 0
+
 
 func _ready() -> void:
 	tooltip = TOOLTIP.instantiate()
@@ -145,6 +151,7 @@ func _ready() -> void:
 			production_tab_bar.set_tab_tooltip(i, "%s  [%s]" % [tab_name, key_label])
 
 	MatchSignals.tick_advanced.connect(set_timer)
+	MatchSignals.tick_advanced.connect(_update_ping_display)
 	MatchSignals.unit_spawned.connect(_on_unit_changed)
 	MatchSignals.unit_died.connect(_on_unit_changed)
 	MatchSignals.unit_construction_finished.connect(_on_unit_changed)
@@ -551,9 +558,9 @@ func _try_produce_structure(scene_path: String) -> void:
 			producer.production_queue != null
 			and producer.production_queue.has_completed(scene_path)
 		):
-			producer.production_queue.deploy_completed(scene_path)
 			MatchSignals.pending_off_field_deploy = true
 			MatchSignals.pending_trickle = false
+			MatchSignals.pending_off_field_producer_id = producer.id
 			var prototype = load(scene_path)
 			if prototype:
 				MatchSignals.place_structure.emit(prototype)
@@ -592,6 +599,12 @@ func _try_produce_structure(scene_path: String) -> void:
 
 func _unhandled_key_input(event: InputEvent) -> void:
 	if not event is InputEventKey or not event.pressed:
+		return
+
+	# Ctrl+F1 toggles ping overlay
+	if event.keycode == KEY_F1 and event.ctrl_pressed:
+		ping_container.visible = not ping_container.visible
+		get_viewport().set_input_as_handled()
 		return
 
 	var physical: Key = event.physical_keycode
@@ -1589,8 +1602,12 @@ func _update_unit_info_panel() -> void:
 	var props: Dictionary = UnitConstants.DEFAULT_PROPERTIES.get(scene_path, {})
 
 	# Hitpoints
-	var hp_cur: int = _portrait_unit.hp if _portrait_unit.hp != null else 0
-	var hp_max_val: int = _portrait_unit.hp_max if _portrait_unit.hp_max != null else 0
+	var hp_cur: int = (
+		_portrait_unit.hp if "hp" in _portrait_unit and _portrait_unit.hp != null else 0
+	)
+	var hp_max_val: int = (
+		_portrait_unit.hp_max if "hp_max" in _portrait_unit and _portrait_unit.hp_max != null else 0
+	)
 	hitpoints.bbcode_enabled = true
 	hitpoints.text = "[b]%d[/b] / %d" % [hp_cur, hp_max_val]
 	hitpoints.modulate.a = 1.0 if hp_max_val > 0 else 0.0
@@ -1649,3 +1666,29 @@ func _clear_unit_info_panel() -> void:
 		child.queue_free()
 	var ability_wrapper: MarginContainer = unit_specific_ability_h_box_container.get_parent()
 	ability_wrapper.modulate.a = 0.0
+
+
+func _update_ping_display() -> void:
+	if not ping_container.visible or not NetworkCommandSync.is_active:
+		return
+	_ping_tick_counter += 1
+	if _ping_tick_counter < _PING_UPDATE_TICKS:
+		return
+	_ping_tick_counter = 0
+	var rtts := NetworkCommandSync.get_peer_rtts()
+	for pid in rtts:
+		if not _ping_labels.has(pid):
+			var lbl := Label.new()
+			lbl.add_theme_font_size_override("font_size", 12)
+			lbl.add_theme_color_override("font_color", Color.WHITE)
+			lbl.add_theme_color_override("font_shadow_color", Color.BLACK)
+			lbl.add_theme_constant_override("shadow_offset_x", 1)
+			lbl.add_theme_constant_override("shadow_offset_y", 1)
+			ping_container.add_child(lbl)
+			_ping_labels[pid] = lbl
+		_ping_labels[pid].text = "Peer %d: %d ms" % [pid, rtts[pid]]
+	# Remove labels for disconnected peers
+	for pid in _ping_labels.keys():
+		if not rtts.has(pid):
+			_ping_labels[pid].queue_free()
+			_ping_labels.erase(pid)

@@ -80,7 +80,7 @@ func _ready():
 	MatchSignals.tick_advanced.connect(_on_tick_advanced)
 
 
-func _process(delta):
+func _on_tick_advanced() -> void:
 	if (
 		_self_constructing
 		and is_under_construction()
@@ -89,14 +89,15 @@ func _process(delta):
 		and _has_active_structure_producer()
 	):
 		var speed_mult := 0.75 if player != null and player.energy < 0 else 1.0
-		var progress = delta * _self_construction_speed * speed_mult
+		var progress = MatchConstants.TICK_DELTA * _self_construction_speed * speed_mult
 		if not _trickle_cost.is_empty():
 			if not _try_deduct_trickle(progress):
-				return
-		construct(progress)
-
-
-func _on_tick_advanced() -> void:
+				# can't afford trickle, skip
+				pass
+			else:
+				construct(progress)
+		else:
+			construct(progress)
 	if is_selling:
 		_sell_ticks_remaining -= 1
 		if _sell_ticks_remaining <= 0:
@@ -203,7 +204,7 @@ func is_under_construction():
 func _has_active_structure_producer() -> bool:
 	if player == null:
 		return true
-	for unit in get_tree().get_nodes_in_group("controlled_units"):
+	for unit in get_tree().get_nodes_in_group("units"):
 		if unit == self:
 			continue
 		if not "produces" in unit:
@@ -229,7 +230,7 @@ func _cancel_orphaned_constructions() -> void:
 		return
 	# Collect other active structure-producers (excluding self)
 	var other_producers: Array = []
-	for unit in get_tree().get_nodes_in_group("controlled_units"):
+	for unit in get_tree().get_nodes_in_group("units"):
 		if unit == self:
 			continue
 		if not "produces" in unit:
@@ -249,7 +250,7 @@ func _cancel_orphaned_constructions() -> void:
 		return
 	# No producers left — cancel all under-construction structures
 	var to_cancel: Array = []
-	for unit in get_tree().get_nodes_in_group("controlled_units"):
+	for unit in get_tree().get_nodes_in_group("units"):
 		if unit == self:
 			continue
 		if unit.player != player:

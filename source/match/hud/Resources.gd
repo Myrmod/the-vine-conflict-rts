@@ -1,7 +1,5 @@
 extends VBoxContainer
 
-const Human = preload("res://source/match/players/human/Human.gd")
-
 @onready var _match = find_parent("Match")
 
 # TODO: handle human player removal/addition
@@ -11,14 +9,9 @@ func _ready():
 	await find_parent("Match").ready
 	_hide_all_bars()
 	_setup_all_bars()
-	var human_players = get_tree().get_nodes_in_group("players").filter(
-		func(player): return player is Human
-	)
-	if (
-		_match.settings.visibility == _match.settings.Visibility.PER_PLAYER
-		and not human_players.is_empty()
-	):
-		_show_player_bars([human_players[0]])
+	var local_player = _match._get_local_player()
+	if _match.settings.visibility == _match.settings.Visibility.PER_PLAYER and local_player != null:
+		_show_player_bars([local_player])
 	else:
 		_show_player_bars(get_tree().get_nodes_in_group("players"))
 

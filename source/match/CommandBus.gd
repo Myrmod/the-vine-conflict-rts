@@ -306,6 +306,15 @@ func push_command(cmd: Dictionary):
 		return
 	if not _is_valid_command(cmd):
 		return
+
+	# MULTIPLAYER: apply input delay and broadcast to all peers.
+	# Commands normally target Match.tick + 1. In multiplayer, shift them
+	# forward by the extra input delay so the network has time to deliver.
+	if NetworkCommandSync.is_active:
+		cmd.tick += (NetworkCommandSync.INPUT_DELAY - 1)
+		NetworkCommandSync.broadcast_command(cmd)
+		return
+
 	var t: int = cmd.tick
 	if not commands.has(t):
 		commands[t] = []

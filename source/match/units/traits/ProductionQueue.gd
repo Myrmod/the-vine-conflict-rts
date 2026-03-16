@@ -46,8 +46,12 @@ var _queue = []
 @onready var _unit = get_parent()
 
 
-func _process(delta):
-	if _queue.is_empty() or delta <= 0.0:
+func _ready():
+	MatchSignals.tick_advanced.connect(_on_tick_advanced)
+
+
+func _on_tick_advanced():
+	if _queue.is_empty():
 		return
 	# Don't tick production while the parent structure is disabled or selling.
 	if _unit != null and (_unit.get("is_disabled") or _unit.get("is_selling")):
@@ -61,7 +65,7 @@ func _process(delta):
 	if current_queue_element == null:
 		return
 	# Slow production by 25% when player energy is negative
-	var effective_delta: float = delta
+	var effective_delta: float = MatchConstants.TICK_DELTA
 	if _unit != null and _unit.player != null and _unit.player.energy < 0:
 		effective_delta *= 0.75
 	# Trickle cost: deduct proportional resources before progressing

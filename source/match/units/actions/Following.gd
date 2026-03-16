@@ -2,14 +2,14 @@ extends "res://source/match/units/actions/Action.gd"
 
 const MovingToUnit = preload("res://source/match/units/actions/MovingToUnit.gd")
 
-const REFRESH_INTERVAL = 1.0 / 60.0 * 20.0
+const REFRESH_TICKS = 1
 
 var _target_unit = null
-var _timer = null
+var _refresh_counter: int = 0
 var _last_known_target_unit_position = null
 var _sub_action = null
 
-@onready var _unit = Utils.NodeEx.find_parent_with_group(self , "units")
+@onready var _unit = Utils.NodeEx.find_parent_with_group(self, "units")
 
 
 static func is_applicable(source_unit):
@@ -22,19 +22,21 @@ func _init(target_unit):
 
 func _ready():
 	_target_unit.tree_exited.connect(queue_free)
-	_setup_refresh_timer()
+	MatchSignals.tick_advanced.connect(_on_tick_advanced)
 	_refresh()
 
 
 func _to_string():
-	return "{0}({1})".format([ super (), str(_sub_action) if _sub_action != null else ""])
+	return "{0}({1})".format([super(), str(_sub_action) if _sub_action != null else ""])
 
 
-func _setup_refresh_timer():
-	_timer = Timer.new()
-	_timer.timeout.connect(_refresh)
-	add_child(_timer)
-	_timer.start(REFRESH_INTERVAL)
+func _on_tick_advanced():
+	if not is_inside_tree():
+		return
+	_refresh_counter += 1
+	if _refresh_counter >= REFRESH_TICKS:
+		_refresh_counter = 0
+		_refresh()
 
 
 func _refresh():

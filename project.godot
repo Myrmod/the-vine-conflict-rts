@@ -37,6 +37,7 @@ CommandType="*uid://fjmnrbmh4ujk"
 MatchGlobal="*uid://u8dmif40cejc"
 Projectile="*res://source/match/units/projectiles/Projectile.tscn"
 UnitConstants="*uid://cn83tjsuqp5kv"
+NetworkCommandSync="*uid://cljkl7swtkeyw"
 
 [debug]
 

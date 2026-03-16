@@ -134,9 +134,10 @@ func _on_left_click():
 	if completed_el != null:
 		var src_queue = element_to_source.get(completed_el)
 		if src_queue != null:
-			src_queue.deploy_completed(unit_type_path)
+			var structure = src_queue.get_parent()
 			MatchSignals.pending_off_field_deploy = true
 			MatchSignals.pending_trickle = false
+			MatchSignals.pending_off_field_producer_id = structure.id
 			var prototype = load(unit_type_path)
 			if prototype:
 				MatchSignals.place_structure.emit(prototype)

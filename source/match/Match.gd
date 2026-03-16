@@ -26,7 +26,7 @@ extends Node3D
 # ──────────────────────────────────────────────────────────────────────
 
 const Structure = preload("res://source/match/units/Structure.gd")
-const Human = preload("res://source/match/players/human/Human.gd")
+const _SEPARATION_STRENGTH := 0.4
 
 @export var settings: Resource = null
 
@@ -64,6 +64,10 @@ static var tick := 0
 # produces the same sequence. Static so controllers and utils can access it directly.
 static var rng := RandomNumberGenerator.new()
 
+# The player controlled by THIS peer. In single-player this is the Human player.
+# In multiplayer each peer gets a different _local_player based on their peer ID.
+var _local_player: Player = null
+
 
 func _enter_tree():
 	assert(settings != null, "match cannot start without settings, see examples in tests/manual/")
@@ -77,8 +81,15 @@ func _ready():
 	MatchSignals.setup_and_spawn_unit.connect(_setup_and_spawn_unit)
 	_setup_subsystems_dependent_on_map()
 	_setup_players()
+
+	# Determine which player this peer controls — must be set before _setup_player_units()
+	# so _setup_unit_groups() knows which units are "controlled" vs "adversary".
+	var local_idx: int = _get_local_player_index()
+	var all_players: Array = get_tree().get_nodes_in_group("players")
+	_local_player = all_players[local_idx]
+
 	_setup_player_units()
-	visible_player = get_tree().get_nodes_in_group("players")[settings.visible_player]
+	visible_player = _local_player
 	_move_camera_to_initial_position()
 
 	# Reset tick counter for this match
@@ -90,6 +101,11 @@ func _ready():
 	timer.autostart = true
 	timer.timeout.connect(_on_tick)
 	add_child(timer)
+
+	# In multiplayer, catch up immediately when a stalled tick becomes ready
+	# instead of waiting for the next timer fire.
+	if NetworkCommandSync.is_active:
+		NetworkCommandSync.tick_unblocked.connect(_on_tick_unblocked)
 
 	if settings.visibility == settings.Visibility.FULL:
 		fog_of_war.reveal()
@@ -178,16 +194,139 @@ func _verify_unit_ownership(unit, player_id: int, context: String) -> bool:
 # TICK LOOP
 # ──────────────────────────────────────────────────────────────────────
 
-
 # Called by the Timer at TICK_RATE Hz. Advances the deterministic tick counter
 # and executes all commands queued for this tick. This is the heartbeat of the
 # game simulation — identical ticks + identical commands = identical game state.
+var _tick_stalled: bool = false
+
+
 func _on_tick():
+	# MULTIPLAYER: wait until all peers have submitted commands for the next tick.
+	if NetworkCommandSync.is_active:
+		# Send our "tick ready" signal so other peers know we have no more
+		# commands for this upcoming tick.
+		NetworkCommandSync.send_tick_ready(tick + 1)
+		if not NetworkCommandSync.is_tick_ready(tick + 1):
+			_tick_stalled = true
+			return  # stall — not all peers have sent their commands yet
+		NetworkCommandSync.cleanup_tick(tick)
+
+	_advance_tick()
+
+
+func _on_tick_unblocked():
+	if not _tick_stalled:
+		return
+	_tick_stalled = false
+	if NetworkCommandSync.is_tick_ready(tick + 1):
+		NetworkCommandSync.cleanup_tick(tick)
+		_advance_tick()
+
+
+func _advance_tick():
 	tick += 1
 	_process_commands_for_tick()
 	# Notify AI controllers and other tick-driven systems.
 	# This fires AFTER commands are executed, so listeners see up-to-date game state.
 	MatchSignals.tick_advanced.emit()
+	# Deterministic unit separation — runs AFTER all Movement handlers have
+	# updated positions, so every unit's tick transform is final before we
+	# resolve overlaps.  Processes units in sorted-ID order for determinism.
+	_apply_unit_separation()
+	# MULTIPLAYER: periodically exchange state checksums for desync detection.
+	NetworkCommandSync.maybe_check_state(tick)
+
+
+# ──────────────────────────────────────────────────────────────────────
+# DETERMINISTIC UNIT SEPARATION
+# ──────────────────────────────────────────────────────────────────────
+
+
+func _apply_unit_separation() -> void:
+	var mobile_units: Array = []
+	for unit_id in EntityRegistry.entities:
+		var unit = EntityRegistry.entities[unit_id]
+		if unit == null or not is_instance_valid(unit):
+			continue
+		if unit.find_child("Movement") == null:
+			continue
+		mobile_units.append(unit)
+
+	if mobile_units.size() < 2:
+		return
+
+	mobile_units.sort_custom(func(a, b): return a.id < b.id)
+
+	# Build per-unit push accumulators so each pair contributes
+	# independently (order-independent within a single pass).
+	var pushes := {}  # unit.id → Vector3
+	for u in mobile_units:
+		pushes[u.id] = Vector3.ZERO
+
+	for i in range(mobile_units.size()):
+		var unit_a: Node3D = mobile_units[i]
+		var r_a: float = unit_a.radius if unit_a.radius != null else 0.25
+		var pos_a := Vector3(
+			unit_a.global_transform.origin.x,
+			0.0,
+			unit_a.global_transform.origin.z,
+		)
+
+		for j in range(i + 1, mobile_units.size()):
+			var unit_b: Node3D = mobile_units[j]
+			var r_b: float = unit_b.radius if unit_b.radius != null else 0.25
+
+			if unit_a.get_nav_domain() != unit_b.get_nav_domain():
+				continue
+
+			var pos_b := Vector3(
+				unit_b.global_transform.origin.x,
+				0.0,
+				unit_b.global_transform.origin.z,
+			)
+
+			var diff := pos_a - pos_b
+			var dist := diff.length()
+			var min_dist := r_a + r_b
+
+			if dist >= min_dist:
+				continue
+
+			var push_dir: Vector3
+			if dist < 0.001:
+				push_dir = Vector3(1, 0, 0)
+			else:
+				push_dir = diff / dist
+
+			# When both units are actively moving, bias separation
+			# perpendicular to push_dir so they slide past each other.
+			var mov_a = unit_a.find_child("Movement")
+			var mov_b = unit_b.find_child("Movement")
+			var a_moving: bool = mov_a.is_moving()
+			var b_moving: bool = mov_b.is_moving()
+			if a_moving and b_moving:
+				var perp := push_dir.cross(Vector3.UP).normalized()
+				if not perp.is_zero_approx():
+					push_dir = (push_dir + perp * 0.5).normalized()
+
+			var overlap := min_dist - dist
+			var half_push := push_dir * overlap * _SEPARATION_STRENGTH * 0.5
+			pushes[unit_a.id] += half_push
+			pushes[unit_b.id] -= half_push
+
+	# Apply accumulated pushes.
+	for unit in mobile_units:
+		var push: Vector3 = pushes[unit.id]
+		if push.is_zero_approx():
+			continue
+		# Cap the push so it never exceeds one tick of movement.
+		var mov = unit.find_child("Movement")
+		var max_push: float = mov.speed * MatchConstants.TICK_DELTA
+		if push.length() > max_push:
+			push = push.normalized() * max_push
+		unit.global_transform.origin.x += push.x
+		unit.global_transform.origin.z += push.z
+		mov.resync_tick_transform()
 
 
 # Fetch and execute every command for the current tick.
@@ -196,6 +335,9 @@ func _process_commands_for_tick():
 	var commands_for_tick = CommandBus.get_commands_for_tick(tick)
 	if commands_for_tick.is_empty():
 		return
+	# Sort commands by player_id to guarantee identical execution order on all
+	# peers regardless of RPC arrival order.
+	commands_for_tick.sort_custom(func(a, b): return a.player_id < b.player_id)
 	for cmd in commands_for_tick:
 		_execute_command(cmd)
 
@@ -365,6 +507,11 @@ func _execute_command(cmd: Dictionary):
 			)
 			if off_field_deploy:
 				# Cost already handled during queue production. Deploy with quick build.
+				var producer_id: int = cmd.data.get("producer_id", -1)
+				if producer_id >= 0:
+					var producer = _resolve_unit(producer_id, "STRUCTURE_PLACED")
+					if producer != null and producer.has_node("ProductionQueue"):
+						producer.production_queue.deploy_completed(cmd.data.structure_prototype)
 				var unit = structure_prototype.instantiate()
 				MatchSignals.setup_and_spawn_unit.emit(unit, cmd.data.transform, player, true)
 				if unit is Structure:
@@ -761,8 +908,13 @@ func _setup_players():
 
 
 func _create_players_from_settings():
-	# Instantiate each player (Human or AI controller) from their configured controller scene
-	for player_settings in settings.players:
+	# Instantiate each player (Human or AI controller) from their configured controller scene.
+	# In multiplayer only the LOCAL peer's Human keeps input controllers;
+	# remote Human players have their input nodes removed so they don't
+	# react to local UI signals (their commands arrive via NetworkCommandSync).
+	var local_idx: int = _get_local_player_index()
+	for player_idx: int in range(settings.players.size()):
+		var player_settings: PlayerSettings = settings.players[player_idx]
 		var player_scene = Constants.CONTROLLER_SCENES[player_settings.controller]
 		var player = player_scene.instantiate()
 		player.color = player_settings.color
@@ -773,6 +925,25 @@ func _create_players_from_settings():
 		player.faction = player_settings.faction
 		# set starting resources
 		player.initialize_resources(Factions.get_starting_resource())
+
+		# Strip input controllers from remote Human players in multiplayer.
+		if (
+			NetworkCommandSync.is_active
+			and player_settings.controller == Constants.PlayerType.HUMAN
+			and player_idx != local_idx
+		):
+			for child_name in [
+				"UnitActionsController",
+				"StructurePlacementHandler",
+				"StructureActionHandler",
+				"VoiceNarratorController",
+				"UnitVoicesController",
+			]:
+				var child: Node = player.get_node_or_null(child_name)
+				if child:
+					player.remove_child(child)
+					child.queue_free()
+
 		_players.add_child(player)
 
 
@@ -843,7 +1014,7 @@ func _setup_and_spawn_unit(unit, a_transform, player, self_constructing = false)
 func _setup_unit_groups(unit, player):
 	# Categorize units into groups that the UI and game systems use for visibility/filtering
 	unit.add_to_group("units")
-	if player == _get_human_player():
+	if player == _get_local_player():
 		unit.add_to_group("controlled_units")
 	else:
 		unit.add_to_group("adversary_units")
@@ -862,20 +1033,34 @@ func _setup_unit_groups(unit, player):
 				break
 
 
-func _get_human_player():
-	var human_players = get_tree().get_nodes_in_group("players").filter(
-		func(player): return player is Human
-	)
-	assert(human_players.size() <= 1, "more than one human player is not allowed")
-	if not human_players.is_empty():
-		return human_players[0]
-	return null
+## Returns the player controlled by this peer.
+## In multiplayer each peer has a different local player. In single-player
+## this is the Human player (or the first player if no human exists).
+func _get_local_player() -> Player:
+	if _local_player != null:
+		return _local_player
+	# Fallback for early calls before _ready sets _local_player (e.g. tests)
+	var all_players: Array = get_tree().get_nodes_in_group("players")
+	if all_players.is_empty():
+		return null
+	return all_players[_get_local_player_index()]
+
+
+## Compute which player index this peer controls.
+## Peers are sorted by ID; each gets the matching player slot.
+func _get_local_player_index() -> int:
+	if not NetworkCommandSync.is_active:
+		# Single-player: use settings.visible_player (the human slot)
+		return settings.visible_player if settings.visible_player >= 0 else 0
+	var peers: Array = NetworkCommandSync.get_peer_ids()
+	peers.sort()
+	return peers.find(multiplayer.get_unique_id())
 
 
 func _move_camera_to_initial_position():
-	var human_player = _get_human_player()
-	if human_player != null:
-		_move_camera_to_player_units_crowd_pivot(human_player)
+	var local_player: Player = _get_local_player()
+	if local_player != null:
+		_move_camera_to_player_units_crowd_pivot(local_player)
 	else:
 		_move_camera_to_player_units_crowd_pivot(get_tree().get_nodes_in_group("players")[0])
 

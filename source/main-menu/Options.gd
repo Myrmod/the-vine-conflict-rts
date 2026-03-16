@@ -27,11 +27,13 @@ var _preset_names: Array[String] = []
 @onready var _screen = find_child("Screen")
 @onready var _mouse_movement_restricted = find_child("MouseMovementRestricted")
 @onready var _preset_select: OptionButton = find_child("PresetSelect")
+@onready var _player_name_input: LineEdit = find_child("PlayerNameInput")
 
 
 func _ready():
 	_mouse_movement_restricted.button_pressed = (Globals.options.mouse_restricted)
 	_screen.selected = Globals.options.screen
+	_player_name_input.text = Globals.options.player_name
 	_populate_preset_dropdown()
 	_setup_all_hotkey_buttons()
 	_refresh_hotkey_labels()
@@ -111,6 +113,11 @@ func _on_screen_item_selected(index):
 		0: Globals.options.Screen.FULL,
 		1: Globals.options.Screen.WINDOW,
 	}[index]
+	ResourceSaver.save(Globals.options, Constants.get_options_file_path())
+
+
+func _on_player_name_changed(new_text: String) -> void:
+	Globals.options.player_name = new_text
 	ResourceSaver.save(Globals.options, Constants.get_options_file_path())
 
 

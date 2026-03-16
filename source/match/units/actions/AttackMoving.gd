@@ -8,11 +8,13 @@ extends "res://source/match/units/actions/Action.gd"
 
 const AutoAttacking = preload("res://source/match/units/actions/AutoAttacking.gd")
 
-const SCAN_INTERVAL = 1.0 / 60.0 * 10.0
+const SCAN_TICKS = 1
 
 var _target_position: Vector3
 var _sub_action = null
 var _state: int = 0  # 0 = moving, 1 = engaging
+var _scan_counter: int = 0
+var _scanning: bool = false
 
 @onready var _unit = Utils.NodeEx.find_parent_with_group(self, "units")
 @onready var _movement_trait = _unit.find_child("Movement")
@@ -39,11 +41,10 @@ func _start_moving_with_scan():
 	_state = 0
 	_movement_trait.move(_target_position)
 	_movement_trait.movement_finished.connect(_on_movement_finished)
-	var timer = Timer.new()
-	timer.name = "ScanTimer"
-	timer.timeout.connect(_on_scan_timeout)
-	add_child(timer)
-	timer.start(SCAN_INTERVAL)
+	_scanning = true
+	_scan_counter = 0
+	if not MatchSignals.tick_advanced.is_connected(_on_tick_advanced):
+		MatchSignals.tick_advanced.connect(_on_tick_advanced)
 
 
 func _exit_tree():
@@ -68,9 +69,15 @@ func _get_enemies_in_sight():
 	)
 
 
-func _on_scan_timeout():
-	if _state != 0:
+func _on_tick_advanced():
+	if not is_inside_tree():
 		return
+	if not _scanning or _state != 0:
+		return
+	_scan_counter += 1
+	if _scan_counter < SCAN_TICKS:
+		return
+	_scan_counter = 0
 	var enemies = _get_enemies_in_sight()
 	if not enemies.is_empty():
 		_engage_enemy(_pick_closest(enemies))
@@ -81,10 +88,7 @@ func _engage_enemy(target):
 	_movement_trait.stop()
 	if _movement_trait.movement_finished.is_connected(_on_movement_finished):
 		_movement_trait.movement_finished.disconnect(_on_movement_finished)
-	var scan_timer = get_node_or_null("ScanTimer")
-	if scan_timer:
-		scan_timer.timeout.disconnect(_on_scan_timeout)
-		scan_timer.stop()
+	_scanning = false
 	_sub_action = AutoAttacking.new(target)
 	_sub_action.tree_exited.connect(_on_engagement_finished)
 	add_child(_sub_action)
@@ -99,10 +103,8 @@ func _on_engagement_finished():
 	_state = 0
 	_movement_trait.move(_target_position)
 	_movement_trait.movement_finished.connect(_on_movement_finished)
-	var scan_timer = get_node_or_null("ScanTimer")
-	if scan_timer:
-		scan_timer.timeout.connect(_on_scan_timeout)
-		scan_timer.start(SCAN_INTERVAL)
+	_scanning = true
+	_scan_counter = 0
 
 
 func _on_movement_finished():
@@ -114,7 +116,7 @@ func _pick_closest(units):
 	var best_dist = _unit.global_position_yless.distance_to(closest.global_position_yless)
 	for u in units:
 		var d = _unit.global_position_yless.distance_to(u.global_position_yless)
-		if d < best_dist:
+		if d < best_dist or (d == best_dist and u.id < closest.id):
 			best_dist = d
 			closest = u
 	return closest

@@ -8,7 +8,7 @@ signal hp_changed
 signal action_changed(new_action)
 signal action_updated
 
-const MATERIAL_ALBEDO_TO_REPLACE = Color(0.99, 0.81, 0.48)
+const MATERIAL_ALBEDO_TO_REPLACE = Color(1.0, 0.8144, 0.4877)
 const MATERIAL_ALBEDO_TO_REPLACE_EPSILON = 0.05
 
 const UnitCommandQueue = preload("res://source/match/units/UnitCommandQueue.gd")

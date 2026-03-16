@@ -1,7 +1,10 @@
 extends "res://source/match/units/actions/Action.gd"
 
+const COLLECT_TICKS = 10  # 1.0s at TICK_RATE 10
+
 var _resource_unit = null
-var _timer = null
+var _collect_counter: int = 0
+var _paused: bool = false
 
 @onready var _unit = Utils.NodeEx.find_parent_with_group(self, "units")
 @onready var _unit_movement_trait = _unit.find_child("Movement")
@@ -24,7 +27,7 @@ func _ready():
 	_resource_unit.tree_exited.connect(queue_free)
 	_unit_movement_trait.passive_movement_started.connect(_on_passive_movement_started)
 	_unit_movement_trait.passive_movement_finished.connect(_on_passive_movement_finished)
-	_setup_timer()
+	MatchSignals.tick_advanced.connect(_on_tick_advanced)
 	_unit.get_node("Sparkling").enable()
 
 
@@ -32,12 +35,17 @@ func _exit_tree():
 	_unit.get_node("Sparkling").disable()
 
 
-func _setup_timer():
-	_timer = Timer.new()
-	_timer.timeout.connect(_transfer_single_resource_unit_from_resource_to_worker)
-	add_child(_timer)
-	if "resource" in _resource_unit:
-		_timer.start(Resources.A.COLLECTING_TIME_S)
+func _on_tick_advanced():
+	if not is_inside_tree():
+		return
+	if _paused:
+		return
+	if not ("resource" in _resource_unit):
+		return
+	_collect_counter += 1
+	if _collect_counter >= COLLECT_TICKS:
+		_collect_counter = 0
+		_transfer_single_resource_unit_from_resource_to_worker()
 
 
 func _transfer_single_resource_unit_from_resource_to_worker():
@@ -63,9 +71,9 @@ func _rotate_unit_towards_resource_unit():
 
 
 func _on_passive_movement_started():
-	_timer.paused = true
+	_paused = true
 
 
 func _on_passive_movement_finished():
-	_timer.paused = false
+	_paused = false
 	_rotate_unit_towards_resource_unit()

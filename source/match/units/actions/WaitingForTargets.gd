@@ -7,20 +7,17 @@ extends "res://source/match/units/actions/Action.gd"
 const AttackingWhileInRange = preload("res://source/match/units/actions/AttackingWhileInRange.gd")
 const AutoAttacking = preload("res://source/match/units/actions/AutoAttacking.gd")
 
-const REFRESH_INTERVAL = 1.0 / 60.0 * 10.0
+const SCAN_TICKS = 1
 
-var _timer = null
+var _scan_counter: int = 0
+var _scanning: bool = true
 var _sub_action = null
 
 @onready var _unit = Utils.NodeEx.find_parent_with_group(self, "units")
 
 
 func _ready():
-	# Start periodic scanning for enemies in sight range
-	_timer = Timer.new()
-	_timer.timeout.connect(_on_timer_timeout)
-	add_child(_timer)
-	_timer.start(REFRESH_INTERVAL)
+	MatchSignals.tick_advanced.connect(_on_tick_advanced)
 
 
 func is_idle():
@@ -48,7 +45,7 @@ func _get_units_to_attack():
 
 func _attack_unit(unit):
 	# Found a target! Stop scanning and start attacking.
-	_timer.timeout.disconnect(_on_timer_timeout)
+	_scanning = false
 	_sub_action = (
 		AutoAttacking.new(unit) if _unit.movement_speed > 0.0 else AttackingWhileInRange.new(unit)
 	)
@@ -57,7 +54,15 @@ func _attack_unit(unit):
 	_unit.action_updated.emit()
 
 
-func _on_timer_timeout():
+func _on_tick_advanced():
+	if not is_inside_tree():
+		return
+	if not _scanning:
+		return
+	_scan_counter += 1
+	if _scan_counter < SCAN_TICKS:
+		return
+	_scan_counter = 0
 	var units_to_attack = _get_units_to_attack()
 	if not units_to_attack.is_empty():
 		_attack_unit(_pick_closest_unit(units_to_attack, _unit))
@@ -68,7 +73,8 @@ func _on_attack_finished():
 		return
 	_sub_action = null
 	_unit.action_updated.emit()
-	_timer.timeout.connect(_on_timer_timeout)
+	_scanning = true
+	_scan_counter = 0
 
 
 static func _pick_closest_unit(units, unit):
@@ -79,7 +85,10 @@ static func _pick_closest_unit(units, unit):
 	var closest_unit = units[0]
 	for unit_to_check in units:
 		var distance = unit.global_position_yless.distance_to(unit_to_check.global_position_yless)
-		if distance < distance_to_closest_unit:
+		if (
+			distance < distance_to_closest_unit
+			or (distance == distance_to_closest_unit and unit_to_check.id < closest_unit.id)
+		):
 			distance_to_closest_unit = distance
 			closest_unit = unit_to_check
 	return closest_unit

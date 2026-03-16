@@ -6,6 +6,7 @@ enum Screen { FULL = 0, WINDOW = 1 }
 	set = _set_screen
 @export var mouse_restricted = false:
 	set = _set_mouse_restricted
+@export var player_name: String = ""
 
 
 func _init():

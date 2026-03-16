@@ -39,8 +39,6 @@ path_desired_distance = 0.1
 target_desired_distance = 0.1
 path_height_offset = 0.8
 radius = 0.6
-neighbor_distance = 8.0
-max_neighbors = 40
 terrain_move_type = 1
 
 [node name="HealthBar" parent="." unique_id=1639718595 instance=ExtResource("5_vqiw1")]

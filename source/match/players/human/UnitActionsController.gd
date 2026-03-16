@@ -15,15 +15,33 @@ extends Node
 class_name UnitActionsController
 
 const Structure = preload("res://source/match/units/Structure.gd")
+const FormationPreviewScript = preload("res://source/match/players/human/FormationPreview.gd")
 
 @onready var _player = get_parent()
+@onready var _formation_preview: Node3D = null
 
 
 func _ready():
 	MatchSignals.terrain_targeted.connect(_on_terrain_targeted)
+	MatchSignals.terrain_drag_updated.connect(_on_terrain_drag_updated)
+	MatchSignals.terrain_drag_finished.connect(_on_terrain_drag_finished)
 	MatchSignals.unit_targeted.connect(_on_unit_targeted)
 	MatchSignals.unit_spawned.connect(_on_unit_spawned)
 	MatchSignals.navigate_unit_to_rally_point.connect(_on_navigate_unit_to_rally_point)
+
+	# FormationPreview is a Node3D — must live under Match (a Node3D) so
+	# world-space positions work.  UnitActionsController is a plain Node
+	# parented to the Human player, so we climb up to Match.
+	_formation_preview = Node3D.new()
+	_formation_preview.set_script(FormationPreviewScript)
+	_formation_preview.name = "FormationPreview"
+	call_deferred("_attach_formation_preview")
+
+
+func _attach_formation_preview() -> void:
+	var match_node = find_parent("Match")
+	if match_node:
+		match_node.add_child(_formation_preview)
 
 
 func _try_navigating_selected_units_towards_position(target_point, queued: bool = false):
@@ -348,6 +366,79 @@ func _on_terrain_targeted(position):
 	_try_setting_rally_points(position)
 
 
+func _on_terrain_drag_updated(start_pos: Vector3, current_pos: Vector3) -> void:
+	var units := _get_movable_selected_units()
+	if units.is_empty():
+		_formation_preview.hide_preview()
+		return
+	var spread := MatchUtils.Movement.line_spread(units, start_pos, current_pos)
+	var positions: Array = []
+	var radii: Array = []
+	for pair in spread:
+		positions.append(pair[1])
+		radii.append(pair[0].radius if pair[0].radius else 0.5)
+	var forward_dir := current_pos - start_pos
+	forward_dir.y = 0.0
+	_formation_preview.show_preview(positions, radii, forward_dir)
+
+
+func _on_terrain_drag_finished(start_pos: Vector3, end_pos: Vector3) -> void:
+	_formation_preview.hide_preview()
+
+	# Patrol mode is excluded from drag-spread.
+	var mode = MatchSignals.active_command_mode
+	if mode == Enums.UnitCommandMode.PATROL:
+		_handle_command_mode_click(end_pos, mode)
+		MatchSignals.active_command_mode = Enums.UnitCommandMode.NORMAL
+		MatchSignals.command_mode_changed.emit(Enums.UnitCommandMode.NORMAL)
+		return
+
+	var is_queued = Input.is_key_pressed(KEY_SHIFT)
+	var movable_units := _get_movable_selected_units()
+	if movable_units.is_empty():
+		_try_setting_rally_points(end_pos)
+		return
+
+	var terrain_units := movable_units.filter(
+		func(u): return u.get_nav_domain() == NavigationConstants.Domain.TERRAIN
+	)
+	var air_units := movable_units.filter(
+		func(u): return u.get_nav_domain() == NavigationConstants.Domain.AIR
+	)
+
+	var targets: Array = MatchUtils.Movement.line_spread(terrain_units, start_pos, end_pos)
+	targets += MatchUtils.Movement.line_spread(air_units, start_pos, end_pos)
+
+	var cmd_type: int
+	if mode == Enums.UnitCommandMode.ATTACK_MOVE:
+		cmd_type = Enums.CommandType.ATTACK_MOVE
+	elif mode == Enums.UnitCommandMode.MOVE:
+		cmd_type = Enums.CommandType.MOVE_NO_ATTACK
+	elif mode == Enums.UnitCommandMode.REVERSE_MOVE:
+		cmd_type = Enums.CommandType.REVERSE_MOVE
+	else:
+		cmd_type = Enums.CommandType.MOVE
+
+	# Reset command mode if it was active.
+	if mode != Enums.UnitCommandMode.NORMAL:
+		MatchSignals.active_command_mode = Enums.UnitCommandMode.NORMAL
+		MatchSignals.command_mode_changed.emit(Enums.UnitCommandMode.NORMAL)
+
+	CommandBus.push_command(
+		{
+			"tick": Match.tick + 1,
+			"type": cmd_type,
+			"player_id": _player.id,
+			"data":
+			{
+				"targets": targets.map(func(t): return {"unit": t[0].id, "pos": t[1]}),
+				"queued": is_queued,
+			}
+		}
+	)
+	_try_setting_rally_points(end_pos)
+
+
 func _handle_command_mode_click(position: Vector3, mode: int):
 	var is_queued = Input.is_key_pressed(KEY_SHIFT)
 	var movable_units = _get_movable_selected_units()
@@ -497,6 +588,12 @@ func _on_unit_spawned(unit):
 
 
 func _on_navigate_unit_to_rally_point(unit, rally_point):
+	# Only handle rally points for units owned by this controller's player.
+	# In multiplayer each peer has one local Human — without this check the
+	# signal (which fires for ALL production) would make every peer generate
+	# a rally command with *its own* player_id, causing duplicates and desyncs.
+	if unit.player != _player:
+		return
 	if rally_point.target_unit != null:
 		_navigate_unit_towards_unit(unit, rally_point.target_unit)
 	elif rally_point.global_position != rally_point.get_parent().global_position:

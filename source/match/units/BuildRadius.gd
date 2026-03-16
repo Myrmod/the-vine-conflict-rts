@@ -14,7 +14,6 @@ extends Node3D
 ##   - Provide is_position_in_radius() for placement-gating checks.
 ##   - Track whether parent structure has finished construction.
 
-const Human = preload("res://source/match/players/human/Human.gd")
 const Structure = preload("res://source/match/units/Structure.gd")
 
 ## Multiplier applied to radius_in_cells for the water build radius.

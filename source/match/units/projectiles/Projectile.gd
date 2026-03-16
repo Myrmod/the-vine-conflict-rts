@@ -175,6 +175,15 @@ func _rebuild_laser_multimesh() -> void:
 func _fire_traveling(
 	type: Enums.Projectile, from: Vector3, to: Vector3, config: Dictionary
 ) -> void:
+	# Apply damage immediately for determinism — projectile travel is cosmetic only.
+	var damage: float = config.get("damage", 0.0)
+	var aoe_radius: float = config.get("aoe_radius", 0.0)
+	var source_player: Node = config.get("source_player")
+	var attack_type: String = config.get("attack_type", "")
+	var target_unit: Node3D = config.get("target_unit")
+	if damage > 0.0:
+		_apply_damage(target_unit, to, damage, aoe_radius, source_player, attack_type)
+
 	var homing: bool = config.get("homing", true)
 	var arc: float = config.get("arc", 0.0)
 	if arc > 0.0:
@@ -192,13 +201,10 @@ func _fire_traveling(
 				"from": from,
 				"to": to,
 				"current_pos": from,
-				"target_unit": config.get("target_unit"),
-				"source_player": config.get("source_player"),
+				"target_unit": target_unit,
 				"speed": config.get("speed", 12.0),
 				"arc": arc,
 				"homing": homing,
-				"damage": config.get("damage", 0.0),
-				"aoe_radius": config.get("aoe_radius", 0.0),
 				"progress": 0.0,
 				"total_distance": total_dist,
 				"color": config.get("color", _default_color_for(type)),
@@ -256,16 +262,8 @@ func _update_traveling(delta: float) -> void:
 
 
 func _on_projectile_arrival(p: Dictionary) -> void:
-	var damage: float = p.get("damage", 0.0)
-	if damage > 0.0:
-		_apply_damage(
-			p.get("target_unit"),
-			p.current_pos,
-			damage,
-			p.get("aoe_radius", 0.0),
-			p.get("source_player"),
-			p.get("attack_type", ""),
-		)
+	# Damage was already applied instantly in _fire_traveling for determinism.
+	# Only play impact sound here (cosmetic).
 	var sound_end: AudioStream = p.get("sound_end")
 	if sound_end:
 		_play_sound(sound_end, p.current_pos)
@@ -300,6 +298,8 @@ func _apply_damage(
 
 func _reduce_damage(damage: float, damage_type: int, target) -> float:
 	if damage_type == Enums.DamageTypes.TRUE:
+		return damage
+	if not "armor" in target:
 		return damage
 	var reduction: float = target.armor.get(damage_type, 0.0)
 	return damage * (1.0 - reduction)

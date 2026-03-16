@@ -23,6 +23,7 @@
 [ext_resource type="PackedScene" uid="uid://yn470qvc3eak" path="res://source/match/handlers/MatchEndHandler.tscn" id="26_4d7im"]
 [ext_resource type="PackedScene" uid="uid://ck6vrgdyg7hja" path="res://source/match/handlers/UnitGroupSelectionHandler.tscn" id="27_j2drv"]
 [ext_resource type="PackedScene" uid="uid://b8p6lcwubx1tp" path="res://source/match/handlers/UnitVisibilityHandler.tscn" id="32_fci1c"]
+[ext_resource type="PackedScene" path="res://source/match/hud/MatchOverlay.tscn" id="33_overlay"]
 [ext_resource type="Script" path="res://source/match/GlobalBuildGrid.gd" id="33_gbg"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_c3tkw"]
@@ -228,3 +229,5 @@ visible = false
 [node name="UnitVisibilityHandler" parent="Handlers" unique_id=435844044 instance=ExtResource("32_fci1c")]
 
 [node name="HUD" parent="." unique_id=128907128 instance=ExtResource("24_3l8e4")]
+
+[node name="MatchOverlay" parent="." instance=ExtResource("33_overlay")]

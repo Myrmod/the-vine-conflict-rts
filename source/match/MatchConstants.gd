@@ -19,6 +19,7 @@ const MAPS = {
 	},
 }
 const TICK_RATE: int = 10  # RTS logic ticks per second
+const TICK_DELTA: float = 1.0 / float(TICK_RATE)  # seconds per tick (0.1)
 const VINE_SPAWN_RATE_IN_S: int = 30  # RTS logic ticks per second
 
 

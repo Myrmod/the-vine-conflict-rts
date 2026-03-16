@@ -14,6 +14,10 @@ signal match_finished_with_victory
 signal match_finished_with_defeat
 signal tick_advanced  # emitted after each deterministic tick is processed (use instead of wall-clock timers)
 signal terrain_targeted(position)
+## Emitted every frame during a right-click drag on terrain (formation spread).
+signal terrain_drag_updated(start_position, current_position)
+## Emitted when a right-click drag on terrain ends (mouse released).
+signal terrain_drag_finished(start_position, end_position)
 signal unit_spawned(unit)
 signal unit_targeted(unit)
 signal unit_selected(unit)
@@ -52,3 +56,5 @@ signal command_mode_changed(mode)
 ## knows whether this is an off-field deploy or a trickle placement.
 var pending_off_field_deploy: bool = false
 var pending_trickle: bool = false
+## Entity ID of the producer structure for off-field deploy.
+var pending_off_field_producer_id: int = -1

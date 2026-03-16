@@ -5,6 +5,10 @@ func _on_play_button_pressed():
 	get_tree().change_scene_to_file("res://source/main-menu/Play.tscn")
 
 
+func _on_multiplayer_button_pressed():
+	get_tree().change_scene_to_file("res://source/main-menu/Lobby.tscn")
+
+
 func _on_options_button_pressed():
 	get_tree().change_scene_to_file("res://source/main-menu/Options.tscn")
 
@@ -19,10 +23,12 @@ func _on_quit_button_pressed():
 
 func _on_replay_button_pressed() -> void:
 	get_tree().change_scene_to_file("res://source/main-menu/Replays.tscn")
-	
+
+
 func _on_campaign_button_pressed() -> void:
 	print("TODO")
-	
+
+
 func _on_Load_button_pressed() -> void:
 	print("TODO")
 

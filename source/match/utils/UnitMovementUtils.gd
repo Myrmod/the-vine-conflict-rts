@@ -122,7 +122,7 @@ static func _calculate_yless_unit_offsets_from_old_pivot(units, old_pivot):
 		var unit_position_yless = unit.global_position * Vector3(1, 0, 1)
 		(
 			yless_unit_offsets_from_old_pivot
-			.append(
+			. append(
 				[
 					unit,
 					unit_position_yless - old_pivot_yless,
@@ -158,3 +158,76 @@ static func _calculate_extremum(positions, axis, minimum):
 		if (minimum and value < extremum) or (not minimum and value > extremum):
 			extremum = value
 	return extremum
+
+
+## Spread units in a grid formation perpendicular to the drag direction.
+## The drag vector (start_pos → end_pos) defines the "forward" facing;
+## units are placed on rows rotated 90° from it, centred on the midpoint.
+## Drag length controls the width: short drag = narrow = more rows,
+## long drag = wide = fewer rows.  Row spacing uses the average unit radius.
+## Returns Array of [unit, Vector3] pairs.
+static func line_spread(units: Array, start_pos: Vector3, end_pos: Vector3) -> Array:
+	if units.is_empty():
+		return []
+
+	var mid := (start_pos + end_pos) * 0.5
+	mid.y = 0.0
+
+	if units.size() == 1:
+		return [[units[0], mid]]
+
+	var drag_dir: Vector3 = end_pos - start_pos
+	drag_dir.y = 0.0
+	var drag_len: float = drag_dir.length()
+	if drag_len < 0.01:
+		return [[units[0], mid]]
+
+	# Forward direction (the drag direction) and perpendicular spread axis.
+	var forward_dir: Vector3 = drag_dir.normalized()
+	var spread_dir: Vector3 = Vector3(-drag_dir.z, 0.0, drag_dir.x).normalized()
+
+	# Average unit radius for spacing.
+	var total_r: float = 0.0
+	for u in units:
+		total_r += u.radius if u.radius else 0.5
+	var avg_r: float = total_r / float(units.size())
+	var spacing: float = avg_r * 2.5
+
+	# How many columns fit in the drag width?
+	var cols: int = maxi(1, int(drag_len / spacing))
+	# Clamp so we don't have more columns than units.
+	cols = mini(cols, units.size())
+	var rows: int = ceili(float(units.size()) / float(cols))
+
+	# Sort units by their projection onto the spread axis so spatial
+	# order is preserved (left-most unit → left end of line, etc.)
+	var sorted_units := units.duplicate()
+	sorted_units.sort_custom(
+		func(a, b):
+			var pa: float = a.global_position.dot(spread_dir)
+			var pb: float = b.global_position.dot(spread_dir)
+			return pa < pb
+	)
+
+	# Compute actual spread width from cols (not drag_len) so positions
+	# are centred and evenly spaced.
+	var spread_width: float = float(cols - 1) * spacing if cols > 1 else 0.0
+	var row_depth: float = float(rows - 1) * spacing if rows > 1 else 0.0
+
+	var result: Array = []
+	var idx: int = 0
+	for row in range(rows):
+		# Row offset: first row is frontmost, subsequent rows are behind.
+		var row_offset: Vector3 = -forward_dir * (float(row) * spacing - row_depth * 0.5)
+		for col in range(cols):
+			if idx >= sorted_units.size():
+				break
+			var col_t: float = 0.5
+			if cols > 1:
+				col_t = float(col) / float(cols - 1)
+			var col_offset: Vector3 = spread_dir * (col_t * spread_width - spread_width * 0.5)
+			var pos: Vector3 = mid + row_offset + col_offset
+			pos.y = 0.0
+			result.append([sorted_units[idx], pos])
+			idx += 1
+	return result

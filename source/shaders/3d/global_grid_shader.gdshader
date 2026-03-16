@@ -15,7 +15,7 @@ void vertex() {
 }
 
 void fragment() {
-    vec2 uv = (local_pos.xz + cell_size * 0.5) / cell_size;
+    vec2 uv = local_pos.xz / cell_size;
     vec2 grid = abs(fract(uv) - 0.5);
     float half_line = line_width * 0.5 / cell_size;
     float on_line = 1.0 - step(0.5 - half_line, max(grid.x, grid.y));

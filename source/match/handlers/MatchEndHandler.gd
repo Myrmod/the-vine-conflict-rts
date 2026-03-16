@@ -1,7 +1,5 @@
 extends CanvasLayer
 
-const Human = preload("res://source/match/players/human/Human.gd")
-
 @onready var _victory_tile = find_child("Victory")
 @onready var _defeat_tile = find_child("Defeat")
 @onready var _finish_tile = find_child("Finish")
@@ -56,22 +54,21 @@ func _on_unit_tree_exited():
 		if not team in units_by_team:
 			units_by_team[team] = []
 		units_by_team[team].append(unit)
-	
-	var human_players = get_tree().get_nodes_in_group("players").filter(
-		func(player): return player is Human
-	)
-	
-	if human_players.is_empty():
-		# No human player, just check if one team remains
+
+	var local_player = find_parent("Match")._get_local_player()
+
+	if local_player == null:
+		# No local player, just check if one team remains
 		if units_by_team.size() == 1:
 			_handle_finish()
 		return
-	
-	var human_player = human_players[0]
-	var human_team = human_player.team
-	var human_team_has_units = human_team in units_by_team and not units_by_team[human_team].is_empty()
-	
-	if not human_team_has_units:
+
+	var local_team = local_player.team
+	var local_team_has_units = (
+		local_team in units_by_team and not units_by_team[local_team].is_empty()
+	)
+
+	if not local_team_has_units:
 		_handle_defeat()
 	elif units_by_team.size() == 1:
 		_handle_victory()
