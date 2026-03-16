@@ -1,6 +1,6 @@
 class_name UnitPlacementUtils
 
-enum {VALID, COLLIDES_WITH_AGENT, NOT_NAVIGABLE}
+enum { VALID, COLLIDES_WITH_AGENT, NOT_NAVIGABLE }
 
 
 static func find_valid_position_radially(
@@ -65,15 +65,19 @@ static func find_valid_position_radially_yet_skip_starting_radius(
 	return Vector3.INF
 
 
-static func validate_agent_placement_position(position, radius, existing_units, navigation_map_rid):
+static func validate_agent_placement_position(
+	position, radius, existing_units, navigation_map_rid, skip_nav_check := false
+):
 	for existing_unit in existing_units:
 		if (
 			(existing_unit.global_position * Vector3(1, 0, 1)).distance_to(
 				position * Vector3(1, 0, 1)
 			)
-			<= existing_unit.radius + radius
+			< existing_unit.radius + radius
 		):
 			return COLLIDES_WITH_AGENT
+	if skip_nav_check:
+		return VALID
 	var points_expected_to_be_navigable = []
 	for x in [-1, 0, 1]:
 		for z in [-1, 0, 1]:

@@ -23,6 +23,7 @@ var _pending_structure_radius = null
 var _pending_structure_navmap_rid = null
 var _pending_structure_prototype = null
 var _pending_structure_placement_domains = []
+var _pending_skip_nav_check = false
 var _blueprint_rotating = false
 var _free_placement_mode = false
 var _off_field_deploy = false
@@ -128,7 +129,8 @@ func _calculate_blueprint_position_validity():
 		_active_blueprint_node.global_position,
 		_pending_structure_radius,
 		get_tree().get_nodes_in_group("units") + get_tree().get_nodes_in_group("resource_units"),
-		_pending_structure_navmap_rid
+		_pending_structure_navmap_rid,
+		_pending_skip_nav_check
 	)
 	if placement_validity == MatchUtils.Placement.COLLIDES_WITH_AGENT:
 		return BlueprintPositionValidity.COLLIDES_WITH_OBJECT
@@ -205,9 +207,34 @@ func _start_structure_placement(structure_prototype):
 	if _structure_placement_started():
 		return
 	_pending_structure_prototype = structure_prototype
-	_active_blueprint_node = (
-		load(UnitConstants.STRUCTURE_BLUEPRINTS[structure_prototype.resource_path]).instantiate()
+	var temporary_structure_instance = _pending_structure_prototype.instantiate()
+	_pending_structure_radius = temporary_structure_instance.radius
+	_pending_structure_placement_domains = (
+		Array(temporary_structure_instance.placement_domains)
+		if temporary_structure_instance.get("placement_domains") != null
+		else []
 	)
+	_pending_structure_navmap_rid = (
+		find_parent("Match")
+		. navigation
+		. get_navigation_map_rid_by_domain(temporary_structure_instance.get_nav_domain())
+	)
+	var geometry = temporary_structure_instance.find_child("Geometry")
+	if geometry != null:
+		geometry.get_parent().remove_child(geometry)
+		_active_blueprint_node = geometry
+	else:
+		_active_blueprint_node = Node3D.new()
+	var structure_radius = temporary_structure_instance.radius
+	var structure_placement_domains = (
+		Array(temporary_structure_instance.placement_domains)
+		if temporary_structure_instance.get("placement_domains") != null
+		else []
+	)
+	var structure_nav_domain = temporary_structure_instance.get_nav_domain()
+	var movement_obstacle = temporary_structure_instance.find_child("MovementObstacle")
+	var skip_nav = movement_obstacle != null and movement_obstacle.affect_navigation_mesh
+	temporary_structure_instance.free()
 	var blueprint_origin = Vector3(-999, 0, -999)
 	var camera_direction_yless = (
 		(get_viewport().get_camera_3d().project_ray_normal(Vector2(0, 0)) * Vector3(1, 0, 1))
@@ -221,19 +248,12 @@ func _start_structure_placement(structure_prototype):
 	if FeatureFlags.use_grid_based_placement:
 		_snap_rotation_to_90_degrees()
 	add_child(_active_blueprint_node)
-	var temporary_structure_instance = _pending_structure_prototype.instantiate()
-	_pending_structure_radius = temporary_structure_instance.radius
-	_pending_structure_placement_domains = (
-		Array(temporary_structure_instance.placement_domains)
-		if temporary_structure_instance.get("placement_domains") != null
-		else []
-	)
+	_pending_structure_radius = structure_radius
+	_pending_structure_placement_domains = structure_placement_domains
+	_pending_skip_nav_check = skip_nav
 	_pending_structure_navmap_rid = (
-		find_parent("Match")
-		. navigation
-		. get_navigation_map_rid_by_domain(temporary_structure_instance.get_nav_domain())
+		find_parent("Match").navigation.get_navigation_map_rid_by_domain(structure_nav_domain)
 	)
-	temporary_structure_instance.free()
 	MatchSignals.current_placement_domains = _pending_structure_placement_domains
 	MatchSignals.structure_placement_started.emit()
 

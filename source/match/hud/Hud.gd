@@ -502,7 +502,7 @@ func _populate_production_grid(grid_data: Dictionary, tab_type: int) -> void:
 		)
 		button.mouse_exited.connect(_on_production_button_exit)
 
-		var is_structure := UnitConstants.STRUCTURE_BLUEPRINTS.has(scene_path)
+		var is_structure := UnitHelper.is_structure(scene_path)
 		_grid_slot_is_structure[slot] = is_structure
 		if is_structure:
 			button.gui_input.connect(_on_structure_grid_button_gui_input.bind(scene_path))
@@ -514,7 +514,7 @@ func _populate_production_grid(grid_data: Dictionary, tab_type: int) -> void:
 
 ## Decide whether to place a structure or queue unit production.
 func _on_production_button_pressed(scene_path: String) -> void:
-	var is_structure := UnitConstants.STRUCTURE_BLUEPRINTS.has(scene_path)
+	var is_structure := UnitHelper.is_structure(scene_path)
 	if is_structure:
 		_try_produce_structure(scene_path)
 	else:
@@ -940,7 +940,7 @@ func _update_grid_button_queue_display(button: Button, scene_path: String) -> vo
 		return
 
 	# ── Construction progress for structure slots ──
-	if UnitConstants.STRUCTURE_BLUEPRINTS.has(scene_path):
+	if UnitHelper.is_structure(scene_path):
 		_update_structure_slot_display(time_label, count_label, scene_path)
 		return
 

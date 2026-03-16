@@ -2,14 +2,14 @@
 
 [ext_resource type="Script" uid="uid://dk7m2qr8x5f3a" path="res://source/factions/the_legion/structures/CommandCenter.gd" id="1_s4oro"]
 [ext_resource type="PackedScene" uid="uid://cgsi062w5fjia" path="res://source/match/units/traits/Highlight.tscn" id="2_c41i5"]
-[ext_resource type="PackedScene" uid="uid://bxx81l3t16rrs" path="res://source/factions/the_remnants/structures/structure-geometries/CommandCenter.tscn" id="2_hwq4d"]
+[ext_resource type="Script" uid="uid://bysf721q4x37n" path="res://source/generic-scenes-and-nodes/3d/ModelHolder.gd" id="2_v1kwh"]
 [ext_resource type="PackedScene" uid="uid://3c1h14nqdumt" path="res://source/match/units/traits/Selection.tscn" id="3_slmue"]
 [ext_resource type="PackedScene" uid="uid://d4cwip5hpxlmo" path="res://source/match/units/traits/MovementObstacle.tscn" id="4_f5u8t"]
 [ext_resource type="PackedScene" uid="uid://c3ssj2p6voauk" path="res://source/match/units/traits/HealthBar.tscn" id="5_xuulo"]
 [ext_resource type="PackedScene" uid="uid://b8jwlpdvxgrr6" path="res://source/match/units/traits/RallyPoint.tscn" id="8_8qw5y"]
 [ext_resource type="PackedScene" uid="uid://cd3v6508vjcu3" path="res://source/match/units/traits/ProductionQueue.tscn" id="9_y6bg8"]
 [ext_resource type="PackedScene" uid="uid://b1gne72rgc7un" path="res://source/match/units/BuildRadius.tscn" id="10_0bmnr"]
-[ext_resource type="PackedScene" path="res://source/match/units/traits/NameTag.tscn" id="11_v1kwh"]
+[ext_resource type="PackedScene" uid="uid://dde6yvuax0g4" path="res://source/match/units/traits/NameTag.tscn" id="11_v1kwh"]
 [ext_resource type="PackedScene" uid="uid://d4cm4yhtf11ur" path="res://source/match/units/traits/Targetability.tscn" id="17_dco2r"]
 
 [sub_resource type="CylinderShape3D" id="CylinderShape3D_pav5c"]
@@ -21,7 +21,80 @@ collision_layer = 2
 collision_mask = 0
 script = ExtResource("1_s4oro")
 
-[node name="Geometry" parent="." unique_id=659219184 instance=ExtResource("2_hwq4d")]
+[node name="Geometry" type="Node3D" parent="." unique_id=659219184]
+
+[node name="Transforms" type="Node3D" parent="Geometry" unique_id=704173897]
+transform = Transform3D(-0.494975, 0, 0.494975, 0, 0.7, 0, -0.494975, 0, -0.494975, 0, 0, -0.4)
+
+[node name="corridor_cross" type="Node3D" parent="Geometry/Transforms" unique_id=296956273]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 0, -1.5)
+script = ExtResource("2_v1kwh")
+model_path = "models/kenney-spacekit/corridor_cross.glb"
+
+[node name="corridor_corner" type="Node3D" parent="Geometry/Transforms" unique_id=1719013930]
+transform = Transform3D(-4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, -0.5, 0, -2)
+script = ExtResource("2_v1kwh")
+model_path = "models/kenney-spacekit/corridor_corner.glb"
+
+[node name="corridor_corner2" type="Node3D" parent="Geometry/Transforms" unique_id=425235255]
+transform = Transform3D(-4.37114e-08, 0, 1, 0, 1, 0, -1, 0, -4.37114e-08, -1.5, 0, 0)
+script = ExtResource("2_v1kwh")
+model_path = "models/kenney-spacekit/corridor_corner.glb"
+
+[node name="corridor_detailed" type="Node3D" parent="Geometry/Transforms" unique_id=1177050990]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 0, -2.5)
+script = ExtResource("2_v1kwh")
+model_path = "models/kenney-spacekit/corridor_detailed.glb"
+
+[node name="corridor_detailed2" type="Node3D" parent="Geometry/Transforms" unique_id=1812072654]
+transform = Transform3D(-4.37114e-08, 0, 1, 0, 1, 0, -1, 0, -4.37114e-08, -2.5, 0, 0)
+script = ExtResource("2_v1kwh")
+model_path = "models/kenney-spacekit/corridor_detailed.glb"
+
+[node name="corridor_open" type="Node3D" parent="Geometry/Transforms" unique_id=1281463550]
+transform = Transform3D(-4.37114e-08, 0, 1, 0, 1, 0, -1, 0, -4.37114e-08, -0.5, 0, 2)
+script = ExtResource("2_v1kwh")
+model_path = "models/kenney-spacekit/corridor_open.glb"
+
+[node name="corridor_windowClosed" type="Node3D" parent="Geometry/Transforms" unique_id=1603291021]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 0, -0.5)
+script = ExtResource("2_v1kwh")
+model_path = "models/kenney-spacekit/corridor_windowClosed.glb"
+
+[node name="corridor_windowClosed2" type="Node3D" parent="Geometry/Transforms" unique_id=943674953]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 0, -2.5)
+script = ExtResource("2_v1kwh")
+model_path = "models/kenney-spacekit/corridor_windowClosed.glb"
+
+[node name="corridor2" type="Node3D" parent="Geometry/Transforms" unique_id=627243459]
+transform = Transform3D(-4.37114e-08, 0, 1, 0, 1, 0, -1, 0, -4.37114e-08, -2.5, 0, 2)
+script = ExtResource("2_v1kwh")
+model_path = "models/kenney-spacekit/corridor.glb"
+
+[node name="corridor_end" type="Node3D" parent="Geometry/Transforms" unique_id=127730359]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 0, 0)
+script = ExtResource("2_v1kwh")
+model_path = "models/kenney-spacekit/corridor_end.glb"
+
+[node name="machine_generator" type="Node3D" parent="Geometry/Transforms" unique_id=2013408343]
+transform = Transform3D(-1, 0, 8.74228e-08, 0, 1, 0, -8.74228e-08, 0, -1, 0.7, 0, 2.5)
+script = ExtResource("2_v1kwh")
+model_path = "models/kenney-spacekit/machine_generator.glb"
+
+[node name="machine_wireless" type="Node3D" parent="Geometry/Transforms" unique_id=1936441467]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3, 1, -1.5)
+script = ExtResource("2_v1kwh")
+model_path = "models/kenney-spacekit/machine_wireless.glb"
+
+[node name="barrels" type="Node3D" parent="Geometry/Transforms" unique_id=602707552]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.9, 0, -2.5)
+script = ExtResource("2_v1kwh")
+model_path = "models/kenney-spacekit/barrels.glb"
+
+[node name="corridor_cornerRoundWindow" type="Node3D" parent="Geometry/Transforms" unique_id=389250188]
+transform = Transform3D(-1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, 0, 0, -0.5)
+script = ExtResource("2_v1kwh")
+model_path = "models/kenney-spacekit/corridor_cornerRoundWindow.glb"
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=1116279399]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.4, 0)
@@ -56,5 +129,3 @@ radius = 2.0
 [node name="BuildRadius" parent="." unique_id=1664502028 instance=ExtResource("10_0bmnr")]
 
 [node name="NameTag" parent="." unique_id=1847880934 instance=ExtResource("11_v1kwh")]
-
-[editable path="Geometry"]

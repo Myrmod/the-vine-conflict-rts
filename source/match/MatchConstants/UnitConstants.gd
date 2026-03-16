@@ -1,32 +1,7 @@
+const SOUND_ROCKET_START = preload("res://assets/sound_effects/rocket1_start.mp3")
+const SOUND_ROCKET_END = preload("res://assets/sound_effects/rocket1_end.mp3")
+
 const PRODUCTION_QUEUE_LIMIT = 5
-const STRUCTURE_BLUEPRINTS = {
-	# the Amuns
-	"res://source/factions/the_amuns/structures/CommandCenter.tscn":
-	"res://source/factions/the_amuns/structures/structure-geometries/CommandCenter.tscn",
-	"res://source/factions/the_amuns/structures/VehicleFactory.tscn":
-	"res://source/factions/the_amuns/structures/structure-geometries/VehicleFactory.tscn",
-	"res://source/factions/the_amuns/structures/AircraftFactory.tscn":
-	"res://source/factions/the_amuns/structures/structure-geometries/AircraftFactory.tscn",
-	"res://source/factions/the_amuns/structures/AntiGroundTurret.tscn":
-	"res://source/factions/the_amuns/structures/structure-geometries/AntiGroundTurret.tscn",
-	"res://source/factions/the_amuns/structures/AntiAirTurret.tscn":
-	"res://source/factions/the_amuns/structures/structure-geometries/AntiAirTurret.tscn",
-	"res://source/factions/the_amuns/structures/Shipyard.tscn":
-	"res://source/factions/the_amuns/structures/structure-geometries/Shipyard.tscn",
-	# the Legion
-	"res://source/factions/the_legion/structures/CommandCenter.tscn":
-	"res://source/factions/the_legion/structures/structure-geometries/CommandCenter.tscn",
-	"res://source/factions/the_legion/structures/PowerPlant.tscn":
-	"res://source/factions/the_legion/structures/structure-geometries/PowerPlant.tscn",
-	"res://source/factions/the_legion/structures/Barracks.tscn":
-	"res://source/factions/the_legion/structures/structure-geometries/Barracks.tscn",
-	# the Radix
-	"res://source/factions/the_radix/structures/CommandCenter.tscn":
-	"res://source/factions/the_radix/structures/structure-geometries/CommandCenter.tscn",
-	# the Remnants
-	"res://source/factions/the_remnants/structures/CommandCenter.tscn":
-	"res://source/factions/the_remnants/structures/structure-geometries/CommandCenter.tscn",
-}
 const DEFAULT_PROPERTIES = {
 	# the Amuns
 	"res://source/factions/the_amuns/units/Drone.tscn":
@@ -105,8 +80,8 @@ const DEFAULT_PROPERTIES = {
 		"projectile_type": Enums.Projectile.ROCKET,
 		"projectile_config":
 		{
-			"sound_start": preload("res://assets/sound_effects/rocket1_start.mp3"),
-			"sound_end": preload("res://assets/sound_effects/rocket1_end.mp3"),
+			"sound_start": SOUND_ROCKET_START,
+			"sound_end": SOUND_ROCKET_END,
 		},
 		"attack_domains":
 		[
@@ -222,6 +197,10 @@ const DEFAULT_PROPERTIES = {
 		},
 		"costs": {"credits": 6},
 		"build_time": 8.0,
+		"structure_requirements":
+		[
+			"res://source/factions/the_amuns/structures/CommandCenter.tscn",
+		],
 	},
 	"res://source/factions/the_amuns/structures/AircraftFactory.tscn":
 	{
@@ -251,6 +230,42 @@ const DEFAULT_PROPERTIES = {
 		},
 		"costs": {"credits": 4},
 		"build_time": 8.0,
+		"structure_requirements":
+		[
+			"res://source/factions/the_amuns/structures/CommandCenter.tscn",
+		],
+	},
+	"res://source/factions/the_amuns/structures/WallPillar.tscn":
+	{
+		"unit_name": "amuns_WallPillar",
+		"description": "Defensive wall",
+		"faction": Enums.Faction.AMUNS,
+		"production_tab_type": Enums.ProductionTabType.DEFENCES,
+		"production_tab_grid_slot": Enums.ProductionTabGridSlots.F1,
+		"sight_range": 4.0,
+		"hp": 100,
+		"hp_max": 100,
+		"armor":
+		{
+			Enums.DamageTypes.CANNON: 0.5,
+			Enums.DamageTypes.CORROSIVE: 0.5,
+			Enums.DamageTypes.CRUSH: 0.5,
+			Enums.DamageTypes.EXPLOSIVE: 0.5,
+			Enums.DamageTypes.FIRE: 0.0,
+			Enums.DamageTypes.LASER: 0.5,
+			Enums.DamageTypes.MELEE: 0.5,
+			Enums.DamageTypes.PLASMA: 0.5,
+			Enums.DamageTypes.PRISM: 0.5,
+			Enums.DamageTypes.RIFLE: 0.5,
+			Enums.DamageTypes.ROCKET: 0.5,
+			Enums.DamageTypes.TESLA: 0.5,
+		},
+		"costs": {"credits": 50},
+		"build_time": 4.0,
+		"structure_requirements":
+		[
+			"res://source/factions/the_amuns/structures/CommandCenter.tscn",
+		],
 	},
 	"res://source/factions/the_amuns/structures/AntiGroundTurret.tscn":
 	{
@@ -258,7 +273,7 @@ const DEFAULT_PROPERTIES = {
 		"description": "Defensive turret that fires cannons at ground targets",
 		"faction": Enums.Faction.AMUNS,
 		"production_tab_type": Enums.ProductionTabType.DEFENCES,
-		"production_tab_grid_slot": Enums.ProductionTabGridSlots.F1,
+		"production_tab_grid_slot": Enums.ProductionTabGridSlots.F3,
 		"sight_range": 8.0,
 		"hp": 8,
 		"hp_max": 8,
@@ -269,8 +284,8 @@ const DEFAULT_PROPERTIES = {
 		"projectile_type": Enums.Projectile.CANNON,
 		"projectile_config":
 		{
-			"sound_start": preload("res://assets/sound_effects/rocket1_start.mp3"),
-			"sound_end": preload("res://assets/sound_effects/rocket1_end.mp3"),
+			"sound_start": SOUND_ROCKET_START,
+			"sound_end": SOUND_ROCKET_END,
 		},
 		"attack_domains":
 		[
@@ -293,6 +308,10 @@ const DEFAULT_PROPERTIES = {
 		},
 		"costs": {"credits": 2},
 		"build_time": 5.0,
+		"structure_requirements":
+		[
+			"res://source/factions/the_amuns/structures/CommandCenter.tscn",
+		],
 	},
 	"res://source/factions/the_amuns/structures/AntiAirTurret.tscn":
 	{
@@ -300,7 +319,7 @@ const DEFAULT_PROPERTIES = {
 		"description": "Defensive turret that fires rockets at air targets",
 		"faction": Enums.Faction.AMUNS,
 		"production_tab_type": Enums.ProductionTabType.DEFENCES,
-		"production_tab_grid_slot": Enums.ProductionTabGridSlots.F2,
+		"production_tab_grid_slot": Enums.ProductionTabGridSlots.F4,
 		"sight_range": 8.0,
 		"hp": 8,
 		"hp_max": 8,
@@ -311,8 +330,8 @@ const DEFAULT_PROPERTIES = {
 		"projectile_type": Enums.Projectile.ROCKET,
 		"projectile_config":
 		{
-			"sound_start": preload("res://assets/sound_effects/rocket1_start.mp3"),
-			"sound_end": preload("res://assets/sound_effects/rocket1_end.mp3"),
+			"sound_start": SOUND_ROCKET_START,
+			"sound_end": SOUND_ROCKET_END,
 		},
 		"attack_domains":
 		[
@@ -335,6 +354,10 @@ const DEFAULT_PROPERTIES = {
 		},
 		"costs": {"credits": 2},
 		"build_time": 5.0,
+		"structure_requirements":
+		[
+			"res://source/factions/the_amuns/structures/CommandCenter.tscn",
+		],
 	},
 	"res://source/factions/the_amuns/structures/Shipyard.tscn":
 	{
@@ -364,6 +387,10 @@ const DEFAULT_PROPERTIES = {
 		},
 		"costs": {"credits": 5},
 		"build_time": 8.0,
+		"structure_requirements":
+		[
+			"res://source/factions/the_amuns/structures/CommandCenter.tscn",
+		],
 	},
 	# the Legion
 	"res://source/factions/the_legion/structures/CommandCenter.tscn":

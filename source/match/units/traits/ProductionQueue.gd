@@ -3,8 +3,6 @@ extends Node
 signal element_enqueued(element)
 signal element_removed(element)
 
-const Moving = preload("res://source/match/units/actions/Moving.gd")
-
 
 class ProductionQueueElement:
 	extends Resource
@@ -218,7 +216,7 @@ func _finalize_production(former_queue_element):
 
 ## Returns true if the given scene_path is a structure produced off-field by this producer.
 func _is_off_field_structure(scene_path: String) -> bool:
-	if not UnitConstants.STRUCTURE_BLUEPRINTS.has(scene_path):
+	if not UnitHelper.is_structure(scene_path):
 		return false
 	if _unit == null:
 		return false
@@ -236,7 +234,7 @@ func _is_off_field_structure(scene_path: String) -> bool:
 
 ## Returns true if the given scene_path is an off-field structure that should trickle cost.
 func _is_off_field_trickle(scene_path: String) -> bool:
-	if not UnitConstants.STRUCTURE_BLUEPRINTS.has(scene_path):
+	if not UnitHelper.is_structure(scene_path):
 		return false
 	if _unit == null:
 		return false
@@ -272,7 +270,7 @@ func structure_count_in_queue_for_tab(tab: int) -> int:
 	var count := 0
 	for el in _queue:
 		var path: String = el.unit_prototype.resource_path
-		if not UnitConstants.STRUCTURE_BLUEPRINTS.has(path):
+		if not UnitHelper.is_structure(path):
 			continue
 		var props = UnitConstants.DEFAULT_PROPERTIES.get(path, {})
 		if props.get("production_tab_type", -1) == tab:

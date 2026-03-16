@@ -155,11 +155,8 @@ func _try_deduct_trickle(progress: float) -> bool:
 func construct(progress):
 	assert(is_under_construction(), "structure must be under construction")
 
-	var expected_hp_before_progressing = int(_construction_progress * float(hp_max - 1))
 	_construction_progress += progress
-	var expected_hp_after_progressing = int(_construction_progress * float(hp_max - 1))
-	if expected_hp_after_progressing > expected_hp_before_progressing:
-		hp += 1
+	hp = 1 + int(_construction_progress * float(hp_max - 1))
 	if _construction_progress >= 1.0:
 		_finish_construction()
 
@@ -273,7 +270,12 @@ func _finish_construction():
 
 
 func _change_geometry_material(material):
-	for child in find_child("Geometry").find_children("*"):
+	var geo = find_child("Geometry")
+	if geo == null:
+		geo = find_child("ModelHolder")
+	if geo == null:
+		return
+	for child in geo.find_children("*"):
 		if "material_override" in child:
 			child.material_override = material
 
@@ -426,6 +428,8 @@ func toggle_disable() -> void:
 func _apply_disabled_visual() -> void:
 	var geo = find_child("Geometry")
 	if geo == null:
+		geo = find_child("ModelHolder")
+	if geo == null:
 		return
 	for child in geo.find_children("*"):
 		if child is MeshInstance3D:
@@ -438,6 +442,8 @@ func _apply_disabled_visual() -> void:
 
 func _remove_disabled_visual() -> void:
 	var geo = find_child("Geometry")
+	if geo == null:
+		geo = find_child("ModelHolder")
 	if geo == null:
 		return
 	for child in geo.find_children("*"):
