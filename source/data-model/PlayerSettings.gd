@@ -8,3 +8,5 @@ extends Resource
 @export var controller = Constants.PlayerType.SIMPLE_CLAIRVOYANT_AI
 ## -1 means random (assigned deterministically at match start), 0+ means a specific spawn point.
 @export var spawn_index = -1
+## Persistent identity for reconnection. Generated once; survives reconnects.
+@export var uuid: String = ""

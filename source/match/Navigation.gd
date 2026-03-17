@@ -33,6 +33,10 @@ func setup(map):
 	_setup_static_obstacles()
 
 
+func rebake_terrain_sync() -> void:
+	terrain.rebake_sync()
+
+
 func _setup_static_obstacles():
 	if Engine.is_editor_hint():
 		return

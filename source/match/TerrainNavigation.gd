@@ -100,6 +100,18 @@ func _on_schedule_navigation_rebake(domain):
 		_earliest_frame_to_perform_next_rebake = get_tree().get_frame() + 1
 
 
+func rebake_sync() -> void:
+	var full_geometry = NavigationMeshSourceGeometryData3D.new()
+	NavigationServer3D.parse_source_geometry_data(
+		_navigation_region.navigation_mesh, full_geometry, get_tree().root
+	)
+	full_geometry.merge(_map_geometry)
+	NavigationServer3D.bake_from_source_geometry_data(
+		_navigation_region.navigation_mesh, full_geometry
+	)
+	_sync_navmesh_changes()
+
+
 func _on_bake_finished():
 	_sync_navmesh_changes()
 	_is_baking = false

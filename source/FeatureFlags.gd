@@ -16,3 +16,5 @@ extends Node
 @export_group("Match/Debug")
 @export var frame_incrementer = false
 @export var god_mode = false
+@export var debug_save_json = false
+@export var debug_disconnect = false

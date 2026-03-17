@@ -6,18 +6,22 @@ const PlayerSettingsScene: PackedScene = preload("res://source/main-menu/PlayerS
 const LoadingScene: PackedScene = preload("res://source/main-menu/Loading.tscn")
 
 var _is_host: bool = false
+var _local_ready: bool = false
+## Password of the game the client is attempting to join.
+var _pending_password: String = ""
 var _map_paths: Array = []
 var _map_info: Dictionary = {}
 var _num_spawns: int = 0
+var _reconnect_button: Button = null
 
-# ── Browse panel refs ─────────────────────────────────────────────────
+# ── Browse panel refs ─────────────────────────────
 @onready var _browse_panel: PanelContainer = find_child("BrowsePanel")
 @onready var _games_list: ItemList = find_child("GamesList")
 @onready var _browse_chat_display: RichTextLabel = find_child("BrowseChatDisplay")
 @onready var _browse_chat_input: LineEdit = find_child("BrowseChatInput")
 @onready var _join_button: Button = find_child("JoinButton")
 
-# ── Room panel refs ───────────────────────────────────────────────────
+# ── Room panel refs ───────────────────────────────
 @onready var _room_panel: PanelContainer = find_child("RoomPanel")
 @onready var _map_list: ItemList = find_child("RoomMapList")
 @onready var _map_details: RichTextLabel = find_child("RoomMapDetails")
@@ -29,14 +33,10 @@ var _num_spawns: int = 0
 @onready var _ready_button: Button = find_child("ReadyButton")
 @onready var _room_title: Label = find_child("RoomTitle")
 
-var _local_ready: bool = false
-
-## Password of the game the client is attempting to join (empty if none).
-var _pending_password: String = ""
-
 
 func _ready() -> void:
 	_show_browse()
+	_build_reconnect_button()
 	NetworkCommandSync.peer_connected.connect(_on_peer_connected)
 	NetworkCommandSync.peer_disconnected.connect(_on_peer_disconnected)
 	NetworkCommandSync.connection_failed.connect(_on_connection_failed)
@@ -49,6 +49,7 @@ func _ready() -> void:
 	NetworkCommandSync.lobby_password_rejected.connect(_on_password_rejected)
 	NetworkCommandSync.lobby_player_setting_changed.connect(_on_player_setting_received)
 	NetworkCommandSync.browse_chat_received.connect(_on_browse_chat_received)
+	NetworkCommandSync.reconnect_state_received.connect(_on_reconnect_state_received)
 	NetworkCommandSync.start_lan_discovery()
 
 
@@ -67,6 +68,7 @@ func _exit_tree() -> void:
 	NetworkCommandSync.lobby_password_rejected.disconnect(_on_password_rejected)
 	NetworkCommandSync.lobby_player_setting_changed.disconnect(_on_player_setting_received)
 	NetworkCommandSync.browse_chat_received.disconnect(_on_browse_chat_received)
+	NetworkCommandSync.reconnect_state_received.disconnect(_on_reconnect_state_received)
 
 
 func _process(_delta: float) -> void:
@@ -603,6 +605,7 @@ func _create_match_settings() -> MatchSettings:
 			ps.team = team_select.selected
 			ps.faction = faction_select.selected
 			ps.spawn_index = spawn_select.selected - 1
+			ps.uuid = "%s-%s" % [randi(), Time.get_ticks_msec()]
 			match_settings.players.append(ps)
 
 	match_settings.visible_player = _get_local_slot()
@@ -637,6 +640,7 @@ func _serialize_match_settings(settings: MatchSettings) -> Dictionary:
 					"team": ps.team,
 					"faction": ps.faction,
 					"spawn_index": ps.spawn_index,
+					"uuid": ps.uuid,
 				}
 			)
 		)
@@ -656,6 +660,7 @@ func _deserialize_match_settings(data: Dictionary) -> MatchSettings:
 		ps.team = pd["team"]
 		ps.faction = pd["faction"]
 		ps.spawn_index = pd["spawn_index"]
+		ps.uuid = pd.get("uuid", "")
 		ms.players.append(ps)
 	ms.visibility = data.get("visibility", MatchSettings.Visibility.PER_PLAYER)
 	ms.visible_player = data.get("visible_player", 0)
@@ -687,6 +692,12 @@ func _on_peer_connected(peer_id: int) -> void:
 		# Send stored password to host for validation
 		NetworkCommandSync.send_lobby_password(_pending_password)
 		_pending_password = ""
+	# If reconnecting, send our UUID to the host
+	if not _is_host and NetworkCommandSync.had_involuntary_disconnect():
+		var uuid := NetworkCommandSync._local_uuid
+		if not uuid.is_empty():
+			NetworkCommandSync.send_reconnect_uuid(uuid)
+		return
 	if _is_host:
 		_refresh_player_slots()
 		_update_start_button()
@@ -716,6 +727,14 @@ func _on_connection_failed() -> void:
 	_append_browse_chat("[color=red]Connection failed![/color]")
 	NetworkCommandSync.disconnect_game()
 	_show_browse()
+	if _reconnect_button != null:
+		_reconnect_button.disabled = false
+		_reconnect_button.text = "Reconnect"
+		var can_reconnect := (
+			NetworkCommandSync.had_involuntary_disconnect()
+			and not NetworkCommandSync.last_server_address.is_empty()
+		)
+		_reconnect_button.visible = can_reconnect
 	NetworkCommandSync.start_lan_discovery()
 
 
@@ -892,3 +911,60 @@ func _apply_player_slots(slots: Array) -> void:
 		ps_node.find_child("FactionSelect").selected = slot.get("faction", 0)
 		ps_node.find_child("TeamSelect").selected = slot.get("team", i)
 		ps_node.find_child("SpawnSelect").selected = slot.get("spawn", 0)
+
+
+# ──────────────────────────────────────────────────────────────────────
+# RECONNECT
+# ──────────────────────────────────────────────────────────────────────
+
+
+func _build_reconnect_button() -> void:
+	_reconnect_button = Button.new()
+	_reconnect_button.text = "Reconnect"
+	_reconnect_button.custom_minimum_size = Vector2(200, 50)
+	_reconnect_button.pressed.connect(_on_reconnect_pressed)
+	# Insert after the join button inside the browse panel
+	var btn_container: Node = _join_button.get_parent()
+	btn_container.add_child(_reconnect_button)
+	var can_reconnect := (
+		NetworkCommandSync.had_involuntary_disconnect()
+		and not NetworkCommandSync.last_server_address.is_empty()
+	)
+	_reconnect_button.visible = can_reconnect
+
+
+func _on_reconnect_pressed() -> void:
+	_reconnect_button.disabled = true
+	_reconnect_button.text = "Reconnecting..."
+	NetworkCommandSync.stop_lan_discovery()
+	var err := NetworkCommandSync.reconnect()
+	if err != OK:
+		_append_browse_chat("[color=red]Reconnect failed: %s[/color]" % error_string(err))
+		_reconnect_button.disabled = false
+		_reconnect_button.text = "Reconnect"
+		NetworkCommandSync.start_lan_discovery()
+		return
+	# After connected_to_server fires, _on_peer_connected will be called.
+	# We wait for a short moment then send our UUID so the host identifies us.
+	_is_host = false
+	_append_browse_chat("[color=yellow]Reconnecting to game...[/color]")
+
+
+func _on_reconnect_state_received(state_data: Dictionary) -> void:
+	# Received full game state snapshot from host after reconnect.
+	NetworkCommandSync.clear_involuntary_disconnect()
+	var ss = get_node("/root/SaveSystem")
+	var save = ss.deserialize_match_from_dict(state_data)
+
+	# Transition to Loading with the save data
+	NetworkCommandSync.stop_lan_discovery()
+	hide()
+	var loading: Node = LoadingScene.instantiate()
+	loading.match_settings = ss._deserialize_settings(save.match_settings_data)
+	# Each client must see its own player slot, not the host's
+	loading.match_settings.visible_player = _get_local_slot()
+	loading.map_path = save.map_source_path
+	loading.save_resource = save
+	get_parent().add_child(loading)
+	get_tree().current_scene = loading
+	queue_free()

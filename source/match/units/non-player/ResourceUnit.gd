@@ -16,13 +16,20 @@ var id: int
 
 var in_player_vision: bool = false
 
+var _saved_id: int = -1
 var _occupied_cell: Vector2i
 var _footprint: Vector2i = Vector2i(1, 1)
 var _type: Enums.OccupationType = Enums.OccupationType.RESOURCE
 
 
 func _ready():
-	id = EntityRegistry.register(self)
+	if _saved_id >= 0:
+		id = _saved_id
+		EntityRegistry.entities[id] = self
+		if EntityRegistry._next_id <= id:
+			EntityRegistry._next_id = id + 1
+	else:
+		id = EntityRegistry.register(self)
 
 	var map = MatchGlobal.map
 	if map == null:

@@ -26,6 +26,8 @@ var id: int
 # Default (0) is assigned by Play.gd: first player=team 0, second player=team 1, etc.
 # Custom team values can be set to create alliances or custom match configurations.
 var team: int = 0
+## Persistent identity for reconnection — copied from PlayerSettings.uuid.
+var uuid: String = ""
 var faction: Enums.Faction:
 	set(_faction):
 		faction = _faction

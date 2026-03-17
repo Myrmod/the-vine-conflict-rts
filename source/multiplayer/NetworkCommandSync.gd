@@ -23,6 +23,13 @@ signal all_peers_ready  ## all peers have loaded into match
 signal connection_failed
 signal server_disconnected
 
+## ── In-match disconnect/reconnect signals ──────────────────────────
+signal player_disconnected_in_match(peer_id: int)
+signal player_reconnected_in_match(peer_id: int, uuid: String)
+signal reconnect_timer_expired(peer_id: int)
+signal reconnect_state_received(state_data: Dictionary)
+signal reconnect_client_ready(peer_id: int)  ## client finished loading after reconnect
+
 ## ── Lobby signals ───────────────────────────────────────────────────
 signal lobby_chat_received(sender_name: String, message: String)
 signal lobby_settings_received(settings_data: Dictionary, map_path: String)
@@ -98,6 +105,37 @@ signal match_chat_received(sender_name: String, message: String, is_team: bool)
 signal tick_unblocked
 
 ## Tick → { peer_id → int (checksum) }.
+
+## ── Disconnect / reconnect state ────────────────────────────────────
+
+## True when we are in an active match (not just lobby).
+var in_match: bool = false
+
+## Peer IDs that disconnected during a match, awaiting reconnect.
+var _disconnected_peers: Dictionary = {}  # peer_id → true
+
+## Peer ID → player UUID mapping, set during match setup.
+var _peer_uuid_map: Dictionary = {}  # peer_id(int) → uuid(String)
+
+## Reverse: UUID → original peer_id (for reconnect identity mapping).
+var _uuid_peer_map: Dictionary = {}  # uuid(String) → peer_id(int)
+
+## Peer ID → player_index mapping for slot tracking.
+var _peer_player_index: Dictionary = {}  # peer_id(int) → player_index(int)
+
+## Address/port of the last server we connected to (for reconnect).
+var last_server_address: String = ""
+var last_server_port: int = DEFAULT_PORT
+
+## True if the local player disconnected involuntarily (not manual leave).
+var _involuntary_disconnect: bool = false
+
+## The local player's UUID — persists across disconnect for reconnect identity.
+var _local_uuid: String = ""
+
+## The reconnect countdown timer (seconds remaining). -1 = inactive.
+var _reconnect_countdown: float = -1.0
+const RECONNECT_TIMEOUT: float = 60.0
 var _checksums: Dictionary = {}
 
 ## Last tick for which we detected a desync (avoid spamming).
@@ -140,10 +178,12 @@ func join_game(address: String, port: int = DEFAULT_PORT) -> Error:
 	multiplayer.multiplayer_peer = peer
 	_setup_signals()
 	is_active = true
+	last_server_address = address
+	last_server_port = port
 	return OK
 
 
-func disconnect_game() -> void:
+func disconnect_game(voluntary: bool = true) -> void:
 	if multiplayer.multiplayer_peer:
 		multiplayer.multiplayer_peer.close()
 		multiplayer.multiplayer_peer = null
@@ -153,7 +193,14 @@ func disconnect_game() -> void:
 	_lobby_ready.clear()
 	_sent_log.clear()
 	_recv_log.clear()
+	_disconnected_peers.clear()
+	_reconnect_countdown = -1.0
+	in_match = false
 	is_active = false
+	_involuntary_disconnect = not voluntary
+	if voluntary:
+		last_server_address = ""
+		_local_uuid = ""
 
 
 func _setup_signals() -> void:
@@ -175,6 +222,17 @@ func _on_peer_connected(id: int) -> void:
 
 
 func _on_peer_disconnected(id: int) -> void:
+	if in_match:
+		# In-match disconnect: don't erase peer yet, track for reconnect
+		_disconnected_peers[id] = true
+		# Remove from tick tracking so the game doesn't stall on them
+		for t in _received:
+			_received[t].erase(id)
+		_peers.erase(id)
+		_peers_ready.erase(id)
+		player_disconnected_in_match.emit(id)
+		peer_disconnected.emit(id)
+		return
 	_peers.erase(id)
 	_received.erase(id)
 	_peers_ready.erase(id)
@@ -192,7 +250,11 @@ func _on_connection_failed() -> void:
 
 
 func _on_server_disconnected() -> void:
+	_involuntary_disconnect = true
 	is_active = false
+	in_match = false
+	# Clear reconnect address — host is gone, can't reconnect
+	last_server_address = ""
 	server_disconnected.emit()
 
 
@@ -379,8 +441,12 @@ func _compute_state_checksum() -> int:
 		hp_buf.resize(4)
 		hp_buf.encode_s32(0, hp_val)
 		ctx.update(hp_buf)
-		# Position — quantize to millimetres to avoid float drift
+		# Position — use the authoritative tick transform from Movement
+		# when available, rather than the interpolated visual position.
 		var pos: Vector3 = unit.global_position
+		var _movement = unit.find_child("Movement")
+		if _movement and _movement._initialized:
+			pos = _movement._tick_transform.origin
 		var pos_buf := PackedByteArray()
 		pos_buf.resize(12)
 		pos_buf.encode_s32(0, int(pos.x * 1000.0))
@@ -469,22 +535,28 @@ func _try_compare_checksums(t: int) -> void:
 
 
 func _dump_desync_state(t: int) -> void:
+	var lines: PackedStringArray = []
 	var ids: Array = EntityRegistry.entities.keys()
 	ids.sort()
-	push_warning("=== DESYNC STATE DUMP (tick %d, peer %d) ===" % [t, multiplayer.get_unique_id()])
-	push_warning("Entity count: %d" % ids.size())
+	var header := "=== DESYNC STATE DUMP (tick %d, peer %d) ===" % [t, multiplayer.get_unique_id()]
+	lines.append(header)
+	lines.append("Entity count: %d" % ids.size())
 	for eid: int in ids:
 		var unit = EntityRegistry.entities[eid]
 		if unit == null or not is_instance_valid(unit):
-			push_warning("  [%d] null/invalid" % eid)
+			lines.append("  [%d] null/invalid" % eid)
 			continue
 		var hp_val = unit.get("hp") if "hp" in unit else -1
+		# Use authoritative tick position when available.
 		var pos: Vector3 = unit.global_position
+		var _mov = unit.find_child("Movement")
+		if _mov and _mov._initialized:
+			pos = _mov._tick_transform.origin
 		var owner_id: int = unit.player.id if "player" in unit and unit.player != null else -1
 		var type_name: String = (
 			unit.get_script().resource_path.get_file() if unit.get_script() else unit.get_class()
 		)
-		push_warning(
+		lines.append(
 			(
 				"  [%d] %s owner=%d hp=%s pos=(%.3f,%.3f,%.3f)"
 				% [eid, type_name, owner_id, str(hp_val), pos.x, pos.y, pos.z]
@@ -493,9 +565,18 @@ func _dump_desync_state(t: int) -> void:
 	var tree := Engine.get_main_loop() as SceneTree
 	if tree != null:
 		for p in tree.get_nodes_in_group("players"):
-			push_warning("  Player %d: credits=%d energy=%d" % [p.id, p.credits, p.energy])
-	push_warning("=== END DESYNC STATE DUMP ===")
-	_dump_command_log(t)
+			lines.append("  Player %d: credits=%d energy=%d" % [p.id, p.credits, p.energy])
+	lines.append("=== END DESYNC STATE DUMP ===")
+	_dump_command_log(t, lines)
+	# Write to file
+	var path := "user://desync_peer_%d_tick_%d.log" % [multiplayer.get_unique_id(), t]
+	var f := FileAccess.open(path, FileAccess.WRITE)
+	if f:
+		f.store_string("\n".join(lines))
+		push_warning("Desync log written to: %s" % path)
+	# Also print to console
+	for line in lines:
+		push_warning(line)
 
 
 # ──────────────────────────────────────────────────────────────────────
@@ -547,19 +628,19 @@ func _command_type_name(type_val: int) -> String:
 	return "UNKNOWN(%d)" % type_val
 
 
-func _dump_command_log(t: int) -> void:
-	push_warning(
+func _dump_command_log(t: int, lines: PackedStringArray = []) -> void:
+	lines.append(
 		"=== COMMAND LOG (desync at tick %d, local peer %d) ===" % [t, multiplayer.get_unique_id()]
 	)
-	push_warning("-- Last %d SENT commands --" % _sent_log.size())
+	lines.append("-- Last %d SENT commands --" % _sent_log.size())
 	for cmd in _sent_log:
-		push_warning("  S: %s" % _cmd_to_string(cmd))
+		lines.append("  S: %s" % _cmd_to_string(cmd))
 	for peer_id in _recv_log:
 		var log: Array = _recv_log[peer_id]
-		push_warning("-- Last %d RECEIVED from peer %d --" % [log.size(), peer_id])
+		lines.append("-- Last %d RECEIVED from peer %d --" % [log.size(), peer_id])
 		for cmd in log:
-			push_warning("  R[%d]: %s" % [peer_id, _cmd_to_string(cmd)])
-	push_warning("=== END COMMAND LOG ===")
+			lines.append("  R[%d]: %s" % [peer_id, _cmd_to_string(cmd)])
+	lines.append("=== END COMMAND LOG ===")
 
 
 # ──────────────────────────────────────────────────────────────────────
@@ -916,3 +997,160 @@ func _receive_lobby_password(password: String) -> void:
 @rpc("authority", "call_remote", "reliable")
 func _notify_password_rejected() -> void:
 	lobby_password_rejected.emit()
+
+
+# ──────────────────────────────────────────────────────────────────────
+# PEER UUID MAPPING (for reconnection identity)
+# ──────────────────────────────────────────────────────────────────────
+
+
+## Call once from Match._ready() to register peer→UUID mappings.
+func register_peer_uuids(peers_sorted: Array, player_uuids: Array) -> void:
+	_peer_uuid_map.clear()
+	_uuid_peer_map.clear()
+	_peer_player_index.clear()
+	var my_id: int = multiplayer.get_unique_id() if is_active else 1
+	for i in range(mini(peers_sorted.size(), player_uuids.size())):
+		var pid: int = peers_sorted[i]
+		var uuid: String = player_uuids[i]
+		_peer_uuid_map[pid] = uuid
+		_uuid_peer_map[uuid] = pid
+		_peer_player_index[pid] = i
+		if pid == my_id:
+			_local_uuid = uuid
+	in_match = true
+
+
+## Get the player UUID for a peer ID.
+func get_uuid_for_peer(peer_id: int) -> String:
+	return _peer_uuid_map.get(peer_id, "")
+
+
+## Get the original peer ID for a UUID.
+func get_peer_for_uuid(uuid: String) -> int:
+	return _uuid_peer_map.get(uuid, -1)
+
+
+## Get the player index for a peer ID.
+func get_player_index_for_peer(peer_id: int) -> int:
+	return _peer_player_index.get(peer_id, -1)
+
+
+## Check if any peers are in disconnected state.
+func has_disconnected_peers() -> bool:
+	return not _disconnected_peers.is_empty()
+
+
+## Get list of disconnected peer IDs.
+func get_disconnected_peer_ids() -> Array:
+	return _disconnected_peers.keys()
+
+
+# ──────────────────────────────────────────────────────────────────────
+# RECONNECTION
+# ──────────────────────────────────────────────────────────────────────
+
+
+## Start the reconnect countdown timer.
+func start_reconnect_timer() -> void:
+	_reconnect_countdown = RECONNECT_TIMEOUT
+
+
+## Get remaining reconnect time. Returns -1 if inactive.
+func get_reconnect_time_remaining() -> float:
+	return _reconnect_countdown
+
+
+## Called every frame from MatchOverlay to tick the countdown.
+func tick_reconnect_timer(delta: float) -> void:
+	if _reconnect_countdown <= 0.0:
+		return
+	_reconnect_countdown -= delta
+	if _reconnect_countdown <= 0.0:
+		_reconnect_countdown = -1.0
+		# Timer expired — emit for each still-disconnected peer
+		for pid in _disconnected_peers.keys():
+			reconnect_timer_expired.emit(pid)
+		_disconnected_peers.clear()
+
+
+## Client calls this to reconnect to a running game.
+func reconnect() -> Error:
+	if last_server_address.is_empty():
+		push_error("NetworkCommandSync: no server address for reconnect")
+		return ERR_UNCONFIGURED
+	return join_game(last_server_address, last_server_port)
+
+
+## After reconnecting, client sends its UUID so the host can identify it.
+func send_reconnect_uuid(uuid: String) -> void:
+	if multiplayer.is_server():
+		return
+	_receive_reconnect_uuid.rpc_id(1, uuid)
+
+
+@rpc("any_peer", "call_remote", "reliable")
+func _receive_reconnect_uuid(uuid: String) -> void:
+	if not multiplayer.is_server():
+		return
+	var sender: int = multiplayer.get_remote_sender_id()
+	if not _uuid_peer_map.has(uuid):
+		push_warning("NetworkCommandSync: unknown UUID %s from peer %d" % [uuid, sender])
+		return
+
+	var old_peer_id: int = _uuid_peer_map[uuid]
+	# Update mappings to new peer ID
+	_peer_uuid_map.erase(old_peer_id)
+	_peer_uuid_map[sender] = uuid
+	_uuid_peer_map[uuid] = sender
+	if _peer_player_index.has(old_peer_id):
+		_peer_player_index[sender] = _peer_player_index[old_peer_id]
+		_peer_player_index.erase(old_peer_id)
+	_disconnected_peers.erase(old_peer_id)
+
+	# Add new peer to active peers
+	_peers[sender] = true
+
+	# Notify match that player reconnected
+	player_reconnected_in_match.emit(sender, uuid)
+
+	# If no more disconnected peers, stop the timer
+	if _disconnected_peers.is_empty():
+		_reconnect_countdown = -1.0
+
+
+## Host sends the full game state snapshot to a reconnecting peer.
+func send_state_snapshot(target_peer: int, state_data: Dictionary) -> void:
+	if not multiplayer.is_server():
+		return
+	_receive_state_snapshot.rpc_id(target_peer, state_data)
+
+
+@rpc("authority", "call_remote", "reliable")
+func _receive_state_snapshot(state_data: Dictionary) -> void:
+	reconnect_state_received.emit(state_data)
+
+
+## Client tells the host it finished loading and is ready to tick.
+func send_reconnect_ready() -> void:
+	if multiplayer.is_server():
+		return
+	_receive_reconnect_ready.rpc_id(1)
+
+
+@rpc("any_peer", "call_remote", "reliable")
+func _receive_reconnect_ready() -> void:
+	if not multiplayer.is_server():
+		return
+	var sender: int = multiplayer.get_remote_sender_id()
+	reconnect_client_ready.emit(sender)
+
+
+## Check if the local client had an involuntary disconnect.
+func had_involuntary_disconnect() -> bool:
+	return _involuntary_disconnect
+
+
+## Clear the involuntary disconnect flag (after reconnecting or dismissing).
+func clear_involuntary_disconnect() -> void:
+	_involuntary_disconnect = false

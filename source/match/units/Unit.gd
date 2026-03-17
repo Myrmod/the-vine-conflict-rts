@@ -57,6 +57,10 @@ var type:
 
 var id: int
 
+## When set (>= 0), the entity will be registered with this specific ID
+## instead of getting a new sequential one. Used during save restoration.
+var _saved_id: int = -1
+
 var _action_locked = false
 ## When true, unit is "stopped" — no default idle action will be assigned.
 ## Set by the STOP command, cleared when any explicit command is given.
@@ -78,7 +82,13 @@ func _ready():
 	_setup_default_properties_from_constants()
 	_setup_model_fallback()
 	assert(_safety_checks())
-	id = EntityRegistry.register(self)
+	if _saved_id >= 0:
+		id = _saved_id
+		EntityRegistry.entities[id] = self
+		if EntityRegistry._next_id <= id:
+			EntityRegistry._next_id = id + 1
+	else:
+		id = EntityRegistry.register(self)
 	# Add command queue for shift-queued orders
 	var queue = UnitCommandQueue.new()
 	queue.name = "UnitCommandQueue"

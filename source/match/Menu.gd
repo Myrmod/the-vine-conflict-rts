@@ -37,11 +37,29 @@ func _on_exit_button_pressed():
 
 
 func _on_load_button_pressed():
-	print("TODO")
+	if not SaveSystem.has_save():
+		return
+	var save := SaveSystem.load_game()
+	if save == null:
+		return
+	MatchSignals.match_aborted.emit()
+	get_tree().paused = false
+	# Transition to Loading with the save resource
+	var loading_scene = load("res://source/main-menu/Loading.tscn")
+	var loading = loading_scene.instantiate()
+	loading.match_settings = SaveSystem._deserialize_settings(save.match_settings_data)
+	loading.map_path = save.map_source_path
+	loading.save_resource = save
+	var old_scene = get_tree().current_scene
+	get_tree().root.add_child(loading)
+	get_tree().current_scene = loading
+	old_scene.queue_free()
 
 
 func _on_save_button_pressed():
-	print("TODO")
+	var err := SaveSystem.save_game()
+	if err == OK:
+		_toggle()
 
 
 func _on_restart_button_pressed():

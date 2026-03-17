@@ -46,6 +46,10 @@ var is_replay_mode = false
 ## ReplayRecorder can save the correct path instead of the base template.
 var map_source_path: String = ""
 
+## When set, the match will restore state from this save instead of spawning
+## fresh units. Set by Loading.gd when loading a save file or reconnecting.
+var save_resource = null
+
 @onready var navigation = $Navigation
 @onready var fog_of_war = $FogOfWar
 @onready var hud: CanvasLayer = $HUD
@@ -88,12 +92,16 @@ func _ready():
 	var all_players: Array = get_tree().get_nodes_in_group("players")
 	_local_player = all_players[local_idx]
 
-	_setup_player_units()
+	if save_resource != null:
+		_restore_from_save(save_resource)
+	else:
+		_setup_player_units()
 	visible_player = _local_player
 	_move_camera_to_initial_position()
 
-	# Reset tick counter for this match
-	tick = 0
+	# Reset tick counter for this match (save restores it in _restore_from_save)
+	if save_resource == null:
+		tick = 0
 
 	# Start the deterministic tick timer (10 ticks/sec = 100ms per tick)
 	var timer := Timer.new()
@@ -106,6 +114,13 @@ func _ready():
 	# instead of waiting for the next timer fire.
 	if NetworkCommandSync.is_active:
 		NetworkCommandSync.tick_unblocked.connect(_on_tick_unblocked)
+		_register_peer_uuids()
+		NetworkCommandSync.player_reconnected_in_match.connect(_on_player_reconnected)
+		NetworkCommandSync.reconnect_timer_expired.connect(_on_reconnect_timer_expired)
+		NetworkCommandSync.server_disconnected.connect(_on_host_disconnected)
+		# If this is a reconnect (loading from save), tell the host we're ready
+		if save_resource != null:
+			NetworkCommandSync.send_reconnect_ready()
 
 	if settings.visibility == settings.Visibility.FULL:
 		fog_of_war.reveal()
@@ -243,14 +258,18 @@ func _advance_tick():
 
 
 func _apply_unit_separation() -> void:
+	# Collect mobile units together with their Movement node.
 	var mobile_units: Array = []
+	var movements: Dictionary = {}  # unit.id → Movement
 	for unit_id in EntityRegistry.entities:
 		var unit = EntityRegistry.entities[unit_id]
 		if unit == null or not is_instance_valid(unit):
 			continue
-		if unit.find_child("Movement") == null:
+		var mov = unit.find_child("Movement")
+		if mov == null:
 			continue
 		mobile_units.append(unit)
+		movements[unit.id] = mov
 
 	if mobile_units.size() < 2:
 		return
@@ -266,11 +285,9 @@ func _apply_unit_separation() -> void:
 	for i in range(mobile_units.size()):
 		var unit_a: Node3D = mobile_units[i]
 		var r_a: float = unit_a.radius if unit_a.radius != null else 0.25
-		var pos_a := Vector3(
-			unit_a.global_transform.origin.x,
-			0.0,
-			unit_a.global_transform.origin.z,
-		)
+		# Use authoritative tick position, NOT interpolated global_transform.
+		var tick_a: Transform3D = movements[unit_a.id]._tick_transform
+		var pos_a := Vector3(tick_a.origin.x, 0.0, tick_a.origin.z)
 
 		for j in range(i + 1, mobile_units.size()):
 			var unit_b: Node3D = mobile_units[j]
@@ -279,11 +296,8 @@ func _apply_unit_separation() -> void:
 			if unit_a.get_nav_domain() != unit_b.get_nav_domain():
 				continue
 
-			var pos_b := Vector3(
-				unit_b.global_transform.origin.x,
-				0.0,
-				unit_b.global_transform.origin.z,
-			)
+			var tick_b: Transform3D = movements[unit_b.id]._tick_transform
+			var pos_b := Vector3(tick_b.origin.x, 0.0, tick_b.origin.z)
 
 			var diff := pos_a - pos_b
 			var dist := diff.length()
@@ -300,8 +314,8 @@ func _apply_unit_separation() -> void:
 
 			# When both units are actively moving, bias separation
 			# perpendicular to push_dir so they slide past each other.
-			var mov_a = unit_a.find_child("Movement")
-			var mov_b = unit_b.find_child("Movement")
+			var mov_a = movements[unit_a.id]
+			var mov_b = movements[unit_b.id]
 			var a_moving: bool = mov_a.is_moving()
 			var b_moving: bool = mov_b.is_moving()
 			if a_moving and b_moving:
@@ -314,18 +328,18 @@ func _apply_unit_separation() -> void:
 			pushes[unit_a.id] += half_push
 			pushes[unit_b.id] -= half_push
 
-	# Apply accumulated pushes.
+	# Apply accumulated pushes to the authoritative tick transform.
 	for unit in mobile_units:
 		var push: Vector3 = pushes[unit.id]
 		if push.is_zero_approx():
 			continue
 		# Cap the push so it never exceeds one tick of movement.
-		var mov = unit.find_child("Movement")
+		var mov = movements[unit.id]
 		var max_push: float = mov.speed * MatchConstants.TICK_DELTA
 		if push.length() > max_push:
 			push = push.normalized() * max_push
-		unit.global_transform.origin.x += push.x
-		unit.global_transform.origin.z += push.z
+		mov._tick_transform.origin.x += push.x
+		mov._tick_transform.origin.z += push.z
 		mov.resync_tick_transform()
 
 
@@ -923,6 +937,7 @@ func _create_players_from_settings():
 		# to ensure playable matches. Custom team assignments override this (for alliances, etc.)
 		player.team = player_settings.team
 		player.faction = player_settings.faction
+		player.uuid = player_settings.uuid
 		# set starting resources
 		player.initialize_resources(Factions.get_starting_resource())
 
@@ -1095,3 +1110,304 @@ func _conceal_player_units(player):
 ## here the HUD will be wired up with everything from the match
 func wire_hud():
 	hud.set_player_settings(settings)
+	# Refresh credits/energy display — the restore may have set them
+	# before the HUD knew which player to display.
+	if visible_player:
+		MatchSignals.player_resource_changed.emit(
+			visible_player, visible_player.credits, Enums.ResourceType.CREDITS
+		)
+		MatchSignals.player_resource_changed.emit(
+			visible_player, visible_player.energy, Enums.ResourceType.ENERGY
+		)
+
+
+# ──────────────────────────────────────────────────────────────────────
+# MULTIPLAYER RECONNECT / DISCONNECT
+# ──────────────────────────────────────────────────────────────────────
+
+
+func _register_peer_uuids() -> void:
+	var peers: Array = NetworkCommandSync.get_peer_ids()
+	peers.sort()
+	var uuids: Array = []
+	var all_players: Array = get_tree().get_nodes_in_group("players")
+	all_players.sort_custom(func(a, b): return a.id < b.id)
+	for i in range(mini(peers.size(), all_players.size())):
+		uuids.append(all_players[i].uuid)
+	NetworkCommandSync.register_peer_uuids(peers, uuids)
+
+
+func _on_player_reconnected(peer_id: int, uuid: String) -> void:
+	# Host sends the full game state snapshot to the reconnecting peer
+	if multiplayer.is_server():
+		var state_data: Dictionary = SaveSystem.serialize_match_to_dict(self)
+		NetworkCommandSync.send_state_snapshot(peer_id, state_data)
+
+
+func _on_reconnect_timer_expired(peer_id: int) -> void:
+	# Find the disconnected player by UUID and reassign their units
+	var uuid: String = NetworkCommandSync.get_uuid_for_peer(peer_id)
+	var disconnected_player: Player = null
+	for p in get_tree().get_nodes_in_group("players"):
+		if p.uuid == uuid:
+			disconnected_player = p
+			break
+	if disconnected_player == null:
+		return
+
+	# Find a teammate (same team, different player)
+	var teammate: Player = null
+	for p in get_tree().get_nodes_in_group("players"):
+		if p != disconnected_player and p.team == disconnected_player.team:
+			teammate = p
+			break
+
+	# Reassign or destroy all units belonging to disconnected player
+	var units_to_process: Array = []
+	for unit in get_tree().get_nodes_in_group("units"):
+		if unit.player == disconnected_player:
+			units_to_process.append(unit)
+
+	for unit in units_to_process:
+		if teammate != null:
+			# Transfer to teammate — reparent so unit.player (get_parent()) is correct
+			var old_pos: Vector3 = unit.global_position
+			var old_rot: Vector3 = unit.rotation
+			unit.get_parent().remove_child(unit)
+			teammate.add_child(unit)
+			unit._player_ref = teammate  # _ready() won't re-run after reparent
+			unit.global_position = old_pos
+			unit.rotation = old_rot
+			# Update group membership
+			unit.remove_from_group("controlled_units")
+			unit.remove_from_group("adversary_units")
+			if teammate == _local_player:
+				unit.add_to_group("controlled_units")
+			else:
+				unit.add_to_group("adversary_units")
+			# Update vision
+			if teammate in visible_players:
+				if not unit.is_in_group("revealed_units"):
+					unit.add_to_group("revealed_units")
+		else:
+			# No teammate — destroy the unit
+			unit.hp = 0
+
+	# Transfer resources to teammate
+	if teammate != null:
+		teammate.credits += disconnected_player.credits
+		teammate.energy += disconnected_player.energy
+		disconnected_player.credits = 0
+		disconnected_player.energy = 0
+
+
+func _on_host_disconnected() -> void:
+	# Auto-save the game state so it can be rehosted from lobby
+	SaveSystem.save_game()
+	get_tree().paused = false
+	get_tree().change_scene_to_file("res://source/main-menu/Main.tscn")
+
+
+# ──────────────────────────────────────────────────────────────────────
+# SAVE / LOAD RESTORATION
+# ──────────────────────────────────────────────────────────────────────
+
+
+func _restore_from_save(save: SaveGameResource) -> void:
+	tick = save.match_tick
+
+	# Restore player state — match by player ID, not array index
+	var player_by_id: Dictionary = {}
+	for p in get_tree().get_nodes_in_group("players"):
+		player_by_id[p.id] = p
+	for pd: Dictionary in save.players_data:
+		var pid: int = pd.get("id", -1)
+		var player: Player = player_by_id.get(pid, null)
+		if player == null:
+			continue
+		player.credits = int(pd.get("credits", 0))
+		player.energy = int(pd.get("energy", 0))
+		if pd.has("support_powers"):
+			player.support_powers = pd["support_powers"].duplicate(true)
+
+	# Set EntityRegistry next_id so new entities get IDs after saved ones
+	EntityRegistry._next_id = save.entity_registry_next_id
+
+	# ── CLEAN UP MAP-SPAWNED RESOURCES ──────────────────────────────
+	# The fresh map spawns ALL resource nodes, but some may have been
+	# depleted during the match. Remove any ResourceUnit entities whose
+	# IDs are NOT present in the save data so the EntityRegistry matches
+	# the host's state exactly.
+	var saved_resource_ids: Dictionary = {}
+	for ed: Dictionary in save.entities_data:
+		if ed.get("entity_type", "unit") != "resource":
+			continue
+		saved_resource_ids[ed.get("entity_id", -1)] = true
+
+	var stale_resources: Array = []
+	for eid: int in EntityRegistry.entities:
+		var e = EntityRegistry.entities[eid]
+		if e != null and is_instance_valid(e) and e is ResourceUnit:
+			if not saved_resource_ids.has(eid):
+				stale_resources.append(e)
+	for e in stale_resources:
+		EntityRegistry.unregister(e)
+		e.queue_free()
+
+	# ── RESTORE RESOURCE AMOUNTS / SPAWN MISSING RESOURCES ─────────
+	for ed: Dictionary in save.entities_data:
+		if ed.get("entity_type", "unit") != "resource":
+			continue
+		var eid: int = ed.get("entity_id", -1)
+		var existing = EntityRegistry.get_unit(eid)
+		if existing:
+			if ed.has("resource_amount"):
+				existing.resource = ed["resource_amount"]
+		else:
+			# Dynamically spawned resource (e.g. VineSpawner-created
+			# VineTile) — instantiate it on the client.
+			var rsc_path: String = ed.get("scene_path", "")
+			if rsc_path.is_empty():
+				continue
+			var rsc_proto = load(rsc_path)
+			if rsc_proto == null:
+				push_warning("RESTORE: cannot load resource scene %s" % rsc_path)
+				continue
+			var rsc = rsc_proto.instantiate()
+			var rsc_pos: Vector3 = SaveSystem._arr_to_vec3(ed.get("position", [0, 0, 0]))
+			rsc._saved_id = eid
+			rsc.position = rsc_pos
+			get_tree().current_scene.add_child(rsc)
+			rsc.global_position = rsc_pos
+			if ed.has("resource_amount"):
+				rsc.resource = ed["resource_amount"]
+
+	# ── SPAWN UNIT ENTITIES ─────────────────────────────────────────
+	for ed: Dictionary in save.entities_data:
+		if ed.get("entity_type", "unit") != "unit":
+			continue
+
+		var scene_path: String = ed.get("scene_path", "")
+		if scene_path.is_empty():
+			push_warning(
+				"RESTORE: skipping entity with empty scene_path, id=%d" % ed.get("entity_id", -1)
+			)
+			continue
+		var proto = load(scene_path)
+		if proto == null:
+			push_warning("_restore_from_save: cannot load %s" % scene_path)
+			continue
+		var entity = proto.instantiate()
+		var pos: Vector3 = SaveSystem._arr_to_vec3(ed.get("position", [0, 0, 0]))
+		var rot: Vector3 = SaveSystem._arr_to_vec3(ed.get("rotation", [0, 0, 0]))
+		var spawn_transform := Transform3D(Basis.from_euler(rot), pos)
+
+		var player_id: int = ed.get("player_id", -1)
+		var player: Player = player_by_id.get(player_id, null)
+		if player == null:
+			push_warning("_restore_from_save: no player with id %d" % player_id)
+			entity.queue_free()
+			continue
+
+		var _fk: String = Enums.Faction.keys()[player.faction]
+		push_warning(
+			(
+				"RESTORE: entity=%d player_id=%d faction=%s scene=%s"
+				% [ed.get("entity_id", -1), player_id, _fk, scene_path.get_file()]
+			)
+		)
+
+		# Pre-set the entity ID before adding to tree (so EntityRegistry gets the right ID)
+		entity._saved_id = ed.get("entity_id", -1)
+
+		var is_structure: bool = ed.get("is_structure", false)
+		var self_constructing: bool = ed.get("self_constructing", false)
+
+		# Pass the transform directly — do NOT read entity.global_transform
+		# before add_child, as the getter returns identity when not in tree.
+		_setup_and_spawn_unit(entity, spawn_transform, player, self_constructing)
+
+		# Re-apply position AFTER add_child to guarantee correctness
+		entity.global_position = pos
+		entity.rotation = rot
+
+		# Restore HP
+		if ed.has("hp"):
+			entity.hp = ed["hp"]
+		if ed.has("hp_max"):
+			entity.hp_max = ed["hp_max"]
+		if ed.has("stopped"):
+			entity._stopped = ed["stopped"]
+
+		# Restore structure-specific state
+		if is_structure:
+			if ed.has("construction_progress") and ed["construction_progress"] != null:
+				entity._construction_progress = ed["construction_progress"]
+			if ed.get("is_disabled", false):
+				entity.is_disabled = true
+			if ed.get("is_selling", false):
+				entity.is_selling = true
+			if ed.get("is_repairing", false):
+				entity.is_repairing = true
+			if ed.get("is_construction_paused", false):
+				entity.is_construction_paused = true
+			if ed.has("sell_ticks_remaining"):
+				entity._sell_ticks_remaining = ed["sell_ticks_remaining"]
+			if ed.has("self_construction_speed"):
+				entity._self_construction_speed = ed["self_construction_speed"]
+			if ed.has("trickle_cost") and ed["trickle_cost"] != null:
+				entity._trickle_cost = ed["trickle_cost"]
+			if ed.has("trickle_cost_deducted"):
+				entity._trickle_cost_deducted = ed["trickle_cost_deducted"]
+
+			# Restore production queue
+			var pq = entity.find_child("ProductionQueue")
+			if pq and ed.has("production_queue"):
+				SaveSystem.restore_production_queue(pq, ed["production_queue"])
+
+			# Restore rally point
+			var rally = entity.find_child("RallyPoint")
+			if rally:
+				if ed.has("rally_position") and ed["rally_position"] != null:
+					rally.global_position = SaveSystem._arr_to_vec3(ed["rally_position"])
+				var rally_target_id: int = ed.get("rally_target_unit", -1)
+				if rally_target_id >= 0:
+					var target = EntityRegistry.get_unit(rally_target_id)
+					if target:
+						rally.target_unit = target
+
+	# Restore actions AFTER all entities are spawned (so cross-references resolve)
+	for ed in save.entities_data:
+		if ed.get("entity_type", "unit") != "unit":
+			continue
+		var eid: int = ed.get("entity_id", -1)
+		var entity = EntityRegistry.get_unit(eid)
+		if entity == null:
+			continue
+		if ed.has("action"):
+			SaveSystem.restore_action_on_unit(entity, ed["action"])
+		# Restore command queue
+		var queue_node = entity.find_child("UnitCommandQueue")
+		if queue_node and ed.has("command_queue"):
+			SaveSystem.restore_command_queue(queue_node, ed["command_queue"])
+
+	# ── FORCE NAVMESH SYNC ─────────────────────────────────────────
+	# MovementObstacle._ready() awaits a process frame before
+	# registering with the navigation group and requesting a rebake.
+	# The tick timer starts right after _ready(), so the first ticks
+	# would use a navmesh WITHOUT structure carve-outs, causing path
+	# divergence vs the host.  Fix: register obstacles immediately
+	# and perform a synchronous rebake before any ticks fire.
+	for eid: int in EntityRegistry.entities:
+		var e = EntityRegistry.entities[eid]
+		if e == null or not is_instance_valid(e):
+			continue
+		var obstacle = e.find_child("MovementObstacle")
+		if obstacle and obstacle.affect_navigation_mesh:
+			var grp: String = NavigationConstants.DOMAIN_TO_GROUP_MAPPING[obstacle.domain]
+			if not obstacle.is_in_group(grp):
+				obstacle.add_to_group(grp)
+			obstacle.set_navigation_map(
+				navigation.get_navigation_map_rid_by_domain(obstacle.domain)
+			)
+	navigation.rebake_terrain_sync()

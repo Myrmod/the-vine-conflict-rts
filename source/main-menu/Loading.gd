@@ -3,6 +3,7 @@ extends Control
 var match_settings = null
 var map_path = null
 var replay_resource = null
+var save_resource = null  ## SaveGameResource for loading from save
 
 @onready var _label = find_child("Label")
 @onready var _progress_bar = find_child("ProgressBar")
@@ -36,11 +37,16 @@ func _ready():
 	a_match.map = map
 	a_match.map_source_path = map_path
 	a_match.is_replay_mode = !!replay_resource
+	if save_resource != null:
+		a_match.save_resource = save_resource
 
 	# ── DETERMINISTIC SEED ──────────────────────────────────────────
-	# Generate a match seed (or restore from replay) so all RNG (shuffle, randf, etc.)
+	# Generate a match seed (or restore from replay/save) so all RNG
 	# reproduces identically. This is essential for replay determinism.
-	if replay_resource != null and replay_resource.get("match_seed") != null:
+	if save_resource != null:
+		Match.rng.seed = save_resource.rng_seed
+		Match.rng.state = save_resource.rng_state
+	elif replay_resource != null and replay_resource.get("match_seed") != null:
 		Match.rng.seed = replay_resource.match_seed
 	else:
 		Match.rng.seed = randi()
@@ -55,6 +61,13 @@ func _ready():
 	# when Match._ready() starts the tick timer
 	if replay_resource != null:
 		CommandBus.load_from_replay_array(replay_resource.commands)
+
+	# Restore pending commands from save
+	if save_resource != null:
+		for cmd in save_resource.pending_commands:
+			if not CommandBus.commands.has(cmd.get("tick", 0)):
+				CommandBus.commands[cmd.get("tick", 0)] = []
+			CommandBus.commands[cmd.get("tick", 0)].append(cmd)
 
 	_progress_bar.value = 0.9
 

@@ -97,19 +97,31 @@ func _ready() -> void:
 		terrain_move_type = NavigationConstants.TerrainMoveType.AIR
 
 	_nav_map_rid = _match.navigation.get_navigation_map_rid_by_domain(domain)
-	_align_unit_position_to_navigation()
+
+	# When restoring from save the unit already has its correct position
+	# and rotation.  Skip the navmesh snap (it would overwrite XZ) and
+	# capture yaw from the saved rotation *before* _apply_terrain_height
+	# resets the basis via _apply_yaw().
+	var is_restored: bool = "_saved_id" in _unit and _unit._saved_id >= 0
+	if is_restored:
+		_yaw = _unit.global_transform.basis.get_euler().y
+	else:
+		_align_unit_position_to_navigation()
+
 	_apply_terrain_height_and_tilt(true)
 
-	# Initial dispersion so stacked units spread.
-	move(
-		(
-			_unit.global_position
-			+ (Vector3(Match.rng.randf(), 0, Match.rng.randf()).normalized() * INITIAL_DISPERSION)
+	if not is_restored:
+		move(
+			(
+				_unit.global_position
+				+ (
+					Vector3(Match.rng.randf(), 0, Match.rng.randf()).normalized()
+					* INITIAL_DISPERSION
+				)
+			)
 		)
-	)
-
-	# Record initial yaw from whatever direction the unit faces.
-	_yaw = _unit.global_transform.basis.get_euler().y
+		# Record initial yaw from whatever direction the unit faces.
+		_yaw = _unit.global_transform.basis.get_euler().y
 
 	MatchSignals.tick_advanced.connect(_on_tick_advanced)
 	_prev_transform = _unit.global_transform
@@ -385,8 +397,12 @@ func _finish_tick() -> void:
 
 
 ## Called by Match._apply_unit_separation() after pushing.
+## The push has already been applied to _tick_transform.origin.
 func resync_tick_transform() -> void:
 	_suppress_nav_finished = true
+	# Snap the node to the authoritative tick state so terrain
+	# height/tilt operates on the correct position.
+	_unit.global_transform = _tick_transform
 	_apply_terrain_height_and_tilt()
 	_tick_transform = _unit.global_transform
 	_interpolate_visual()
@@ -577,21 +593,23 @@ func _resolve_unit_collisions(new_pos: Vector3) -> Vector3:
 	for _iter in range(3):
 		var resolved: bool = true
 		for unit_id: int in EntityRegistry.entities:
-			var other: Node3D = EntityRegistry.entities[unit_id]
+			var other = EntityRegistry.entities[unit_id]
 			if other == null or other == _unit:
 				continue
 			if not is_instance_valid(other):
 				continue
-			if other.find_child("Movement") == null:
+			var other_mov = other.find_child("Movement")
+			if other_mov == null:
 				continue
 			if other.get_nav_domain() != _unit.get_nav_domain():
 				continue
 
 			var other_r: float = other.radius if other.radius != null else 0.25
+			# Use authoritative tick position, not interpolated visual.
 			var other_2d := Vector3(
-				other.global_transform.origin.x,
+				other_mov._tick_transform.origin.x,
 				0.0,
-				other.global_transform.origin.z,
+				other_mov._tick_transform.origin.z,
 			)
 			var diff := pos_2d - other_2d
 			var dist := diff.length()
@@ -637,20 +655,22 @@ func _compute_avoidance_dir(desired_dir: Vector3) -> Vector3:
 	var blockers: Array[Dictionary] = []
 
 	for unit_id: int in EntityRegistry.entities:
-		var other: Node3D = EntityRegistry.entities[unit_id]
+		var other = EntityRegistry.entities[unit_id]
 		if other == null or other == _unit:
 			continue
 		if not is_instance_valid(other):
 			continue
-		if other.find_child("Movement") == null:
+		var other_mov = other.find_child("Movement")
+		if other_mov == null:
 			continue
 		if other.get_nav_domain() != _unit.get_nav_domain():
 			continue
 
+		# Use authoritative tick position, not interpolated visual.
 		var other_pos := Vector3(
-			other.global_transform.origin.x,
+			other_mov._tick_transform.origin.x,
 			0.0,
-			other.global_transform.origin.z,
+			other_mov._tick_transform.origin.z,
 		)
 		var other_r: float = other.radius if other.radius != null else 0.25
 		var to_other := other_pos - my_pos
