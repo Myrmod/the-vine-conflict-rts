@@ -11,6 +11,7 @@ var _chat_visible: bool = false
 var _chat_fade_timer: float = 0.0
 var _local_team: int = -1
 var _disconnect_active: bool = false
+var _match_finished: bool = false
 var _disconnect_panel: VBoxContainer = null
 var _disconnect_label: Label = null
 var _disconnect_timer_label: Label = null
@@ -88,6 +89,12 @@ func _unhandled_key_input(event: InputEvent) -> void:
 
 func set_local_team(team: int) -> void:
 	_local_team = team
+
+
+func set_match_finished() -> void:
+	_match_finished = true
+	_disconnect_active = false
+	_disconnect_panel.hide()
 
 
 func show_overlay(text: String) -> void:
@@ -227,6 +234,8 @@ func _build_disconnect_panel() -> void:
 
 
 func _on_player_disconnected_in_match(peer_id: int) -> void:
+	if _match_finished:
+		return
 	_disconnect_active = true
 	_disconnect_label.text = "Player disconnected (peer %d)" % peer_id
 	_disconnect_timer_label.text = "Waiting for reconnect... 60s"
@@ -243,6 +252,8 @@ func _on_player_disconnected_in_match(peer_id: int) -> void:
 
 
 func _on_player_reconnected_in_match(_peer_id: int, _uuid: String) -> void:
+	if _match_finished:
+		return
 	# Don't unpause yet — wait for the client to finish loading.
 	# The host will unpause when it receives reconnect_client_ready.
 	if _disconnect_label != null:
@@ -250,6 +261,8 @@ func _on_player_reconnected_in_match(_peer_id: int, _uuid: String) -> void:
 
 
 func _on_reconnect_client_ready(_peer_id: int) -> void:
+	if _match_finished:
+		return
 	if not NetworkCommandSync.has_disconnected_peers():
 		_disconnect_label.text = "All players ready"
 		_disconnect_timer_label.hide()
@@ -259,6 +272,8 @@ func _on_reconnect_client_ready(_peer_id: int) -> void:
 
 
 func _on_reconnect_timer_expired(_peer_id: int) -> void:
+	if _match_finished:
+		return
 	_disconnect_active = false
 	_disconnect_panel.hide()
 	# Match.gd handles the unit reassignment via the same signal

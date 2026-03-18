@@ -256,6 +256,9 @@ func _start_structure_placement(structure_prototype):
 	)
 	MatchSignals.current_placement_domains = _pending_structure_placement_domains
 	MatchSignals.structure_placement_started.emit()
+	# Position blueprint at current mouse immediately so it's visible
+	# without requiring a mouse move first.
+	_set_blueprint_position_based_on_mouse_pos()
 
 
 func _set_blueprint_position_based_on_mouse_pos():

@@ -50,6 +50,7 @@ func _ready() -> void:
 	NetworkCommandSync.lobby_player_setting_changed.connect(_on_player_setting_received)
 	NetworkCommandSync.browse_chat_received.connect(_on_browse_chat_received)
 	NetworkCommandSync.reconnect_state_received.connect(_on_reconnect_state_received)
+	_games_list.item_activated.connect(_on_games_list_item_activated)
 	NetworkCommandSync.start_lan_discovery()
 
 
@@ -69,6 +70,7 @@ func _exit_tree() -> void:
 	NetworkCommandSync.lobby_player_setting_changed.disconnect(_on_player_setting_received)
 	NetworkCommandSync.browse_chat_received.disconnect(_on_browse_chat_received)
 	NetworkCommandSync.reconnect_state_received.disconnect(_on_reconnect_state_received)
+	_games_list.item_activated.disconnect(_on_games_list_item_activated)
 
 
 func _process(_delta: float) -> void:
@@ -209,6 +211,17 @@ func _on_join_button_pressed() -> void:
 	var info: Dictionary = games.get(key, {})
 	var is_pw_protected: bool = info.get("password_protected", false)
 
+	if is_pw_protected:
+		_show_password_dialog(key)
+	else:
+		_join_by_key(key, "")
+
+
+func _on_games_list_item_activated(index: int) -> void:
+	var key: String = _games_list.get_item_metadata(index)
+	var games: Dictionary = NetworkCommandSync.get_discovered_games()
+	var info: Dictionary = games.get(key, {})
+	var is_pw_protected: bool = info.get("password_protected", false)
 	if is_pw_protected:
 		_show_password_dialog(key)
 	else:
@@ -359,6 +372,17 @@ func _on_ready_button_pressed() -> void:
 	_local_ready = not _local_ready
 	_ready_button.text = "UNREADY" if _local_ready else "READY"
 	NetworkCommandSync.set_lobby_ready(_local_ready)
+	_lock_client_settings(_local_ready)
+
+
+func _lock_client_settings(locked: bool) -> void:
+	if _is_host:
+		return
+	var local_slot: int = _get_local_slot()
+	var nodes: Array[Node] = _player_grid.get_children()
+	if local_slot < 0 or local_slot >= nodes.size():
+		return
+	nodes[local_slot].find_child("FactionSelect").disabled = locked
 
 
 # ──────────────────────────────────────────────────────────────────────

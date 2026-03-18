@@ -71,6 +71,7 @@ static var rng := RandomNumberGenerator.new()
 # The player controlled by THIS peer. In single-player this is the Human player.
 # In multiplayer each peer gets a different _local_player based on their peer ID.
 var _local_player: Player = null
+var _match_ended: bool = false
 
 
 func _enter_tree():
@@ -125,6 +126,8 @@ func _ready():
 	if settings.visibility == settings.Visibility.FULL:
 		fog_of_war.reveal()
 	MatchSignals.match_started.emit()
+	MatchSignals.match_finished_with_victory.connect(_on_match_ended)
+	MatchSignals.match_finished_with_defeat.connect(_on_match_ended)
 
 	hud.set_replay_mode(is_replay_mode)
 	wire_hud()
@@ -1145,6 +1148,8 @@ func _on_player_reconnected(peer_id: int, uuid: String) -> void:
 
 
 func _on_reconnect_timer_expired(peer_id: int) -> void:
+	if _match_ended:
+		return
 	# Find the disconnected player by UUID and reassign their units
 	var uuid: String = NetworkCommandSync.get_uuid_for_peer(peer_id)
 	var disconnected_player: Player = null
@@ -1201,7 +1206,14 @@ func _on_reconnect_timer_expired(peer_id: int) -> void:
 		disconnected_player.energy = 0
 
 
+func _on_match_ended() -> void:
+	_match_ended = true
+
+
 func _on_host_disconnected() -> void:
+	# Ignore if match already ended (statistics screen handles exit)
+	if _match_ended:
+		return
 	# Auto-save the game state so it can be rehosted from lobby
 	SaveSystem.save_game()
 	get_tree().paused = false
