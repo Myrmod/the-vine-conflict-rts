@@ -1,14 +1,12 @@
 extends Node
 
 const SAVE_DIR := "user://saves/"
-const SAVE_PATH := "user://saves/savegame.tres"
-const SAVE_PATH_JSON := "user://saves/savegame.json"
 
 signal game_saved
 signal game_loaded(save: SaveGameResource)
 
 
-func save_game() -> Error:
+func save_game(save_name: String = "") -> Error:
 	var match_node: Match = _get_match()
 	if match_node == null:
 		push_error("SaveSystem: no active Match node found")
@@ -17,23 +15,29 @@ func save_game() -> Error:
 	var save := _serialize_match(match_node)
 	DirAccess.make_dir_recursive_absolute(SAVE_DIR)
 
-	var err := ResourceSaver.save(save, SAVE_PATH)
+	if save_name.is_empty():
+		save_name = get_default_save_name(match_node)
+	var path := SAVE_DIR + save_name + ".tres"
+
+	var err := ResourceSaver.save(save, path)
 	if err != OK:
 		push_error("SaveSystem: failed to save game: %s" % error_string(err))
 		return err
 
 	if FeatureFlags.get("debug_save_json"):
-		_save_json_debug(save)
+		_save_json_debug(save, save_name)
 
 	game_saved.emit()
 	return OK
 
 
-func load_game() -> SaveGameResource:
-	if not FileAccess.file_exists(SAVE_PATH):
-		push_warning("SaveSystem: no save file at %s" % SAVE_PATH)
+func load_game(path: String = "") -> SaveGameResource:
+	if path.is_empty():
+		path = _find_latest_save()
+	if path.is_empty() or not FileAccess.file_exists(path):
+		push_warning("SaveSystem: no save file at %s" % path)
 		return null
-	var save = ResourceLoader.load(SAVE_PATH) as SaveGameResource
+	var save = ResourceLoader.load(path) as SaveGameResource
 	if save == null:
 		push_error("SaveSystem: failed to load save file")
 		return null
@@ -41,7 +45,46 @@ func load_game() -> SaveGameResource:
 
 
 func has_save() -> bool:
-	return FileAccess.file_exists(SAVE_PATH)
+	return not list_saves().is_empty()
+
+
+func list_saves() -> Array[String]:
+	var saves: Array[String] = []
+	if not DirAccess.dir_exists_absolute(SAVE_DIR):
+		return saves
+	var dir := DirAccess.open(SAVE_DIR)
+	if dir == null:
+		return saves
+	dir.list_dir_begin()
+	var file_name := dir.get_next()
+	while file_name != "":
+		if (
+			not dir.current_is_dir()
+			and file_name.ends_with(".tres")
+			and not file_name.ends_with(".import")
+		):
+			saves.append(SAVE_DIR + file_name)
+		file_name = dir.get_next()
+	dir.list_dir_end()
+	saves.sort()
+	saves.reverse()
+	return saves
+
+
+func get_default_save_name(match_node: Match = null) -> String:
+	var map_name := "save"
+	if match_node != null and not match_node.map_source_path.is_empty():
+		map_name = (match_node.map_source_path.get_file().get_basename())
+	var ts := Time.get_datetime_string_from_system()
+	ts = ts.replace("T", "_").replace(":", "_").replace("-", "_")
+	return map_name + "_" + ts
+
+
+func _find_latest_save() -> String:
+	var saves := list_saves()
+	if saves.is_empty():
+		return ""
+	return saves[0]
 
 
 func serialize_match_to_dict(match_node: Match) -> Dictionary:
@@ -431,10 +474,11 @@ func _dict_to_save(data: Dictionary) -> SaveGameResource:
 	return save
 
 
-func _save_json_debug(save: SaveGameResource) -> void:
+func _save_json_debug(save: SaveGameResource, save_name: String = "savegame") -> void:
 	var dict := _save_to_dict(save)
 	var json_str := JSON.stringify(dict, "\t")
-	var file := FileAccess.open(SAVE_PATH_JSON, FileAccess.WRITE)
+	var path := SAVE_DIR + save_name + ".json"
+	var file := FileAccess.open(path, FileAccess.WRITE)
 	if file:
 		file.store_string(json_str)
 

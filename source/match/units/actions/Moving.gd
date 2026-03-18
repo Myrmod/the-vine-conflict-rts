@@ -10,7 +10,8 @@ var _target_position = null
 @onready var _movement_trait = _unit.find_child("Movement")
 
 
-# Moving is applicable if the unit has a Movement component (most units do, except stationary buildings)
+# Moving is applicable if the unit has a Movement component
+# (most units do, except stationary buildings)
 static func is_applicable(unit):
 	return unit.find_child("Movement") != null
 
@@ -23,13 +24,19 @@ func _init(target_position):
 func _ready():
 	# Tell the Movement trait to navigate to the target.
 	# The trait handles pathfinding, obstacle avoidance, etc.
+	if _movement_trait == null:
+		push_warning(
+			"Moving: unit %d has no Movement trait (replay desync?)" % (_unit.id if _unit else -1)
+		)
+		queue_free()
+		return
 	_movement_trait.move(_target_position)
 	_movement_trait.movement_finished.connect(_on_movement_finished)
 
 
 func _exit_tree():
 	# If action is removed from tree (e.g., unit dies), stop movement immediately
-	if is_inside_tree():
+	if is_inside_tree() and _movement_trait != null:
 		_movement_trait.stop()
 
 

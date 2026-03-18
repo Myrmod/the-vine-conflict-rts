@@ -945,11 +945,17 @@ func _create_players_from_settings():
 		player.initialize_resources(Factions.get_starting_resource())
 
 		# Strip input controllers from remote Human players in multiplayer.
-		if (
-			NetworkCommandSync.is_active
-			and player_settings.controller == Constants.PlayerType.HUMAN
-			and player_idx != local_idx
-		):
+		# In replay mode, strip ALL human input controllers since commands
+		# come from the replay data — no player should generate new input.
+		var should_strip_input: bool = (
+			is_replay_mode
+			or (
+				NetworkCommandSync.is_active
+				and player_settings.controller == Constants.PlayerType.HUMAN
+				and player_idx != local_idx
+			)
+		)
+		if should_strip_input and player_settings.controller == Constants.PlayerType.HUMAN:
 			for child_name in [
 				"UnitActionsController",
 				"StructurePlacementHandler",

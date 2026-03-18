@@ -30,7 +30,7 @@ func _on_campaign_button_pressed() -> void:
 
 
 func _on_Load_button_pressed() -> void:
-	print("TODO")
+	get_tree().change_scene_to_file("res://source/main-menu/Saves.tscn")
 
 
 func _on_map_editor_button_pressed() -> void:

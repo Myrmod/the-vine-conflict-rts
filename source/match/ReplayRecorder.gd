@@ -124,6 +124,8 @@ func _serialize_players(players: Array[PlayerSettings]) -> Array:
 			"controller": player_settings.controller,
 			"team": player_settings.team,
 			"spawn_index": player_settings.spawn_index,
+			"faction": player_settings.faction,
+			"uuid": player_settings.uuid,
 		}
 		serialized.append(player_dict)
 	return serialized
@@ -153,6 +155,11 @@ func _restore_players(players_data: Array) -> Array[PlayerSettings]:
 				player_settings.spawn_index = data_variant.get("spawn_index")
 			else:
 				player_settings.spawn_index = -1
+			# Backward compatibility: old replays might not include faction/uuid.
+			player_settings.faction = (
+				data_variant.get("faction") if data_variant.has("faction") else Enums.Faction.AMUNS
+			)
+			player_settings.uuid = data_variant.get("uuid", "")
 		else:
 			player_settings = player_data as PlayerSettings
 			if player_settings != null and player_settings.team == null:
