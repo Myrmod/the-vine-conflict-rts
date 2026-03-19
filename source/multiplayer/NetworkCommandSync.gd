@@ -127,6 +127,11 @@ var _peer_player_index: Dictionary = {}  # peer_id(int) → player_index(int)
 var last_server_address: String = ""
 var last_server_port: int = DEFAULT_PORT
 
+## UPnP state for automatic port forwarding.
+var _upnp: UPNP = null
+var _upnp_port: int = 0
+var external_ip: String = ""
+
 ## True if the local player disconnected involuntarily (not manual leave).
 var _involuntary_disconnect: bool = false
 
@@ -140,6 +145,56 @@ var _checksums: Dictionary = {}
 
 ## Last tick for which we detected a desync (avoid spamming).
 var _last_desync_tick: int = -1
+
+## ── UPnP port forwarding ────────────────────────────────────────────
+
+
+func _setup_upnp(port: int) -> void:
+	_upnp_port = port
+	var thread := Thread.new()
+	thread.start(_upnp_thread.bind(port))
+
+
+func _upnp_thread(port: int) -> void:
+	var upnp := UPNP.new()
+	var result := upnp.discover()
+	if result != UPNP.UPNP_RESULT_SUCCESS:
+		push_warning("UPnP: discovery failed (code %d). Port forwarding unavailable." % result)
+		call_deferred("_on_upnp_completed", false, "")
+		return
+	if upnp.get_device_count() == 0:
+		push_warning("UPnP: no gateway devices found.")
+		call_deferred("_on_upnp_completed", false, "")
+		return
+
+	var err_udp := upnp.add_port_mapping(port, port, "Overgrowth RTS", "UDP")
+	var err_tcp := upnp.add_port_mapping(port, port, "Overgrowth RTS", "TCP")
+	if err_udp != UPNP.UPNP_RESULT_SUCCESS and err_tcp != UPNP.UPNP_RESULT_SUCCESS:
+		push_warning("UPnP: port mapping failed (UDP=%d, TCP=%d)." % [err_udp, err_tcp])
+		call_deferred("_on_upnp_completed", false, "")
+		return
+
+	var ip := upnp.query_external_address()
+	call_deferred("_on_upnp_completed", true, ip)
+	_upnp = upnp
+
+
+func _on_upnp_completed(success: bool, ip: String) -> void:
+	if success:
+		external_ip = ip
+		print("UPnP: port %d forwarded. External IP: %s" % [_upnp_port, ip])
+	else:
+		print("UPnP: automatic port forwarding unavailable. Manual forwarding may be needed.")
+
+
+func _cleanup_upnp() -> void:
+	if _upnp != null and _upnp_port > 0:
+		_upnp.delete_port_mapping(_upnp_port, "UDP")
+		_upnp.delete_port_mapping(_upnp_port, "TCP")
+		_upnp = null
+		_upnp_port = 0
+		external_ip = ""
+
 
 ## ── Command logging ─────────────────────────────────────────────────
 ## Ring buffers per peer storing the last N commands sent/received.
@@ -166,6 +221,7 @@ func host_game(port: int = DEFAULT_PORT) -> Error:
 	_setup_signals()
 	_peers[1] = true  # server is always peer 1
 	is_active = true
+	_setup_upnp(port)
 	return OK
 
 
@@ -184,6 +240,7 @@ func join_game(address: String, port: int = DEFAULT_PORT) -> Error:
 
 
 func disconnect_game(voluntary: bool = true) -> void:
+	_cleanup_upnp()
 	if multiplayer.multiplayer_peer:
 		multiplayer.multiplayer_peer.close()
 		multiplayer.multiplayer_peer = null
