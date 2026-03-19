@@ -1429,3 +1429,17 @@ func _restore_from_save(save: SaveGameResource) -> void:
 				navigation.get_navigation_map_rid_by_domain(obstacle.domain)
 			)
 	navigation.rebake_terrain_sync()
+	_rebuild_wall_connections()
+
+
+## Re-derive wall section connections between constructed WallPillars.
+## Called after restoring from a save since WallSections are not serialized.
+func _rebuild_wall_connections() -> void:
+	for unit in get_tree().get_nodes_in_group("units"):
+		if not "wall_sections" in unit:
+			continue
+		if not "connection_length" in unit:
+			continue
+		if not unit.is_constructed():
+			continue
+		unit._connect_to_nearby_pillars()

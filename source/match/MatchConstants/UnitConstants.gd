@@ -261,11 +261,13 @@ const DEFAULT_PROPERTIES = {
 			Enums.DamageTypes.TESLA: 0.5,
 		},
 		"costs": {"credits": 50},
-		"build_time": 4.0,
+		"build_time": 1.0,
 		"structure_requirements":
 		[
 			"res://source/factions/the_amuns/structures/CommandCenter.tscn",
 		],
+		## wall specific settings
+		"connection_length": 5,
 	},
 	"res://source/factions/the_amuns/structures/AntiGroundTurret.tscn":
 	{

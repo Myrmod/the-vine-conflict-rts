@@ -1,0 +1,105 @@
+[gd_scene format=3 uid="uid://7m00tcc7lvnc"]
+
+[ext_resource type="Script" uid="uid://doh5l2vaj7x08" path="res://source/factions/the_amuns/structures/WallSection.gd" id="1_wallsec"]
+[ext_resource type="PackedScene" uid="uid://d4cwip5hpxlmo" path="res://source/match/units/traits/MovementObstacle.tscn" id="2_movobs"]
+[ext_resource type="Curve" uid="uid://cv0k0umipiy7n" path="res://addons/nojoule-energy-shield/impact_animation_curve.tres" id="5_anim_curve"]
+[ext_resource type="Script" uid="uid://sgldwin4tbiv" path="res://addons/nojoule-energy-shield/shield.gd" id="6_shield_gd"]
+[ext_resource type="Shader" uid="uid://dcko35tc4k343" path="res://addons/nojoule-energy-shield/shield.gdshader" id="7_shield_shader"]
+[ext_resource type="Texture2D" uid="uid://dnqegf8mxqli" path="res://addons/nojoule-energy-shield/shield_noise.tres" id="8_shield_noise"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_wall"]
+render_priority = 0
+shader = ExtResource("7_shield_shader")
+shader_parameter/_quantization = true
+shader_parameter/_steps_quantization = 5
+shader_parameter/_object_scale = 1.0
+shader_parameter/_object_size = 1.0
+shader_parameter/_only_on_wave_visibility = false
+shader_parameter/_start_falloff_visibility = 0.5
+shader_parameter/_end_falloff_visibility = 0.3
+shader_parameter/_time_multiplier_activation = 2.0
+shader_parameter/_distance_multiplier_activation = 1.0
+shader_parameter/_width_time_activation = 0.2
+shader_parameter/_enable_highlight_intersection = false
+shader_parameter/_width_highlight_intersection = 1.0
+shader_parameter/_noise_texture = ExtResource("8_shield_noise")
+shader_parameter/_speed_noise = Vector2(0.02, 0.02)
+shader_parameter/_origin_generate = Vector3(0, 0.5, 0)
+shader_parameter/_time_generate = 1.0
+shader_parameter/_thickness_generate = 0.25
+shader_parameter/_collapse = false
+shader_parameter/_color_shield = Color(0.26, 0.975, 1, 1)
+shader_parameter/_color_brightness_shield = 0.5000000074506
+shader_parameter/_intensity_shield = 1.2500000186265
+shader_parameter/glow_enabled = true
+shader_parameter/glow_strength = 0.1
+shader_parameter/_active_static = false
+shader_parameter/_origin_static = Vector3(0, 0.5, 0)
+shader_parameter/_speed_static = 0.1
+shader_parameter/_frequency_static = 80.0
+shader_parameter/_amplitude_static = 0.002
+shader_parameter/_normal_amplitude_static = 0.002
+shader_parameter/_effect_radius_static = 1.2
+shader_parameter/_active_static_offset_hl = true
+shader_parameter/_strength_static_offset_hl = 1.0
+shader_parameter/_intensity_static_offset_hl = 5.0
+shader_parameter/_relative_origin_static = true
+shader_parameter/_origin_impact = PackedVector3Array(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+shader_parameter/_time_impact = PackedFloat32Array(0, 0, 0, 0, 0)
+shader_parameter/_frequency_impact = 20.0
+shader_parameter/_waves_impact = 0.0
+shader_parameter/_fade_waves_impact = 2.0
+shader_parameter/_amplitude_impact = 0.04
+shader_parameter/_normal_amplitude_impact = 0.1
+shader_parameter/_radius_impact = 1.0
+shader_parameter/_active_impact_offset_hl = true
+shader_parameter/_strength_impact_offset_hl = 2.0
+shader_parameter/_intensity_impact_offset_hl = 5.0
+shader_parameter/_relative_origin_impact = false
+shader_parameter/_active_border = true
+shader_parameter/_intensity_border = 5.0
+shader_parameter/_percentage_border = 0.150000007125
+shader_parameter/_show_normals = false
+
+[sub_resource type="BoxMesh" id="BoxMesh_yb4t3"]
+lightmap_size_hint = Vector2i(14, 11)
+material = SubResource("ShaderMaterial_wall")
+size = Vector3(1, 0.05, 1)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_shield"]
+size = Vector3(1, 0.1, 1)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial_top"]
+disable_receive_shadows = true
+
+[sub_resource type="BoxMesh" id="BoxMesh_top"]
+material = SubResource("StandardMaterial_top")
+size = Vector3(0.06, 0.02, 1)
+
+[node name="WallSection" type="Node3D" unique_id=403367514]
+script = ExtResource("1_wallsec")
+
+[node name="Model" type="MeshInstance3D" parent="." unique_id=2057682924]
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 0.5, 0)
+cast_shadow = 0
+mesh = SubResource("BoxMesh_yb4t3")
+script = ExtResource("6_shield_gd")
+animation_curve = ExtResource("5_anim_curve")
+
+[node name="Area3D" type="Area3D" parent="Model" unique_id=1071947285]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Model/Area3D" unique_id=1943880284]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.025, 0)
+shape = SubResource("BoxShape3D_shield")
+
+[node name="TopEdge" type="MeshInstance3D" parent="." unique_id=1605233696]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+cast_shadow = 0
+mesh = SubResource("BoxMesh_top")
+
+[node name="MovementObstacle" parent="." unique_id=1017674547 instance=ExtResource("2_movobs")]
+visible = false
+radius = 0.5
+vertices = PackedVector3Array(0, 0, -0.5, 0.5, 0, -0.5, 0.5, 0, 0, 0.5, 0, 0.5, 0, 0, 0.5, -0.5, 0, 0.5, -0.5, 0, 0, -0.5, 0, -0.5)
+affect_navigation_mesh = true
+path_height_offset = 0.6

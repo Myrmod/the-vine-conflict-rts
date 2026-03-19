@@ -116,6 +116,17 @@ text = "- 3D Space Kit by Kenney.nl
 - https://fontawesome.com/"
 fit_content = true
 
+[node name="Shaders" type="Label" parent="PanelContainer/MarginContainer/VBoxContainer/PanelContainer/MarginContainer/VBoxContainer" unique_id=299282200]
+layout_mode = 2
+text = "SHADERS"
+
+[node name="ShaderText" type="RichTextLabel" parent="PanelContainer/MarginContainer/VBoxContainer/PanelContainer/MarginContainer/VBoxContainer" unique_id=552529911]
+layout_mode = 2
+theme_override_font_sizes/normal_font_size = 20
+bbcode_enabled = true
+text = "- Julian Rogawski (energy shield base)"
+fit_content = true
+
 [node name="Button" type="Button" parent="PanelContainer/MarginContainer/VBoxContainer" unique_id=620460703]
 layout_mode = 2
 text = "BACK"

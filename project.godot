@@ -325,3 +325,8 @@ avoidance/thread_model/avoidance_use_multiple_threads=false
 baking/thread_model/baking_use_multiple_threads=false
 3d/merge_rasterizer_cell_scale=0.001
 3d/use_edge_connections=false
+
+[rendering]
+
+anti_aliasing/quality/msaa_3d=2
+anti_aliasing/quality/screen_space_aa=2
