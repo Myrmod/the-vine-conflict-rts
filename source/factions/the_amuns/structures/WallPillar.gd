@@ -16,8 +16,25 @@ func _get_wall_section_scene() -> PackedScene:
 
 func _finish_construction():
 	super()
+	_hide_all_arms()
 	_connect_to_nearby_pillars()
+	_update_arm_visibility()
 	hp_changed.connect(_on_hp_changed_ripple)
+
+
+func _setup_color():
+	super()
+	var holder := find_child("ModelHolder")
+	if holder == null or player == null:
+		return
+	var mat: Material = player.get_color_material()
+	for mesh in holder.find_children("*", "MeshInstance3D", true, false):
+		for surface_id in range(mesh.mesh.get_surface_count()):
+			var surface_mat: Material = mesh.get_active_material(surface_id)
+			if surface_mat == null:
+				continue
+			if surface_mat.resource_name == "PlayerColor":
+				mesh.set_surface_override_material(surface_id, mat)
 
 
 func _exit_tree():
@@ -133,6 +150,9 @@ func _spawn_wall_section(other) -> void:
 	section.setup(self, other, player.color)
 	wall_sections.append(section)
 	other.wall_sections.append(section)
+	_update_arm_visibility()
+	if other.has_method("_update_arm_visibility"):
+		other._update_arm_visibility()
 
 
 func _destroy_wall_sections() -> void:
@@ -145,6 +165,8 @@ func _destroy_wall_sections() -> void:
 		var other = section.pillar_b if section.pillar_a == self else section.pillar_a
 		if is_instance_valid(other) and "wall_sections" in other:
 			other.wall_sections.erase(section)
+			if other.has_method("_update_arm_visibility"):
+				other._update_arm_visibility()
 		section.queue_free()
 
 
@@ -162,3 +184,59 @@ func _is_wall_pillar(unit) -> bool:
 static func _is_axis_aligned(a_pos: Vector3, b_pos: Vector3) -> bool:
 	var tolerance := 0.1
 	return absf(a_pos.x - b_pos.x) < tolerance or absf(a_pos.z - b_pos.z) < tolerance
+
+
+## ---------------------------------------------------------------------------
+## Arm visibility — show only arms that face a connected wall section.
+## Arm names use Blender axes: xp=+X, xn=-X, yp=+Y(Godot -Z), yn=-Y(Godot +Z)
+## ---------------------------------------------------------------------------
+
+const ARM_DIRECTIONS := {
+	"arms_xp": Vector3(-1, 0, 0),
+	"arms_xn": Vector3(1, 0, 0),
+	"arms_yp": Vector3(0, 0, 1),
+	"arms_yn": Vector3(0, 0, -1),
+}
+
+
+func _find_arm_node(arm_name: String) -> Node3D:
+	var holder := find_child("ModelHolder")
+	if holder == null:
+		return null
+	return holder.find_child(arm_name, true, false)
+
+
+func _hide_all_arms() -> void:
+	for arm_name in ARM_DIRECTIONS:
+		var arm := _find_arm_node(arm_name)
+		if arm != null:
+			arm.visible = false
+
+
+func _update_arm_visibility() -> void:
+	_hide_all_arms()
+
+	for section in wall_sections:
+		if not is_instance_valid(section):
+			continue
+		var other = section.pillar_b if section.pillar_a == self else section.pillar_a
+		if not is_instance_valid(other):
+			continue
+		var dir: Vector3 = other.global_position - global_position
+		dir.y = 0.0
+		if dir.length_squared() < 0.001:
+			continue
+		dir = dir.normalized()
+
+		var best_name := ""
+		var best_dot := -2.0
+		for arm_name in ARM_DIRECTIONS:
+			var dot: float = ARM_DIRECTIONS[arm_name].dot(dir)
+			if dot > best_dot:
+				best_dot = dot
+				best_name = arm_name
+
+		if not best_name.is_empty():
+			var arm := _find_arm_node(best_name)
+			if arm != null:
+				arm.visible = true

@@ -18,10 +18,8 @@ func setup(a: Node, b: Node, shield_color: Color = Color(0.26, 0.975, 1.0)) -> v
 	var full_distance: float = pos_a.distance_to(pos_b)
 	var direction: Vector3 = (pos_b - pos_a).normalized()
 
-	# Subtract pillar radii so the section spans edge-to-edge
-	var radius_a = a.radius if a.radius != null else 0.5
-	var radius_b = b.radius if b.radius != null else 0.5
-	var section_length := maxf(full_distance - radius_a - radius_b, 0.1)
+	# Span center-to-center
+	var section_length := maxf(full_distance, 0.1)
 
 	global_position = midpoint
 	# Rotate so local -Z points from A to B
@@ -68,6 +66,28 @@ func _resize_model(length: float) -> void:
 	var top_edge := find_child("TopEdge") as MeshInstance3D
 	if top_edge != null:
 		top_edge.scale = Vector3(1.0, 1.0, length)
+
+
+func _process(_delta: float) -> void:
+	var top_edge := find_child("TopEdge") as MeshInstance3D
+	if top_edge == null:
+		return
+	var cam := get_viewport().get_camera_3d()
+	if cam == null:
+		top_edge.visible = false
+		return
+	# Wall faces along local X (perpendicular to the connection axis).
+	# Show TopEdge when the camera looks along the wall (shield is edge-on).
+	var wall_normal := global_transform.basis.x.normalized()
+	var to_cam := cam.global_position - global_position
+	to_cam.y = 0.0
+	if to_cam.length_squared() < 0.001:
+		top_edge.visible = false
+		return
+	var dot := absf(wall_normal.dot(to_cam.normalized()))
+	# dot ~1 = camera facing the wall (shield visible) → hide edge
+	# dot ~0 = camera along the wall (shield edge-on) → show edge
+	top_edge.visible = dot < 0.5
 
 
 func _resize_obstacle(length: float) -> void:
