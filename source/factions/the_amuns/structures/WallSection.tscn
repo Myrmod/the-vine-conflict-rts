@@ -7,7 +7,7 @@
 [ext_resource type="Shader" uid="uid://dcko35tc4k343" path="res://addons/nojoule-energy-shield/shield.gdshader" id="7_shield_shader"]
 [ext_resource type="Texture2D" uid="uid://dnqegf8mxqli" path="res://addons/nojoule-energy-shield/shield_noise.tres" id="8_shield_noise"]
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_wall"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_yb4t3"]
 render_priority = 0
 shader = ExtResource("7_shield_shader")
 shader_parameter/_quantization = true
@@ -20,8 +20,8 @@ shader_parameter/_end_falloff_visibility = 0.3
 shader_parameter/_time_multiplier_activation = 2.0
 shader_parameter/_distance_multiplier_activation = 1.0
 shader_parameter/_width_time_activation = 0.2
-shader_parameter/_enable_highlight_intersection = false
-shader_parameter/_width_highlight_intersection = 1.0
+shader_parameter/_enable_highlight_intersection = true
+shader_parameter/_width_highlight_intersection = 0.02
 shader_parameter/_noise_texture = ExtResource("8_shield_noise")
 shader_parameter/_speed_noise = Vector2(0.02, 0.02)
 shader_parameter/_origin_generate = Vector3(0, 0.5, 0)
@@ -56,15 +56,16 @@ shader_parameter/_active_impact_offset_hl = true
 shader_parameter/_strength_impact_offset_hl = 2.0
 shader_parameter/_intensity_impact_offset_hl = 5.0
 shader_parameter/_relative_origin_impact = false
-shader_parameter/_active_border = false
+shader_parameter/_active_border = true
 shader_parameter/_intensity_border = 5.0
-shader_parameter/_percentage_border = 0.150000007125
+shader_parameter/_percentage_border = 0.50000002375
 shader_parameter/_show_normals = false
 
-[sub_resource type="BoxMesh" id="BoxMesh_yb4t3"]
-lightmap_size_hint = Vector2i(14, 11)
-material = SubResource("ShaderMaterial_wall")
-size = Vector3(1.1, 0.05, 1)
+[sub_resource type="PlaneMesh" id="PlaneMesh_7pgsk"]
+material = SubResource("ShaderMaterial_yb4t3")
+size = Vector2(1.12, 1)
+subdivide_width = 64
+subdivide_depth = 64
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_shield"]
 size = Vector3(1, 0.1, 1)
@@ -74,7 +75,7 @@ disable_receive_shadows = true
 
 [sub_resource type="BoxMesh" id="BoxMesh_top"]
 material = SubResource("StandardMaterial_top")
-size = Vector3(0.06, 0.02, 1)
+size = Vector3(0.05, 0.02, 1)
 
 [node name="WallSection" type="Node3D" unique_id=403367514]
 script = ExtResource("1_wallsec")
@@ -82,7 +83,7 @@ script = ExtResource("1_wallsec")
 [node name="Model" type="MeshInstance3D" parent="." unique_id=2057682924]
 transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 0.5, 0)
 cast_shadow = 0
-mesh = SubResource("BoxMesh_yb4t3")
+mesh = SubResource("PlaneMesh_7pgsk")
 script = ExtResource("6_shield_gd")
 animation_curve = ExtResource("5_anim_curve")
 

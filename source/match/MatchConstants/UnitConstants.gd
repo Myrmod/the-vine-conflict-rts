@@ -261,7 +261,7 @@ const DEFAULT_PROPERTIES = {
 			Enums.DamageTypes.TESLA: 0.5,
 		},
 		"costs": {"credits": 50},
-		"build_time": 1.0,
+		"build_time": 5.0,
 		"structure_requirements":
 		[
 			"res://source/factions/the_amuns/structures/CommandCenter.tscn",

@@ -17,7 +17,9 @@ height = 0.8
 [node name="WallPillar" type="Area3D" unique_id=201524588]
 script = ExtResource("1_32dxk")
 
-[node name="ModelHolder" type="Node3D" parent="." unique_id=641800164]
+[node name="Geometry" type="Node3D" parent="."]
+
+[node name="ModelHolder" type="Node3D" parent="Geometry" unique_id=641800164]
 transform = Transform3D(0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, 0, 0.03, 0)
 script = ExtResource("1_co30m")
 model_path = "Amuns/Defenses/Amuns_Wall_Pillar.glb"

@@ -155,7 +155,7 @@ func _try_deduct_trickle(progress: float) -> bool:
 func construct(progress):
 	assert(is_under_construction(), "structure must be under construction")
 
-	_construction_progress += progress
+	_construction_progress = minf(_construction_progress + progress, 1.0)
 	hp = 1 + int(_construction_progress * float(hp_max - 1))
 	if _construction_progress >= 1.0:
 		_finish_construction()

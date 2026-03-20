@@ -157,6 +157,7 @@ func _spawn_wall_section(other) -> void:
 
 func _destroy_wall_sections() -> void:
 	var sections_copy := wall_sections.duplicate()
+	var neighbors: Array = []
 	wall_sections.clear()
 	for section in sections_copy:
 		if not is_instance_valid(section):
@@ -167,7 +168,30 @@ func _destroy_wall_sections() -> void:
 			other.wall_sections.erase(section)
 			if other.has_method("_update_arm_visibility"):
 				other._update_arm_visibility()
+			neighbors.append(other)
 		section.queue_free()
+	# After a delay, let neighbors try to reconnect to each other
+	if neighbors.size() >= 2:
+		_schedule_neighbor_reconnect(neighbors)
+
+
+func _schedule_neighbor_reconnect(neighbors: Array) -> void:
+	var target_tick: int = Match.tick + 30
+	var callback_ref: Array = []
+	var callback := func():
+		if Match.tick < target_tick:
+			return
+		MatchSignals.tick_advanced.disconnect(callback_ref[0])
+		for i in range(neighbors.size()):
+			var a = neighbors[i]
+			if not is_instance_valid(a) or not a.is_inside_tree():
+				continue
+			if not a.has_method("_connect_to_nearby_pillars"):
+				continue
+			a._connect_to_nearby_pillars()
+			a._update_arm_visibility()
+	callback_ref.append(callback)
+	MatchSignals.tick_advanced.connect(callback)
 
 
 func _on_hp_changed_ripple() -> void:
