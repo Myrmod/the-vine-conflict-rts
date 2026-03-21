@@ -4,24 +4,46 @@
 [ext_resource type="PackedScene" uid="uid://bxe2bwqo30j5o" path="res://source/match/TerrainSystem.tscn" id="4_usfks"]
 
 [sub_resource type="PhysicalSkyMaterial" id="ProceduralSkyMaterial_map"]
+ground_color = Color(0, 0, 0, 1)
 
 [sub_resource type="Sky" id="Sky_map"]
 sky_material = SubResource("ProceduralSkyMaterial_map")
+radiance_size = 2
 
 [sub_resource type="Environment" id="Environment_map"]
 background_mode = 2
+background_intensity = 100000.0
 sky = SubResource("Sky_map")
 ambient_light_source = 2
 ambient_light_color = Color(1, 1, 1, 1)
 ambient_light_sky_contribution = 0.5
 ambient_light_energy = 0.5
 reflected_light_source = 2
-tonemap_mode = 2
+tonemap_mode = 3
+tonemap_white = 8.0
 ssao_enabled = true
 ssao_radius = 0.5
 ssao_intensity = 0.7
-fog_enabled = true
-fog_density = 0.001
+ssao_detail = 2.0
+sdfgi_enabled = true
+sdfgi_bounce_feedback = 0.9
+glow_enabled = true
+glow_normalized = true
+glow_bloom = 0.2
+volumetric_fog_enabled = true
+volumetric_fog_density = 0.01
+volumetric_fog_gi_inject = 1.14
+volumetric_fog_anisotropy = 0.7
+volumetric_fog_sky_affect = 0.295
+adjustment_saturation = 1.17
+
+[sub_resource type="CameraAttributesPractical" id="CameraAttributesPractical_map"]
+exposure_multiplier = 3.069
+auto_exposure_scale = 0.22
+auto_exposure_speed = 0.8
+dof_blur_far_distance = 1.44
+dof_blur_near_distance = 0.01
+auto_exposure_min_sensitivity = 8.01
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ve5fg"]
 shading_mode = 0
@@ -36,7 +58,7 @@ script = ExtResource("1_1svvv")
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=313200187]
 transform = Transform3D(0.7071068, -0.54640514, 0.4488223, 0, 0.6347305, 0.77273357, -0.7071068, -0.54640514, 0.4488223, 0, 0, 0)
 light_color = Color(1, 0.94509804, 0.8392157, 1)
-light_energy = 2.0
+light_energy = 3.0
 light_specular = 0.5
 shadow_enabled = true
 shadow_bias = 0.2
@@ -49,6 +71,10 @@ directional_shadow_pancake_size = 100.0
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=1790756690]
 environment = SubResource("Environment_map")
+camera_attributes = SubResource("CameraAttributesPractical_map")
+
+[node name="ReflectionProbe" type="ReflectionProbe" parent="."]
+size = Vector3(10000, 10000, 1000)
 
 [node name="Geometry" type="Node3D" parent="." unique_id=1147796471]
 
