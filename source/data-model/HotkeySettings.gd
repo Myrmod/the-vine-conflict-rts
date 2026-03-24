@@ -253,6 +253,28 @@ func apply_preset(preset_name: String) -> void:
 	_apply_data_dict(p)
 
 
+func reset_to_defaults() -> void:
+	bindings = get_default_bindings()
+	tab_bindings = get_default_tab_bindings()
+	unit_command_bindings = get_default_unit_command_bindings()
+	structure_action_bindings = get_default_structure_action_bindings()
+
+
+func matches_data(data: Dictionary) -> bool:
+	return (
+		_category_matches(bindings, data.get("production_grid", {}), SLOT_NAMES)
+		and _category_matches(tab_bindings, data.get("production_tabs", {}), TAB_NAMES)
+		and _category_matches(
+			unit_command_bindings, data.get("unit_commands", {}), UNIT_COMMAND_NAMES
+		)
+		and _category_matches(
+			structure_action_bindings,
+			data.get("structure_actions", {}),
+			STRUCTURE_ACTION_NAMES,
+		)
+	)
+
+
 func _apply_data_dict(p: Dictionary) -> void:
 	if p.has("production_grid") and p["production_grid"] is Dictionary:
 		for slot in SLOT_NAMES:
@@ -299,6 +321,15 @@ func set_binding(slot: String, keycode: int) -> void:
 		unit_command_bindings[slot] = keycode
 	elif structure_action_bindings.has(slot):
 		structure_action_bindings[slot] = keycode
+
+
+func _category_matches(current: Dictionary, candidate: Variant, slot_names: Array) -> bool:
+	if not candidate is Dictionary:
+		return false
+	for slot_name in slot_names:
+		if int(current.get(slot_name, -1)) != int(candidate.get(slot_name, -1)):
+			return false
+	return true
 
 
 ## Get binding for a specific category and action name

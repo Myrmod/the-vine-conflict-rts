@@ -496,7 +496,7 @@ func _setup_audio_pool() -> void:
 		player.max_db = 0.0
 		player.unit_size = 10.0
 		player.max_distance = 80.0
-		player.bus = &"Master"
+		player.bus = &"SFX"
 		add_child(player)
 		_audio_pool.append(player)
 

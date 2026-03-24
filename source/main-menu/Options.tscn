@@ -49,9 +49,15 @@ layout_mode = 2
 theme = ExtResource("1_a5uwh")
 text = "BACK"
 
+[node name="TitleLabel" type="Label" parent="PanelContainer/MarginContainer/VBoxContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "SETTINGS"
+horizontal_alignment = 1
+
 [node name="TabContainer" type="TabContainer" parent="PanelContainer/MarginContainer/VBoxContainer" unique_id=440954596]
 layout_mode = 2
-current_tab = 2
+current_tab = 0
 
 [node name="Video" type="ScrollContainer" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer" unique_id=94142765]
 visible = false
@@ -80,7 +86,7 @@ layout_mode = 2
 
 [node name="Label" type="Label" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Video/VBoxContainer/PanelContainer/MarginContainer/VBoxContainer" unique_id=35015891]
 layout_mode = 2
-text = "Video"
+text = "Display Mode"
 horizontal_alignment = 1
 
 [node name="Panel" type="Panel" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Video/VBoxContainer/PanelContainer/MarginContainer/VBoxContainer/Label" unique_id=208535024]
@@ -117,7 +123,7 @@ layout_mode = 2
 
 [node name="Label" type="Label" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Video/VBoxContainer/PanelContainer2/MarginContainer/VBoxContainer" unique_id=338212186]
 layout_mode = 2
-text = "Mouse"
+text = "Frame Sync"
 horizontal_alignment = 1
 
 [node name="Panel" type="Panel" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Video/VBoxContainer/PanelContainer2/MarginContainer/VBoxContainer/Label" unique_id=1777201415]
@@ -129,10 +135,10 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="MouseMovementRestricted" type="CheckBox" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Video/VBoxContainer/PanelContainer2/MarginContainer/VBoxContainer" unique_id=799464184]
+[node name="VsyncEnabled" type="CheckBox" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Video/VBoxContainer/PanelContainer2/MarginContainer/VBoxContainer" unique_id=799464184]
 layout_mode = 2
 focus_mode = 0
-text = "Mouse movement restricted to the game window"
+text = "Enable V-Sync"
 
 [node name="PanelContainer3" type="PanelContainer" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Video/VBoxContainer"]
 layout_mode = 2
@@ -149,7 +155,7 @@ layout_mode = 2
 
 [node name="Label" type="Label" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Video/VBoxContainer/PanelContainer3/MarginContainer/VBoxContainer"]
 layout_mode = 2
-text = "Profile"
+text = "Display Notes"
 horizontal_alignment = 1
 
 [node name="Panel" type="Panel" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Video/VBoxContainer/PanelContainer3/MarginContainer/VBoxContainer/Label"]
@@ -164,15 +170,30 @@ grow_vertical = 2
 [node name="NameRow" type="HBoxContainer" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Video/VBoxContainer/PanelContainer3/MarginContainer/VBoxContainer"]
 layout_mode = 2
 
-[node name="Label" type="Label" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Video/VBoxContainer/PanelContainer3/MarginContainer/VBoxContainer/NameRow"]
+[node name="ResolutionLabel" type="Label" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Video/VBoxContainer/PanelContainer3/MarginContainer/VBoxContainer/NameRow"]
 layout_mode = 2
-text = "Player Name:"
+text = "Resolution:"
 
-[node name="PlayerNameInput" type="LineEdit" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Video/VBoxContainer/PanelContainer3/MarginContainer/VBoxContainer/NameRow"]
+[node name="ResolutionSelect" type="OptionButton" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Video/VBoxContainer/PanelContainer3/MarginContainer/VBoxContainer/NameRow"]
 layout_mode = 2
 size_flags_horizontal = 3
-placeholder_text = "Player"
-max_length = 32
+
+[node name="BorderlessWindow" type="CheckBox" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Video/VBoxContainer/PanelContainer3/MarginContainer/VBoxContainer"]
+layout_mode = 2
+text = "Borderless Window"
+
+[node name="TipsRow" type="HBoxContainer" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Video/VBoxContainer/PanelContainer3/MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Video/VBoxContainer/PanelContainer3/MarginContainer/VBoxContainer/TipsRow"]
+layout_mode = 2
+text = "Tip:"
+
+[node name="VideoInfoLabel" type="Label" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Video/VBoxContainer/PanelContainer3/MarginContainer/VBoxContainer/TipsRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Fullscreen and V-Sync changes are applied immediately."
+autowrap_mode = 3
 
 [node name="Audio" type="ScrollContainer" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer" unique_id=1246592285]
 visible = false
@@ -186,7 +207,7 @@ layout_mode = 2
 
 [node name="GridContainer" type="GridContainer" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Audio/VBoxContainer" unique_id=1896062021]
 layout_mode = 2
-columns = 2
+columns = 1
 
 [node name="HBoxContainer" type="HBoxContainer" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Audio/VBoxContainer/GridContainer" unique_id=1311793173]
 custom_minimum_size = Vector2(500, 0)
@@ -199,6 +220,78 @@ text = "Master Volume"
 [node name="MasterVolume" type="HSlider" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Audio/VBoxContainer/GridContainer/HBoxContainer" unique_id=987607227]
 custom_minimum_size = Vector2(200, 0)
 layout_mode = 2
+size_flags_horizontal = 3
+max_value = 100.0
+step = 1.0
+
+[node name="MasterVolumeValue" type="Label" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Audio/VBoxContainer/GridContainer/HBoxContainer"]
+custom_minimum_size = Vector2(64, 0)
+layout_mode = 2
+horizontal_alignment = 2
+text = "100%"
+
+[node name="SfxRow" type="HBoxContainer" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Audio/VBoxContainer/GridContainer"]
+custom_minimum_size = Vector2(500, 0)
+layout_mode = 2
+
+[node name="Label" type="Label" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Audio/VBoxContainer/GridContainer/SfxRow"]
+layout_mode = 2
+text = "SFX Volume"
+
+[node name="SfxVolume" type="HSlider" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Audio/VBoxContainer/GridContainer/SfxRow"]
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+max_value = 100.0
+step = 1.0
+
+[node name="SfxVolumeValue" type="Label" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Audio/VBoxContainer/GridContainer/SfxRow"]
+custom_minimum_size = Vector2(64, 0)
+layout_mode = 2
+horizontal_alignment = 2
+text = "100%"
+
+[node name="VoiceRow" type="HBoxContainer" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Audio/VBoxContainer/GridContainer"]
+custom_minimum_size = Vector2(500, 0)
+layout_mode = 2
+
+[node name="Label" type="Label" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Audio/VBoxContainer/GridContainer/VoiceRow"]
+layout_mode = 2
+text = "Voice Volume"
+
+[node name="VoiceVolume" type="HSlider" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Audio/VBoxContainer/GridContainer/VoiceRow"]
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+max_value = 100.0
+step = 1.0
+
+[node name="VoiceVolumeValue" type="Label" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Audio/VBoxContainer/GridContainer/VoiceRow"]
+custom_minimum_size = Vector2(64, 0)
+layout_mode = 2
+horizontal_alignment = 2
+text = "100%"
+
+[node name="MusicRow" type="HBoxContainer" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Audio/VBoxContainer/GridContainer"]
+custom_minimum_size = Vector2(500, 0)
+layout_mode = 2
+
+[node name="Label" type="Label" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Audio/VBoxContainer/GridContainer/MusicRow"]
+layout_mode = 2
+text = "Music Volume"
+
+[node name="MusicVolume" type="HSlider" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Audio/VBoxContainer/GridContainer/MusicRow"]
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+max_value = 100.0
+step = 1.0
+
+[node name="MusicVolumeValue" type="Label" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Audio/VBoxContainer/GridContainer/MusicRow"]
+custom_minimum_size = Vector2(64, 0)
+layout_mode = 2
+horizontal_alignment = 2
+text = "100%"
 
 [node name="Controls" type="ScrollContainer" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer" unique_id=1977574795]
 custom_minimum_size = Vector2(0, 956)
@@ -226,10 +319,122 @@ text = "Hotkey Preset:"
 [node name="PresetSelect" type="OptionButton" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Controls/MarginContainer/VBoxContainer/PresetContainer" unique_id=1534821611]
 layout_mode = 2
 
+[node name="ResetHotkeysButton" type="Button" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Controls/MarginContainer/VBoxContainer/PresetContainer"]
+layout_mode = 2
+text = "RESTORE DEFAULTS"
+
 [node name="HintLabel" type="Label" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Controls/MarginContainer/VBoxContainer" unique_id=1445082096]
 layout_mode = 2
-text = "Click a slot button below, then press a key to rebind it."
+text = "Click a slot button below, then press a key to rebind it. Press Backspace/Delete to clear, Esc to cancel."
 horizontal_alignment = 1
+
+[node name="HotkeyConflictLabel" type="Label" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Controls/MarginContainer/VBoxContainer"]
+layout_mode = 2
+text = ""
+horizontal_alignment = 1
+
+[node name="KeyConflictDialog" type="ConfirmationDialog" parent="."]
+initial_position = 1
+size = Vector2i(520, 180)
+title = "Key Already In Use"
+dialog_text = "This key is already assigned. Swap bindings?"
+
+[node name="Game" type="ScrollContainer" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer"]
+visible = false
+custom_minimum_size = Vector2(0, 956)
+layout_mode = 2
+metadata/_tab_index = 3
+
+[node name="MarginContainer" type="MarginContainer" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Game"]
+layout_mode = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 10
+
+[node name="VBoxContainer" type="VBoxContainer" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Game/MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="ProfilePanel" type="PanelContainer" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Game/MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="MarginContainer" type="MarginContainer" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Game/MarginContainer/VBoxContainer/ProfilePanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 8
+
+[node name="VBoxContainer" type="VBoxContainer" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Game/MarginContainer/VBoxContainer/ProfilePanel/MarginContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Game/MarginContainer/VBoxContainer/ProfilePanel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+text = "Profile"
+horizontal_alignment = 1
+
+[node name="Panel" type="Panel" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Game/MarginContainer/VBoxContainer/ProfilePanel/MarginContainer/VBoxContainer/Label"]
+show_behind_parent = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="NameRow" type="HBoxContainer" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Game/MarginContainer/VBoxContainer/ProfilePanel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Game/MarginContainer/VBoxContainer/ProfilePanel/MarginContainer/VBoxContainer/NameRow"]
+layout_mode = 2
+text = "Player Name:"
+
+[node name="PlayerNameInput" type="LineEdit" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Game/MarginContainer/VBoxContainer/ProfilePanel/MarginContainer/VBoxContainer/NameRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+placeholder_text = "Player"
+max_length = 32
+
+[node name="ControlsPanel" type="PanelContainer" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Game/MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="MarginContainer" type="MarginContainer" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Game/MarginContainer/VBoxContainer/ControlsPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 8
+
+[node name="VBoxContainer" type="VBoxContainer" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Game/MarginContainer/VBoxContainer/ControlsPanel/MarginContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Game/MarginContainer/VBoxContainer/ControlsPanel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+text = "Gameplay"
+horizontal_alignment = 1
+
+[node name="Panel" type="Panel" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Game/MarginContainer/VBoxContainer/ControlsPanel/MarginContainer/VBoxContainer/Label"]
+show_behind_parent = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="MouseMovementRestricted" type="CheckBox" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Game/MarginContainer/VBoxContainer/ControlsPanel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+text = "Confine the mouse cursor to the game window"
+
+[node name="EdgeScrollEnabled" type="CheckBox" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Game/MarginContainer/VBoxContainer/ControlsPanel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+text = "Enable edge scrolling"
+
+[node name="GameHintLabel" type="Label" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Game/MarginContainer/VBoxContainer/ControlsPanel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+text = "If edge scrolling is disabled, the camera only moves with keyboard input."
+autowrap_mode = 3
 
 [node name="HotkeyGrid" type="GridContainer" parent="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Controls/MarginContainer/VBoxContainer" unique_id=456057631]
 layout_mode = 2
@@ -492,7 +697,16 @@ custom_minimum_size = Vector2(80, 30)
 layout_mode = 2
 
 [connection signal="pressed" from="PanelContainer/MarginContainer/VBoxContainer/HBoxContainer/Button" to="." method="_on_back_button_pressed"]
+[connection signal="value_changed" from="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Audio/VBoxContainer/GridContainer/HBoxContainer/MasterVolume" to="." method="_on_master_volume_value_changed"]
+[connection signal="value_changed" from="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Audio/VBoxContainer/GridContainer/SfxRow/SfxVolume" to="." method="_on_sfx_volume_value_changed"]
+[connection signal="value_changed" from="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Audio/VBoxContainer/GridContainer/VoiceRow/VoiceVolume" to="." method="_on_voice_volume_value_changed"]
+[connection signal="value_changed" from="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Audio/VBoxContainer/GridContainer/MusicRow/MusicVolume" to="." method="_on_music_volume_value_changed"]
 [connection signal="item_selected" from="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Video/VBoxContainer/PanelContainer/MarginContainer/VBoxContainer/Screen" to="." method="_on_screen_item_selected"]
-[connection signal="pressed" from="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Video/VBoxContainer/PanelContainer2/MarginContainer/VBoxContainer/MouseMovementRestricted" to="." method="_on_mouse_movement_restricted_pressed"]
-[connection signal="text_changed" from="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Video/VBoxContainer/PanelContainer3/MarginContainer/VBoxContainer/NameRow/PlayerNameInput" to="." method="_on_player_name_changed"]
+[connection signal="toggled" from="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Video/VBoxContainer/PanelContainer2/MarginContainer/VBoxContainer/VsyncEnabled" to="." method="_on_vsync_enabled_toggled"]
+[connection signal="item_selected" from="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Video/VBoxContainer/PanelContainer3/MarginContainer/VBoxContainer/NameRow/ResolutionSelect" to="." method="_on_resolution_selected"]
+[connection signal="toggled" from="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Video/VBoxContainer/PanelContainer3/MarginContainer/VBoxContainer/BorderlessWindow" to="." method="_on_borderless_window_toggled"]
 [connection signal="item_selected" from="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Controls/MarginContainer/VBoxContainer/PresetContainer/PresetSelect" to="." method="_on_preset_selected"]
+[connection signal="pressed" from="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Controls/MarginContainer/VBoxContainer/PresetContainer/ResetHotkeysButton" to="." method="_on_reset_hotkeys_button_pressed"]
+[connection signal="text_changed" from="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Game/MarginContainer/VBoxContainer/ProfilePanel/MarginContainer/VBoxContainer/NameRow/PlayerNameInput" to="." method="_on_player_name_changed"]
+[connection signal="toggled" from="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Game/MarginContainer/VBoxContainer/ControlsPanel/MarginContainer/VBoxContainer/MouseMovementRestricted" to="." method="_on_mouse_movement_restricted_toggled"]
+[connection signal="toggled" from="PanelContainer/MarginContainer/VBoxContainer/TabContainer/Game/MarginContainer/VBoxContainer/ControlsPanel/MarginContainer/VBoxContainer/EdgeScrollEnabled" to="." method="_on_edge_scroll_enabled_toggled"]

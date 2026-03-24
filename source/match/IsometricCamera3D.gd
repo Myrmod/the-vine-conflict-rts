@@ -114,6 +114,8 @@ func _calculate_screen_move_vector() -> Vector2:
 	var x_axis = Input.get_axis("move_map_left", "move_map_right")
 	var y_axis = Input.get_axis("move_map_up", "move_map_down")
 	var move_vector = Vector2(x_axis, y_axis)
+	if Globals.options != null and not Globals.options.edge_scroll_enabled:
+		return move_vector
 
 	# Only edge-scroll when the mouse is inside the window
 	var mouse_inside = Rect2(Vector2.ZERO, viewport_size).has_point(mouse_pos)
