@@ -16,6 +16,10 @@ var splat_textures: Array[Texture2D] = []
 ## per-vertex based on the MapResource height data.
 var _height_grid_texture: ImageTexture
 
+## Water mask texture: white where water cells exist, black elsewhere.
+## Uploaded to the water shader so it can discard non-water fragments.
+var _water_mask_texture: ImageTexture
+
 ## The terrain system shader assigned in the scene file.  Saved before
 ## ensure_mesh() overrides material_override with a simple fallback so
 ## set_map() can restore it when a MapResource supplies real textures.
@@ -56,6 +60,7 @@ func resize_mesh(map_size: Vector2):
 	# Force-clear texture caches — they were created at the old dimensions
 	# and ImageTexture.update() cannot change an image's size.
 	_height_grid_texture = null
+	_water_mask_texture = null
 	splat_textures.clear()
 	splat_images.clear()
 
@@ -82,6 +87,7 @@ func set_map(_map: MapResource):
 	_upload_splats_to_shader()
 	_upload_terrain_textures()
 	_upload_height_grid()
+	_upload_water_mask()
 
 
 # ============================================================
@@ -126,6 +132,58 @@ func update_height_at(_positions: Array[Vector2i]):
 
 	# Rebuild the full image (RF images don't support partial update easily)
 	_upload_height_grid()
+	_upload_water_mask()
+
+
+# ============================================================
+# Water mask → water shader
+# ============================================================
+
+
+func _upload_water_mask():
+	"""Build an R8 mask image: white for water cells, black elsewhere.
+	Padded by 1 cell so water is visible through terrain cliff edges.
+	Uploaded to the water shader so it can discard non-water fragments."""
+	if not map:
+		return
+
+	var img := Image.create(size.x, size.y, false, Image.FORMAT_R8)
+	var has_water := false
+
+	# First pass: mark actual water cells
+	for y in range(size.y):
+		for x in range(size.x):
+			var idx: int = y * size.x + x
+			var ct: int = map.cell_type_grid[idx] if idx < map.cell_type_grid.size() else 0
+			if ct == MapResource.CELL_WATER or ct == MapResource.CELL_WATER_SLOPE:
+				img.set_pixel(x, y, Color(1, 0, 0, 0))
+				has_water = true
+
+	# Second pass: pad 1 cell around water so it shows through cliff edges
+	if has_water:
+		var padded := img.duplicate()
+		for y in range(size.y):
+			for x in range(size.x):
+				if img.get_pixel(x, y).r > 0.5:
+					for dy in range(-1, 2):
+						for dx in range(-1, 2):
+							var nx := x + dx
+							var ny := y + dy
+							if nx >= 0 and nx < size.x and ny >= 0 and ny < size.y:
+								padded.set_pixel(nx, ny, Color(1, 0, 0, 0))
+		img = padded
+
+	$WaterMesh.visible = has_water
+
+	if _water_mask_texture:
+		_water_mask_texture.update(img)
+	else:
+		_water_mask_texture = ImageTexture.create_from_image(img)
+
+	var mat: ShaderMaterial = $WaterMesh.get_active_material(0) as ShaderMaterial
+	if mat:
+		mat.set_shader_parameter("water_mask_tex", _water_mask_texture)
+		mat.set_shader_parameter("map_size", Vector2(size))
 
 
 func apply_base_layer(terrain: TerrainType):

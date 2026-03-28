@@ -59,6 +59,10 @@ uniform float foamFallOffDistance: hint_range(0.0, 1.0, 0.1) = 0.4;
 uniform float foamEdgeDistance: hint_range(0.0, 1.0, 0.1) = 0.2;
 const vec4 edgeFalloffColor = vec4(0.8,0.8,0.8,0.6);
 
+group_uniforms water_mask;
+uniform sampler2D water_mask_tex : filter_nearest;
+uniform vec2 map_size = vec2(1.0, 1.0); // world-space map dimensions for UV mapping
+
 vec2 round_to_pixel(vec2 i, int width){
 	float denom = 1.0 / float(width);
 	float _x = i.x + abs(mod(i.x, denom) - denom);
@@ -147,6 +151,12 @@ void vertex() {
 }
 
 void fragment() {
+	// Discard fragments outside painted water cells.
+	vec2 mask_uv = (INV_VIEW_MATRIX * vec4(VERTEX, 1.0)).xz / map_size;
+	if (texture(water_mask_tex, mask_uv).r < 0.5) {
+		discard;
+	}
+
 	ROUGHNESS = roughness;
 	vec3 _albedo;
 	vec3 deep;

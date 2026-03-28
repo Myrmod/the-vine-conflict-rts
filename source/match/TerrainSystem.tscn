@@ -43,4 +43,5 @@ script = ExtResource("1_cn2ly")
 material_override = SubResource("ShaderMaterial_id0cr")
 
 [node name="WaterMesh" type="MeshInstance3D" parent="." unique_id=1955076504]
+cast_shadow = 0
 mesh = SubResource("PlaneMesh_gs6k5")
