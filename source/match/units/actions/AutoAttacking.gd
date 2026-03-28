@@ -25,9 +25,12 @@ var _sub_action = null
 # 3. Match._execute_command() indirectly when applying actions (command validation)
 # TEAM CHECK: Units cannot attack same-team units. This is the primary team control point.
 static func is_applicable(source_unit, target_unit):
+	if source_unit.attack_range == null:
+		return false
+	if target_unit is Vine:
+		return source_unit.can_attack_vines and target_unit.hp > 0
 	return (
-		source_unit.attack_range != null
-		and "player" in target_unit
+		"player" in target_unit
 		and source_unit.player != target_unit.player
 		# TEAM SYSTEM: Same-team players cannot attack each other - core team mechanic
 		and source_unit.player.team != target_unit.player.team

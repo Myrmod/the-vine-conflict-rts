@@ -47,6 +47,9 @@ var spawn_preview_nodes: Array[Node3D] = []
 # Symmetry axis visual guide
 var _symmetry_line_mesh: MeshInstance3D = null
 
+# Map name input
+var _map_name_edit: LineEdit = null
+
 # Material selector for decorations
 var _material_option: OptionButton = null
 var _material_paths: Array[String] = []
@@ -122,11 +125,15 @@ func _setup_ui_connections():
 		"VBoxContainer/MainArea/LeftPalette/ScrollContainer/ScrollContent/PaletteSelect/Textures/TexturePalette"
 	)
 	status_label = get_node_or_null("VBoxContainer/StatusBar/StatusLabel")
+	_map_name_edit = get_node_or_null("VBoxContainer/Toolbar/MapNameEdit")
+	if _map_name_edit:
+		_map_name_edit.text = current_map.map_name if current_map.map_name != "Untitled Map" else ""
 
 	# Connect entity palette signals
 	if palette_select:
 		palette_select.entity_selected.connect(_on_palette_entity_selected)
 		palette_select.spawn_selected.connect(_on_palette_spawn_selected)
+		palette_select.erase_selected.connect(_on_palette_erase_selected)
 		palette_select.height_level_selected.connect(_on_palette_height_selected)
 		palette_select.slope_selected.connect(_on_palette_slope_selected)
 		palette_select.water_slope_selected.connect(_on_palette_water_slope_selected)
@@ -186,9 +193,16 @@ func _setup_ui_connections():
 			brush_size_spin.value = 1
 			brush_size_spin.value_changed.connect(_on_brush_size_changed)
 
-		# Material selector for decorations
+		# Erase button and material selector
 		var vbox = brush_settings.get_node_or_null("MarginContainer/VBoxContainer")
 		if vbox:
+			var erase_btn := Button.new()
+			erase_btn.text = "✕ Erase"
+			erase_btn.set_text_alignment(HorizontalAlignment.HORIZONTAL_ALIGNMENT_LEFT)
+			erase_btn.pressed.connect(_on_palette_erase_selected)
+			vbox.add_child(erase_btn)
+			vbox.move_child(erase_btn, 0)
+
 			var mat_label := Label.new()
 			mat_label.name = "MaterialLabel"
 			mat_label.text = "Material"
@@ -268,6 +282,15 @@ func _on_palette_entity_selected(scene_path: String):
 func _on_palette_spawn_selected():
 	"""Handle spawn point tool selection from palette"""
 	_create_brush(BrushType.PLACE_SPAWN)
+
+	var brush_info = get_node_or_null("VBoxContainer/Toolbar/BrushInfo")
+	if brush_info and current_brush:
+		brush_info.text = current_brush.get_brush_name()
+
+
+func _on_palette_erase_selected():
+	"""Handle erase tool selection from palette"""
+	_create_brush(BrushType.ERASE)
 
 	var brush_info = get_node_or_null("VBoxContainer/Toolbar/BrushInfo")
 	if brush_info and current_brush:
@@ -1141,6 +1164,8 @@ func new_map(_size: Vector2i):
 	"""Create a new map"""
 	current_map = MapResource.new()
 	current_map.size = _size
+	if _map_name_edit:
+		_map_name_edit.text = ""
 	current_map._initialize_collision_grid()
 	current_map._initialize_height_grid()
 	current_map._initialize_water_grid()
@@ -1156,6 +1181,11 @@ func new_map(_size: Vector2i):
 
 func save_map(path: String):
 	"""Save the current map to a file"""
+	if _map_name_edit:
+		var entered_name := _map_name_edit.text.strip_edges()
+		current_map.map_name = (
+			entered_name if not entered_name.is_empty() else path.get_file().get_basename()
+		)
 	var errors = current_map.validate()
 	if not errors.is_empty():
 		push_warning("Map has validation errors: " + str(errors))
@@ -1197,6 +1227,10 @@ func load_map(path: String):
 		_rebuild_3d_scene()
 		_refresh_view()
 		_update_symmetry_line()
+		if _map_name_edit:
+			_map_name_edit.text = (
+				current_map.map_name if current_map.map_name != "Untitled Map" else ""
+			)
 		if status_label:
 			status_label.text = "Map loaded: " + path.get_file()
 	else:

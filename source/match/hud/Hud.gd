@@ -1430,6 +1430,9 @@ func _on_unit_selected_portrait(unit) -> void:
 	if _portrait_unit.has_signal("hp_changed"):
 		_portrait_hp_connection = _update_unit_info_panel
 		_portrait_unit.hp_changed.connect(_portrait_hp_connection)
+	if _portrait_unit.has_signal("resource_changed"):
+		if not _portrait_unit.resource_changed.is_connected(_update_unit_info_panel):
+			_portrait_unit.resource_changed.connect(_update_unit_info_panel)
 
 
 func _on_unit_deselected_portrait(unit) -> void:
@@ -1592,6 +1595,11 @@ func _disconnect_portrait_hp() -> void:
 			and _portrait_unit.hp_changed.is_connected(_portrait_hp_connection)
 		):
 			_portrait_unit.hp_changed.disconnect(_portrait_hp_connection)
+		if (
+			_portrait_unit.has_signal("resource_changed")
+			and _portrait_unit.resource_changed.is_connected(_update_unit_info_panel)
+		):
+			_portrait_unit.resource_changed.disconnect(_update_unit_info_panel)
 	_portrait_hp_connection = Callable()
 
 
@@ -1611,6 +1619,12 @@ func _update_unit_info_panel() -> void:
 	hitpoints.bbcode_enabled = true
 	hitpoints.text = "[b]%d[/b] / %d" % [hp_cur, hp_max_val]
 	hitpoints.modulate.a = 1.0 if hp_max_val > 0 else 0.0
+
+	# Resources (for vines / resource units)
+	if "resource" in _portrait_unit and "resource_max" in _portrait_unit:
+		var res_cur: int = _portrait_unit.resource
+		var res_max: int = _portrait_unit.resource_max
+		hitpoints.text += "\nResources: [b]%d[/b] / %d" % [res_cur, res_max]
 
 	# Attack button
 	if props.has("attack_damage"):

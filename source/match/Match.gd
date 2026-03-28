@@ -870,7 +870,7 @@ func _set_map(a_map):
 	a_map.name = "Map"
 	add_child(a_map)
 	a_map.owner = self
-	MatchGlobal.map = a_map  # for static access by other classes, e.g. VineSpawner
+	MatchGlobal.map = a_map  # for static access by other classes
 
 
 func _ignore(_value):
@@ -1282,8 +1282,7 @@ func _restore_from_save(save: SaveGameResource) -> void:
 			if ed.has("resource_amount"):
 				existing.resource = ed["resource_amount"]
 		else:
-			# Dynamically spawned resource (e.g. VineSpawner-created
-			# VineTile) — instantiate it on the client.
+			# Dynamically spawned resource — instantiate it on the client.
 			var rsc_path: String = ed.get("scene_path", "")
 			if rsc_path.is_empty():
 				continue

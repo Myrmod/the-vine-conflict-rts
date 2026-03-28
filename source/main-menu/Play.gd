@@ -217,8 +217,8 @@ func _on_map_list_item_selected(index):
 	var map = _map_info[map_path]
 
 	# set the map description text
-	_map_details.text = "[u]Players:[/u] {0}\n[u]Size:[/u] {1}x{2}".format(
-		[map["players"], map["size"].x, map["size"].y]
+	_map_details.text = "[u]{0}[/u]\n[u]Players:[/u] {1}\n[u]Size:[/u] {2}x{3}".format(
+		[map["name"], map["players"], map["size"].x, map["size"].y]
 	)
 
 	# Update map preview

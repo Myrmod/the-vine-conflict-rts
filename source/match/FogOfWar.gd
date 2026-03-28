@@ -97,6 +97,12 @@ func _map_unit_to_new_circles(unit):
 func _sync_circles_to_unit(unit):
 	var unit_pos_3d = unit.global_transform.origin
 	var unit_pos_2d = Vector2(unit_pos_3d.x, unit_pos_3d.z) * texture_units_per_world_unit
+	var effective_sight = unit.sight_range
+	if "forest_zones_inside" in unit and unit.forest_zones_inside > 0:
+		effective_sight *= unit.forest_sight_multiplier
+	var radius = effective_sight * texture_units_per_world_unit
+	_unit_to_circles_mapping[unit][0].radius = radius
+	_unit_to_circles_mapping[unit][1].radius = radius
 	_unit_to_circles_mapping[unit][0].position = unit_pos_2d
 	_unit_to_circles_mapping[unit][1].position = unit_pos_2d
 

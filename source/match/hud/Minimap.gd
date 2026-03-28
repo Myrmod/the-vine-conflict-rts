@@ -37,13 +37,16 @@ func _ready():
 
 	await get_tree().process_frame
 
-	get_parent().pivot_offset = Vector2(0, viewport_size.y)
-	var larger_dimension = max(viewport_size.x, viewport_size.y)
-	var scale_factor = 1.0
+	# Fixed display size — the TextureRect's STRETCH_KEEP_ASPECT_CENTERED
+	# fits the map inside this square; empty areas remain black.
+	var display_size = MaxSize * 2
+	custom_minimum_size = Vector2(display_size, display_size)
+	_texture_rect.custom_minimum_size = Vector2(display_size, display_size)
 
-	if larger_dimension > MaxSize:
-		scale_factor = MaxSize / larger_dimension * 2
-	get_parent().scale = Vector2(scale_factor, scale_factor)
+	# Black background behind letterboxed areas
+	var black_style = StyleBoxFlat.new()
+	black_style.bg_color = Color.BLACK
+	add_theme_stylebox_override("panel", black_style)
 
 	_texture_rect.gui_input.connect(_on_gui_input)
 

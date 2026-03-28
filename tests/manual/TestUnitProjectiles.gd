@@ -4,6 +4,8 @@ extends Node3D
 ## Each unit gets its own lane, firing at attack_range distance on its attack_interval.
 ## WASD/arrows to pan, scroll to zoom, middle mouse to rotate.
 
+const VineArcScript = preload("res://source/factions/neutral/structures/ResourceNode/VineArc.gd")
+
 const LANE_SPACING: float = 5.0
 const FIRE_Y: float = 0.15
 const CAM_SPEED: float = 15.0
@@ -96,11 +98,59 @@ func _ready() -> void:
 
 		lane_index += 1
 
+	# --- Electric discharge (VineArc) demo ---
+	_add_arc_demo(lane_index)
+
 
 func _fire_lane(lane: Dictionary) -> void:
 	var config: Dictionary = lane.config.duplicate()
 	config["damage"] = 0.0  # no actual damage in test
 	Projectile.fire(lane.type, lane.from, lane.to, config)
+
+
+func _add_arc_demo(lane_index: int) -> void:
+	var x_offset: float = lane_index * LANE_SPACING
+	var from_pos := Vector3(x_offset, FIRE_Y + 0.5, 3.0)
+	var to_pos := Vector3(x_offset, FIRE_Y + 0.5, -4.0)
+
+	# Label
+	var label := Label3D.new()
+	label.text = "VineArc (fBm)"
+	label.position = Vector3(x_offset, 2.0, 4.0)
+	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	label.font_size = 36
+	label.modulate = Color.WHITE
+	add_child(label)
+
+	# Endpoint markers
+	for pos: Vector3 in [from_pos, to_pos]:
+		var marker := MeshInstance3D.new()
+		var sphere := SphereMesh.new()
+		sphere.radius = 0.15
+		sphere.height = 0.3
+		marker.mesh = sphere
+		marker.position = pos
+		var mat := StandardMaterial3D.new()
+		mat.albedo_color = Color(0.3, 0.9, 1.0)
+		mat.emission_enabled = true
+		mat.emission = Color(0.3, 0.9, 1.0)
+		marker.material_override = mat
+		add_child(marker)
+
+	# Arc — spawn on a repeating timer since arcs self-destruct
+	var arc_timer := Timer.new()
+	arc_timer.wait_time = 0.5
+	arc_timer.autostart = true
+	add_child(arc_timer)
+	arc_timer.timeout.connect(_spawn_arc.bind(from_pos, to_pos))
+	_spawn_arc(from_pos, to_pos)
+
+
+func _spawn_arc(from: Vector3, to: Vector3) -> void:
+	var arc := MeshInstance3D.new()
+	arc.set_script(VineArcScript)
+	add_child(arc)
+	arc.setup(from, to)
 
 
 func _process(delta: float) -> void:

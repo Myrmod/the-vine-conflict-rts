@@ -1,5 +1,13 @@
 extends "res://source/match/units/Structure.gd"
 
+## Arm names use Blender axes. GLB export: Blender +X → Godot +X, Blender +Y → Godot -Z.
+const ARM_DIRECTIONS := {
+	"arms_xp": Vector3(-1, 0, 0),
+	"arms_xn": Vector3(1, 0, 0),
+	"arms_yp": Vector3(0, 0, 1),
+	"arms_yn": Vector3(0, 0, -1),
+}
+
 var wall_sections: Array = []
 var connection_length: float = 0.0
 
@@ -16,6 +24,7 @@ func _get_wall_section_scene() -> PackedScene:
 
 func _finish_construction():
 	super()
+	_fix_backface_culling()
 	_hide_all_arms()
 	_connect_to_nearby_pillars()
 	_update_arm_visibility()
@@ -35,6 +44,19 @@ func _setup_color():
 				continue
 			if surface_mat.resource_name == "PlayerColor":
 				mesh.set_surface_override_material(surface_id, mat)
+
+
+## Disable backface culling on all materials so both sides of the mesh render.
+## Workaround for flipped normals on the lower part of the pillar model.
+func _fix_backface_culling():
+	var holder := find_child("ModelHolder")
+	if holder == null:
+		return
+	for mesh in holder.find_children("*", "MeshInstance3D", true, false):
+		for surface_id in range(mesh.mesh.get_surface_count()):
+			var surface_mat = mesh.get_active_material(surface_id)
+			if surface_mat is StandardMaterial3D:
+				surface_mat.cull_mode = BaseMaterial3D.CULL_DISABLED
 
 
 func _exit_tree():
@@ -212,15 +234,7 @@ static func _is_axis_aligned(a_pos: Vector3, b_pos: Vector3) -> bool:
 
 ## ---------------------------------------------------------------------------
 ## Arm visibility — show only arms that face a connected wall section.
-## Arm names use Blender axes: xp=+X, xn=-X, yp=+Y(Godot -Z), yn=-Y(Godot +Z)
 ## ---------------------------------------------------------------------------
-
-const ARM_DIRECTIONS := {
-	"arms_xp": Vector3(-1, 0, 0),
-	"arms_xn": Vector3(1, 0, 0),
-	"arms_yp": Vector3(0, 0, 1),
-	"arms_yn": Vector3(0, 0, -1),
-}
 
 
 func _find_arm_node(arm_name: String) -> Node3D:

@@ -163,6 +163,15 @@ func _handle_sub_action_finished_while_moving_to_resource():
 
 
 func _handle_sub_action_finished_while_collecting():
+	# react to resource being depleted (vine still exists but empty)
+	if _resource_unit != null and "resource" in _resource_unit and _resource_unit.resource <= 0:
+		_resource_unit.tree_exited.disconnect(_on_resource_unit_removed)
+		_resource_unit = null
+		if _unit.resource > 0:
+			_change_state_to(State.MOVING_TO_CC)
+		elif _set_resource_unit(_find_closest_resource_unit_in_nearby_area()):
+			_change_state_to(State.MOVING_TO_RESOURCE)
+		return
 	# react to resource not being in range anymore
 	if (
 		_resource_unit != null

@@ -41,18 +41,18 @@ func _recalculate_unit_visibility(unit, revealed_units = null):
 			func(a_unit): return a_unit.is_in_group("revealed_units")
 		)
 	for revealed_unit in revealed_units:
-		if (
-			revealed_unit.is_revealing()
-			and revealed_unit.sight_range != null
-			and (
+		if revealed_unit.is_revealing() and revealed_unit.sight_range != null:
+			var effective_sight = revealed_unit.sight_range
+			if "forest_zones_inside" in revealed_unit and revealed_unit.forest_zones_inside > 0:
+				effective_sight *= revealed_unit.forest_sight_multiplier
+			if (
 				(revealed_unit.global_position * Vector3(1, 0, 1)).distance_to(
 					unit.global_position * Vector3(1, 0, 1)
 				)
-				<= revealed_unit.sight_range + SIGHT_COMPENSATION
-			)
-		):
-			should_be_visible = true
-			break
+				<= effective_sight + SIGHT_COMPENSATION
+			):
+				should_be_visible = true
+				break
 	_update_unit_visibility(unit, should_be_visible)
 
 

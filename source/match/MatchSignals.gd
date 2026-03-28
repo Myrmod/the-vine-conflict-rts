@@ -47,6 +47,11 @@ var current_placement_domains: Array = []
 ## Currently active structure action type, or -1 if none.
 var current_structure_action: int = -1
 
+## Set true by Targetability when a unit is right-click targeted.  Terrain
+## checks (and clears) this on right-click release so the move command is
+## suppressed when the player intended to interact with a unit, not the ground.
+var unit_targeted_this_click: bool = false
+
 ## Currently active unit command mode (NORMAL, ATTACK_MOVE, MOVE, PATROL).
 ## Set by hotkey press; consumed by the next left-click on terrain.
 var active_command_mode: int = Enums.UnitCommandMode.NORMAL

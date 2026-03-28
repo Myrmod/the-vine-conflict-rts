@@ -53,7 +53,7 @@ func _exit_tree():
 
 
 func _get_enemies_in_sight():
-	return get_tree().get_nodes_in_group("units").filter(
+	var targets = get_tree().get_nodes_in_group("units").filter(
 		func(unit):
 			return (
 				unit.player != _unit.player
@@ -67,6 +67,7 @@ func _get_enemies_in_sight():
 				)
 			)
 	)
+	return targets
 
 
 func _on_tick_advanced():

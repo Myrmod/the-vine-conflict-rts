@@ -31,6 +31,11 @@ var projectile_type: int = -1
 var projectile_config: Dictionary = {}
 var projectile_origin: Vector3 = Vector3.ZERO
 var can_reverse_move: bool = false
+var can_attack_vines: bool = false
+var can_move_through_vines: bool = false
+var forest_zones_inside: int = 0
+var forest_speed_multiplier: float = 1.0
+var forest_sight_multiplier: float = 1.0
 var movement_domains: Array[Enums.MovementTypes] = []
 var _player_ref
 

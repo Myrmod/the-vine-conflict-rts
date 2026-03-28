@@ -40,7 +40,7 @@ const COLORS = [
 
 ## The world-space height for each level (tuneable)
 const LEVEL_HEIGHTS := {
-	Enums.HeightLevel.WATER: -0.5,
+	Enums.HeightLevel.WATER: -0.2,
 	Enums.HeightLevel.GROUND: 0.0,
 	Enums.HeightLevel.HIGH_GROUND: 2.0,
 	Enums.HeightLevel.AIR: 3.0,

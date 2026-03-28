@@ -125,7 +125,7 @@ func _serialize_match(match_node: Match) -> SaveGameResource:
 			save.entities_data.append(ed)
 		elif entity is ResourceUnit:
 			save.entities_data.append(_serialize_resource_entity(entity))
-		# Other entity types (VineSpawner, etc.) are part of the map and don't need saving
+		# Other resource entity types are part of the map and don't need saving
 	save.entity_registry_next_id = EntityRegistry._next_id
 
 	# Serialize pending commands

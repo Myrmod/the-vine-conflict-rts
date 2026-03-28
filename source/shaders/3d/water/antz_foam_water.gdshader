@@ -20,7 +20,7 @@ uniform bool pixelate = true;
 
 uniform float roughness : hint_range(0.0, 1.0, 0.01) = 0.4;
 uniform float height_scale = 1; // the scale of the waves in units
-uniform float amplitude1 = 2; // the relative scale of vertex_noise_big
+uniform float amplitude1 = 1.0; // the relative scale of vertex_noise_big
 uniform float amplitude2 = 0.5; // the relative scale of vertex_noise_big2
 
 uniform sampler2D vertex_noise_big : repeat_enable;

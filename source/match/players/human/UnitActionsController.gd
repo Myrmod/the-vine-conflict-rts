@@ -219,7 +219,7 @@ func _navigate_unit_towards_unit(unit, target_unit):
 		)
 
 		return true
-	if Actions.AutoAttacking.is_applicable(unit, target_unit):
+	if not target_unit is Vine and Actions.AutoAttacking.is_applicable(unit, target_unit):
 		(
 			CommandBus
 			. push_command(

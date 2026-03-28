@@ -23,7 +23,7 @@ func _ready():
 
 
 func _get_enemies_in_range():
-	return get_tree().get_nodes_in_group("units").filter(
+	var targets = get_tree().get_nodes_in_group("units").filter(
 		func(unit):
 			return (
 				unit.player != _unit.player
@@ -37,6 +37,7 @@ func _get_enemies_in_range():
 				)
 			)
 	)
+	return targets
 
 
 func _attack_unit(target):

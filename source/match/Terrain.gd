@@ -51,12 +51,16 @@ func _on_input_event(_camera, event, _click_position, _click_normal, _shape_idx)
 	# ── Right-click release: finish click or drag ──
 	if is_right_click and not event.pressed:
 		if not _rclick_dragging:
+			MatchSignals.unit_targeted_this_click = false
 			return
 		_rclick_dragging = false
+		var suppressed := MatchSignals.unit_targeted_this_click
+		MatchSignals.unit_targeted_this_click = false
 		var drag_dist: float = event.position.distance_to(_rclick_start_screen)
 		if drag_dist < _DRAG_THRESHOLD_PX:
 			# Tiny movement → treat as a normal click.
-			MatchSignals.terrain_targeted.emit(_rclick_start_world)
+			if not suppressed:
+				MatchSignals.terrain_targeted.emit(_rclick_start_world)
 		else:
 			var end_world = _world_pos_from_mouse(event.position)
 			if end_world != null:
@@ -82,11 +86,14 @@ func _unhandled_input(event: InputEvent) -> void:
 	):
 		if _rclick_dragging:
 			_rclick_dragging = false
+			var suppressed := MatchSignals.unit_targeted_this_click
+			MatchSignals.unit_targeted_this_click = false
 			var end_world = _world_pos_from_mouse(event.position)
 			if end_world != null:
 				var drag_dist: float = event.position.distance_to(_rclick_start_screen)
 				if drag_dist < _DRAG_THRESHOLD_PX:
-					MatchSignals.terrain_targeted.emit(_rclick_start_world)
+					if not suppressed:
+						MatchSignals.terrain_targeted.emit(_rclick_start_world)
 				else:
 					MatchSignals.terrain_drag_finished.emit(_rclick_start_world, end_world)
 

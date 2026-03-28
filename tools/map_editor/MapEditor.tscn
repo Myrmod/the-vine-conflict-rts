@@ -103,6 +103,18 @@ suffix = ""
 layout_mode = 2
 text = "Apply"
 
+[node name="Sep2" type="VSeparator" parent="VBoxContainer/Toolbar"]
+layout_mode = 2
+
+[node name="MapNameLabel" type="Label" parent="VBoxContainer/Toolbar"]
+layout_mode = 2
+text = "Name:"
+
+[node name="MapNameEdit" type="LineEdit" parent="VBoxContainer/Toolbar"]
+layout_mode = 2
+custom_minimum_size = Vector2(150, 0)
+placeholder_text = "Map name"
+
 [node name="HSeparator" type="HSeparator" parent="VBoxContainer/Toolbar" unique_id=310674019]
 layout_mode = 2
 size_flags_horizontal = 3
@@ -357,13 +369,15 @@ render_target_update_mode = 4
 [node name="TerrainSystem" parent="VBoxContainer/MainArea/ViewportArea/MarginContainer/ViewportContainer/EditorViewport/VisualLayer" unique_id=1246279829 instance=ExtResource("5_afdhn")]
 
 [node name="Sun" type="DirectionalLight3D" parent="VBoxContainer/MainArea/ViewportArea/MarginContainer/ViewportContainer/EditorViewport/VisualLayer" unique_id=738210997]
-transform = Transform3D(0.7071068, -0.54640514, 0.4488223, 0, 0.6347305, 0.77273357, -0.7071068, -0.54640514, 0.4488223, 0, 0, 0)
+transform = Transform3D(0.38590613, 0.525182, -0.75845915, 0, 0.822144, 0.5692795, 0.9225382, -0.21968842, 0.31727034, 0, 0, 0)
 light_color = Color(1, 0.94509804, 0.8392157, 1)
-light_energy = 2.0
+light_energy = 1.5
 light_specular = 0.5
 shadow_enabled = true
 shadow_bias = 0.2
-shadow_blur = 0.2
+shadow_normal_bias = 5.0
+shadow_reverse_cull_face = true
+shadow_blur = 0.7
 directional_shadow_split_1 = 0.45
 directional_shadow_split_2 = 0.5
 directional_shadow_split_3 = 0.55

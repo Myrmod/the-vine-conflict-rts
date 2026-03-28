@@ -35,6 +35,9 @@ static var _cache_loaded: bool = false
 ## Color of the fallback cube
 @export var fallback_cube_color: Color = Color.MAGENTA
 
+## When true, shift the loaded model so its AABB center sits at this node's XZ origin
+@export var center_xz: bool = false
+
 var _loaded_source: String = ""
 
 
@@ -55,6 +58,7 @@ func load_model(path: String) -> void:
 		if _try_instantiate(override_path, mat):
 			_loaded_source = override_path
 			_update_size_cache(path)
+			_apply_center_xz()
 			return
 
 	# 2. Try default path
@@ -63,6 +67,7 @@ func load_model(path: String) -> void:
 		if _try_instantiate(default_path, mat):
 			_loaded_source = default_path
 			_update_size_cache(path)
+			_apply_center_xz()
 			return
 
 	# 3. Fallback cube
@@ -133,6 +138,26 @@ func _create_fallback_cube(size: Vector3) -> void:
 func _clear_children() -> void:
 	for child in get_children():
 		child.queue_free()
+
+
+func _apply_center_xz() -> void:
+	if not center_xz:
+		return
+	var points: PackedVector3Array = PackedVector3Array()
+	_gather_aabb_points(self, points)
+	if points.is_empty():
+		return
+	var min_pt := points[0]
+	var max_pt := points[0]
+	for p in points:
+		min_pt = Vector3(minf(min_pt.x, p.x), minf(min_pt.y, p.y), minf(min_pt.z, p.z))
+		max_pt = Vector3(maxf(max_pt.x, p.x), maxf(max_pt.y, p.y), maxf(max_pt.z, p.z))
+	var center_x := (min_pt.x + max_pt.x) * 0.5
+	var center_z := (min_pt.z + max_pt.z) * 0.5
+	for child in get_children():
+		if child is Node3D:
+			child.position.x -= center_x
+			child.position.z -= center_z
 
 
 # region Size cache

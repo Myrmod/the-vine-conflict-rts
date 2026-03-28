@@ -27,7 +27,7 @@ func is_idle():
 func _get_units_to_attack():
 	# Scan for valid attack targets: enemy units in sight range that can be attacked.
 	# TEAM FILTER: unit.player.team != _unit.player.team ensures we only see enemy teams.
-	return get_tree().get_nodes_in_group("units").filter(
+	var targets = get_tree().get_nodes_in_group("units").filter(
 		func(unit):
 			return (
 				unit.player != _unit.player  # Different player
@@ -41,6 +41,7 @@ func _get_units_to_attack():
 				)
 			)  # In vision range
 	)
+	return targets
 
 
 func _attack_unit(unit):

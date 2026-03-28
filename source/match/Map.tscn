@@ -56,13 +56,15 @@ size = Vector2(1000, 1000)
 script = ExtResource("1_1svvv")
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=313200187]
-transform = Transform3D(0.7071068, -0.54640514, 0.4488223, 0, 0.6347305, 0.77273357, -0.7071068, -0.54640514, 0.4488223, 0, 0, 0)
+transform = Transform3D(0.38590613, 0.525182, -0.75845915, 0, 0.822144, 0.5692795, 0.9225382, -0.21968842, 0.31727034, 0, 0, 0)
 light_color = Color(1, 0.94509804, 0.8392157, 1)
-light_energy = 3.0
+light_energy = 1.5
 light_specular = 0.5
 shadow_enabled = true
 shadow_bias = 0.2
-shadow_blur = 0.2
+shadow_normal_bias = 5.0
+shadow_reverse_cull_face = true
+shadow_blur = 0.7
 directional_shadow_split_1 = 0.45
 directional_shadow_split_2 = 0.5
 directional_shadow_split_3 = 0.55
@@ -73,7 +75,7 @@ directional_shadow_pancake_size = 100.0
 environment = SubResource("Environment_map")
 camera_attributes = SubResource("CameraAttributesPractical_map")
 
-[node name="ReflectionProbe" type="ReflectionProbe" parent="."]
+[node name="ReflectionProbe" type="ReflectionProbe" parent="." unique_id=1369107965]
 size = Vector3(10000, 10000, 1000)
 
 [node name="Geometry" type="Node3D" parent="." unique_id=1147796471]

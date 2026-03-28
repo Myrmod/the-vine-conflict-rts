@@ -25,6 +25,8 @@ func _init(resource_unit):
 
 func _ready():
 	_resource_unit.tree_exited.connect(queue_free)
+	if "resource_changed" in _resource_unit:
+		_resource_unit.resource_changed.connect(_on_resource_changed)
 	_unit_movement_trait.passive_movement_started.connect(_on_passive_movement_started)
 	_unit_movement_trait.passive_movement_finished.connect(_on_passive_movement_finished)
 	MatchSignals.tick_advanced.connect(_on_tick_advanced)
@@ -53,9 +55,13 @@ func _transfer_single_resource_unit_from_resource_to_worker():
 		queue_free()
 		return
 	if "resource" in _resource_unit:
-		_resource_unit.resource -= _unit.resources_gather_rate
-		_unit.resource += _unit.resources_gather_rate
-	if _unit.is_full():
+		var remaining_capacity = _unit.resources_max - _unit.resource
+		var amount = mini(
+			_unit.resources_gather_rate, mini(_resource_unit.resource, remaining_capacity)
+		)
+		_resource_unit.resource -= amount
+		_unit.resource += amount
+	if _unit.is_full() or _resource_unit.resource <= 0:
 		queue_free()
 
 
@@ -77,3 +83,8 @@ func _on_passive_movement_started():
 func _on_passive_movement_finished():
 	_paused = false
 	_rotate_unit_towards_resource_unit()
+
+
+func _on_resource_changed():
+	if _resource_unit.resource <= 0:
+		queue_free()

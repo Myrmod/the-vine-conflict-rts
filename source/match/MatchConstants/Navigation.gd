@@ -3,6 +3,7 @@ class_name NavigationConstants
 enum Domain {
 	AIR,
 	TERRAIN,
+	TERRAIN_VEHICLE,
 }
 
 ## Movement type flags — determines which terrain cell types a unit can traverse.
@@ -16,4 +17,5 @@ enum TerrainMoveType {
 const DOMAIN_TO_GROUP_MAPPING = {
 	Domain.AIR: "air_navigation_input",
 	Domain.TERRAIN: "terrain_navigation_input",
+	Domain.TERRAIN_VEHICLE: "vehicle_terrain_navigation_input",
 }

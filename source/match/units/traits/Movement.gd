@@ -93,10 +93,22 @@ func _ready() -> void:
 	if _match.navigation == null:
 		await _match.ready
 
+	# Wait for the parent unit to finish _ready() so properties set by
+	# _setup_default_properties_from_constants() (e.g. can_move_through_vines)
+	# are available.  Child _ready() fires before parent _ready() in Godot.
+	if not _unit.is_node_ready():
+		await _unit.ready
+
 	if domain == NavigationConstants.Domain.AIR:
 		terrain_move_type = NavigationConstants.TerrainMoveType.AIR
 
-	_nav_map_rid = _match.navigation.get_navigation_map_rid_by_domain(domain)
+	# Units that cannot move through vines use the vehicle terrain nav map
+	# where forest vines are baked as obstacles.
+	var effective_domain = domain
+	if domain == NavigationConstants.Domain.TERRAIN and not _unit.can_move_through_vines:
+		effective_domain = NavigationConstants.Domain.TERRAIN_VEHICLE
+
+	_nav_map_rid = _match.navigation.get_navigation_map_rid_by_domain(effective_domain)
 
 	# When restoring from save the unit already has its correct position
 	# and rotation.  Skip the navmesh snap (it would overwrite XZ) and
@@ -181,6 +193,9 @@ func _on_tick_advanced() -> void:
 	# Snap to authoritative state before computing.
 	_unit.global_transform = _tick_transform
 	var step: float = speed * MatchConstants.TICK_DELTA
+	# Forest speed debuff while inside forest zones.
+	if "forest_zones_inside" in _unit and _unit.forest_zones_inside > 0:
+		step *= _unit.forest_speed_multiplier
 
 	if terrain_move_type == NavigationConstants.TerrainMoveType.WATER:
 		_tick_water(step)

@@ -25,6 +25,13 @@ func _exit_tree():
 	if affect_navigation_mesh:
 		remove_from_group(NavigationConstants.DOMAIN_TO_GROUP_MAPPING[domain])
 		MatchSignals.schedule_navigation_rebake.emit(domain)
+		if domain == NavigationConstants.Domain.TERRAIN:
+			remove_from_group(
+				NavigationConstants.DOMAIN_TO_GROUP_MAPPING[
+					NavigationConstants.Domain.TERRAIN_VEHICLE
+				]
+			)
+			MatchSignals.schedule_navigation_rebake.emit(NavigationConstants.Domain.TERRAIN_VEHICLE)
 
 
 func _align_unit_position_to_navigation():
@@ -40,3 +47,10 @@ func _affect_navigation_if_needed():
 	if affect_navigation_mesh:
 		add_to_group(NavigationConstants.DOMAIN_TO_GROUP_MAPPING[domain])
 		MatchSignals.schedule_navigation_rebake.emit(domain)
+		if domain == NavigationConstants.Domain.TERRAIN:
+			add_to_group(
+				NavigationConstants.DOMAIN_TO_GROUP_MAPPING[
+					NavigationConstants.Domain.TERRAIN_VEHICLE
+				]
+			)
+			MatchSignals.schedule_navigation_rebake.emit(NavigationConstants.Domain.TERRAIN_VEHICLE)

@@ -6,6 +6,7 @@ extends TabContainer
 
 signal entity_selected(scene_path: String)
 signal spawn_selected
+signal erase_selected
 signal height_level_selected(level: int)  ## -1 = water, 0 = ground, 1 = high ground
 signal slope_selected
 signal water_slope_selected

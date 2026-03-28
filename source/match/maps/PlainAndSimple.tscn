@@ -1,8 +1,7 @@
 [gd_scene format=3 uid="uid://cbe63rdjw7y4p"]
 
 [ext_resource type="PackedScene" uid="uid://b7c1crf36x1li" path="res://source/match/Map.tscn" id="1_sqrvi"]
-[ext_resource type="PackedScene" uid="uid://dwihfgr811wiv" path="res://source/factions/neutral/structures/ResourceNode/VineTile.tscn" id="4_4t7y0"]
-[ext_resource type="PackedScene" uid="uid://ifedmjndcw3x" path="res://source/factions/neutral/structures/ResourceNode/AncientTreeResourceNode.tscn" id="4_44mwl"]
+[ext_resource type="PackedScene" uid="uid://c7b8toulsxsdd" path="res://source/factions/neutral/structures/ResourceNode/ForestVine_2_1.tscn" id="4_vine"]
 
 [node name="Map" unique_id=1008340994 instance=ExtResource("1_sqrvi")]
 
@@ -20,26 +19,62 @@ transform = Transform3D(-1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, 40, 0,
 [node name="Marker3D4" type="Marker3D" parent="SpawnPoints" parent_id_path=PackedInt32Array(1918326678) index="3" unique_id=1056767866]
 transform = Transform3D(-1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, 10, 0, 43)
 
-[node name="AncientTreeResourceNode" parent="Resources" parent_id_path=PackedInt32Array(1136795596) index="0" unique_id=1111207615 instance=ExtResource("4_44mwl")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11.404465, 0, 11.495064)
+[node name="Vine1" parent="Resources" parent_id_path=PackedInt32Array(1136795596) index="0" instance=ExtResource("4_vine")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 0, 12)
 
-[node name="AncientTreeResourceNode2" parent="Resources" parent_id_path=PackedInt32Array(1136795596) index="1" unique_id=1691869348 instance=ExtResource("4_44mwl")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 40.277504, 0, 11.274086)
+[node name="Vine2" parent="Resources" parent_id_path=PackedInt32Array(1136795596) index="1" instance=ExtResource("4_vine")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 0, 12)
 
-[node name="AncientTreeResourceNode3" parent="Resources" parent_id_path=PackedInt32Array(1136795596) index="2" unique_id=189148322 instance=ExtResource("4_44mwl")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 36.79551, 0, 41.926193)
+[node name="Vine3" parent="Resources" parent_id_path=PackedInt32Array(1136795596) index="2" instance=ExtResource("4_vine")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11, 0, 14)
 
-[node name="AncientTreeResourceNode4" parent="Resources" parent_id_path=PackedInt32Array(1136795596) index="3" unique_id=1458893753 instance=ExtResource("4_44mwl")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11.404465, 0, 39.4521)
+[node name="Vine4" parent="Resources" parent_id_path=PackedInt32Array(1136795596) index="3" instance=ExtResource("4_vine")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13, 0, 13)
 
-[node name="VineTile" parent="." index="6" unique_id=1616044755 instance=ExtResource("4_4t7y0")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11.908978, 0, 13.491177)
+[node name="Vine5" parent="Resources" parent_id_path=PackedInt32Array(1136795596) index="4" instance=ExtResource("4_vine")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 0, 13)
 
-[node name="VineTile2" parent="." index="7" unique_id=841183743 instance=ExtResource("4_4t7y0")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 38.01024, 0, 12.498192)
+[node name="Vine6" parent="Resources" parent_id_path=PackedInt32Array(1136795596) index="5" instance=ExtResource("4_vine")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 38, 0, 12)
 
-[node name="VineTile3" parent="." index="8" unique_id=1611322663 instance=ExtResource("4_4t7y0")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 34.797318, 0, 40.91998)
+[node name="Vine7" parent="Resources" parent_id_path=PackedInt32Array(1136795596) index="6" instance=ExtResource("4_vine")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 40, 0, 12)
 
-[node name="VineTile4" parent="." index="9" unique_id=680712750 instance=ExtResource("4_4t7y0")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9.182704, 0, 38.531834)
+[node name="Vine8" parent="Resources" parent_id_path=PackedInt32Array(1136795596) index="7" instance=ExtResource("4_vine")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 39, 0, 14)
+
+[node name="Vine9" parent="Resources" parent_id_path=PackedInt32Array(1136795596) index="8" instance=ExtResource("4_vine")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 41, 0, 13)
+
+[node name="Vine10" parent="Resources" parent_id_path=PackedInt32Array(1136795596) index="9" instance=ExtResource("4_vine")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 37, 0, 13)
+
+[node name="Vine11" parent="Resources" parent_id_path=PackedInt32Array(1136795596) index="10" instance=ExtResource("4_vine")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 35, 0, 41)
+
+[node name="Vine12" parent="Resources" parent_id_path=PackedInt32Array(1136795596) index="11" instance=ExtResource("4_vine")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 37, 0, 41)
+
+[node name="Vine13" parent="Resources" parent_id_path=PackedInt32Array(1136795596) index="12" instance=ExtResource("4_vine")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 36, 0, 43)
+
+[node name="Vine14" parent="Resources" parent_id_path=PackedInt32Array(1136795596) index="13" instance=ExtResource("4_vine")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 38, 0, 42)
+
+[node name="Vine15" parent="Resources" parent_id_path=PackedInt32Array(1136795596) index="14" instance=ExtResource("4_vine")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 34, 0, 42)
+
+[node name="Vine16" parent="Resources" parent_id_path=PackedInt32Array(1136795596) index="15" instance=ExtResource("4_vine")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 0, 39)
+
+[node name="Vine17" parent="Resources" parent_id_path=PackedInt32Array(1136795596) index="16" instance=ExtResource("4_vine")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 0, 39)
+
+[node name="Vine18" parent="Resources" parent_id_path=PackedInt32Array(1136795596) index="17" instance=ExtResource("4_vine")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11, 0, 41)
+
+[node name="Vine19" parent="Resources" parent_id_path=PackedInt32Array(1136795596) index="18" instance=ExtResource("4_vine")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13, 0, 40)
+
+[node name="Vine20" parent="Resources" parent_id_path=PackedInt32Array(1136795596) index="19" instance=ExtResource("4_vine")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 0, 40)
