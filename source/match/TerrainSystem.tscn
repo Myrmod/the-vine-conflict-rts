@@ -3,6 +3,7 @@
 [ext_resource type="Script" uid="uid://dfswsd3q4ogqh" path="res://source/match/TerrainSystem.gd" id="1_cn2ly"]
 [ext_resource type="Shader" uid="uid://c6n2inphyhccf" path="res://source/shaders/3d/TerrainSystemTerrainMesh.gdshader" id="2_tlr23"]
 [ext_resource type="Material" uid="uid://ct4tfb0wwk3vs" path="res://source/shaders/3d/water/water_material.tres" id="3_water"]
+[ext_resource type="Script" path="res://source/match/CliffPlacer.gd" id="4_cliff"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_id0cr"]
 render_priority = 0
@@ -42,6 +43,13 @@ script = ExtResource("1_cn2ly")
 [node name="TerrainMesh" type="MeshInstance3D" parent="." unique_id=1188752785]
 material_override = SubResource("ShaderMaterial_id0cr")
 
+[node name="HighGroundMesh" type="MeshInstance3D" parent="."]
+
 [node name="WaterMesh" type="MeshInstance3D" parent="." unique_id=1955076504]
 cast_shadow = 0
 mesh = SubResource("PlaneMesh_gs6k5")
+
+[node name="SlopeMeshes" type="Node3D" parent="."]
+
+[node name="CliffPlacer" type="Node3D" parent="."]
+script = ExtResource("4_cliff")

@@ -149,6 +149,12 @@ static func initialize_terrain_from_meta(map_node: Node3D):
 	if terrain_system and terrain_system.has_method("set_map"):
 		terrain_system.set_map(map_resource)
 
+		# _build_slope_meshes() (called by set_map) writes corrected per-cell
+		# heights back to map_resource.height_grid.  Re-sync them to the
+		# runtime Map node so units read the right slope heights.
+		if not map_resource.height_grid.is_empty():
+			map_node.height_grid = map_resource.height_grid.duplicate()
+
 
 static func _apply_lighting(map_resource: MapResource, map_node: Node3D):
 	"""Override the Map scene's DirectionalLight3D and WorldEnvironment

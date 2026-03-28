@@ -44,9 +44,10 @@ func _init(map_res: MapResource, affected_positions: Array[Vector2i], water_slop
 
 
 func _compute_slope_height(map_res: MapResource, pos: Vector2i) -> float:
-	## Average the heights of all 4-connected neighbours to create a
-	## smooth transition.  If the cell has no neighbours with different
-	## heights the value stays the same as the current cell.
+	## Store a midpoint height for the cell.  The actual linear ramp is
+	## computed at upload time by TerrainSystem._compute_slope_heights()
+	## which has visibility of the full region.  Here we just set a
+	## reasonable default so navigation / collision have something close.
 	var neighbours: Array[Vector2i] = [
 		Vector2i(pos.x - 1, pos.y),
 		Vector2i(pos.x + 1, pos.y),
@@ -54,19 +55,21 @@ func _compute_slope_height(map_res: MapResource, pos: Vector2i) -> float:
 		Vector2i(pos.x, pos.y + 1),
 	]
 
-	var total: float = 0.0
-	var count: int = 0
+	var low_h: float = INF
+	var high_h: float = -INF
 
 	for n: Vector2i in neighbours:
 		if n.x < 0 or n.x >= map_res.size.x or n.y < 0 or n.y >= map_res.size.y:
 			continue
-		total += map_res.get_height_at(n)
-		count += 1
+		var nh: float = map_res.get_height_at(n)
+		low_h = minf(low_h, nh)
+		high_h = maxf(high_h, nh)
 
-	if count == 0:
+	if low_h == INF:
 		return map_res.get_height_at(pos)
 
-	return total / float(count)
+	# Midpoint as fallback — _compute_slope_heights() refines this later
+	return (low_h + high_h) * 0.5
 
 
 func execute() -> void:

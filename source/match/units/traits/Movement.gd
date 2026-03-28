@@ -392,13 +392,18 @@ func _apply_yaw() -> void:
 	if surface_normal.is_equal_approx(Vector3.UP):
 		_unit.global_transform.basis = Basis(Vector3.UP, _yaw)
 	else:
-		var fwd := Vector3(sin(_yaw), 0.0, cos(_yaw))
-		fwd = (fwd - surface_normal * fwd.dot(surface_normal)).normalized()
-		if fwd.is_zero_approx():
-			fwd = Vector3.FORWARD
-		var right := surface_normal.cross(fwd).normalized()
-		fwd = right.cross(surface_normal).normalized()
-		_unit.global_transform.basis = Basis(right, surface_normal, -fwd)
+		# Tilt unit to match terrain slope.
+		# Basis(UP, _yaw) has Z column = (sin(_yaw), 0, cos(_yaw)) = back.
+		# Project that onto the surface plane to get the tilted back direction.
+		var back := Vector3(sin(_yaw), 0.0, cos(_yaw))
+		back = (back - surface_normal * back.dot(surface_normal)).normalized()
+		if back.is_zero_approx():
+			back = Vector3.BACK
+		var right := surface_normal.cross(back).normalized()
+		if right.is_zero_approx():
+			right = Vector3.RIGHT
+		var up := back.cross(right).normalized()
+		_unit.global_transform.basis = Basis(right, up, back)
 
 
 # ── tick bookkeeping ────────────────────────────────────────────────

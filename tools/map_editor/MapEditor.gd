@@ -983,6 +983,11 @@ func _refresh_view():
 	terrain_system._ensure_splat_textures()
 	if terrain_system:
 		terrain_system._upload_height_grid()
+		terrain_system._build_slope_meshes()
+		terrain_system._upload_water_mask()
+		terrain_system.get_node("CliffPlacer").update_cliffs(
+			terrain_system.map, terrain_system.size
+		)
 
 
 # --- Entity preview rendering ---
@@ -1080,9 +1085,7 @@ func set_view_mode(mode: ViewMode):
 
 	if visual_layer and collision_layer:
 		# Keep visual_layer always visible so entity/spawn previews remain on screen.
-		# Only toggle the terrain system and collision overlay.
-		if terrain_system:
-			terrain_system.visible = (mode == ViewMode.GAME_VIEW)
+		# Keep terrain system visible in collision view as reference behind the overlay.
 		collision_layer.visible = (mode == ViewMode.COLLISION_VIEW)
 	else:
 		push_warning("Warning: Visual or collision layer not found for view mode toggle")

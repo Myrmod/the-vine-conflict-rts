@@ -61,10 +61,27 @@ uniform float blend_sharpness : hint_range(1.0, 32.0) = 8.0;
 // layer quickly, avoiding mushy height transitions.
 uniform float height_edge_sharpness : hint_range(1.0, 64.0) = 16.0;
 
+// --- Layer mask (for split high-ground / low-ground planes) ---
+// R8 texture same size as grid: 1.0 = render, 0.0 = discard.
+// When not set (all white default) the full terrain is rendered.
+uniform sampler2D layer_mask_tex : filter_nearest;
+uniform bool layer_mask_enabled = false;
+
+// Debug: flat colour override for visualising terrain layers.
+uniform bool debug_layer_color_enabled = false;
+uniform vec3 debug_layer_color : source_color = vec3(1.0);
+
 void vertex() {
+    // Map each PlaneMesh vertex to the centre of its corresponding texel.
+    // PlaneMesh has map_size+1 vertices (UV 0..1) but only map_size texels,
+    // so boundary vertices sit between two texels.  Shift +0.5 texel and
+    // clamp so the last vertex samples the last texel instead of wrapping.
+    vec2 grid_ts = vec2(textureSize(grid_height_tex, 0));
+    vec2 grid_uv = clamp(UV + 0.5 / grid_ts, 0.5 / grid_ts, 1.0 - 0.5 / grid_ts);
+
     // --- Grid-based height (macro displacement from MapResource.height_grid) ---
     if (grid_height_scale > 0.0) {
-        float grid_h = texture(grid_height_tex, UV).r;
+        float grid_h = texture(grid_height_tex, grid_uv).r;
         VERTEX.y += grid_h * grid_height_scale;
     }
 
@@ -115,6 +132,16 @@ void vertex() {
 }
 
 void fragment() {
+    // Discard fragments outside this layer.
+    // No half-texel offset here — interpolated UVs already land inside the
+    // correct texel.  Only clamp the upper bound so UV=1.0 doesn't wrap.
+    if (layer_mask_enabled) {
+        vec2 mask_ts = vec2(textureSize(layer_mask_tex, 0));
+        vec2 mask_uv = min(UV, 1.0 - 0.5 / mask_ts);
+        float mask_val = texture(layer_mask_tex, mask_uv).r;
+        if (mask_val < 0.5) discard;
+    }
+
     vec2 tiled_uv = UV * uv_scale;
 
     float weights[MAX_TERRAINS];
@@ -221,6 +248,12 @@ void fragment() {
     }
 
     ALBEDO           = final_albedo;
+
+    // Debug layer colour override
+    if (debug_layer_color_enabled) {
+        ALBEDO = debug_layer_color;
+    }
+
     NORMAL_MAP       = final_normal_map;
     NORMAL_MAP_DEPTH = normal_map_depth;
     ROUGHNESS        = clamp(final_roughness, 0.05, 1.0);

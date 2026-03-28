@@ -19,3 +19,4 @@ extends Node
 @export var god_mode = false
 @export var debug_save_json = false
 @export var debug_disconnect = false
+@export var debug_terrain_layers = false
