@@ -14,6 +14,9 @@ signal match_finished_with_victory
 signal match_finished_with_defeat
 signal tick_advanced  # emitted after each deterministic tick is processed (use instead of wall-clock timers)
 signal terrain_targeted(position)
+## Emitted with per-unit spread targets when a move command is issued.
+## targets is Array of [unit, Vector3] pairs.
+signal movement_targets_assigned(targets)
 ## Emitted every frame during a right-click drag on terrain (formation spread).
 signal terrain_drag_updated(start_position, current_position)
 ## Emitted when a right-click drag on terrain ends (mouse released).

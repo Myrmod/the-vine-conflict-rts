@@ -1,4 +1,3 @@
-# TODO: refactor required after porting from Godot 3
 const DISTANCE_REDUCTION_BY_DIVISION_ITERATIONS_MAX = 10
 const DISTANCE_REDUCTION_BY_SUBTRACTION_ITERATIONS_MAX = 10
 
@@ -23,6 +22,103 @@ static func crowd_moved_to_new_pivot(units, new_pivot):
 		new_unit_positions, new_pivot, UnitConstants.ADHERENCE_MARGIN_M * 2
 	)
 	return condensed_unit_positions
+
+
+## Spread units in a circle pattern around a target point, avoiding all
+## existing units/structures.  Units are sorted by distance to target
+## (closest first) so the nearest unit gets the best spot.
+## Returns Array of [unit, Vector3] pairs — deterministic (no randomness).
+static func circle_spread(units: Array, target: Vector3) -> Array:
+	if units.is_empty():
+		return []
+
+	var target_yless := Vector3(target.x, 0.0, target.z)
+
+	if units.size() == 1:
+		return [[units[0], target_yless]]
+
+	# Sort units by distance to target (ascending) — deterministic tiebreak by id.
+	var sorted_units := units.duplicate()
+	sorted_units.sort_custom(
+		func(a, b):
+			var da: float = a.global_position.distance_squared_to(target_yless)
+			var db: float = b.global_position.distance_squared_to(target_yless)
+			if absf(da - db) < 0.001:
+				return a.id < b.id
+			return da < db
+	)
+
+	var margin: float = UnitConstants.ADHERENCE_MARGIN_M
+	# Collect obstacle discs from all existing units not in our move group.
+	var obstacle_discs: Array = _collect_obstacle_discs(sorted_units)
+	# The target point itself is the center "disc" with radius 0.
+	var placed_discs: Array = []
+
+	var result: Array = []
+	for unit in sorted_units:
+		var r: float = unit.radius if unit.radius else 0.5
+		var pos: Vector3 = _find_closest_free_position(
+			target_yless, r, placed_discs, obstacle_discs, margin
+		)
+		placed_discs.append([pos, r])
+		result.append([unit, pos])
+	return result
+
+
+## Gather [position, radius] discs for all existing units that are NOT
+## in the units_to_move array.
+static func _collect_obstacle_discs(units_to_move: Array) -> Array:
+	var move_set := {}
+	for u in units_to_move:
+		move_set[u.get_instance_id()] = true
+	var discs: Array = []
+	for unit_id in EntityRegistry.entities:
+		var unit = EntityRegistry.entities[unit_id]
+		if unit == null or not is_instance_valid(unit):
+			continue
+		if unit.get_instance_id() in move_set:
+			continue
+		var r = unit.radius
+		if r == null or r <= 0.0:
+			continue
+		var pos := Vector3(unit.global_position.x, 0.0, unit.global_position.z)
+		discs.append([pos, r])
+	return discs
+
+
+## Find the closest unoccupied position to `center` for a disc of `radius`.
+## Tries the center first, then scans outward in concentric rings.
+static func _find_closest_free_position(
+	center: Vector3, radius: float, placed: Array, obstacles: Array, margin: float
+) -> Vector3:
+	# Try the center point first.
+	if (
+		not _disc_collides_with_others([center, radius], placed, margin)
+		and not _disc_collides_with_others([center, radius], obstacles, margin)
+	):
+		return center
+
+	# Scan concentric rings outward.
+	var ring_step: float = radius * 0.8 + margin
+	var max_rings: int = 20
+	for ring in range(1, max_rings + 1):
+		var ring_radius: float = ring_step * float(ring)
+		# More candidates on larger rings.
+		var candidate_count: int = maxi(6, ring * 6)
+		for i in range(candidate_count):
+			var angle: float = TAU * float(i) / float(candidate_count)
+			var candidate := Vector3(
+				center.x + cos(angle) * ring_radius,
+				0.0,
+				center.z + sin(angle) * ring_radius,
+			)
+			if (
+				not _disc_collides_with_others([candidate, radius], placed, margin)
+				and not _disc_collides_with_others([candidate, radius], obstacles, margin)
+			):
+				return candidate
+	# Fallback — should rarely happen with 20 rings.
+	return center
 
 
 static func calculate_aabb_crowd_pivot_yless(units):

@@ -63,13 +63,9 @@ func _try_navigating_selected_units_towards_position(target_point, queued: bool 
 				and Actions.Moving.is_applicable(unit)
 			)
 	)
-	# Calculate new positions for units to move to (handles unit grouping and collision avoidance)
-	var new_unit_targets = MatchUtils.Movement.crowd_moved_to_new_pivot(
-		terrain_units_to_move, target_point
-	)
-	new_unit_targets += MatchUtils.Movement.crowd_moved_to_new_pivot(
-		air_units_to_move, target_point
-	)
+	# Calculate new positions for units to move to (circle spread around target)
+	var new_unit_targets = MatchUtils.Movement.circle_spread(terrain_units_to_move, target_point)
+	new_unit_targets += MatchUtils.Movement.circle_spread(air_units_to_move, target_point)
 
 	# Queue a MOVE command through CommandBus. This will:
 	# 1. Be recorded by ReplayRecorder for replay capability
@@ -88,6 +84,8 @@ func _try_navigating_selected_units_towards_position(target_point, queued: bool 
 			}
 		}
 	)
+	if not new_unit_targets.is_empty():
+		MatchSignals.movement_targets_assigned.emit(new_unit_targets)
 
 
 func _try_setting_rally_points(target_point: Vector3):
@@ -135,11 +133,12 @@ func _try_ordering_selected_workers_to_construct_structure(potential_structure):
 			{
 				"selected_constructors":
 				selected_constructors.map(
-					func(unit): return {
-						"unit": unit.id,
-						"pos": unit.global_position,
-						"rot": unit.global_rotation,
-					}
+					func(unit):
+						return {
+							"unit": unit.id,
+							"pos": unit.global_position,
+							"rot": unit.global_rotation,
+						}
 				),
 				"structure": structure.id,
 				"rotation": structure.global_rotation,
@@ -170,11 +169,12 @@ func _force_attack_selected_units_on(target_unit):
 			{
 				"targets":
 				attackers.map(
-					func(unit): return {
-						"unit": unit.id,
-						"pos": unit.global_position,
-						"rot": unit.global_rotation
-					}
+					func(unit):
+						return {
+							"unit": unit.id,
+							"pos": unit.global_position,
+							"rot": unit.global_rotation
+						}
 				),
 				"target_unit": target_unit.id,
 				"force": true,
@@ -436,6 +436,8 @@ func _on_terrain_drag_finished(start_pos: Vector3, end_pos: Vector3) -> void:
 			}
 		}
 	)
+	if not targets.is_empty():
+		MatchSignals.movement_targets_assigned.emit(targets)
 	_try_setting_rally_points(end_pos)
 
 
@@ -479,8 +481,8 @@ func _push_positional_command(cmd_type: int, units: Array, target_point: Vector3
 	var air_units = units.filter(
 		func(u): return u.get_nav_domain() == NavigationConstants.Domain.AIR
 	)
-	var targets = MatchUtils.Movement.crowd_moved_to_new_pivot(terrain_units, target_point)
-	targets += MatchUtils.Movement.crowd_moved_to_new_pivot(air_units, target_point)
+	var targets = MatchUtils.Movement.circle_spread(terrain_units, target_point)
+	targets += MatchUtils.Movement.circle_spread(air_units, target_point)
 	CommandBus.push_command(
 		{
 			"tick": Match.tick + 1,
@@ -493,6 +495,8 @@ func _push_positional_command(cmd_type: int, units: Array, target_point: Vector3
 			}
 		}
 	)
+	if not targets.is_empty():
+		MatchSignals.movement_targets_assigned.emit(targets)
 
 
 func _push_patrol_command(units: Array, target_point: Vector3, queued: bool):
@@ -502,8 +506,8 @@ func _push_patrol_command(units: Array, target_point: Vector3, queued: bool):
 	var air_units = units.filter(
 		func(u): return u.get_nav_domain() == NavigationConstants.Domain.AIR
 	)
-	var targets = MatchUtils.Movement.crowd_moved_to_new_pivot(terrain_units, target_point)
-	targets += MatchUtils.Movement.crowd_moved_to_new_pivot(air_units, target_point)
+	var targets = MatchUtils.Movement.circle_spread(terrain_units, target_point)
+	targets += MatchUtils.Movement.circle_spread(air_units, target_point)
 	# Patrol origin: use the crowd pivot of the selected units as point_a
 	var all_units = terrain_units + air_units
 	var origin = (
@@ -524,6 +528,8 @@ func _push_patrol_command(units: Array, target_point: Vector3, queued: bool):
 			}
 		}
 	)
+	if not targets.is_empty():
+		MatchSignals.movement_targets_assigned.emit(targets)
 
 
 func push_stop_command():

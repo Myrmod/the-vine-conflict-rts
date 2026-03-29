@@ -1,20 +1,17 @@
 extends Node3D
 
-const MouseClickAnimation = preload("res://source/match/utils/MouseClickAnimation.tscn")
+const MovementLineIndicatorScript = preload("res://source/match/handlers/MovementLineIndicator.gd")
+
+var _movement_line_indicator: Node3D = null
 
 
 func _ready():
-	MatchSignals.terrain_targeted.connect(_on_terrain_targeted)
+	_movement_line_indicator = Node3D.new()
+	_movement_line_indicator.set_script(MovementLineIndicatorScript)
+	_movement_line_indicator.name = "MovementLineIndicator"
+	add_child(_movement_line_indicator)
+	MatchSignals.movement_targets_assigned.connect(_on_movement_targets_assigned)
 
 
-func _on_terrain_targeted(target_position):
-	if (
-		get_tree()
-		. get_nodes_in_group("selected_units")
-		. filter(func(unit): return unit.is_in_group("controlled_units"))
-		. is_empty()
-	):
-		return
-	var node = MouseClickAnimation.instantiate()
-	node.global_transform = Transform3D(Basis(), target_position)
-	add_child(node)
+func _on_movement_targets_assigned(unit_target_pairs: Array) -> void:
+	_movement_line_indicator.show_indicators(unit_target_pairs)
