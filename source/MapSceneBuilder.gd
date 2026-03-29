@@ -65,7 +65,10 @@ static func build(map_resource: MapResource) -> Node3D:
 	#    and units physically cannot clip through.
 	map_node.build_cliff_collision()
 
-	# 8. Apply lighting & environment from the MapResource so the game
+	# 8. Build slope side walls so units cannot bypass ramps from the sides.
+	map_node.build_slope_side_walls()
+
+	# 9. Apply lighting & environment from the MapResource so the game
 	#    reproduces the exact same look as the map editor.
 	_apply_lighting(map_resource, map_node)
 

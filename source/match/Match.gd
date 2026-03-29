@@ -900,7 +900,7 @@ func _setup_subsystems_dependent_on_map():
 	# the navmesh bake has geometry to work with.
 	if map.terrain_system:
 		map.terrain_system.ensure_mesh(map.size)
-	_terrain.update_shape_from_map_size(map.size)
+	_terrain.update_shape_from_map(map)
 	fog_of_war.resize(map.size)
 	_recalculate_camera_bounding_planes(map.size)
 	navigation.setup(map)

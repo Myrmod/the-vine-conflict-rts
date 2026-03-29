@@ -56,8 +56,14 @@ static func build_all(map: MapResource) -> Array[Dictionary]:
 	# 4. Tilted slope shapes (ground ↔ high-ground)
 	shapes.append_array(_build_slope_shapes(map, MapResource.CELL_SLOPE, GROUP_SLOPE))
 
+	# 4b. Side walls for slope ramps (perpendicular to slope direction)
+	shapes.append_array(_build_slope_side_walls(map, MapResource.CELL_SLOPE))
+
 	# 5. Tilted water-slope shapes (separate group for passability rules)
 	shapes.append_array(_build_slope_shapes(map, MapResource.CELL_WATER_SLOPE, GROUP_WATER_SLOPE))
+
+	# 5b. Side walls for water-slope ramps
+	shapes.append_array(_build_slope_side_walls(map, MapResource.CELL_WATER_SLOPE))
 
 	# 6. Manually painted collision on ground-level cells
 	shapes.append_array(_build_manual_collision(map))
@@ -304,7 +310,6 @@ static func _build_slope_shapes(
 ) -> Array[Dictionary]:
 	var shapes: Array[Dictionary] = []
 	var cs: float = FeatureFlags.grid_cell_size
-	var angle: float = map.slope_angle
 	var visited: Dictionary = {}
 
 	for y: int in range(map.size.y):
@@ -364,10 +369,9 @@ static func _build_slope_shapes(
 					slope_length = rect.size.x * cs
 				else:
 					slope_length = rect.size.y * cs
-				# Compute the actual tilt angle from geometry so the surface
-				# always reaches from low_h to high_h regardless of the
-				# configured angle.  Fall back to map angle for flat slopes.
-				var actual_angle: float = angle
+				# Compute the tilt angle from geometry so the surface
+				# always reaches from low_h to high_h.
+				var actual_angle: float = 0.0
 				if slope_length > 0.001 and span_h > 0.001:
 					actual_angle = rad_to_deg(atan2(span_h, slope_length))
 
@@ -497,6 +501,96 @@ static func _greedy_merge_region(region: Array[Vector2i]) -> Array[Rect2i]:
 		rects.append(Rect2i(x, y, w, h))
 
 	return rects
+
+
+# ================================================================
+# Slope side walls   (block the non-ramp edges of slope regions)
+# ================================================================
+
+
+static func _build_slope_side_walls(map: MapResource, cell_type: int) -> Array[Dictionary]:
+	var shapes: Array[Dictionary] = []
+	var cs: float = FeatureFlags.grid_cell_size
+	var wall_thickness: float = 0.02
+	var visited: Dictionary = {}
+
+	for y: int in range(map.size.y):
+		for x: int in range(map.size.x):
+			var pos: Vector2i = Vector2i(x, y)
+			if visited.has(pos):
+				continue
+			if map.get_cell_type_at(pos) != cell_type:
+				continue
+
+			var region: Array[Vector2i] = _flood_fill_cell_type(map, pos, cell_type, visited)
+			var direction: Vector2i = _get_region_slope_direction(map, region)
+
+			# Height range from non-slope neighbours
+			var low_h: float = INF
+			var high_h: float = -INF
+			var region_set: Dictionary = {}
+			for p: Vector2i in region:
+				region_set[p] = true
+			for p: Vector2i in region:
+				for d: Vector2i in [
+					Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)
+				]:
+					var n: Vector2i = p + d
+					if n.x < 0 or n.x >= map.size.x or n.y < 0 or n.y >= map.size.y:
+						continue
+					if not region_set.has(n):
+						low_h = minf(low_h, map.get_height_at(n))
+						high_h = maxf(high_h, map.get_height_at(n))
+
+			if low_h == INF or high_h == -INF:
+				continue
+			var wall_h: float = high_h - low_h
+			if wall_h < 0.01:
+				continue
+			var mid_h: float = (low_h + high_h) * 0.5
+
+			# Perpendicular directions to the slope
+			var perp_dirs: Array[Vector2i]
+			if abs(direction.x) > 0:
+				perp_dirs = [Vector2i(0, -1), Vector2i(0, 1)]
+			else:
+				perp_dirs = [Vector2i(-1, 0), Vector2i(1, 0)]
+
+			for sd: Vector2i in perp_dirs:
+				for p: Vector2i in region:
+					var n: Vector2i = p + sd
+					if region_set.has(n):
+						continue
+					if sd.x != 0:
+						var wx: float = (p.x + (1 if sd.x > 0 else 0)) * cs
+						(
+							shapes
+							. append(
+								{
+									"type": SHAPE_WALL,
+									"group": GROUP_CLIFF,
+									"position": Vector3(wx, mid_h, (p.y + 0.5) * cs),
+									"size": Vector3(wall_thickness, wall_h, 1.0 * cs),
+									"rect": Rect2i(p.x, p.y, 1, 1),
+								}
+							)
+						)
+					else:
+						var wz: float = (p.y + (1 if sd.y > 0 else 0)) * cs
+						(
+							shapes
+							. append(
+								{
+									"type": SHAPE_WALL,
+									"group": GROUP_CLIFF,
+									"position": Vector3((p.x + 0.5) * cs, mid_h, wz),
+									"size": Vector3(1.0 * cs, wall_h, wall_thickness),
+									"rect": Rect2i(p.x, p.y, 1, 1),
+								}
+							)
+						)
+
+	return shapes
 
 
 # ================================================================

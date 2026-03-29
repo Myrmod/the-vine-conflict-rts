@@ -11,7 +11,6 @@ signal height_level_selected(level: int)  ## -1 = water, 0 = ground, 1 = high gr
 signal slope_selected
 signal water_slope_selected
 signal collision_selected(value: int)  ## 1 = block, 0 = unblock
-signal slope_angle_changed(angle: float)
 
 # Environment Container
 @onready var objects_container = $Environment/EnvironmentPalette/ObjectsContainer/VBoxContainer
@@ -33,7 +32,6 @@ func _ready() -> void:
 	populate_the_amuns()
 	populate_height_levels()
 	_populate_collision()
-	_add_slope_angle_control()
 
 
 func populate_height_levels() -> void:
@@ -221,36 +219,5 @@ func _populate_collision() -> void:
 	unblock_btn.pressed.connect(func() -> void: collision_selected.emit(0))
 	vbox.add_child(unblock_btn)
 
-	foldable.add_child(vbox)
-	environment_palette.add_child(foldable)
-
-
-func _add_slope_angle_control() -> void:
-	"""Add a slope-angle spinner to the Environment palette."""
-	if not environment_palette:
-		return
-
-	var foldable: FoldableContainer = FoldableContainer.new()
-	foldable.title = "Slope Settings"
-	foldable.name = "SlopeSettingsContainer"
-
-	var vbox: VBoxContainer = VBoxContainer.new()
-
-	var angle_box: HBoxContainer = HBoxContainer.new()
-	var angle_label: Label = Label.new()
-	angle_label.text = "Angle:"
-	angle_box.add_child(angle_label)
-
-	var angle_spin: SpinBox = SpinBox.new()
-	angle_spin.min_value = 10
-	angle_spin.max_value = 85
-	angle_spin.step = 1
-	angle_spin.value = 60
-	angle_spin.suffix = "°"
-	angle_spin.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	angle_spin.value_changed.connect(func(v: float) -> void: slope_angle_changed.emit(v))
-	angle_box.add_child(angle_spin)
-
-	vbox.add_child(angle_box)
 	foldable.add_child(vbox)
 	environment_palette.add_child(foldable)

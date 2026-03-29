@@ -138,7 +138,7 @@ func _setup_ui_connections():
 		palette_select.slope_selected.connect(_on_palette_slope_selected)
 		palette_select.water_slope_selected.connect(_on_palette_water_slope_selected)
 		palette_select.collision_selected.connect(_on_palette_collision_selected)
-		palette_select.slope_angle_changed.connect(_on_palette_slope_angle_changed)
+
 	# Connect texture palette signals
 	if texture_select:
 		texture_select.texture_selected.connect(_on_palette_texture_selected)
@@ -337,17 +337,6 @@ func _on_palette_collision_selected(value: int) -> void:
 	var brush_info: Label = get_node_or_null("VBoxContainer/Toolbar/BrushInfo")
 	if brush_info and current_brush:
 		brush_info.text = current_brush.get_brush_name()
-
-
-func _on_palette_slope_angle_changed(angle: float) -> void:
-	"""Handle slope angle change from palette"""
-	if current_map:
-		current_map.slope_angle = angle
-		# Refresh collision view if visible
-		if collision_renderer and view_mode == ViewMode.COLLISION_VIEW:
-			collision_renderer.refresh()
-	if status_label:
-		status_label.text = "Slope angle: %d°" % int(angle)
 
 
 func _on_palette_texture_selected_as_base_layer(terrain: TerrainType):

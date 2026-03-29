@@ -372,11 +372,13 @@ func _is_slope_cell_type(ct: int) -> bool:
 
 func _add_wall_body(parent: Node3D, pos: Vector3, extents: Vector3, idx: int) -> void:
 	var body := StaticBody3D.new()
-	body.name = "CliffWall%d" % idx
+	body.name = "Wall%d" % idx
 	body.transform.origin = pos
 	# Layer 2 so the terrain NavigationMesh (geometry_collision_mask) detects us
 	body.collision_layer = 2
 	body.collision_mask = 0
+	# Don't intercept mouse clicks — let them pass through to the Terrain plane
+	body.input_ray_pickable = false
 	body.add_to_group("terrain_navigation_input")
 
 	var shape := BoxShape3D.new()
@@ -387,3 +389,126 @@ func _add_wall_body(parent: Node3D, pos: Vector3, extents: Vector3, idx: int) ->
 
 	body.add_child(col)
 	parent.add_child(body)
+
+
+# ============================================================
+# Slope side walls
+# ============================================================
+
+
+func build_slope_side_walls() -> void:
+	"""Create wall collision along the sides of slope ramps perpendicular
+	to the slope direction, so units cannot bypass ramps from the sides."""
+	if height_grid.is_empty() or cell_type_grid.is_empty():
+		return
+
+	var old_walls: Node3D = find_child("SlopeSideWalls")
+	if old_walls:
+		old_walls.queue_free()
+
+	var walls_parent := Node3D.new()
+	walls_parent.name = "SlopeSideWalls"
+	add_child(walls_parent)
+
+	var sx: int = int(size.x)
+	var sy: int = int(size.y)
+	var wall_idx: int = 0
+	var visited: Dictionary = {}
+
+	for y in range(sy):
+		for x in range(sx):
+			var pos := Vector2i(x, y)
+			if visited.has(pos):
+				continue
+			var ct := get_cell_type_at_cell(pos)
+			if not _is_slope_cell_type(ct):
+				continue
+
+			# Flood-fill the contiguous slope region
+			var region: Array[Vector2i] = []
+			var stack: Array[Vector2i] = [pos]
+			var region_set: Dictionary = {}
+			while stack.size() > 0:
+				var p: Vector2i = stack.pop_back()
+				if visited.has(p) or region_set.has(p):
+					continue
+				if not _is_cell_in_bounds(p):
+					continue
+				if get_cell_type_at_cell(p) != ct:
+					continue
+				visited[p] = true
+				region_set[p] = true
+				region.append(p)
+				for d: Vector2i in [
+					Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)
+				]:
+					stack.append(p + d)
+
+			if region.is_empty():
+				continue
+
+			# Compute slope direction and height range from boundary neighbours
+			var total_diff := Vector2.ZERO
+			var low_h: float = INF
+			var high_h: float = -INF
+			for p: Vector2i in region:
+				var my_h: float = get_height_at_cell(p)
+				for d: Vector2i in [
+					Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)
+				]:
+					var n: Vector2i = p + d
+					if not _is_cell_in_bounds(n):
+						continue
+					if region_set.has(n):
+						continue
+					var nh: float = get_height_at_cell(n)
+					low_h = minf(low_h, nh)
+					high_h = maxf(high_h, nh)
+					total_diff += Vector2(d.x, d.y) * (nh - my_h)
+
+			if low_h == INF or high_h == -INF:
+				continue
+			var wall_h: float = high_h - low_h + CLIFF_WALL_HEIGHT
+			if wall_h < 0.01:
+				continue
+			var mid_h: float = (low_h + high_h) * 0.5
+
+			# Determine dominant slope direction
+			var direction: Vector2i
+			if total_diff.length_squared() < 0.001:
+				direction = Vector2i(1, 0)
+			elif absf(total_diff.x) >= absf(total_diff.y):
+				direction = Vector2i(1, 0) if total_diff.x > 0 else Vector2i(-1, 0)
+			else:
+				direction = Vector2i(0, 1) if total_diff.y > 0 else Vector2i(0, -1)
+
+			# Place walls on the two sides perpendicular to the slope direction
+			var perp_dirs: Array[Vector2i]
+			if abs(direction.x) > 0:
+				perp_dirs = [Vector2i(0, -1), Vector2i(0, 1)]
+			else:
+				perp_dirs = [Vector2i(-1, 0), Vector2i(1, 0)]
+
+			for sd: Vector2i in perp_dirs:
+				for p: Vector2i in region:
+					var n: Vector2i = p + sd
+					if region_set.has(n):
+						continue  # Neighbour is also slope — no wall needed
+					var wall_pos: Vector3
+					var wall_size: Vector3
+					if sd.x != 0:
+						wall_pos = Vector3(
+							float(p.x + (1 if sd.x > 0 else 0)),
+							mid_h,
+							float(p.y) + 0.5,
+						)
+						wall_size = Vector3(CLIFF_WALL_THICKNESS, wall_h, 1.0)
+					else:
+						wall_pos = Vector3(
+							float(p.x) + 0.5,
+							mid_h,
+							float(p.y + (1 if sd.y > 0 else 0)),
+						)
+						wall_size = Vector3(1.0, wall_h, CLIFF_WALL_THICKNESS)
+					_add_wall_body(walls_parent, wall_pos, wall_size, wall_idx)
+					wall_idx += 1
