@@ -85,6 +85,7 @@ shader_parameter/foamScrollSpeed = 0.4
 shader_parameter/foamEdgeBias = 0.1
 shader_parameter/foamFallOffDistance = 0.5000000074506
 shader_parameter/foamEdgeDistance = 0.2
+shader_parameter/map_size = Vector2(1, 1)
 shader_parameter/shine_strength = 0.17
 shader_parameter/shine_shininess = 18.0
 shader_parameter/shadow = 0.72

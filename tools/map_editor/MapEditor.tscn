@@ -76,43 +76,41 @@ text = "Symmetry:"
 [node name="SymmetryOption" type="OptionButton" parent="VBoxContainer/Toolbar" unique_id=902609769]
 layout_mode = 2
 
-[node name="Sep1" type="VSeparator" parent="VBoxContainer/Toolbar"]
+[node name="Sep1" type="VSeparator" parent="VBoxContainer/Toolbar" unique_id=1549781884]
 layout_mode = 2
 
-[node name="MapSizeLabel" type="Label" parent="VBoxContainer/Toolbar"]
+[node name="MapSizeLabel" type="Label" parent="VBoxContainer/Toolbar" unique_id=979630148]
 layout_mode = 2
 text = "Map Size:"
 
-[node name="MapSizeX" type="SpinBox" parent="VBoxContainer/Toolbar"]
+[node name="MapSizeX" type="SpinBox" parent="VBoxContainer/Toolbar" unique_id=85099059]
 layout_mode = 2
 min_value = 10.0
 max_value = 200.0
 value = 50.0
 prefix = "X:"
-suffix = ""
 
-[node name="MapSizeY" type="SpinBox" parent="VBoxContainer/Toolbar"]
+[node name="MapSizeY" type="SpinBox" parent="VBoxContainer/Toolbar" unique_id=75553005]
 layout_mode = 2
 min_value = 10.0
 max_value = 200.0
 value = 50.0
 prefix = "Y:"
-suffix = ""
 
-[node name="ApplySizeButton" type="Button" parent="VBoxContainer/Toolbar"]
+[node name="ApplySizeButton" type="Button" parent="VBoxContainer/Toolbar" unique_id=547261887]
 layout_mode = 2
 text = "Apply"
 
-[node name="Sep2" type="VSeparator" parent="VBoxContainer/Toolbar"]
+[node name="Sep2" type="VSeparator" parent="VBoxContainer/Toolbar" unique_id=184459833]
 layout_mode = 2
 
-[node name="MapNameLabel" type="Label" parent="VBoxContainer/Toolbar"]
+[node name="MapNameLabel" type="Label" parent="VBoxContainer/Toolbar" unique_id=1717143468]
 layout_mode = 2
 text = "Name:"
 
-[node name="MapNameEdit" type="LineEdit" parent="VBoxContainer/Toolbar"]
-layout_mode = 2
+[node name="MapNameEdit" type="LineEdit" parent="VBoxContainer/Toolbar" unique_id=37235858]
 custom_minimum_size = Vector2(150, 0)
+layout_mode = 2
 placeholder_text = "Map name"
 
 [node name="HSeparator" type="HSeparator" parent="VBoxContainer/Toolbar" unique_id=310674019]
@@ -135,11 +133,11 @@ size_flags_vertical = 3
 custom_minimum_size = Vector2(301, 0)
 layout_mode = 2
 
-[node name="ScrollContainer" type="ScrollContainer" parent="VBoxContainer/MainArea/LeftPalette"]
+[node name="ScrollContainer" type="ScrollContainer" parent="VBoxContainer/MainArea/LeftPalette" unique_id=1854852675]
 layout_mode = 2
 size_flags_vertical = 3
 
-[node name="ScrollContent" type="VBoxContainer" parent="VBoxContainer/MainArea/LeftPalette/ScrollContainer"]
+[node name="ScrollContent" type="VBoxContainer" parent="VBoxContainer/MainArea/LeftPalette/ScrollContainer" unique_id=230519268]
 layout_mode = 2
 size_flags_horizontal = 3
 
