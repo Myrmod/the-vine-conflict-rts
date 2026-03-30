@@ -88,7 +88,6 @@ func resize_mesh(map_size: Vector2):
 	_water_mask_texture = null
 	splat_textures.clear()
 	splat_images.clear()
-	$CliffPlacer.update_cliffs(null, Vector2i.ZERO)
 
 
 func set_map(_map: MapResource):
@@ -118,7 +117,6 @@ func set_map(_map: MapResource):
 	_upload_height_grid()
 	_build_slope_meshes()
 	_upload_water_mask()
-	$CliffPlacer.update_cliffs(map, size)
 
 
 # ============================================================
@@ -237,7 +235,6 @@ func update_height_at(_positions: Array[Vector2i]):
 	_upload_height_grid()
 	_build_slope_meshes()
 	_upload_water_mask()
-	$CliffPlacer.update_cliffs(map, size)
 
 
 # ============================================================

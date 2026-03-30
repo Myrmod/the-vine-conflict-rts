@@ -54,6 +54,31 @@ var _map_name_edit: LineEdit = null
 var _material_option: OptionButton = null
 var _material_paths: Array[String] = []
 
+# Auto cliff placement
+var auto_place_cliffs: bool = false
+const AUTO_CLIFF_DIR := "res://source/decorations/high_ground_cliffs/"
+const CLIFF_STRAIGHT_SCENES: Array[String] = [
+	"res://source/decorations/high_ground_cliffs/CliffStraight1.tscn",
+]
+const CLIFF_CORNER_SCENES: Array[String] = [
+	"res://source/decorations/high_ground_cliffs/CliffCorner1.tscn",
+]
+const CLIFF_STRAIGHT_HEIGHT := 21.82
+const CLIFF_CORNER_HEIGHT := 9.69
+const CLIFF_MIN_HEIGHT_DIFF := 0.5
+const CLIFF_CARDINAL_DIRS: Array[Vector2i] = [
+	Vector2i(0, -1),
+	Vector2i(1, 0),
+	Vector2i(0, 1),
+	Vector2i(-1, 0),
+]
+const CLIFF_DIR_ROT := {
+	Vector2i(0, -1): 0.0,
+	Vector2i(1, 0): -PI / 2.0,
+	Vector2i(0, 1): PI,
+	Vector2i(-1, 0): PI / 2.0,
+}
+
 # Camera control – orthogonal isometric to match in-game camera
 var camera: Camera3D
 var camera_angle: float = -30.0  # fixed pitch matching IsometricCamera3D
@@ -138,6 +163,7 @@ func _setup_ui_connections():
 		palette_select.slope_selected.connect(_on_palette_slope_selected)
 		palette_select.water_slope_selected.connect(_on_palette_water_slope_selected)
 		palette_select.collision_selected.connect(_on_palette_collision_selected)
+		palette_select.auto_cliff_toggled.connect(_on_auto_cliff_toggled)
 
 	# Connect texture palette signals
 	if texture_select:
@@ -337,6 +363,18 @@ func _on_palette_collision_selected(value: int) -> void:
 	var brush_info: Label = get_node_or_null("VBoxContainer/Toolbar/BrushInfo")
 	if brush_info and current_brush:
 		brush_info.text = current_brush.get_brush_name()
+
+
+func _on_auto_cliff_toggled(enabled: bool) -> void:
+	auto_place_cliffs = enabled
+	if enabled:
+		_update_auto_cliffs()
+	else:
+		# Remove auto-placed cliffs when unchecked
+		current_map.placed_entities = current_map.placed_entities.filter(
+			func(e): return not _is_auto_cliff(e)
+		)
+		_refresh_entity_previews()
 
 
 func _on_palette_texture_selected_as_base_layer(terrain: TerrainType):
@@ -608,6 +646,8 @@ func _on_brush_applied(positions: Array[Vector2i]):
 			terrain_system.update_height_at(positions)
 		if collision_renderer:
 			collision_renderer.refresh()
+		if auto_place_cliffs:
+			_update_auto_cliffs()
 	if current_brush_type == BrushType.ERASE:
 		_refresh_entity_previews()
 		_refresh_spawn_previews()
@@ -965,6 +1005,10 @@ func redo():
 
 func _refresh_view():
 	"""Refresh the 3D view to reflect map changes"""
+	# Always strip stale auto-cliff entities (undo may restore old placed_entities)
+	current_map.placed_entities = current_map.placed_entities.filter(
+		func(e): return not _is_auto_cliff(e)
+	)
 	if collision_renderer:
 		collision_renderer.refresh()
 	_refresh_entity_previews()
@@ -974,9 +1018,8 @@ func _refresh_view():
 		terrain_system._upload_height_grid()
 		terrain_system._build_slope_meshes()
 		terrain_system._upload_water_mask()
-		terrain_system.get_node("CliffPlacer").update_cliffs(
-			terrain_system.map, terrain_system.size
-		)
+	if auto_place_cliffs:
+		_update_auto_cliffs()
 
 
 # --- Entity preview rendering ---
@@ -998,7 +1041,7 @@ func _refresh_entity_previews():
 			continue
 		var inst = scene.instantiate()
 		inst.name = "EntityPreview_%s_%s" % [entity.scene_path.get_file(), str(entity.pos)]
-		var height_y: float = current_map.get_height_at(entity.pos)
+		var height_y: float = entity.get("y_offset", current_map.get_height_at(entity.pos))
 		inst.position = Vector3(entity.pos.x, height_y, entity.pos.y)
 		if entity.has("rotation"):
 			inst.rotation.y = entity.rotation
@@ -1371,3 +1414,263 @@ func _rebuild_3d_scene():
 	# Re-center camera
 	camera_target = Vector3(current_map.size.x / 2.0, 0, current_map.size.y / 2.0)
 	_update_camera_position()
+
+
+# ── Auto-cliff placement ────────────────────────────────────────────────
+
+
+func _is_auto_cliff(entity: Dictionary) -> bool:
+	return entity.has("scene_path") and entity.scene_path.begins_with(AUTO_CLIFF_DIR)
+
+
+func _update_auto_cliffs() -> void:
+	if not current_map:
+		return
+
+	# 1. Remove existing auto-placed cliff entities
+	current_map.placed_entities = current_map.placed_entities.filter(
+		func(e): return not _is_auto_cliff(e)
+	)
+
+	# 2. Collect height edges and slope directions
+	var sz := current_map.size
+	var slope_dirs := _compute_cliff_slope_directions(sz)
+	var edges := _collect_cliff_edges(sz, slope_dirs)
+
+	# 3. Build per-cell edge direction set for corner detection
+	var cell_edges: Dictionary = {}  # Vector2i -> Array[Vector2i]
+	for edge in edges:
+		var pos: Vector2i = edge["pos"]
+		if not cell_edges.has(pos):
+			cell_edges[pos] = []
+		cell_edges[pos].append(edge["dir"])
+
+	# 4. Detect outer convex corners
+	var corners := _detect_cliff_corners(cell_edges, sz)
+
+	# 5. Build set of edges consumed by corners (to skip straight pieces there)
+	var corner_edges := {}  # "x,y,dx,dy" -> true
+	for corner in corners:
+		var cell: Vector2i = corner["cell"]
+		var d1: Vector2i = corner["d1"]
+		var d2: Vector2i = corner["d2"]
+		corner_edges["%d,%d,%d,%d" % [cell.x, cell.y, d1.x, d1.y]] = true
+		corner_edges["%d,%d,%d,%d" % [cell.x, cell.y, d2.x, d2.y]] = true
+
+	# 6. Place straight pieces for each edge (skip edges consumed by corners)
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 12345
+	var high_y: float = current_map.get_height_at(edges[0]["pos"]) if edges.size() > 0 else 0.0
+	for edge in edges:
+		var pos: Vector2i = edge["pos"]
+		var dir: Vector2i = edge["dir"]
+		var edge_key := "%d,%d,%d,%d" % [pos.x, pos.y, dir.x, dir.y]
+		if corner_edges.has(edge_key):
+			continue
+		high_y = edge["h_high"]
+
+		var wx: float = float(pos.x) + 0.5 + float(dir.x) * 0.5
+		var wz: float = float(pos.y) + 0.5 + float(dir.y) * 0.5
+		var rot: float = CLIFF_DIR_ROT.get(dir, 0.0)
+
+		var scene_idx := rng.randi_range(0, CLIFF_STRAIGHT_SCENES.size() - 1)
+		# Straight pieces are symmetric – randomly flip 180° for variety
+		var flip := PI if rng.randi_range(0, 1) == 1 else 0.0
+		var entity_data := {
+			"scene_path": CLIFF_STRAIGHT_SCENES[scene_idx],
+			"pos": Vector2(wx, wz),
+			"player": 0,
+			"rotation": rot + flip,
+			"y_offset": high_y,
+		}
+		current_map.placed_entities.append(entity_data)
+
+	# 6. Place corner pieces
+	for corner in corners:
+		var pos: Vector2 = corner["pos"]
+		var rot: float = corner["rotation"]
+		var corner_high_y: float = corner["h_high"]
+
+		var scene_idx := rng.randi_range(0, CLIFF_CORNER_SCENES.size() - 1)
+		var entity_data := {
+			"scene_path": CLIFF_CORNER_SCENES[scene_idx],
+			"pos": pos,
+			"player": 0,
+			"rotation": rot,
+			"y_offset": corner_high_y,
+		}
+		current_map.placed_entities.append(entity_data)
+
+	# 7. Refresh previews
+	_refresh_entity_previews()
+
+
+func _collect_cliff_edges(sz: Vector2i, slope_dirs: Dictionary) -> Array[Dictionary]:
+	var result: Array[Dictionary] = []
+	for y in range(sz.y):
+		for x in range(sz.x):
+			var pos := Vector2i(x, y)
+			var h := current_map.get_height_at(pos)
+			var ct := current_map.get_cell_type_at(pos)
+
+			for dir: Vector2i in CLIFF_CARDINAL_DIRS:
+				var n := pos + dir
+				if n.x < 0 or n.x >= sz.x or n.y < 0 or n.y >= sz.y:
+					continue
+				var nh := current_map.get_height_at(n)
+				var diff := h - nh
+				if diff < CLIFF_MIN_HEIGHT_DIFF:
+					continue
+
+				# Skip edges along slope ramp direction
+				if ct == MapResource.CELL_SLOPE or ct == MapResource.CELL_WATER_SLOPE:
+					if slope_dirs.has(pos):
+						var axis: Vector2i = slope_dirs[pos]
+						if absi(dir.x) == absi(axis.x) and absi(dir.y) == absi(axis.y):
+							continue
+
+				var nct := current_map.get_cell_type_at(n)
+				if nct == MapResource.CELL_SLOPE or nct == MapResource.CELL_WATER_SLOPE:
+					if slope_dirs.has(n):
+						var axis: Vector2i = slope_dirs[n]
+						if absi(dir.x) == absi(axis.x) and absi(dir.y) == absi(axis.y):
+							continue
+
+				(
+					result
+					. append(
+						{
+							"pos": pos,
+							"dir": dir,
+							"h_high": h,
+							"h_low": nh,
+						}
+					)
+				)
+	return result
+
+
+func _detect_cliff_corners(cell_edges: Dictionary, sz: Vector2i) -> Array[Dictionary]:
+	## Detect outer convex corners where two perpendicular cliff edges meet.
+	## Returns [{pos: Vector2, rotation: float, h_diff: float}]
+	var result: Array[Dictionary] = []
+
+	# Each corner is defined by two perpendicular edge directions from
+	# the same high cell.  The corner vertex sits at the cell vertex
+	# where those two edges meet.
+	#
+	# dir_pair → (vertex offset from cell origin, rotation)
+	var corner_table := [
+		# N + E → NE vertex
+		[Vector2i(0, -1), Vector2i(1, 0), Vector2(1, 0), PI / 2.0],
+		# E + S → SE vertex
+		[Vector2i(1, 0), Vector2i(0, 1), Vector2(1, 1), 0.0],
+		# S + W → SW vertex
+		[Vector2i(0, 1), Vector2i(-1, 0), Vector2(0, 1), -PI / 2.0],
+		# W + N → NW vertex
+		[Vector2i(-1, 0), Vector2i(0, -1), Vector2(0, 0), PI],
+	]
+
+	for pos: Vector2i in cell_edges:
+		var dirs: Array = cell_edges[pos]
+		if dirs.size() < 2:
+			continue
+
+		var h_high: float = current_map.get_height_at(pos)
+
+		for entry in corner_table:
+			var d1: Vector2i = entry[0]
+			var d2: Vector2i = entry[1]
+			var vertex_offset: Vector2 = entry[2]
+			var rot: float = entry[3]
+
+			if not (d1 in dirs and d2 in dirs):
+				continue
+
+			# Confirm the diagonal cell is also lower (true outer corner)
+			var diag := pos + d1 + d2
+			if diag.x >= 0 and diag.x < sz.x and diag.y >= 0 and diag.y < sz.y:
+				var diag_h := current_map.get_height_at(diag)
+				if h_high - diag_h < CLIFF_MIN_HEIGHT_DIFF:
+					continue  # Diagonal is at same height — not an outer corner
+
+			var corner_pos := Vector2(pos.x, pos.y) + vertex_offset
+			# Use the minimum of the two neighboring low heights
+			var h1 := current_map.get_height_at(pos + d1)
+			var h2 := current_map.get_height_at(pos + d2)
+			var h_low := minf(h1, h2)
+
+			(
+				result
+				. append(
+					{
+						"pos": corner_pos,
+						"rotation": rot,
+						"h_diff": h_high - h_low,
+						"h_high": h_high,
+						"cell": pos,
+						"d1": d1,
+						"d2": d2,
+					}
+				)
+			)
+
+	return result
+
+
+func _compute_cliff_slope_directions(sz: Vector2i) -> Dictionary:
+	## Flood-fill slope regions and compute each region's dominant ramp direction.
+	var result := {}
+	var visited := {}
+
+	for y in range(sz.y):
+		for x in range(sz.x):
+			var pos := Vector2i(x, y)
+			if visited.has(pos):
+				continue
+			var ct := current_map.get_cell_type_at(pos)
+			if ct != MapResource.CELL_SLOPE and ct != MapResource.CELL_WATER_SLOPE:
+				continue
+
+			# Flood-fill the slope region
+			var region: Array[Vector2i] = []
+			var queue: Array[Vector2i] = [pos]
+			visited[pos] = true
+			while not queue.is_empty():
+				var p: Vector2i = queue.pop_front()
+				region.append(p)
+				for d in CLIFF_CARDINAL_DIRS:
+					var n := p + d
+					if n.x < 0 or n.x >= sz.x or n.y < 0 or n.y >= sz.y:
+						continue
+					if visited.has(n):
+						continue
+					if current_map.get_cell_type_at(n) == ct:
+						visited[n] = true
+						queue.append(n)
+
+			# Compute dominant direction for this region
+			var total_diff := Vector2.ZERO
+			for p in region:
+				var my_h: float = current_map.get_height_at(p)
+				for d in CLIFF_CARDINAL_DIRS:
+					var n := p + d
+					if n.x < 0 or n.x >= sz.x or n.y < 0 or n.y >= sz.y:
+						continue
+					if current_map.get_cell_type_at(n) == ct:
+						continue
+					var diff: float = current_map.get_height_at(n) - my_h
+					total_diff += Vector2(d.x, d.y) * diff
+
+			var direction: Vector2i
+			if total_diff.length_squared() < 0.001:
+				direction = Vector2i(1, 0)
+			elif absf(total_diff.x) >= absf(total_diff.y):
+				direction = Vector2i(1, 0) if total_diff.x > 0 else Vector2i(-1, 0)
+			else:
+				direction = Vector2i(0, 1) if total_diff.y > 0 else Vector2i(0, -1)
+
+			for p in region:
+				result[p] = direction
+
+	return result

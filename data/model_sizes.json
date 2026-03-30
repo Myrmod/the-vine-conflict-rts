@@ -9,6 +9,16 @@
 		3.221,
 		2.767
 	],
+	"RockPack1/CliffPartials/CliffCorner_1.res": [
+		14.083,
+		9.693,
+		13.565
+	],
+	"RockPack1/CliffPartials/CliffStraigth_1.res": [
+		16.844,
+		21.82,
+		6.205
+	],
 	"RockPack1/Models/meshes/Cliff_models_boulder1_mesh.res": [
 		5.671,
 		2.027,

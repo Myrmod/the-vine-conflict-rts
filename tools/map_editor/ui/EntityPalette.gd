@@ -11,9 +11,13 @@ signal height_level_selected(level: int)  ## -1 = water, 0 = ground, 1 = high gr
 signal slope_selected
 signal water_slope_selected
 signal collision_selected(value: int)  ## 1 = block, 0 = unblock
+signal auto_cliff_toggled(enabled: bool)
+
+const THUMBNAIL_DIR := "res://assets/ui/map_editor_thumbnails/"
+const THUMBNAIL_SIZE := Vector2(134, 134)
 
 # Environment Container
-@onready var objects_container = $Environment/EnvironmentPalette/ObjectsContainer/VBoxContainer
+@onready var objects_container = $Environment/EnvironmentPalette/ObjectsContainer/GridContainer
 @onready
 var high_ground_container = $Environment/EnvironmentPalette/HighGroundContainer/VBoxContainer
 @onready
@@ -22,8 +26,8 @@ var normal_ground_container = $Environment/EnvironmentPalette/NormalGroundContai
 @onready var environment_palette = $Environment/EnvironmentPalette
 
 # Faction container
-@onready var neutral_container = $Factions/EntityPalette/NeutralContainer/VBoxContainer
-@onready var the_amuns_container = $Factions/EntityPalette/TheAmunsContainer/VBoxContainer
+@onready var neutral_container = $Factions/EntityPalette/NeutralContainer/GridContainer
+@onready var the_amuns_container = $Factions/EntityPalette/TheAmunsContainer/GridContainer
 
 
 func _ready() -> void:
@@ -63,6 +67,33 @@ func _populate_high_ground() -> void:
 	slope_btn.set_text_alignment(HorizontalAlignment.HORIZONTAL_ALIGNMENT_LEFT)
 	slope_btn.pressed.connect(func() -> void: slope_selected.emit())
 	high_ground_container.add_child(slope_btn)
+
+	# Manual cliff placement buttons
+	var cliff_label := Label.new()
+	cliff_label.text = "Cliff Pieces"
+	cliff_label.add_theme_color_override("font_color", Color(0.8, 0.8, 0.6))
+	high_ground_container.add_child(cliff_label)
+
+	var cliff_grid := GridContainer.new()
+	cliff_grid.columns = 2
+	high_ground_container.add_child(cliff_grid)
+
+	var cliff_scenes := [
+		["CliffStraight1", "res://source/decorations/high_ground_cliffs/CliffStraight1.tscn"],
+		["CliffCorner1", "res://source/decorations/high_ground_cliffs/CliffCorner1.tscn"],
+	]
+	for cliff in cliff_scenes:
+		var btn := Button.new()
+		btn.text = cliff[0]
+		btn.set_text_alignment(HorizontalAlignment.HORIZONTAL_ALIGNMENT_LEFT)
+		btn.pressed.connect(_on_scene_button_pressed.bind(cliff[1]))
+		cliff_grid.add_child(btn)
+
+	# Auto-place cliffs checkbox
+	var cliff_check: CheckBox = CheckBox.new()
+	cliff_check.text = "Auto-place cliffs"
+	cliff_check.toggled.connect(func(on: bool) -> void: auto_cliff_toggled.emit(on))
+	high_ground_container.add_child(cliff_check)
 
 
 func _populate_normal_ground() -> void:
@@ -176,15 +207,25 @@ func populate_container_with_scenes(scenes_path: String, container: Node) -> voi
 
 
 func create_scene_button(file_name: String, scenes_path: String, container: Node) -> void:
-	var btn: Button = Button.new()
-
 	var scene_path: String = scenes_path + file_name
-	btn.text = file_name.get_basename()
-	btn.set_text_alignment(HorizontalAlignment.HORIZONTAL_ALIGNMENT_LEFT)
+	var base_name: String = file_name.get_basename()
+	var thumb_path: String = THUMBNAIL_DIR + base_name + ".png"
 
-	btn.pressed.connect(_on_scene_button_pressed.bind(scene_path))
-
-	container.add_child(btn)
+	if ResourceLoader.exists(thumb_path):
+		var btn := TextureButton.new()
+		btn.texture_normal = load(thumb_path)
+		btn.ignore_texture_size = true
+		btn.stretch_mode = TextureButton.STRETCH_SCALE
+		btn.custom_minimum_size = THUMBNAIL_SIZE
+		btn.tooltip_text = base_name
+		btn.pressed.connect(_on_scene_button_pressed.bind(scene_path))
+		container.add_child(btn)
+	else:
+		var btn: Button = Button.new()
+		btn.text = base_name
+		btn.set_text_alignment(HorizontalAlignment.HORIZONTAL_ALIGNMENT_LEFT)
+		btn.pressed.connect(_on_scene_button_pressed.bind(scene_path))
+		container.add_child(btn)
 
 
 func _on_scene_button_pressed(scene_path: String) -> void:

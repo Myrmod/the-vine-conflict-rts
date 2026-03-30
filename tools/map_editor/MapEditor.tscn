@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" uid="uid://bm0tyugi4obyy" path="res://tools/map_editor/MapEditor.gd" id="1_map_editor"]
 [ext_resource type="Script" uid="uid://cftdr3jcpcmeh" path="res://tools/map_editor/ui/EntityPalette.gd" id="2_entity_palette"]
+[ext_resource type="Texture2D" uid="uid://d0dsluc7xlpme" path="res://assets/ui/images/dummyimage_134_134.png" id="3_afdhn"]
 [ext_resource type="Script" uid="uid://dueeo8aayojqe" path="res://tools/map_editor/ui/TexturePalette.gd" id="3_c1img"]
 [ext_resource type="PackedScene" uid="uid://bxe2bwqo30j5o" path="res://source/match/TerrainSystem.tscn" id="5_afdhn"]
 
@@ -175,18 +176,34 @@ layout_mode = 2
 layout_mode = 2
 text = "Test Button"
 
+[node name="HighGroundBorders" type="GridContainer" parent="VBoxContainer/MainArea/LeftPalette/ScrollContainer/ScrollContent/PaletteSelect/Environment/EnvironmentPalette/HighGroundContainer/VBoxContainer" unique_id=906837218]
+layout_mode = 2
+size_flags_vertical = 3
+columns = 2
+
+[node name="TextureButton1" type="TextureButton" parent="VBoxContainer/MainArea/LeftPalette/ScrollContainer/ScrollContent/PaletteSelect/Environment/EnvironmentPalette/HighGroundContainer/VBoxContainer/HighGroundBorders" unique_id=544416543]
+custom_minimum_size = Vector2(134, 134)
+layout_mode = 2
+texture_normal = ExtResource("3_afdhn")
+ignore_texture_size = true
+stretch_mode = 5
+
+[node name="TextureButton2" type="TextureButton" parent="VBoxContainer/MainArea/LeftPalette/ScrollContainer/ScrollContent/PaletteSelect/Environment/EnvironmentPalette/HighGroundContainer/VBoxContainer/HighGroundBorders" unique_id=164278861]
+custom_minimum_size = Vector2(134, 134)
+layout_mode = 2
+texture_normal = ExtResource("3_afdhn")
+ignore_texture_size = true
+stretch_mode = 5
+
 [node name="ObjectsContainer" type="FoldableContainer" parent="VBoxContainer/MainArea/LeftPalette/ScrollContainer/ScrollContent/PaletteSelect/Environment/EnvironmentPalette" unique_id=1321707504]
 layout_mode = 2
 folded = true
 title = "Objects"
 
-[node name="VBoxContainer" type="VBoxContainer" parent="VBoxContainer/MainArea/LeftPalette/ScrollContainer/ScrollContent/PaletteSelect/Environment/EnvironmentPalette/ObjectsContainer" unique_id=2012060010]
+[node name="GridContainer" type="GridContainer" parent="VBoxContainer/MainArea/LeftPalette/ScrollContainer/ScrollContent/PaletteSelect/Environment/EnvironmentPalette/ObjectsContainer" unique_id=2012060010]
 visible = false
 layout_mode = 2
-
-[node name="Button" type="Button" parent="VBoxContainer/MainArea/LeftPalette/ScrollContainer/ScrollContent/PaletteSelect/Environment/EnvironmentPalette/ObjectsContainer/VBoxContainer" unique_id=1777046724]
-layout_mode = 2
-text = "Test Button"
+columns = 2
 
 [node name="NormalGroundContainer" type="FoldableContainer" parent="VBoxContainer/MainArea/LeftPalette/ScrollContainer/ScrollContent/PaletteSelect/Environment/EnvironmentPalette" unique_id=1027875116]
 layout_mode = 2
@@ -233,25 +250,19 @@ size_flags_horizontal = 3
 layout_mode = 2
 title = "Neutral"
 
-[node name="VBoxContainer" type="VBoxContainer" parent="VBoxContainer/MainArea/LeftPalette/ScrollContainer/ScrollContent/PaletteSelect/Factions/EntityPalette/NeutralContainer" unique_id=1433596192]
+[node name="GridContainer" type="GridContainer" parent="VBoxContainer/MainArea/LeftPalette/ScrollContainer/ScrollContent/PaletteSelect/Factions/EntityPalette/NeutralContainer" unique_id=1433596192]
 layout_mode = 2
-
-[node name="Button" type="Button" parent="VBoxContainer/MainArea/LeftPalette/ScrollContainer/ScrollContent/PaletteSelect/Factions/EntityPalette/NeutralContainer/VBoxContainer" unique_id=1360166780]
-layout_mode = 2
-text = "Test Button"
+columns = 2
 
 [node name="TheAmunsContainer" type="FoldableContainer" parent="VBoxContainer/MainArea/LeftPalette/ScrollContainer/ScrollContent/PaletteSelect/Factions/EntityPalette" unique_id=1022574296]
 layout_mode = 2
 folded = true
 title = "The Amuns"
 
-[node name="VBoxContainer" type="VBoxContainer" parent="VBoxContainer/MainArea/LeftPalette/ScrollContainer/ScrollContent/PaletteSelect/Factions/EntityPalette/TheAmunsContainer" unique_id=2050963586]
+[node name="GridContainer" type="GridContainer" parent="VBoxContainer/MainArea/LeftPalette/ScrollContainer/ScrollContent/PaletteSelect/Factions/EntityPalette/TheAmunsContainer" unique_id=2050963586]
 visible = false
 layout_mode = 2
-
-[node name="Button" type="Button" parent="VBoxContainer/MainArea/LeftPalette/ScrollContainer/ScrollContent/PaletteSelect/Factions/EntityPalette/TheAmunsContainer/VBoxContainer" unique_id=2001061542]
-layout_mode = 2
-text = "Test Button"
+columns = 2
 
 [node name="FoldableContainer3" type="FoldableContainer" parent="VBoxContainer/MainArea/LeftPalette/ScrollContainer/ScrollContent/PaletteSelect/Factions/EntityPalette" unique_id=1888542167]
 layout_mode = 2
