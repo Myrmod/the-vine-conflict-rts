@@ -172,9 +172,20 @@ title = "High ground"
 [node name="VBoxContainer" type="VBoxContainer" parent="VBoxContainer/MainArea/LeftPalette/ScrollContainer/ScrollContent/PaletteSelect/Environment/EnvironmentPalette/HighGroundContainer" unique_id=332097653]
 layout_mode = 2
 
-[node name="Button" type="Button" parent="VBoxContainer/MainArea/LeftPalette/ScrollContainer/ScrollContent/PaletteSelect/Environment/EnvironmentPalette/HighGroundContainer/VBoxContainer" unique_id=1623579744]
+[node name="PaintHighGroundButton" type="Button" parent="VBoxContainer/MainArea/LeftPalette/ScrollContainer/ScrollContent/PaletteSelect/Environment/EnvironmentPalette/HighGroundContainer/VBoxContainer" unique_id=1331297922]
 layout_mode = 2
-text = "Test Button"
+text = "▲ Paint High Ground"
+alignment = 0
+
+[node name="PaintSlopeButton" type="Button" parent="VBoxContainer/MainArea/LeftPalette/ScrollContainer/ScrollContent/PaletteSelect/Environment/EnvironmentPalette/HighGroundContainer/VBoxContainer" unique_id=1623579744]
+layout_mode = 2
+text = "⟋ Slope"
+alignment = 0
+
+[node name="AutoPlaceCliffsCheckBox" type="CheckBox" parent="VBoxContainer/MainArea/LeftPalette/ScrollContainer/ScrollContent/PaletteSelect/Environment/EnvironmentPalette/HighGroundContainer/VBoxContainer" unique_id=1289439846]
+layout_mode = 2
+button_pressed = true
+text = "Auto-place cliffs"
 
 [node name="HighGroundBorders" type="GridContainer" parent="VBoxContainer/MainArea/LeftPalette/ScrollContainer/ScrollContent/PaletteSelect/Environment/EnvironmentPalette/HighGroundContainer/VBoxContainer" unique_id=906837218]
 layout_mode = 2
@@ -416,3 +427,6 @@ text = "Position: 0, 0"
 
 [connection signal="pressed" from="VBoxContainer/Toolbar/BackButton" to="." method="_on_back_button_pressed"]
 [connection signal="pressed" from="VBoxContainer/Toolbar/ApplySizeButton" to="." method="_on_apply_size_pressed"]
+[connection signal="pressed" from="VBoxContainer/MainArea/LeftPalette/ScrollContainer/ScrollContent/PaletteSelect/Environment/EnvironmentPalette/HighGroundContainer/VBoxContainer/PaintHighGroundButton" to="." method="_on_palette_height_selected" binds= [1]]
+[connection signal="pressed" from="VBoxContainer/MainArea/LeftPalette/ScrollContainer/ScrollContent/PaletteSelect/Environment/EnvironmentPalette/HighGroundContainer/VBoxContainer/PaintSlopeButton" to="." method="_on_palette_slope_selected"]
+[connection signal="toggled" from="VBoxContainer/MainArea/LeftPalette/ScrollContainer/ScrollContent/PaletteSelect/Environment/EnvironmentPalette/HighGroundContainer/VBoxContainer/AutoPlaceCliffsCheckBox" to="." method="_on_auto_cliff_toggled"]

@@ -55,7 +55,7 @@ var _material_option: OptionButton = null
 var _material_paths: Array[String] = []
 
 # Auto cliff placement
-var auto_place_cliffs: bool = false
+var auto_place_cliffs: bool = true
 const AUTO_CLIFF_DIR := "res://source/decorations/high_ground_cliffs/"
 const CLIFF_STRAIGHT_SCENES: Array[String] = [
 	"res://source/decorations/high_ground_cliffs/CliffStraight1.tscn",
@@ -367,6 +367,7 @@ func _on_palette_collision_selected(value: int) -> void:
 
 func _on_auto_cliff_toggled(enabled: bool) -> void:
 	auto_place_cliffs = enabled
+	# TODO: maybe the following should be removed?
 	if enabled:
 		_update_auto_cliffs()
 	else:
@@ -545,7 +546,7 @@ func _scan_material_paths() -> Array[String]:
 	return paths
 
 
-func _show_material_selector(is_visible: bool):
+func _show_material_selector(value: bool):
 	"""Show or hide the material selector label and option button."""
 	var brush_settings = get_node_or_null(
 		"VBoxContainer/MainArea/LeftPalette/ScrollContainer/ScrollContent/Brushsettings"
@@ -554,9 +555,9 @@ func _show_material_selector(is_visible: bool):
 		return
 	var mat_label = brush_settings.get_node_or_null("MarginContainer/VBoxContainer/MaterialLabel")
 	if mat_label:
-		mat_label.visible = is_visible
+		mat_label.visible = value
 	if _material_option:
-		_material_option.visible = is_visible
+		_material_option.visible = value
 
 
 func _create_brush(brush_type: BrushType):
@@ -698,26 +699,26 @@ func _input(event):
 	# Handle mouse scroll for zoom and middle mouse for orbit
 	if event is InputEventMouseButton:
 		# Only process viewport mouse events when the cursor is over the viewport
-		var _over_viewport := _is_mouse_over_viewport(event.position)
-		var _is_scroll_up = (
-			event.button_index == MOUSE_BUTTON_WHEEL_UP and event.pressed and _over_viewport
+		var is_over_viewport: bool = _is_mouse_over_viewport(event.position)
+		var is_scroll_up = (
+			event.button_index == MOUSE_BUTTON_WHEEL_UP and event.pressed and is_over_viewport
 		)
-		var _is_scroll_down = (
-			event.button_index == MOUSE_BUTTON_WHEEL_DOWN and event.pressed and _over_viewport
+		var is_scroll_down = (
+			event.button_index == MOUSE_BUTTON_WHEEL_DOWN and event.pressed and is_over_viewport
 		)
 
-		if (_is_scroll_up or _is_scroll_down) and event.ctrl_pressed:
+		if (is_scroll_up or is_scroll_down) and event.ctrl_pressed:
 			# Ctrl + Mouse Wheel → rotate entity brush (15° steps)
-			var direction = -1.0 if _is_scroll_up else 1.0
+			var direction = -1.0 if is_scroll_up else 1.0
 			_rotate_entity_brush(15.0 * direction)
-		elif (_is_scroll_up or _is_scroll_down) and event.shift_pressed:
+		elif (is_scroll_up or is_scroll_down) and event.shift_pressed:
 			# Shift + Mouse Wheel → scale entity brush (0.1 steps)
-			var direction = 1.0 if _is_scroll_up else -1.0
+			var direction = 1.0 if is_scroll_up else -1.0
 			_scale_entity_brush(0.1 * direction)
-		elif _is_scroll_up:
+		elif is_scroll_up:
 			camera_size = maxf(camera_size_min, camera_size - camera_zoom_speed)
 			_update_camera_position()
-		elif _is_scroll_down:
+		elif is_scroll_down:
 			camera_size = minf(camera_size_max, camera_size + camera_zoom_speed)
 			_update_camera_position()
 		elif event.button_index == MOUSE_BUTTON_MIDDLE:
@@ -726,7 +727,7 @@ func _input(event):
 			if not event.pressed:
 				# Always clear painting state on release
 				is_painting = false
-			elif _over_viewport:
+			elif is_over_viewport:
 				if current_brush and current_brush.is_single_placement():
 					# Single-placement brushes: click to place, no drag
 					_try_paint_at_mouse(event.position)

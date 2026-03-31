@@ -1,6 +1,4 @@
-class_name EntityPalette
-
-extends TabContainer
+class_name EntityPalette extends TabContainer
 
 ## Automatically generates and manages the entity palette for the map editor
 
@@ -20,6 +18,9 @@ const THUMBNAIL_SIZE := Vector2(134, 134)
 @onready var objects_container = $Environment/EnvironmentPalette/ObjectsContainer/GridContainer
 @onready
 var high_ground_container = $Environment/EnvironmentPalette/HighGroundContainer/VBoxContainer
+@onready
+var high_ground_border_buttons = $Environment/EnvironmentPalette/HighGroundContainer/VBoxContainer/HighGroundBorders
+
 @onready
 var normal_ground_container = $Environment/EnvironmentPalette/NormalGroundContainer/VBoxContainer
 @onready var water_container = $Environment/EnvironmentPalette/WaterContainer/VBoxContainer
@@ -51,22 +52,8 @@ func _populate_high_ground() -> void:
 		return
 
 	# Clear placeholder buttons
-	for c: Node in high_ground_container.get_children():
+	for c: Node in high_ground_border_buttons.get_children():
 		c.queue_free()
-
-	# Paint high ground button
-	var paint_btn: Button = Button.new()
-	paint_btn.text = "▲ Paint High Ground"
-	paint_btn.set_text_alignment(HorizontalAlignment.HORIZONTAL_ALIGNMENT_LEFT)
-	paint_btn.pressed.connect(func() -> void: height_level_selected.emit(1))
-	high_ground_container.add_child(paint_btn)
-
-	# Slope button
-	var slope_btn: Button = Button.new()
-	slope_btn.text = "⟋ Slope"
-	slope_btn.set_text_alignment(HorizontalAlignment.HORIZONTAL_ALIGNMENT_LEFT)
-	slope_btn.pressed.connect(func() -> void: slope_selected.emit())
-	high_ground_container.add_child(slope_btn)
 
 	# Manual cliff placement buttons
 	var cliff_label := Label.new()
@@ -88,12 +75,6 @@ func _populate_high_ground() -> void:
 		btn.set_text_alignment(HorizontalAlignment.HORIZONTAL_ALIGNMENT_LEFT)
 		btn.pressed.connect(_on_scene_button_pressed.bind(cliff[1]))
 		cliff_grid.add_child(btn)
-
-	# Auto-place cliffs checkbox
-	var cliff_check: CheckBox = CheckBox.new()
-	cliff_check.text = "Auto-place cliffs"
-	cliff_check.toggled.connect(func(on: bool) -> void: auto_cliff_toggled.emit(on))
-	high_ground_container.add_child(cliff_check)
 
 
 func _populate_normal_ground() -> void:

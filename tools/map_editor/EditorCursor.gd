@@ -122,13 +122,13 @@ func set_affected_cells(positions: Array[Vector2i]):
 
 	for i in range(positions.size()):
 		var pos = positions[i]
-		var transform = Transform3D()
-		transform.origin = Vector3(
+		var local_transform = Transform3D()
+		local_transform.origin = Vector3(
 			pos.x * FeatureFlags.grid_cell_size + FeatureFlags.grid_cell_size / 2.0,
 			0.1,
 			pos.y * FeatureFlags.grid_cell_size + FeatureFlags.grid_cell_size / 2.0
 		)
-		multimesh.set_instance_transform(i, transform)
+		multimesh.set_instance_transform(i, local_transform)
 
 
 func set_brush_radius(cell_radius: int) -> void:
@@ -152,11 +152,11 @@ func set_cursor_color(color: Color):
 		_circle_mesh_instance.material_override.albedo_color = Color(color.r, color.g, color.b, 0.8)
 
 
-func set_visible_cursor(is_visible: bool):
+func set_visible_cursor(value: bool):
 	"""Show or hide the cursor"""
 	if _cursor_mesh_instance:
-		_cursor_mesh_instance.visible = is_visible
+		_cursor_mesh_instance.visible = value
 	if _affected_cells_mesh:
-		_affected_cells_mesh.visible = is_visible
+		_affected_cells_mesh.visible = value
 	if _circle_mesh_instance:
-		_circle_mesh_instance.visible = is_visible
+		_circle_mesh_instance.visible = value
