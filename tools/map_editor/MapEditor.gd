@@ -59,9 +59,13 @@ var auto_place_cliffs: bool = true
 const AUTO_CLIFF_DIR := "res://source/decorations/high_ground_cliffs/"
 const CLIFF_STRAIGHT_SCENES: Array[String] = [
 	"res://source/decorations/high_ground_cliffs/CliffStraight1.tscn",
+	"res://source/decorations/high_ground_cliffs/CliffStraight2.tscn",
+	"res://source/decorations/high_ground_cliffs/CliffStraight3.tscn",
+	"res://source/decorations/high_ground_cliffs/CliffStraight4.tscn",
 ]
 const CLIFF_CORNER_SCENES: Array[String] = [
 	"res://source/decorations/high_ground_cliffs/CliffCorner1.tscn",
+	"res://source/decorations/high_ground_cliffs/CliffCorner2.tscn",
 ]
 const CLIFF_STRAIGHT_HEIGHT := 21.82
 const CLIFF_CORNER_HEIGHT := 9.69
@@ -368,14 +372,14 @@ func _on_palette_collision_selected(value: int) -> void:
 func _on_auto_cliff_toggled(enabled: bool) -> void:
 	auto_place_cliffs = enabled
 	# TODO: maybe the following should be removed?
-	if enabled:
-		_update_auto_cliffs()
-	else:
-		# Remove auto-placed cliffs when unchecked
-		current_map.placed_entities = current_map.placed_entities.filter(
-			func(e): return not _is_auto_cliff(e)
-		)
-		_refresh_entity_previews()
+	# if enabled:
+	# 	_update_auto_cliffs()
+	# else:
+	# 	# Remove auto-placed cliffs when unchecked
+	# 	current_map.placed_entities = current_map.placed_entities.filter(
+	# 		func(e): return not _is_auto_cliff(e)
+	# 	)
+	# 	_refresh_entity_previews()
 
 
 func _on_palette_texture_selected_as_base_layer(terrain: TerrainType):

@@ -1,0 +1,20 @@
+[gd_scene format=3 uid="uid://c1hku1b7s78bx"]
+
+[ext_resource type="Script" uid="uid://bysf721q4x37n" path="res://source/generic-scenes-and-nodes/3d/ModelHolder.gd" id="1_pgsyk"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_2xrye"]
+size = Vector3(16.843674, 21.819574, 6.205094)
+
+[node name="CliffStraight2" type="Node3D" unique_id=634829028]
+
+[node name="ModelHolder" type="Node3D" parent="." unique_id=1735832108]
+transform = Transform3D(-0.023532057, 0, 0.26897258, 0, 0.27, 0, -0.26897258, 0, -0.023532057, 0, -0.85, 0)
+script = ExtResource("1_pgsyk")
+model_path = "RockPack1/CliffPartials/CliffStraight_2.res"
+material_path = "RockPack1/Materials/Cliff_Material_Photoscan.tres"
+
+[node name="StaticBody3D" type="StaticBody3D" parent="." unique_id=1693620916]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.0072603, -0.3991089, 0.091701746)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="StaticBody3D" unique_id=1879633543]
+shape = SubResource("BoxShape3D_2xrye")

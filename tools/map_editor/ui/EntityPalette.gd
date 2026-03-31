@@ -67,7 +67,11 @@ func _populate_high_ground() -> void:
 
 	var cliff_scenes := [
 		["CliffStraight1", "res://source/decorations/high_ground_cliffs/CliffStraight1.tscn"],
+		["CliffStraight2", "res://source/decorations/high_ground_cliffs/CliffStraight2.tscn"],
+		["CliffStraight3", "res://source/decorations/high_ground_cliffs/CliffStraight3.tscn"],
+		["CliffStraight4", "res://source/decorations/high_ground_cliffs/CliffStraight4.tscn"],
 		["CliffCorner1", "res://source/decorations/high_ground_cliffs/CliffCorner1.tscn"],
+		["CliffCorner2", "res://source/decorations/high_ground_cliffs/CliffCorner2.tscn"],
 	]
 	for cliff in cliff_scenes:
 		var btn := Button.new()

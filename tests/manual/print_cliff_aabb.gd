@@ -1,8 +1,21 @@
 extends Node
 
+const RESOURCES := [
+	preload("res://assets_overide/RockPack1/CliffPartials/CliffCorner_1.res"),
+	preload("res://assets_overide/RockPack1/CliffPartials/CliffCorner_2.res"),
+	preload("res://assets_overide/RockPack1/CliffPartials/CliffStraight_1.res"),
+	preload("res://assets_overide/RockPack1/CliffPartials/CliffStraight_2.res"),
+	preload("res://assets_overide/RockPack1/CliffPartials/CliffStraight_3.res"),
+	preload("res://assets_overide/RockPack1/CliffPartials/CliffStraight_4.res"),
+]
+
+
 func _ready():
-	var mesh1 = load("res://assets_overide/RockPack1/CliffPartials/CliffCorner_1.res")
-	var mesh2 = load("res://assets_overide/RockPack1/CliffPartials/CliffStraigth_1.res")
-	print("Corner AABB: ", mesh1.get_aabb())
-	print("Straight AABB: ", mesh2.get_aabb())
+	for resource in RESOURCES:
+		if resource is Mesh:
+			var mesh: Mesh = resource
+			print(mesh.resource_path, " AABB: ", mesh.get_aabb())
+		else:
+			push_warning(resource.resource_path + " is not a Mesh")
+
 	get_tree().quit()
