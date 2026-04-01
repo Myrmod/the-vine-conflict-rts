@@ -1539,8 +1539,11 @@ func _update_auto_cliffs() -> void:
 		var pos: Vector2i = edge["pos"]
 		var dir: Vector2i = edge["dir"]
 
-		var wx: float = float(pos.x) + 0.5 + float(dir.x) * 0.5
-		var wz: float = float(pos.y) + 0.5 + float(dir.y) * 0.5
+		# Slope-side edges use 0.51 instead of 0.5 so floor(entity_pos) is biased
+		# into the accessible (lower) cell, letting the erase brush find them reliably.
+		var dir_offset: float = 0.51 if edge.get("slope_side", false) else 0.5
+		var wx: float = float(pos.x) + 0.5 + float(dir.x) * dir_offset
+		var wz: float = float(pos.y) + 0.5 + float(dir.y) * dir_offset
 		var rot: float = CLIFF_DIR_ROT.get(dir, 0.0)
 
 		# Pick a scene index different from the previous two straight pieces
@@ -1619,9 +1622,12 @@ func _collect_cliff_edges(sz: Vector2i, slope_dirs: Dictionary) -> Array[Diction
 
 func _collect_slope_side_edges(sz: Vector2i, slope_dirs: Dictionary) -> Array[Dictionary]:
 	## For each slope cell, check the two faces perpendicular to the ramp axis.
-	## Where the cliff faces a non-slope neighbour with enough height difference,
-	## emit an edge using the cell's interpolated ramp height instead of the raw
-	## grid value (which is always the low-ground base for slope cells).
+	## Two cases are handled:
+	##   Forward  – slope cell is HIGHER than the flat neighbour (slope wall faces out)
+	##   Reverse  – flat neighbour is HIGHER than the slope cell  (high-plateau wall beside the ramp)
+	## "slope_side": true is tagged so the placement loop can use a 0.51 dir-offset
+	## instead of 0.5, ensuring floor(entity_pos) lands in the accessible low cell
+	## and the erase brush can reliably find the entity.
 	var result: Array[Dictionary] = []
 	var seen := {}
 	for y in range(sz.y):
@@ -1657,14 +1663,35 @@ func _collect_slope_side_edges(sz: Vector2i, slope_dirs: Dictionary) -> Array[Di
 				if nct == MapResource.CELL_SLOPE or nct == MapResource.CELL_WATER_SLOPE:
 					continue
 				var nh: float = current_map.get_height_at(n)
-				if interp_h - nh < CLIFF_MIN_HEIGHT_DIFF:
-					continue
-				# Deduplicate (same edge can be visited from a slope cell on either side)
+				# Deduplicate using the slope-cell + side direction as the physical edge key
 				var key := Vector3i(pos.x, pos.y, (side.x + 2) * 10 + (side.y + 2))
 				if seen.has(key):
 					continue
-				seen[key] = true
-				result.append({"pos": pos, "dir": side, "h_high": interp_h, "h_low": nh})
+				if interp_h - nh >= CLIFF_MIN_HEIGHT_DIFF:
+					# Forward: slope side is higher → cliff faces outward from slope cell
+					seen[key] = true
+					result.append(
+						{
+							"pos": pos,
+							"dir": side,
+							"h_high": interp_h,
+							"h_low": nh,
+							"slope_side": true,
+						}
+					)
+				elif nh - interp_h >= CLIFF_MIN_HEIGHT_DIFF:
+					# Reverse: flat neighbour is higher (e.g. high plateau alongside the ramp)
+					# Emit from the neighbour's perspective so rotation faces toward the slope.
+					seen[key] = true
+					result.append(
+						{
+							"pos": n,
+							"dir": Vector2i(-side.x, -side.y),
+							"h_high": nh,
+							"h_low": interp_h,
+							"slope_side": true,
+						}
+					)
 	return result
 
 
