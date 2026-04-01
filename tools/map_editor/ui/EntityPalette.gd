@@ -10,6 +10,8 @@ signal slope_selected
 signal water_slope_selected
 signal collision_selected(value: int)  ## 1 = block, 0 = unblock
 signal auto_cliff_toggled(enabled: bool)
+signal cliff_y_offset_changed(value: float)
+signal mirror_toggled(mirrored: bool)
 
 const THUMBNAIL_DIR := "res://assets/ui/map_editor_thumbnails/"
 const THUMBNAIL_SIZE := Vector2(134, 134)
@@ -79,6 +81,28 @@ func _populate_high_ground() -> void:
 		btn.set_text_alignment(HorizontalAlignment.HORIZONTAL_ALIGNMENT_LEFT)
 		btn.pressed.connect(_on_scene_button_pressed.bind(cliff[1]))
 		cliff_grid.add_child(btn)
+
+	# Cliff Y offset setting
+	var y_offset_hbox := HBoxContainer.new()
+	var y_label := Label.new()
+	y_label.text = "Cliff Y Offset:"
+	y_label.add_theme_color_override("font_color", Color(0.7, 0.7, 0.7))
+	y_offset_hbox.add_child(y_label)
+	var y_spin := SpinBox.new()
+	y_spin.min_value = -20.0
+	y_spin.max_value = 20.0
+	y_spin.step = 0.1
+	y_spin.value = 0.0
+	y_spin.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	y_spin.value_changed.connect(func(v: float) -> void: cliff_y_offset_changed.emit(v))
+	y_offset_hbox.add_child(y_spin)
+	high_ground_container.add_child(y_offset_hbox)
+
+	# Mirror toggle button for manually placed entities
+	var mirror_btn := CheckButton.new()
+	mirror_btn.text = "Mirror"
+	mirror_btn.toggled.connect(func(pressed: bool) -> void: mirror_toggled.emit(pressed))
+	high_ground_container.add_child(mirror_btn)
 
 
 func _populate_normal_ground() -> void:

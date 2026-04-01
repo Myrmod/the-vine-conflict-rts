@@ -38,6 +38,17 @@ static var _cache_loaded: bool = false
 ## When true, shift the loaded model so its AABB center sits at this node's XZ origin
 @export var center_xz: bool = false
 
+@export_group("Collision")
+## When true, auto-generate a CollisionShape3D sized from the model's AABB
+@export var auto_collision: bool = false
+## Shape type used for auto-generated collision
+@export_enum("Box", "Sphere") var auto_collision_type: int = 0
+## When true, use custom_collision_shape instead of computing from the AABB
+@export var use_custom_collision_shape: bool = false
+## Custom shape used when use_custom_collision_shape is true
+@export var custom_collision_shape: Shape3D = null
+@export_group("")
+
 var _loaded_source: String = ""
 
 
@@ -59,6 +70,7 @@ func load_model(path: String) -> void:
 			_loaded_source = override_path
 			_update_size_cache(path)
 			_apply_center_xz()
+			_rebuild_collision_shape()
 			return
 
 	# 2. Try default path
@@ -68,6 +80,7 @@ func load_model(path: String) -> void:
 			_loaded_source = default_path
 			_update_size_cache(path)
 			_apply_center_xz()
+			_rebuild_collision_shape()
 			return
 
 	# 3. Fallback cube
@@ -158,6 +171,48 @@ func _apply_center_xz() -> void:
 		if child is Node3D:
 			child.position.x -= center_x
 			child.position.z -= center_z
+
+
+func _rebuild_collision_shape() -> void:
+	var existing := get_node_or_null("_AutoCollision")
+	if existing:
+		remove_child(existing)
+		existing.free()
+	if not auto_collision:
+		return
+	var points: PackedVector3Array = PackedVector3Array()
+	_gather_aabb_points(self, points)
+	if points.is_empty():
+		return
+	var min_pt := points[0]
+	var max_pt := points[0]
+	for p in points:
+		min_pt = Vector3(minf(min_pt.x, p.x), minf(min_pt.y, p.y), minf(min_pt.z, p.z))
+		max_pt = Vector3(maxf(max_pt.x, p.x), maxf(max_pt.y, p.y), maxf(max_pt.z, p.z))
+	var aabb_center := (min_pt + max_pt) * 0.5
+	var aabb_size := max_pt - min_pt
+	var shape: Shape3D
+	if use_custom_collision_shape and custom_collision_shape != null:
+		shape = custom_collision_shape
+	else:
+		match auto_collision_type:
+			0:  # Box
+				var box := BoxShape3D.new()
+				box.size = aabb_size
+				shape = box
+			1:  # Sphere
+				var sphere := SphereShape3D.new()
+				sphere.radius = maxf(maxf(aabb_size.x, aabb_size.y), aabb_size.z) * 0.5
+				shape = sphere
+	if shape == null:
+		return
+	var static_body := StaticBody3D.new()
+	static_body.name = "_AutoCollision"
+	static_body.position = aabb_center
+	var col_shape := CollisionShape3D.new()
+	col_shape.shape = shape
+	static_body.add_child(col_shape)
+	add_child(static_body)
 
 
 # region Size cache

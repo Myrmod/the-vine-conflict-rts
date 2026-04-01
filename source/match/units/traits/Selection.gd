@@ -17,6 +17,10 @@ func _ready():
 	if Engine.is_editor_hint():
 		return
 	_set_visual_layer(_circle, 2)
+	# Air units fly at terrain_y + Air.Y — offset the circle back down so it
+	# always appears at ground level rather than floating at flight altitude.
+	if "get_nav_domain" in _unit and _unit.get_nav_domain() == NavigationConstants.Domain.AIR:
+		_circle.position.y = -Air.Y
 	MatchSignals.deselect_all_units.connect(deselect)
 	_unit.input_event.connect(_on_input_event)
 	_circle.hide()

@@ -114,10 +114,10 @@ static func _add_entities(
 		var rot: float = entity.get("rotation", 0.0)
 		var scl: float = entity.get("entity_scale", 1.0)
 		var grid_cell: Vector2 = Vector2i(floor(pos.x), floor(pos.y)) if pos is Vector2 else pos
-		var height_y: float = map_resource.get_height_at(grid_cell)
+		var height_y: float = entity.get("y_offset", map_resource.get_height_at(grid_cell))
 		var basis := Basis(Vector3.UP, rot)
 		if not is_equal_approx(scl, 1.0):
-			basis = basis.scaled(Vector3(scl, scl, scl))
+			basis = basis.scaled(Vector3(scl, absf(scl), absf(scl)))
 		inst.transform = Transform3D(basis, Vector3(pos.x, height_y, pos.y))
 
 		var mat_path: String = entity.get("material_path", "")

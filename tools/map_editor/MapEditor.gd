@@ -46,6 +46,8 @@ var entity_preview_nodes := {}
 var spawn_preview_nodes: Array[Node3D] = []
 # Symmetry axis visual guide
 var _symmetry_line_mesh: MeshInstance3D = null
+# Entity collision debug overlay nodes
+var _entity_collision_debug_nodes: Array[Node3D] = []
 
 # Map name input
 var _map_name_edit: LineEdit = null
@@ -56,6 +58,7 @@ var _material_paths: Array[String] = []
 
 # Auto cliff placement
 var auto_place_cliffs: bool = true
+var cliff_y_offset: float = 0.0  # Y offset for cliff pieces (0.0 = ground level)
 const AUTO_CLIFF_DIR := "res://source/decorations/high_ground_cliffs/"
 const CLIFF_STRAIGHT_SCENES: Array[String] = [
 	"res://source/decorations/high_ground_cliffs/CliffStraight1.tscn",
@@ -168,6 +171,8 @@ func _setup_ui_connections():
 		palette_select.water_slope_selected.connect(_on_palette_water_slope_selected)
 		palette_select.collision_selected.connect(_on_palette_collision_selected)
 		palette_select.auto_cliff_toggled.connect(_on_auto_cliff_toggled)
+		palette_select.cliff_y_offset_changed.connect(_on_cliff_y_offset_changed)
+		palette_select.mirror_toggled.connect(_on_mirror_toggled)
 
 	# Connect texture palette signals
 	if texture_select:
@@ -380,6 +385,21 @@ func _on_auto_cliff_toggled(enabled: bool) -> void:
 	# 		func(e): return not _is_auto_cliff(e)
 	# 	)
 	# 	_refresh_entity_previews()
+
+
+func _on_cliff_y_offset_changed(value: float) -> void:
+	cliff_y_offset = value
+	if auto_place_cliffs:
+		_update_auto_cliffs()
+
+
+func _on_mirror_toggled(mirrored: bool) -> void:
+	"""Toggle X-axis mirroring on the current entity brush."""
+	if current_brush is EntityBrush:
+		var s = absf(current_brush.entity_scale)
+		current_brush.set_entity_scale(-s if mirrored else s)
+		_update_brush_info_label()
+		_update_entity_ghost_transform()
 
 
 func _on_palette_texture_selected_as_base_layer(terrain: TerrainType):
@@ -864,7 +884,7 @@ func _update_entity_ghost(pos):
 		_entity_ghost.position = Vector3(pos.x, height_y, pos.y)
 		_entity_ghost.rotation.y = brush.rotation
 		var s = brush.entity_scale
-		_entity_ghost.scale = Vector3(s, s, s)
+		_entity_ghost.scale = Vector3(s, absf(s), absf(s))
 		_entity_ghost.visible = true
 
 
@@ -873,7 +893,7 @@ func _update_entity_ghost_transform():
 	if _entity_ghost and is_instance_valid(_entity_ghost) and current_brush is EntityBrush:
 		_entity_ghost.rotation.y = current_brush.rotation
 		var s = current_brush.entity_scale
-		_entity_ghost.scale = Vector3(s, s, s)
+		_entity_ghost.scale = Vector3(s, absf(s), absf(s))
 
 
 func _hide_entity_ghost():
@@ -1052,11 +1072,16 @@ func _refresh_entity_previews():
 			inst.rotation.y = entity.rotation
 		if entity.has("entity_scale"):
 			var s = entity.entity_scale
-			inst.scale = Vector3(s, s, s)
+			# Negative scale mirrors on X axis (used by cliff mirroring)
+			inst.scale = Vector3(s, absf(s), absf(s))
 		if entity.has("material_path"):
 			_apply_material_to_model_holders(inst, entity.material_path)
 		visual_layer.add_child(inst)
 		entity_preview_nodes[entity.pos] = inst
+
+	# Refresh collision debug overlays if currently in collision view
+	if view_mode == ViewMode.COLLISION_VIEW:
+		_update_entity_collision_debug(true)
 
 
 func _apply_material_to_model_holders(node: Node, mat_path: String) -> void:
@@ -1126,6 +1151,66 @@ func set_view_mode(mode: ViewMode):
 		collision_layer.visible = (mode == ViewMode.COLLISION_VIEW)
 	else:
 		push_warning("Warning: Visual or collision layer not found for view mode toggle")
+
+	# Show / hide entity collision debug overlays
+	_update_entity_collision_debug(mode == ViewMode.COLLISION_VIEW)
+
+
+func _update_entity_collision_debug(visible_flag: bool) -> void:
+	"""Add or remove translucent debug meshes for every CollisionShape3D inside entity previews."""
+	# Always clear previous debug visuals
+	for n in _entity_collision_debug_nodes:
+		if is_instance_valid(n):
+			n.queue_free()
+	_entity_collision_debug_nodes.clear()
+
+	if not visible_flag:
+		return
+
+	var debug_mat := StandardMaterial3D.new()
+	debug_mat.albedo_color = Color(0.2, 0.8, 1.0, 0.45)
+	debug_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	debug_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	debug_mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+
+	for node in entity_preview_nodes.values():
+		if not is_instance_valid(node):
+			continue
+		for col_shape in node.find_children("*", "CollisionShape3D"):
+			var shape = col_shape.shape
+			if not shape:
+				continue
+			var mesh: Mesh = null
+			if shape is BoxShape3D:
+				var b := BoxMesh.new()
+				b.size = shape.size
+				mesh = b
+			elif shape is SphereShape3D:
+				var s := SphereMesh.new()
+				s.radius = shape.radius
+				s.height = shape.radius * 2.0
+				mesh = s
+			elif shape is CylinderShape3D:
+				var c := CylinderMesh.new()
+				c.top_radius = shape.radius
+				c.bottom_radius = shape.radius
+				c.height = shape.height
+				mesh = c
+			elif shape is CapsuleShape3D:
+				var cap := CapsuleMesh.new()
+				cap.radius = shape.radius
+				cap.height = shape.height
+				mesh = cap
+			if mesh == null:
+				continue
+			var mi := MeshInstance3D.new()
+			mi.mesh = mesh
+			mi.material_override = debug_mat
+			mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+			# Position relative to the viewport_3d so global transform is correct
+			mi.global_transform = col_shape.global_transform
+			viewport_3d.add_child(mi)
+			_entity_collision_debug_nodes.append(mi)
 
 
 func set_symmetry_mode(mode: SymmetrySystem.Mode):
@@ -1442,71 +1527,45 @@ func _update_auto_cliffs() -> void:
 	var slope_dirs := _compute_cliff_slope_directions(sz)
 	var edges := _collect_cliff_edges(sz, slope_dirs)
 
-	# 3. Build per-cell edge direction set for corner detection
-	var cell_edges: Dictionary = {}  # Vector2i -> Array[Vector2i]
-	for edge in edges:
-		var pos: Vector2i = edge["pos"]
-		if not cell_edges.has(pos):
-			cell_edges[pos] = []
-		cell_edges[pos].append(edge["dir"])
-
-	# 4. Detect outer convex corners
-	var corners := _detect_cliff_corners(cell_edges, sz)
-
-	# 5. Build set of edges consumed by corners (to skip straight pieces there)
-	var corner_edges := {}  # "x,y,dx,dy" -> true
-	for corner in corners:
-		var cell: Vector2i = corner["cell"]
-		var d1: Vector2i = corner["d1"]
-		var d2: Vector2i = corner["d2"]
-		corner_edges["%d,%d,%d,%d" % [cell.x, cell.y, d1.x, d1.y]] = true
-		corner_edges["%d,%d,%d,%d" % [cell.x, cell.y, d2.x, d2.y]] = true
-
-	# 6. Place straight pieces for each edge (skip edges consumed by corners)
+	# 3. Place straight pieces for every edge
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 12345
-	var high_y: float = current_map.get_height_at(edges[0]["pos"]) if edges.size() > 0 else 0.0
+	var prev_straight_idx: int = -1
+	var prev_prev_straight_idx: int = -1
 	for edge in edges:
 		var pos: Vector2i = edge["pos"]
 		var dir: Vector2i = edge["dir"]
-		var edge_key := "%d,%d,%d,%d" % [pos.x, pos.y, dir.x, dir.y]
-		if corner_edges.has(edge_key):
-			continue
-		high_y = edge["h_high"]
 
 		var wx: float = float(pos.x) + 0.5 + float(dir.x) * 0.5
 		var wz: float = float(pos.y) + 0.5 + float(dir.y) * 0.5
 		var rot: float = CLIFF_DIR_ROT.get(dir, 0.0)
 
+		# Pick a scene index different from the previous two straight pieces
 		var scene_idx := rng.randi_range(0, CLIFF_STRAIGHT_SCENES.size() - 1)
-		# Straight pieces are symmetric – randomly flip 180° for variety
+		var attempts := 0
+		while (
+			(scene_idx == prev_straight_idx or scene_idx == prev_prev_straight_idx)
+			and attempts < 10
+		):
+			scene_idx = rng.randi_range(0, CLIFF_STRAIGHT_SCENES.size() - 1)
+			attempts += 1
+		prev_prev_straight_idx = prev_straight_idx
+		prev_straight_idx = scene_idx
+
+		# Randomly mirror: flip 180° and/or mirror scale
 		var flip := PI if rng.randi_range(0, 1) == 1 else 0.0
+		var mirror_scale := -1.0 if rng.randi_range(0, 1) == 1 else 1.0
 		var entity_data := {
 			"scene_path": CLIFF_STRAIGHT_SCENES[scene_idx],
 			"pos": Vector2(wx, wz),
 			"player": 0,
 			"rotation": rot + flip,
-			"y_offset": high_y,
+			"y_offset": float(edge["h_high"]) + cliff_y_offset,
+			"entity_scale": mirror_scale,
 		}
 		current_map.placed_entities.append(entity_data)
 
-	# 6. Place corner pieces
-	for corner in corners:
-		var pos: Vector2 = corner["pos"]
-		var rot: float = corner["rotation"]
-		var corner_high_y: float = corner["h_high"]
-
-		var scene_idx := rng.randi_range(0, CLIFF_CORNER_SCENES.size() - 1)
-		var entity_data := {
-			"scene_path": CLIFF_CORNER_SCENES[scene_idx],
-			"pos": pos,
-			"player": 0,
-			"rotation": rot,
-			"y_offset": corner_high_y,
-		}
-		current_map.placed_entities.append(entity_data)
-
-	# 7. Refresh previews
+	# 4. Refresh previews
 	_refresh_entity_previews()
 
 
@@ -1552,74 +1611,6 @@ func _collect_cliff_edges(sz: Vector2i, slope_dirs: Dictionary) -> Array[Diction
 						}
 					)
 				)
-	return result
-
-
-func _detect_cliff_corners(cell_edges: Dictionary, sz: Vector2i) -> Array[Dictionary]:
-	## Detect outer convex corners where two perpendicular cliff edges meet.
-	## Returns [{pos: Vector2, rotation: float, h_diff: float}]
-	var result: Array[Dictionary] = []
-
-	# Each corner is defined by two perpendicular edge directions from
-	# the same high cell.  The corner vertex sits at the cell vertex
-	# where those two edges meet.
-	#
-	# dir_pair → (vertex offset from cell origin, rotation)
-	var corner_table := [
-		# N + E → NE vertex
-		[Vector2i(0, -1), Vector2i(1, 0), Vector2(1, 0), PI / 2.0],
-		# E + S → SE vertex
-		[Vector2i(1, 0), Vector2i(0, 1), Vector2(1, 1), 0.0],
-		# S + W → SW vertex
-		[Vector2i(0, 1), Vector2i(-1, 0), Vector2(0, 1), -PI / 2.0],
-		# W + N → NW vertex
-		[Vector2i(-1, 0), Vector2i(0, -1), Vector2(0, 0), PI],
-	]
-
-	for pos: Vector2i in cell_edges:
-		var dirs: Array = cell_edges[pos]
-		if dirs.size() < 2:
-			continue
-
-		var h_high: float = current_map.get_height_at(pos)
-
-		for entry in corner_table:
-			var d1: Vector2i = entry[0]
-			var d2: Vector2i = entry[1]
-			var vertex_offset: Vector2 = entry[2]
-			var rot: float = entry[3]
-
-			if not (d1 in dirs and d2 in dirs):
-				continue
-
-			# Confirm the diagonal cell is also lower (true outer corner)
-			var diag := pos + d1 + d2
-			if diag.x >= 0 and diag.x < sz.x and diag.y >= 0 and diag.y < sz.y:
-				var diag_h := current_map.get_height_at(diag)
-				if h_high - diag_h < CLIFF_MIN_HEIGHT_DIFF:
-					continue  # Diagonal is at same height — not an outer corner
-
-			var corner_pos := Vector2(pos.x, pos.y) + vertex_offset
-			# Use the minimum of the two neighboring low heights
-			var h1 := current_map.get_height_at(pos + d1)
-			var h2 := current_map.get_height_at(pos + d2)
-			var h_low := minf(h1, h2)
-
-			(
-				result
-				. append(
-					{
-						"pos": corner_pos,
-						"rotation": rot,
-						"h_diff": h_high - h_low,
-						"h_high": h_high,
-						"cell": pos,
-						"d1": d1,
-						"d2": d2,
-					}
-				)
-			)
-
 	return result
 
 

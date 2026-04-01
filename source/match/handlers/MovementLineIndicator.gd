@@ -104,6 +104,14 @@ func _create_visuals(uid: int) -> void:
 	var entry: Dictionary = _unit_targets[uid]
 	var target_pos: Vector3 = entry["target"]
 
+	# Snap Y to terrain height — circle_spread zeroes Y for navmesh purposes,
+	# but the visual marker must appear at the correct ground elevation.
+	var match_node = find_parent("Match")
+	if match_node != null and match_node.map != null:
+		target_pos.y = match_node.map.get_height_at_world(target_pos)
+	# Write back so _update_line_mesh also uses the correct height.
+	entry["target"] = target_pos
+
 	# Marker at target position.
 	var marker: Node3D = MouseClickAnimation.instantiate()
 	marker.global_transform = Transform3D(Basis(), target_pos)
@@ -158,8 +166,8 @@ func _process(_delta: float) -> void:
 
 
 func _update_line_mesh(mesh_inst: MeshInstance3D, from_pos: Vector3, to_pos: Vector3) -> void:
-	var start := Vector3(from_pos.x, LINE_Y, from_pos.z)
-	var end := Vector3(to_pos.x, LINE_Y, to_pos.z)
+	var start := Vector3(from_pos.x, from_pos.y + LINE_Y, from_pos.z)
+	var end := Vector3(to_pos.x, to_pos.y + LINE_Y, to_pos.z)
 	var diff := end - start
 	var length := diff.length()
 	if length < 0.01:

@@ -2,19 +2,11 @@
 
 [ext_resource type="Script" uid="uid://bysf721q4x37n" path="res://source/generic-scenes-and-nodes/3d/ModelHolder.gd" id="1_model_holder"]
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_ibpa3"]
-size = Vector3(16.843674, 21.819574, 6.205094)
-
 [node name="CliffStraight1" type="Node3D" unique_id=1091999520]
 
 [node name="ModelHolder" type="Node3D" parent="." unique_id=887490304]
-transform = Transform3D(0.11, 0, 0, 0, 0.11, 0, 0, 0, 0.11, 0, -0.95, 0)
+transform = Transform3D(0.2, 0, 0, 0, 0.2, 0, 0, 0, 0.2, 0, -1.6, 0)
 script = ExtResource("1_model_holder")
 model_path = "RockPack1/CliffPartials/CliffStraight_1.res"
 material_path = "RockPack1/Materials/Cliff_Material_Photoscan.tres"
-
-[node name="StaticBody3D" type="StaticBody3D" parent="." unique_id=2082441919]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.0072603, -0.3991089, 0.091701746)
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="StaticBody3D" unique_id=1268071447]
-shape = SubResource("BoxShape3D_ibpa3")
+auto_collision = true

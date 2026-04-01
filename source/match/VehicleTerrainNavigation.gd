@@ -19,7 +19,7 @@ func _ready():
 
 	var nav_mesh := NavigationMesh.new()
 	nav_mesh.geometry_parsed_geometry_type = NavigationMesh.PARSED_GEOMETRY_BOTH
-	nav_mesh.geometry_source_geometry_mode = 2
+	nav_mesh.geometry_source_geometry_mode = NavigationMesh.SourceGeometryMode.SOURCE_GEOMETRY_GROUPS_EXPLICIT
 	nav_mesh.geometry_source_group_name = &"vehicle_terrain_navigation_input"
 	nav_mesh.geometry_collision_mask = 4278190082
 	nav_mesh.cell_size = Terrain.CELL_SIZE
