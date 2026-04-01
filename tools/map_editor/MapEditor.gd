@@ -1526,6 +1526,9 @@ func _update_auto_cliffs() -> void:
 	var sz := current_map.size
 	var slope_dirs := _compute_cliff_slope_directions(sz)
 	var edges := _collect_cliff_edges(sz, slope_dirs)
+	# Append slope-side edges: straight cliffs stepped along each slope face,
+	# using the interpolated ramp height so each piece sits at the correct Y.
+	edges.append_array(_collect_slope_side_edges(sz, slope_dirs))
 
 	# 3. Place straight pieces for every edge
 	var rng := RandomNumberGenerator.new()
@@ -1589,14 +1592,14 @@ func _collect_cliff_edges(sz: Vector2i, slope_dirs: Dictionary) -> Array[Diction
 				# Skip edges along slope ramp direction
 				if ct == MapResource.CELL_SLOPE or ct == MapResource.CELL_WATER_SLOPE:
 					if slope_dirs.has(pos):
-						var axis: Vector2i = slope_dirs[pos]
+						var axis: Vector2i = slope_dirs[pos]["dir"]
 						if absi(dir.x) == absi(axis.x) and absi(dir.y) == absi(axis.y):
 							continue
 
 				var nct := current_map.get_cell_type_at(n)
 				if nct == MapResource.CELL_SLOPE or nct == MapResource.CELL_WATER_SLOPE:
 					if slope_dirs.has(n):
-						var axis: Vector2i = slope_dirs[n]
+						var axis: Vector2i = slope_dirs[n]["dir"]
 						if absi(dir.x) == absi(axis.x) and absi(dir.y) == absi(axis.y):
 							continue
 
@@ -1614,8 +1617,61 @@ func _collect_cliff_edges(sz: Vector2i, slope_dirs: Dictionary) -> Array[Diction
 	return result
 
 
+func _collect_slope_side_edges(sz: Vector2i, slope_dirs: Dictionary) -> Array[Dictionary]:
+	## For each slope cell, check the two faces perpendicular to the ramp axis.
+	## Where the cliff faces a non-slope neighbour with enough height difference,
+	## emit an edge using the cell's interpolated ramp height instead of the raw
+	## grid value (which is always the low-ground base for slope cells).
+	var result: Array[Dictionary] = []
+	var seen := {}
+	for y in range(sz.y):
+		for x in range(sz.x):
+			var pos := Vector2i(x, y)
+			if not slope_dirs.has(pos):
+				continue
+			var sd: Dictionary = slope_dirs[pos]
+			var ramp_dir: Vector2i = sd["dir"]
+			var low_h: float = sd["low_h"]
+			var high_h: float = sd["high_h"]
+			var rmin: int = sd["rmin"]
+			var rmax: int = sd["rmax"]
+
+			# Interpolated terrain height at this cell along the ramp
+			var sc: int = pos.x * ramp_dir.x + pos.y * ramp_dir.y
+			var t: float = 0.5 if rmax == rmin else float(sc - rmin) / float(rmax - rmin)
+			var interp_h: float = lerpf(low_h, high_h, t)
+
+			# Side directions are perpendicular to the ramp axis
+			var side_dirs: Array[Vector2i]
+			if ramp_dir.x != 0:
+				side_dirs = [Vector2i(0, -1), Vector2i(0, 1)]
+			else:
+				side_dirs = [Vector2i(-1, 0), Vector2i(1, 0)]
+
+			for side in side_dirs:
+				var n := pos + side
+				if n.x < 0 or n.x >= sz.x or n.y < 0 or n.y >= sz.y:
+					continue
+				# Only face non-slope cells
+				var nct := current_map.get_cell_type_at(n)
+				if nct == MapResource.CELL_SLOPE or nct == MapResource.CELL_WATER_SLOPE:
+					continue
+				var nh: float = current_map.get_height_at(n)
+				if interp_h - nh < CLIFF_MIN_HEIGHT_DIFF:
+					continue
+				# Deduplicate (same edge can be visited from a slope cell on either side)
+				var key := Vector3i(pos.x, pos.y, (side.x + 2) * 10 + (side.y + 2))
+				if seen.has(key):
+					continue
+				seen[key] = true
+				result.append({"pos": pos, "dir": side, "h_high": interp_h, "h_low": nh})
+	return result
+
+
 func _compute_cliff_slope_directions(sz: Vector2i) -> Dictionary:
 	## Flood-fill slope regions and compute each region's dominant ramp direction.
+	## Returns per-cell dict: { dir:Vector2i, low_h:float, high_h:float, rmin:int, rmax:int }
+	## rmin/rmax are signed coordinates along the ramp axis, used to interpolate height.
 	var result := {}
 	var visited := {}
 
@@ -1645,8 +1701,10 @@ func _compute_cliff_slope_directions(sz: Vector2i) -> Dictionary:
 						visited[n] = true
 						queue.append(n)
 
-			# Compute dominant direction for this region
+			# Compute dominant direction and boundary height range for this region
 			var total_diff := Vector2.ZERO
+			var low_h := INF
+			var high_h := -INF
 			for p in region:
 				var my_h: float = current_map.get_height_at(p)
 				for d in CLIFF_CARDINAL_DIRS:
@@ -1655,7 +1713,10 @@ func _compute_cliff_slope_directions(sz: Vector2i) -> Dictionary:
 						continue
 					if current_map.get_cell_type_at(n) == ct:
 						continue
-					var diff: float = current_map.get_height_at(n) - my_h
+					var nh: float = current_map.get_height_at(n)
+					low_h = minf(low_h, nh)
+					high_h = maxf(high_h, nh)
+					var diff: float = nh - my_h
 					total_diff += Vector2(d.x, d.y) * diff
 
 			var direction: Vector2i
@@ -1666,7 +1727,26 @@ func _compute_cliff_slope_directions(sz: Vector2i) -> Dictionary:
 			else:
 				direction = Vector2i(0, 1) if total_diff.y > 0 else Vector2i(0, -1)
 
+			if low_h == INF:
+				low_h = 0.0
+			if high_h == -INF:
+				high_h = 0.0
+
+			# Compute signed-coord range along ramp axis for height interpolation
+			var rmin_coord := 999999
+			var rmax_coord := -999999
 			for p in region:
-				result[p] = direction
+				var sc: int = p.x * direction.x + p.y * direction.y
+				rmin_coord = mini(rmin_coord, sc)
+				rmax_coord = maxi(rmax_coord, sc)
+
+			for p in region:
+				result[p] = {
+					"dir": direction,
+					"low_h": low_h,
+					"high_h": high_h,
+					"rmin": rmin_coord,
+					"rmax": rmax_coord,
+				}
 
 	return result

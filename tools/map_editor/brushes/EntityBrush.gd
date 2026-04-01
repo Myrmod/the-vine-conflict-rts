@@ -81,7 +81,7 @@ func apply_free(world_pos: Vector2):
 		return
 
 	# Validate terrain type at the grid cell
-	if map_resource:
+	if map_resource and not scene_path.contains("res://source/decorations/"):
 		var cell_type = map_resource.get_cell_type_at(grid_cell)
 		if (
 			cell_type == MapResource.CELL_SLOPE

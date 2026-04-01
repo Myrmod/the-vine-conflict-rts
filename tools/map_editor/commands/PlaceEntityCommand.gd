@@ -59,7 +59,7 @@ func _store_removed_entities():
 
 		# Check for existing entities
 		for entity in map_resource.placed_entities:
-			if entity.pos == pos:
+			if Vector2i(entity.pos) == pos:
 				removed_at_pos.append({"type": "entity", "data": entity.duplicate()})
 
 		removed_entities.append({"pos": pos, "entities": removed_at_pos})
