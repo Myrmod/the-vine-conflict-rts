@@ -1670,27 +1670,33 @@ func _collect_slope_side_edges(sz: Vector2i, slope_dirs: Dictionary) -> Array[Di
 				if interp_h - nh >= CLIFF_MIN_HEIGHT_DIFF:
 					# Forward: slope side is higher → cliff faces outward from slope cell
 					seen[key] = true
-					result.append(
-						{
-							"pos": pos,
-							"dir": side,
-							"h_high": interp_h,
-							"h_low": nh,
-							"slope_side": true,
-						}
+					(
+						result
+						. append(
+							{
+								"pos": pos,
+								"dir": side,
+								"h_high": interp_h,
+								"h_low": nh,
+								"slope_side": true,
+							}
+						)
 					)
 				elif nh - interp_h >= CLIFF_MIN_HEIGHT_DIFF:
 					# Reverse: flat neighbour is higher (e.g. high plateau alongside the ramp)
 					# Emit from the neighbour's perspective so rotation faces toward the slope.
 					seen[key] = true
-					result.append(
-						{
-							"pos": n,
-							"dir": Vector2i(-side.x, -side.y),
-							"h_high": nh,
-							"h_low": interp_h,
-							"slope_side": true,
-						}
+					(
+						result
+						. append(
+							{
+								"pos": n,
+								"dir": Vector2i(-side.x, -side.y),
+								"h_high": nh,
+								"h_low": interp_h,
+								"slope_side": true,
+							}
+						)
 					)
 	return result
 

@@ -30,6 +30,7 @@ static func get_faction_by_enum(id: Enums.Faction):
 
 
 static func _init_production_grid_values_by_identifier(identifier) -> void:
+	UnitConstants.ensure_ready()
 	# Reset all lists so repeated calls don't accumulate duplicates
 	for tab_type in production_grid:
 		production_grid[tab_type] = []
