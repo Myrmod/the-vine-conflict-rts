@@ -34,11 +34,18 @@ static func _init_production_grid_values_by_identifier(identifier) -> void:
 	# Reset all lists so repeated calls don't accumulate duplicates
 	for tab_type in production_grid:
 		production_grid[tab_type] = []
-	for key in UnitConstants.DEFAULT_PROPERTIES:
-		if !key.contains(identifier):
+	for scene_id in UnitConstants.DEFAULT_PROPERTIES:
+		var scene_path: String = UnitConstants.DEFAULT_PROPERTIES[scene_id].get("scene", "")
+		if scene_path.is_empty() or !scene_path.contains(identifier):
 			continue
-		var entry = UnitConstants.DEFAULT_PROPERTIES[key].duplicate()
-		entry["scene_path"] = key
+		var entry = UnitConstants.DEFAULT_PROPERTIES[scene_id].duplicate()
+		entry["scene_path"] = scene_path
+		entry["scene_id"] = scene_id
+		if entry.has("structure_requirements"):
+			var req_ids: Array = []
+			for req in entry["structure_requirements"]:
+				req_ids.append(UnitConstants.get_scene_id(req))
+			entry["structure_requirements"] = req_ids
 		production_grid[entry.production_tab_type].append(entry)
 
 

@@ -95,7 +95,7 @@ func get_elements():
 
 func produce(unit_prototype, _ignore_limit = false):
 	var scene_path = unit_prototype.resource_path
-	var production_cost = UnitConstants.DEFAULT_PROPERTIES[scene_path]["costs"]
+	var production_cost = UnitConstants.get_default_properties(scene_path)["costs"]
 	var is_trickle = _is_off_field_trickle(scene_path)
 	if not is_trickle:
 		if not _unit.player.has_resources(production_cost):
@@ -104,8 +104,8 @@ func produce(unit_prototype, _ignore_limit = false):
 		_unit.player.subtract_resources(production_cost)
 	var queue_element = ProductionQueueElement.new()
 	queue_element.unit_prototype = unit_prototype
-	queue_element.time_total = (UnitConstants.DEFAULT_PROPERTIES[scene_path]["build_time"])
-	queue_element.time_left = (UnitConstants.DEFAULT_PROPERTIES[scene_path]["build_time"])
+	queue_element.time_total = (UnitConstants.get_default_properties(scene_path)["build_time"])
+	queue_element.time_left = (UnitConstants.get_default_properties(scene_path)["build_time"])
 	if is_trickle:
 		queue_element.trickle_cost = production_cost.duplicate()
 	_enqueue_element(queue_element)
@@ -118,7 +118,10 @@ func cancel_all():
 
 
 ## Remove a completed off-field structure from the queue (player is deploying it).
-func deploy_completed(scene_path: String) -> bool:
+func deploy_completed(scene_id: int) -> bool:
+	var scene_path: String = UnitConstants.get_scene_path(scene_id)
+	if scene_path == "":
+		return false
 	for el in _queue:
 		if el.completed and el.unit_prototype.resource_path == scene_path:
 			_remove_element(el)
@@ -127,7 +130,10 @@ func deploy_completed(scene_path: String) -> bool:
 
 
 ## Returns true if any element with the given scene_path is completed.
-func has_completed(scene_path: String) -> bool:
+func has_completed(scene_id: int) -> bool:
+	var scene_path: String = UnitConstants.get_scene_path(scene_id)
+	if scene_path == "":
+		return false
 	for el in _queue:
 		if el.completed and el.unit_prototype.resource_path == scene_path:
 			return true
@@ -142,7 +148,7 @@ func cancel(element):
 	# No refund for completed off-field structures (already fully paid)
 	# No refund for trickle elements (only deducted what was spent)
 	if not element.completed and element.trickle_cost.is_empty():
-		var production_cost = UnitConstants.DEFAULT_PROPERTIES[type_path]["costs"]
+		var production_cost = UnitConstants.get_default_properties(type_path)["costs"]
 		_unit.player.add_resources(production_cost, Enums.ResourceType.CREDITS)
 	_remove_element(element)
 	# If the cancelled element's type was paused and a new element becomes the
@@ -151,16 +157,16 @@ func cancel(element):
 		_queue.front().paused = true
 
 
-func toggle_pause(unit_type_path: String):
+func toggle_pause(unit_type_id: int):
 	# Check whether any element of this type is currently paused.
 	var any_paused := false
 	for element in _queue:
-		if element.unit_prototype.resource_path == unit_type_path and element.paused:
+		if UnitConstants.get_scene_id(element.unit_prototype.resource_path) == unit_type_id and element.paused:
 			any_paused = true
 			break
 	# Toggle: if any are paused, unpause all of that type; otherwise pause all.
 	for element in _queue:
-		if element.unit_prototype.resource_path == unit_type_path:
+		if UnitConstants.get_scene_id(element.unit_prototype.resource_path) == unit_type_id:
 			element.paused = not any_paused
 
 
@@ -176,9 +182,10 @@ func _remove_element(element):
 
 func _finalize_production(former_queue_element):
 	var scene_path = former_queue_element.unit_prototype.resource_path
+	var scene_id: int = UnitConstants.get_scene_id(scene_path)
 	# Off-field structures: add to ready list instead of spawning
 	if _is_off_field_structure(scene_path):
-		_unit._ready_structures.append(scene_path)
+		_unit._ready_structures.append(scene_id)
 		MatchSignals.unit_production_finished.emit(null, _unit)
 		return
 	var produced_unit = former_queue_element.unit_prototype.instantiate()
@@ -272,7 +279,7 @@ func structure_count_in_queue_for_tab(tab: int) -> int:
 		var path: String = el.unit_prototype.resource_path
 		if not UnitHelper.is_structure(path):
 			continue
-		var props = UnitConstants.DEFAULT_PROPERTIES.get(path, {})
+		var props = UnitConstants.get_default_properties(path)
 		if props.get("production_tab_type", -1) == tab:
 			count += 1
 	return count

@@ -33,7 +33,8 @@ func setup(player):
 func provision(resources, metadata):
 	if metadata == "worker":
 		assert(
-			resources == UnitConstants.DEFAULT_PROPERTIES[WorkerScene.resource_path]["costs"],
+			resources
+			== UnitConstants.get_default_properties(UnitConstants.get_scene_id(WorkerScene.resource_path))["costs"],
 			"unexpected amount of resources"
 		)
 		_number_of_pending_worker_resource_requests -= 1
@@ -51,9 +52,11 @@ func provision(resources, metadata):
 					"data":
 					{
 						"entity_id": _ccs[0].id,
-						"unit_type": WorkerScene.resource_path,
+						"unit_type": UnitConstants.get_scene_id(WorkerScene.resource_path),
 						"time_total":
-						UnitConstants.DEFAULT_PROPERTIES[WorkerScene.resource_path]["build_time"],
+						UnitConstants.get_default_properties(
+							UnitConstants.get_scene_id(WorkerScene.resource_path)
+						)["build_time"],
 						"ignore_limit": true,
 					}
 				}
@@ -64,7 +67,9 @@ func provision(resources, metadata):
 		assert(
 			(
 				resources
-				== UnitConstants.DEFAULT_PROPERTIES[CommandCenterScene.resource_path]["costs"]
+				== UnitConstants.get_default_properties(
+					UnitConstants.get_scene_id(CommandCenterScene.resource_path)
+				)["costs"]
 			),
 			"unexpected amount of resources"
 		)
@@ -122,7 +127,8 @@ func _enforce_number_of_ccs():
 	)
 	for _i in range(number_of_extra_ccs_required):
 		resources_required.emit(
-			UnitConstants.DEFAULT_PROPERTIES[CommandCenterScene.resource_path]["costs"], "cc"
+			UnitConstants.get_default_properties(UnitConstants.get_scene_id(CommandCenterScene.resource_path))["costs"],
+			"cc"
 		)
 		_number_of_pending_cc_resource_requests += 1
 
@@ -139,15 +145,16 @@ func _enforce_number_of_workers():
 	)
 	for _i in range(number_of_extra_workers_required):
 		resources_required.emit(
-			UnitConstants.DEFAULT_PROPERTIES[WorkerScene.resource_path]["costs"], "worker"
+			UnitConstants.get_default_properties(UnitConstants.get_scene_id(WorkerScene.resource_path))["costs"],
+			"worker"
 		)
 		_number_of_pending_worker_resource_requests += 1
 
 
 func _construct_cc():
-	var construction_cost = (
-		UnitConstants.DEFAULT_PROPERTIES[CommandCenterScene.resource_path]["costs"]
-	)
+	var construction_cost = UnitConstants.get_default_properties(
+		UnitConstants.get_scene_id(CommandCenterScene.resource_path)
+	)["costs"]
 	# Pre-check resources as an optimistic filter. The authoritative check happens in
 	# Match._execute_command() — between queueing and execution another command may
 	# spend the resources, which Match handles gracefully.
@@ -177,7 +184,7 @@ func _construct_cc():
 				"player_id": _player.id,
 				"data":
 				{
-					"structure_prototype": CommandCenterScene.resource_path,
+					"structure_prototype": UnitConstants.get_scene_id(CommandCenterScene.resource_path),
 					"transform": target_transform,
 					"self_constructing": true,
 				}

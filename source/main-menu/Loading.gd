@@ -87,8 +87,10 @@ func _ready():
 
 
 func _preload_scenes():
-	var scene_paths = UnitConstants.DEFAULT_PROPERTIES.keys()
-	for scene_path in scene_paths:
+	for scene_id in UnitConstants.DEFAULT_PROPERTIES.keys():
+		var scene_path: String = UnitConstants.DEFAULT_PROPERTIES[scene_id].get("scene", "")
+		if scene_path.is_empty():
+			continue
 		Globals.cache[scene_path] = load(scene_path)
 
 

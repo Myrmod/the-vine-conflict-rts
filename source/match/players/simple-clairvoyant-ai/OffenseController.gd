@@ -90,7 +90,8 @@ func _on_tick_advanced():
 
 func _provision_structure(structure_scene, resources, metadata):
 	assert(
-		resources == UnitConstants.DEFAULT_PROPERTIES[structure_scene.resource_path]["costs"],
+		resources
+		== UnitConstants.get_default_properties(UnitConstants.get_scene_id(structure_scene.resource_path))["costs"],
 		"unexpected amount of resources"
 	)
 	var workers = get_tree().get_nodes_in_group("units").filter(
@@ -104,7 +105,8 @@ func _provision_structure(structure_scene, resources, metadata):
 
 func _provision_unit(unit_scene, structure_producing_unit, resources, metadata):
 	assert(
-		resources == UnitConstants.DEFAULT_PROPERTIES[unit_scene.resource_path]["costs"],
+		resources
+		== UnitConstants.get_default_properties(UnitConstants.get_scene_id(unit_scene.resource_path))["costs"],
 		"unexpected amount of resources"
 	)
 	if structure_producing_unit == null:
@@ -121,9 +123,11 @@ func _provision_unit(unit_scene, structure_producing_unit, resources, metadata):
 				"data":
 				{
 					"entity_id": structure_producing_unit.id,
-					"unit_type": unit_scene.resource_path,
+					"unit_type": UnitConstants.get_scene_id(unit_scene.resource_path),
 					"time_total":
-					UnitConstants.DEFAULT_PROPERTIES[unit_scene.resource_path]["build_time"],
+					UnitConstants.get_default_properties(
+						UnitConstants.get_scene_id(unit_scene.resource_path)
+					)["build_time"],
 					"ignore_limit": true,
 				}
 			}
@@ -177,7 +181,9 @@ func _attach_current_battle_units():
 
 
 func _construct_structure(structure_scene):
-	var construction_cost = UnitConstants.DEFAULT_PROPERTIES[structure_scene.resource_path]["costs"]
+	var construction_cost = UnitConstants.get_default_properties(
+		UnitConstants.get_scene_id(structure_scene.resource_path)
+	)["costs"]
 	# Pre-check resources as an optimistic filter. The authoritative check happens in
 	# Match._execute_command() — another command may spend the resources before execution.
 	if not _player.has_resources(construction_cost):
@@ -216,7 +222,7 @@ func _construct_structure(structure_scene):
 				"player_id": _player.id,
 				"data":
 				{
-					"structure_prototype": structure_scene.resource_path,
+					"structure_prototype": UnitConstants.get_scene_id(structure_scene.resource_path),
 					"transform": target_transform,
 					"self_constructing": true,
 				}
@@ -244,7 +250,8 @@ func _enforce_structure_existence(structure, structure_scene, type):
 			_number_of_pending_structure_resource_requests.get(type, 0) + 1
 		)
 		resources_required.emit(
-			UnitConstants.DEFAULT_PROPERTIES[structure_scene.resource_path]["costs"], type
+			UnitConstants.get_default_properties(UnitConstants.get_scene_id(structure_scene.resource_path))["costs"],
+			type
 		)
 
 
@@ -265,7 +272,8 @@ func _enforce_units_production(structure, unit_scene, type):
 			_number_of_pending_unit_resource_requests.get(type, 0) + 1
 		)
 		resources_required.emit(
-			UnitConstants.DEFAULT_PROPERTIES[unit_scene.resource_path]["costs"], type
+			UnitConstants.get_default_properties(UnitConstants.get_scene_id(unit_scene.resource_path))["costs"],
+			type
 		)
 
 

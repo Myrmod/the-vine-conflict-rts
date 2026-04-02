@@ -4,7 +4,7 @@ const SOUND_ROCKET_START = preload("res://assets/sound_effects/rocket1_start.mp3
 const SOUND_ROCKET_END = preload("res://assets/sound_effects/rocket1_end.mp3")
 
 const STRUCTURES = {
-	"res://source/factions/the_radix/structures/CommandCenter.tscn":
+	Enums.SceneId.RADIX_COMMAND_CENTER:
 	{
 		"scene": "res://source/factions/the_radix/structures/CommandCenter.tscn",
 		"unit_name": "radix_CommandCenter",

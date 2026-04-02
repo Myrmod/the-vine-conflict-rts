@@ -1,7 +1,7 @@
 class_name LegionConstants
 
 const STRUCTURES = {
-	"res://source/factions/the_legion/structures/CommandCenter.tscn":
+	Enums.SceneId.LEGION_COMMAND_CENTER:
 	{
 		"scene": "res://source/factions/the_legion/structures/CommandCenter.tscn",
 		"unit_name": "legion_CommandCenter",
@@ -34,7 +34,7 @@ const STRUCTURES = {
 		"energy_required": 0,
 		"build_time": 10.0,
 	},
-	"res://source/factions/the_legion/structures/PowerPlant.tscn":
+	Enums.SceneId.LEGION_POWER_PLANT:
 	{
 		"scene": "res://source/factions/the_legion/structures/PowerPlant.tscn",
 		"unit_name": "legion_PowerPlant",
@@ -64,7 +64,7 @@ const STRUCTURES = {
 		"energy_provided": 5,
 		"build_time": 5.0,
 	},
-	"res://source/factions/the_legion/structures/Barracks.tscn":
+	Enums.SceneId.LEGION_BARRACKS:
 	{
 		"scene": "res://source/factions/the_legion/structures/Barracks.tscn",
 		"unit_name": "legion_Barracks",
@@ -95,8 +95,8 @@ const STRUCTURES = {
 		"energy_required": 5,
 		"structure_requirements":
 		[
-			"res://source/factions/the_legion/structures/CommandCenter.tscn",
-			"res://source/factions/the_legion/structures/PowerPlant.tscn",
+			Enums.SceneId.LEGION_COMMAND_CENTER,
+			Enums.SceneId.LEGION_POWER_PLANT,
 		],
 		"build_time": 6.0,
 	},
@@ -105,7 +105,7 @@ const STRUCTURES = {
 const DEFENCES = {}
 
 const INFANTRY = {
-	"res://source/factions/the_legion/units/Soldier.tscn":
+	Enums.SceneId.LEGION_SOLDIER:
 	{
 		"scene": "res://source/factions/the_legion/units/Soldier.tscn",
 		"unit_name": "legion_Soldier",

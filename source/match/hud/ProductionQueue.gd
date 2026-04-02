@@ -147,6 +147,9 @@ func _on_production_queue_element_removed(element, _source_queue):
 
 
 static func _generate_unit_production_command(entity_id, unit_type, player_id):
+	var scene_id: int = UnitConstants.get_scene_id(unit_type)
+	if scene_id == Enums.SceneId.INVALID:
+		return
 	(
 		CommandBus
 		. push_command(
@@ -157,8 +160,8 @@ static func _generate_unit_production_command(entity_id, unit_type, player_id):
 				"data":
 				{
 					"entity_id": entity_id,
-					"unit_type": unit_type,
-					"time_total": UnitConstants.DEFAULT_PROPERTIES[unit_type]["build_time"],
+					"unit_type": scene_id,
+					"time_total": UnitConstants.get_default_properties(scene_id)["build_time"],
 				}
 			}
 		)

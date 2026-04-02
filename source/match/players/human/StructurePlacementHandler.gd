@@ -140,9 +140,9 @@ func _calculate_blueprint_position_validity():
 
 
 func _player_has_enough_resources():
-	var construction_cost = (
-		UnitConstants.DEFAULT_PROPERTIES[_pending_structure_prototype.resource_path]["costs"]
-	)
+	var construction_cost = UnitConstants.get_default_properties(
+		UnitConstants.get_scene_id(_pending_structure_prototype.resource_path)
+	)["costs"]
 	return _player.has_resources(construction_cost)
 
 
@@ -311,6 +311,10 @@ func _cancel_structure_placement():
 func _finish_structure_placement():
 	var can_place = _off_field_deploy or _is_trickle or _player_has_enough_resources()
 	if can_place:
+		var structure_scene_id: int = UnitConstants.get_scene_id(_pending_structure_prototype.resource_path)
+		if structure_scene_id == Enums.SceneId.INVALID:
+			_cancel_structure_placement()
+			return
 		(
 			CommandBus
 			. push_command(
@@ -320,7 +324,7 @@ func _finish_structure_placement():
 					"player_id": _player.id,
 					"data":
 					{
-						"structure_prototype": _pending_structure_prototype.resource_path,
+						"structure_prototype": structure_scene_id,
 						"transform": _active_blueprint_node.global_transform,
 						"self_constructing": true,
 						"off_field_deploy": _off_field_deploy,

@@ -6,8 +6,9 @@ const SOUND_ROCKET_END = preload("res://assets/sound_effects/rocket1_end.mp3")
 const STRUCTURES = {
 	# Vines (resource nodes)
 	# Naming: Vine_COLLISION_VARIATION — COLLISION = tile count
-	"res://source/factions/neutral/structures/ResourceNode/ForestVine_2_1.tscn":
+	Enums.SceneId.NEUTRAL_FOREST_VINE_2_1:
 	{
+		"scene": "res://source/factions/neutral/structures/ResourceNode/ForestVine_2_1.tscn",
 		"unit_name": "Forest Vine",
 		"description": "Dense overgrowth. Slows movement and reduces vision. Vehicles cannot pass.",
 		"tile_count": 2,

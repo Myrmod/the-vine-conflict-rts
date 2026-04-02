@@ -24,14 +24,14 @@ var structure_production_type: int = Enums.StructureProductionType.CONSTRUCT_ON_
 ## Maximum number of structures that can be produced concurrently.
 var max_concurrent_structures: int = 1
 
-## Completed off-field structures waiting to be placed (scene paths).
+## Completed off-field structures waiting to be placed (Enums.SceneId values).
 var _ready_structures: Array = []
 
 ## Energy this structure provides when constructed (e.g. PowerPlant).
 var energy_provided: int = 0
 ## Energy this structure requires when constructed.
 var energy_required: int = 0
-## Scene paths of structures that must be built before this one can be placed.
+## Enums.SceneId values of structures that must be built before this one can be placed.
 var structure_requirements: Array = []
 
 ## ── Structure action state ──────────────────────────────
@@ -116,7 +116,7 @@ func mark_as_under_construction(self_constructing = false):
 	_self_constructing = self_constructing
 	if _self_constructing:
 		var scene_path = get_script().resource_path.replace(".gd", ".tscn")
-		var construction_time = UnitConstants.DEFAULT_PROPERTIES.get(scene_path, {}).get(
+		var construction_time = UnitConstants.get_default_properties(scene_path).get(
 			"build_time", 5.0
 		)
 		_self_construction_speed = 1.0 / construction_time
@@ -171,7 +171,7 @@ func cancel_construction():
 	# Trickle builds only deducted what was spent — nothing to refund.
 	if _trickle_cost.is_empty():
 		var scene_path = get_script().resource_path.replace(".gd", ".tscn")
-		var construction_cost = UnitConstants.DEFAULT_PROPERTIES[scene_path]["costs"]
+		var construction_cost = UnitConstants.get_default_properties(scene_path)["costs"]
 		player.add_resources(construction_cost, Enums.ResourceType.CREDITS)
 	EntityRegistry.unregister(self)
 	queue_free()
@@ -321,7 +321,7 @@ func _complete_sell() -> void:
 	_remove_sell_bar()
 	_remove_energy_from_player()
 	var scene_path = get_script().resource_path.replace(".gd", ".tscn")
-	var cost = UnitConstants.DEFAULT_PROPERTIES.get(scene_path, {}).get("costs", {})
+	var cost = UnitConstants.get_default_properties(scene_path).get("costs", {})
 	# Refund 50 %
 	if not cost.is_empty():
 		var refund := {}
@@ -362,7 +362,7 @@ func toggle_repair(repair_rate_percentage: float = 0.05) -> void:
 	if hp >= hp_max:
 		return  # already full
 	var scene_path = get_script().resource_path.replace(".gd", ".tscn")
-	var props = UnitConstants.DEFAULT_PROPERTIES.get(scene_path, {})
+	var props = UnitConstants.get_default_properties(scene_path)
 	var cost = props.get("costs", {})
 	var credit_cost: float = float(cost.get("credits", 0))
 	var missing_hp: float = float(hp_max - hp)
@@ -414,14 +414,14 @@ func toggle_disable() -> void:
 		if production_queue != null:
 			for el in production_queue.get_elements():
 				if not el.paused:
-					production_queue.toggle_pause(el.unit_prototype.resource_path)
+					production_queue.toggle_pause(UnitConstants.get_scene_id(el.unit_prototype.resource_path))
 	else:
 		_remove_disabled_visual()
 		# Unpause all production
 		if production_queue != null:
 			for el in production_queue.get_elements():
 				if el.paused:
-					production_queue.toggle_pause(el.unit_prototype.resource_path)
+					production_queue.toggle_pause(UnitConstants.get_scene_id(el.unit_prototype.resource_path))
 	MatchSignals.structure_disabled_changed.emit(self)
 
 

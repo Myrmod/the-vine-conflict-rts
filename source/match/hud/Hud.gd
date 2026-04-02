@@ -549,14 +549,17 @@ func _try_produce_structure(scene_path: String) -> void:
 	)
 	var max_conc: int = producer.get("max_concurrent_structures") if producer != null else 1
 	# Determine the production tab of the structure being placed
-	var target_tab: int = UnitConstants.DEFAULT_PROPERTIES.get(scene_path, {}).get(
+	var target_tab: int = UnitConstants.get_default_properties(scene_path).get(
 		"production_tab_type", -1
 	)
+	var scene_id: int = UnitConstants.get_scene_id(scene_path)
+	if scene_id == Enums.SceneId.INVALID:
+		return
 	if _is_off_field(prod_type):
 		# OFF_FIELD: deploy a completed structure, unpause a paused one, or queue new
 		if (
 			producer.production_queue != null
-			and producer.production_queue.has_completed(scene_path)
+			and producer.production_queue.has_completed(scene_id)
 		):
 			MatchSignals.pending_off_field_deploy = true
 			MatchSignals.pending_trickle = false
@@ -564,7 +567,7 @@ func _try_produce_structure(scene_path: String) -> void:
 			var prototype = load(scene_path)
 			if prototype:
 				MatchSignals.place_structure.emit(prototype)
-		elif producer.production_queue != null and _resume_paused_off_field(producer, scene_path):
+		elif producer.production_queue != null and _resume_paused_off_field(producer, scene_id):
 			pass  # unpaused via command
 		else:
 			var in_progress := 0
@@ -583,7 +586,7 @@ func _try_produce_structure(scene_path: String) -> void:
 			if not (unit is Structure and unit.is_under_construction()):
 				continue
 			var upath: String = unit.scene_file_path
-			var utab = UnitConstants.DEFAULT_PROPERTIES.get(upath, {}).get(
+			var utab = UnitConstants.get_default_properties(upath).get(
 				"production_tab_type", -1
 			)
 			if utab == target_tab:
@@ -868,6 +871,11 @@ func _update_all_grid_button_displays() -> void:
 func _update_structure_slot_display(
 	time_label: Label, count_label: Label, scene_path: String
 ) -> void:
+	var scene_id: int = UnitConstants.get_scene_id(scene_path)
+	if scene_id == Enums.SceneId.INVALID:
+		time_label.visible = false
+		count_label.visible = false
+		return
 	# Check for OFF_FIELD production in the active producer's queue
 	if not _active_producers.is_empty():
 		var pidx := clampi(_active_producer_index, 0, _active_producers.size() - 1)
@@ -881,7 +889,7 @@ func _update_structure_slot_display(
 			if _is_off_field(prod_type):
 				if (
 					producer.production_queue != null
-					and producer.production_queue.has_completed(scene_path)
+					and producer.production_queue.has_completed(scene_id)
 				):
 					time_label.text = tr("READY")
 					time_label.visible = true
@@ -1029,7 +1037,10 @@ func _resume_paused_structure(scene_path: String) -> bool:
 
 
 ## Unpause a paused off-field queue element of this type. Returns true if found.
-func _resume_paused_off_field(producer, scene_path: String) -> bool:
+func _resume_paused_off_field(producer, scene_id: int) -> bool:
+	var scene_path: String = UnitConstants.get_scene_path(scene_id)
+	if scene_path == "":
+		return false
 	for el in producer.production_queue.get_elements():
 		if el.unit_prototype.resource_path == scene_path and el.paused:
 			(
@@ -1039,7 +1050,7 @@ func _resume_paused_off_field(producer, scene_path: String) -> bool:
 						"tick": Match.tick + 1,
 						"type": Enums.CommandType.ENTITY_PRODUCTION_PAUSED,
 						"player_id": producer.player.id,
-						"data": {"entity_id": producer.id, "unit_type": scene_path},
+						"data": {"entity_id": producer.id, "unit_type": scene_id},
 					}
 				)
 			)
@@ -1048,6 +1059,9 @@ func _resume_paused_off_field(producer, scene_path: String) -> bool:
 
 
 func _cancel_building_structure(scene_path: String) -> void:
+	var scene_id: int = UnitConstants.get_scene_id(scene_path)
+	if scene_id == Enums.SceneId.INVALID:
+		return
 	# Check if the active producer uses OFF_FIELD mode
 	if not _active_producers.is_empty():
 		var idx := clampi(_active_producer_index, 0, _active_producers.size() - 1)
@@ -1071,7 +1085,7 @@ func _cancel_building_structure(scene_path: String) -> void:
 										"tick": Match.tick + 1,
 										"type": Enums.CommandType.ENTITY_PRODUCTION_CANCELED,
 										"player_id": producer.player.id,
-										"data": {"entity_id": producer.id, "unit_type": scene_path},
+										"data": {"entity_id": producer.id, "unit_type": scene_id},
 									}
 								)
 							)
@@ -1090,7 +1104,7 @@ func _cancel_building_structure(scene_path: String) -> void:
 										"tick": Match.tick + 1,
 										"type": Enums.CommandType.ENTITY_PRODUCTION_PAUSED,
 										"player_id": producer.player.id,
-										"data": {"entity_id": producer.id, "unit_type": scene_path},
+										"data": {"entity_id": producer.id, "unit_type": scene_id},
 									}
 								)
 							)
@@ -1105,7 +1119,7 @@ func _cancel_building_structure(scene_path: String) -> void:
 										"tick": Match.tick + 1,
 										"type": Enums.CommandType.ENTITY_PRODUCTION_CANCELED,
 										"player_id": producer.player.id,
-										"data": {"entity_id": producer.id, "unit_type": scene_path},
+										"data": {"entity_id": producer.id, "unit_type": scene_id},
 									}
 								)
 							)
@@ -1218,6 +1232,9 @@ func _grid_right_click(producer, scene_path: String) -> void:
 
 
 func _grid_toggle_pause(producer, scene_path: String) -> void:
+	var scene_id: int = UnitConstants.get_scene_id(scene_path)
+	if scene_id == Enums.SceneId.INVALID:
+		return
 	(
 		CommandBus
 		. push_command(
@@ -1228,7 +1245,7 @@ func _grid_toggle_pause(producer, scene_path: String) -> void:
 				"data":
 				{
 					"entity_id": producer.id,
-					"unit_type": scene_path,
+					"unit_type": scene_id,
 				}
 			}
 		)
@@ -1236,6 +1253,9 @@ func _grid_toggle_pause(producer, scene_path: String) -> void:
 
 
 func _grid_cancel_one(producer, scene_path: String) -> void:
+	var scene_id: int = UnitConstants.get_scene_id(scene_path)
+	if scene_id == Enums.SceneId.INVALID:
+		return
 	(
 		CommandBus
 		. push_command(
@@ -1246,7 +1266,7 @@ func _grid_cancel_one(producer, scene_path: String) -> void:
 				"data":
 				{
 					"entity_id": producer.id,
-					"unit_type": scene_path,
+					"unit_type": scene_id,
 				}
 			}
 		)
@@ -1255,6 +1275,9 @@ func _grid_cancel_one(producer, scene_path: String) -> void:
 
 func _grid_cancel_all_of_type(producer, scene_path: String) -> void:
 	if _grid_observed_queue == null:
+		return
+	var scene_id: int = UnitConstants.get_scene_id(scene_path)
+	if scene_id == Enums.SceneId.INVALID:
 		return
 	for el in _grid_observed_queue.get_elements():
 		if el.unit_prototype.resource_path == scene_path:
@@ -1268,7 +1291,7 @@ func _grid_cancel_all_of_type(producer, scene_path: String) -> void:
 						"data":
 						{
 							"entity_id": producer.id,
-							"unit_type": scene_path,
+							"unit_type": scene_id,
 						}
 					}
 				)
@@ -1314,15 +1337,20 @@ func _check_structure_requirements(entry: Dictionary) -> bool:
 	if reqs.is_empty():
 		return true
 	var controlled = get_tree().get_nodes_in_group("controlled_units")
-	for req_path in reqs:
+	for req in reqs:
+		var req_id: int = UnitConstants.get_scene_id(req)
+		if req_id == Enums.SceneId.INVALID:
+			continue
 		var found := false
 		for unit in controlled:
 			if not unit is Structure:
 				continue
 			if unit.is_under_construction():
 				continue
-			var unit_scene: String = unit.get_script().resource_path.replace(".gd", ".tscn")
-			if unit_scene == req_path:
+			var unit_scene_id: int = UnitConstants.get_scene_id(
+				unit.get_script().resource_path.replace(".gd", ".tscn")
+			)
+			if unit_scene_id == req_id:
 				found = true
 				break
 		if not found:
@@ -1464,7 +1492,7 @@ func _on_portrait_hover() -> void:
 	if _portrait_unit == null or not is_instance_valid(_portrait_unit):
 		return
 	var scene_path: String = _portrait_unit.get_script().resource_path.replace(".gd", ".tscn")
-	var props: Dictionary = UnitConstants.DEFAULT_PROPERTIES.get(scene_path, {})
+	var props: Dictionary = UnitConstants.get_default_properties(scene_path)
 	var title: String = ""
 	if "unit_name" in _portrait_unit:
 		title = _portrait_unit.unit_name
@@ -1483,7 +1511,7 @@ func _on_portrait_hover_exit() -> void:
 
 func _build_unit_stats(unit) -> Dictionary:
 	var scene_path: String = unit.get_script().resource_path.replace(".gd", ".tscn")
-	var props: Dictionary = UnitConstants.DEFAULT_PROPERTIES.get(scene_path, {})
+	var props: Dictionary = UnitConstants.get_default_properties(scene_path)
 	var stats := {}
 	if props.has("hp_max"):
 		stats["HP"] = "%d / %d" % [unit.hp, props["hp_max"]]
@@ -1607,7 +1635,7 @@ func _update_unit_info_panel() -> void:
 	if _portrait_unit == null or not is_instance_valid(_portrait_unit):
 		return
 	var scene_path: String = _portrait_unit.get_script().resource_path.replace(".gd", ".tscn")
-	var props: Dictionary = UnitConstants.DEFAULT_PROPERTIES.get(scene_path, {})
+	var props: Dictionary = UnitConstants.get_default_properties(scene_path)
 
 	# Hitpoints
 	var hp_cur: int = (

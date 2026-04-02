@@ -17,7 +17,7 @@
 #
 # SERIALIZATION RULE: Commands must contain ONLY serializable values (ints, floats, strings,
 # vectors, dictionaries, arrays). NO object references, NO Resources, NO Nodes. Units are
-# referenced by their EntityRegistry ID (int). Scenes by resource_path (string).
+# referenced by their EntityRegistry ID (int). Scene types by Enums.SceneId (int).
 #
 # COMMAND SCHEMA (required top-level fields):
 #   { tick: int, type: Enums.CommandType, player_id: int, data: Dictionary }
@@ -150,20 +150,20 @@ func _validate_command_schema(cmd: Dictionary) -> bool:
 				if not _validate_target_dict(entry, "CONSTRUCTING", false):
 					return false
 		Enums.CommandType.ENTITY_IS_QUEUED:
-			# Queue unit production at a structure. data.entity_id = structure ID, data.unit_type = scene path.
+			# Queue unit production at a structure. data.entity_id = structure ID, data.unit_type = Enums.SceneId.
 			if not cmd.data.has("entity_id") or typeof(cmd.data.entity_id) != TYPE_INT:
 				push_error("CommandBus: ENTITY_IS_QUEUED requires int data.entity_id")
 				return false
-			if not cmd.data.has("unit_type") or typeof(cmd.data.unit_type) != TYPE_STRING:
-				push_error("CommandBus: ENTITY_IS_QUEUED requires String data.unit_type")
+			if not cmd.data.has("unit_type") or typeof(cmd.data.unit_type) != TYPE_INT:
+				push_error("CommandBus: ENTITY_IS_QUEUED requires int data.unit_type")
 				return false
 		Enums.CommandType.STRUCTURE_PLACED:
-			# Place a new structure. data.structure_prototype = scene path. Player comes from cmd.player_id.
+			# Place a new structure. data.structure_prototype = Enums.SceneId. Player comes from cmd.player_id.
 			if (
 				not cmd.data.has("structure_prototype")
-				or typeof(cmd.data.structure_prototype) != TYPE_STRING
+				or typeof(cmd.data.structure_prototype) != TYPE_INT
 			):
-				push_error("CommandBus: STRUCTURE_PLACED requires String data.structure_prototype")
+				push_error("CommandBus: STRUCTURE_PLACED requires int data.structure_prototype")
 				return false
 			if not cmd.data.has("transform") or typeof(cmd.data.transform) != TYPE_TRANSFORM3D:
 				push_error("CommandBus: STRUCTURE_PLACED requires Transform3D data.transform")
@@ -172,15 +172,15 @@ func _validate_command_schema(cmd: Dictionary) -> bool:
 			if not cmd.data.has("entity_id") or typeof(cmd.data.entity_id) != TYPE_INT:
 				push_error("CommandBus: ENTITY_PRODUCTION_CANCELED requires int data.entity_id")
 				return false
-			if not cmd.data.has("unit_type") or typeof(cmd.data.unit_type) != TYPE_STRING:
-				push_error("CommandBus: ENTITY_PRODUCTION_CANCELED requires String data.unit_type")
+			if not cmd.data.has("unit_type") or typeof(cmd.data.unit_type) != TYPE_INT:
+				push_error("CommandBus: ENTITY_PRODUCTION_CANCELED requires int data.unit_type")
 				return false
 		Enums.CommandType.ENTITY_PRODUCTION_PAUSED:
 			if not cmd.data.has("entity_id") or typeof(cmd.data.entity_id) != TYPE_INT:
 				push_error("CommandBus: ENTITY_PRODUCTION_PAUSED requires int data.entity_id")
 				return false
-			if not cmd.data.has("unit_type") or typeof(cmd.data.unit_type) != TYPE_STRING:
-				push_error("CommandBus: ENTITY_PRODUCTION_PAUSED requires String data.unit_type")
+			if not cmd.data.has("unit_type") or typeof(cmd.data.unit_type) != TYPE_INT:
+				push_error("CommandBus: ENTITY_PRODUCTION_PAUSED requires int data.unit_type")
 				return false
 		Enums.CommandType.PRODUCTION_CANCEL_ALL:
 			# Cancel all production at a structure. data.entity_id = structure ID.

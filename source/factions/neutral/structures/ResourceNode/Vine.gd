@@ -72,7 +72,7 @@ func _randomize_model_rotation():
 
 func _parse_vine_properties():
 	var scene_path: String = scene_file_path
-	var props: Dictionary = UnitConstants.DEFAULT_PROPERTIES.get(scene_path, {})
+	var props: Dictionary = UnitConstants.get_default_properties(scene_path)
 	tile_count = props.get("tile_count", tile_count)
 	resources_per_tile = props.get("resources_per_tile", resources_per_tile)
 	resource_max = tile_count * resources_per_tile

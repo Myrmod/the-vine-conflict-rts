@@ -233,9 +233,7 @@ func _handle_unit_death():
 
 
 func _setup_model_fallback():
-	var props = UnitConstants.DEFAULT_PROPERTIES.get(
-		get_script().resource_path.replace(".gd", ".tscn"), {}
-	)
+	var props = UnitConstants.get_default_properties(get_script().resource_path.replace(".gd", ".tscn"))
 	var tab_type = props.get("production_tab_type", -1)
 	if not PRODUCTION_TYPE_FALLBACK_MODELS.has(tab_type):
 		return
@@ -248,9 +246,9 @@ func _setup_model_fallback():
 
 
 func _setup_default_properties_from_constants():
-	var default_properties = UnitConstants.DEFAULT_PROPERTIES[get_script().resource_path.replace(
-		".gd", ".tscn"
-	)]
+	var default_properties = UnitConstants.get_default_properties(
+		get_script().resource_path.replace(".gd", ".tscn")
+	)
 	## UnitConstants is the highest authority for all default properties.
 	## If hp was pre-set to less than hp_max (e.g. in the map editor),
 	## the unit/structure spawns damaged with that lower hp value.
@@ -258,6 +256,12 @@ func _setup_default_properties_from_constants():
 	# Apply non-hp properties via Object.set()
 	for property in default_properties:
 		if property == "hp" or property == "hp_max":
+			continue
+		if property == "structure_requirements":
+			var requirement_ids: Array = []
+			for req in default_properties[property]:
+				requirement_ids.append(UnitConstants.get_scene_id(req))
+			set(property, requirement_ids)
 			continue
 		set(property, default_properties[property])
 	# Explicitly assign hp_max before hp through self. to guarantee

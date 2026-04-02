@@ -1,6 +1,6 @@
 class_name UnitHelper
 
 
-static func is_structure(scene_path: String) -> bool:
-	var tab = UnitConstants.DEFAULT_PROPERTIES.get(scene_path, {}).get("production_tab_type", -1)
+static func is_structure(scene_ref: Variant) -> bool:
+	var tab = UnitConstants.get_default_properties(scene_ref).get("production_tab_type", -1)
 	return tab == Enums.ProductionTabType.STRUCTURE or tab == Enums.ProductionTabType.DEFENCES

@@ -4,7 +4,7 @@ const SOUND_ROCKET_START = preload("res://assets/sound_effects/rocket1_start.mp3
 const SOUND_ROCKET_END = preload("res://assets/sound_effects/rocket1_end.mp3")
 
 const STRUCTURES = {
-	"res://source/factions/the_amuns/structures/Bekhenet.tscn":
+	Enums.SceneId.AMUNS_BEKHENET:
 	{
 		"scene": "res://source/factions/the_amuns/structures/Bekhenet.tscn",
 		"unit_name": "Nemet",
@@ -36,7 +36,7 @@ const STRUCTURES = {
 		"costs": {"credits": 2500},
 		"build_time": 25.0,
 	},
-	"res://source/factions/the_amuns/structures/Naucratis.tscn":
+	Enums.SceneId.AMUNS_NAUCRATIS:
 	{
 		"scene": "res://source/factions/the_amuns/structures/Naucratis.tscn",
 		"unit_name": "Naucratis",
@@ -67,12 +67,12 @@ const STRUCTURES = {
 		"build_time": 20.0,
 		"structure_requirements":
 		[
-			"res://source/factions/the_amuns/structures/Bekhenet.tscn",
-			"res://source/factions/the_amuns/structures/Kislagh.tscn", # or Nemet
-			"res://source/factions/the_amuns/structures/Nemet.tscn", # or Kislagh
+			Enums.SceneId.AMUNS_BEKHENET,
+			Enums.SceneId.AMUNS_KISLAGH, # or Nemet
+			Enums.SceneId.AMUNS_NEMET, # or Kislagh
 		],
 	},
-	"res://source/factions/the_amuns/structures/Nemet.tscn":
+	Enums.SceneId.AMUNS_NEMET:
 	{
 		"scene": "res://source/factions/the_amuns/structures/Nemet.tscn",
 		"unit_name": "Nemet",
@@ -103,10 +103,10 @@ const STRUCTURES = {
 		"build_time": 20.0,
 		"structure_requirements":
 		[
-			"res://source/factions/the_amuns/structures/Bekhenet.tscn",
+			Enums.SceneId.AMUNS_BEKHENET,
 		],
 	},
-	"res://source/factions/the_amuns/structures/Mni.tscn":
+	Enums.SceneId.AMUNS_MNI:
 	{
 		"scene": "res://source/factions/the_amuns/structures/Mni.tscn",
 		"unit_name": "Mni",
@@ -137,12 +137,12 @@ const STRUCTURES = {
 		"build_time": 15.0,
 		"structure_requirements":
 		[
-			"res://source/factions/the_amuns/structures/Bekhenet.tscn",
-			"res://source/factions/the_amuns/structures/Kislagh.tscn", # or Nemet
-			"res://source/factions/the_amuns/structures/Nemet.tscn", # or Kislagh
+			Enums.SceneId.AMUNS_BEKHENET,
+			Enums.SceneId.AMUNS_KISLAGH, # or Nemet
+			Enums.SceneId.AMUNS_NEMET, # or Kislagh
 		],
 	},
-	"res://source/factions/the_amuns/structures/Kislagh.tscn":
+	Enums.SceneId.AMUNS_KISLAGH:
 	{
 		"scene": "res://source/factions/the_amuns/structures/Kislagh.tscn",
 		"unit_name": "Kislagh",
@@ -172,11 +172,12 @@ const STRUCTURES = {
 		"energy_required": 5,
 		"structure_requirements":
 		[
-			"res://source/factions/the_amuns/structures/Bekhenet.tscn",
+			Enums.SceneId.AMUNS_BEKHENET,
 		],
+		"produces": [Enums.ProductionTabType.INFANTRY],
 		"build_time": 6.0,
 	},
-	"res://source/factions/the_amuns/structures/Pylon.tscn":
+	Enums.SceneId.AMUNS_PYLON:
 	{
 		"scene": "res://source/factions/the_amuns/structures/Pylon.tscn",
 		"unit_name": "Pylon",
@@ -206,11 +207,11 @@ const STRUCTURES = {
 		"energy_required": 0,
 		"structure_requirements":
 		[
-			"res://source/factions/the_amuns/structures/Bekhenet.tscn",
+			Enums.SceneId.AMUNS_BEKHENET,
 		],
 		"build_time": 10.0,
 	},
-	"res://source/factions/the_amuns/structures/Altar.tscn":
+	Enums.SceneId.AMUNS_ALTAR:
 	{
 		"scene": "res://source/factions/the_amuns/structures/Altar.tscn",
 		"unit_name": "Altar",
@@ -221,7 +222,6 @@ const STRUCTURES = {
 		"sight_range": 8.0,
 		"hp": 10,
 		"hp_max": 10,
-		"produces": [Enums.ProductionTabType.INFANTRY],
 		"armor":
 		{
 			Enums.DamageTypes.CANNON: 0.5,
@@ -241,15 +241,15 @@ const STRUCTURES = {
 		"energy_required": 0,
 		"structure_requirements":
 		[
-			"res://source/factions/the_amuns/structures/Bekhenet.tscn",
-			"res://source/factions/the_amuns/structures/Pylon.tscn",
+			Enums.SceneId.AMUNS_BEKHENET,
+			Enums.SceneId.AMUNS_PYLON,
 		],
 		"build_time": 15.0,
 	},
 }
 
 const DEFENCES = {
-	"res://source/factions/the_amuns/structures/WallPillar.tscn":
+	Enums.SceneId.AMUNS_WALL_PILLAR:
 	{
 		"scene": "res://source/factions/the_amuns/structures/WallPillar.tscn",
 		"unit_name": "amuns_WallPillar",
@@ -279,12 +279,12 @@ const DEFENCES = {
 		"build_time": 5.0,
 		"structure_requirements":
 		[
-			"res://source/factions/the_amuns/structures/Bekhenet.tscn",
+			Enums.SceneId.AMUNS_BEKHENET,
 		],
 		## wall specific settings
 		"connection_length": 5,
 	},
-	"res://source/factions/the_amuns/structures/AntiGroundTurret.tscn":
+	Enums.SceneId.AMUNS_ANTI_GROUND_TURRET:
 	{
 		"scene": "res://source/factions/the_amuns/structures/AntiGroundTurret.tscn",
 		"unit_name": "amuns_AntiGroundTurret",
@@ -329,10 +329,10 @@ const DEFENCES = {
 		"build_time": 5.0,
 		"structure_requirements":
 		[
-			"res://source/factions/the_amuns/structures/Bekhenet.tscn",
+			Enums.SceneId.AMUNS_BEKHENET,
 		],
 	},
-	"res://source/factions/the_amuns/structures/AntiAirTurret.tscn":
+	Enums.SceneId.AMUNS_ANTI_AIR_TURRET:
 	{
 		"scene": "res://source/factions/the_amuns/structures/AntiAirTurret.tscn",
 		"unit_name": "amuns_AntiAirTurret",
@@ -377,13 +377,13 @@ const DEFENCES = {
 		"build_time": 5.0,
 		"structure_requirements":
 		[
-			"res://source/factions/the_amuns/structures/Bekhenet.tscn",
+			Enums.SceneId.AMUNS_BEKHENET,
 		],
 	},
 }
 
 const INFANTRY = {
-	"res://source/factions/the_amuns/units/Soldier.tscn":
+	Enums.SceneId.AMUNS_SOLDIER:
 	{
 		"scene": "res://source/factions/the_amuns/units/Soldier.tscn",
 		"unit_name": "amuns_Soldier",
@@ -425,7 +425,7 @@ const INFANTRY = {
 }
 
 const VEHICLES = {
-	"res://source/factions/the_amuns/units/Worker.tscn":
+	Enums.SceneId.AMUNS_WORKER:
 	{
 		"scene": "res://source/factions/the_amuns/units/Worker.tscn",
 		"unit_name": "amuns_Worker",
@@ -457,7 +457,7 @@ const VEHICLES = {
 		"costs": {"credits": 2},
 		"build_time": 3.0,
 	},
-	"res://source/factions/the_amuns/units/Tank.tscn":
+	Enums.SceneId.AMUNS_TANK:
 	{
 		"scene": "res://source/factions/the_amuns/units/Tank.tscn",
 		"unit_name": "amuns_Tank",
@@ -505,7 +505,7 @@ const VEHICLES = {
 }
 
 const AIR = {
-	"res://source/factions/the_amuns/units/Helicopter.tscn":
+	Enums.SceneId.AMUNS_HELICOPTER:
 	{
 		"scene": "res://source/factions/the_amuns/units/Helicopter.tscn",
 		"unit_name": "amuns_Helicopter",
@@ -542,7 +542,7 @@ const AIR = {
 }
 
 const NAVY = {
-	"res://source/factions/the_amuns/units/Drone.tscn":
+	Enums.SceneId.AMUNS_DRONE:
 	{
 		"scene": "res://source/factions/the_amuns/units/Drone.tscn",
 		"unit_name": "amuns_Drone",

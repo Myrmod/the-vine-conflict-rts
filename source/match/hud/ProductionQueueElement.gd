@@ -172,6 +172,9 @@ func _on_focus_structure():
 func _on_pause_production():
 	# Pause/unpause at every structure that has elements of this type
 	var sent_to: Dictionary = {}
+	var unit_scene_id: int = UnitConstants.get_scene_id(unit_type_path)
+	if unit_scene_id == Enums.SceneId.INVALID:
+		return
 	for el in queue_elements:
 		var src_queue = element_to_source.get(el)
 		if src_queue == null:
@@ -190,7 +193,7 @@ func _on_pause_production():
 					"data":
 					{
 						"entity_id": structure.id,
-						"unit_type": unit_type_path,
+						"unit_type": unit_scene_id,
 					}
 				}
 			)
@@ -204,6 +207,9 @@ func _on_cancel_all_of_type():
 		var src_queue = element_to_source.get(element)
 		if src_queue == null:
 			continue
+		var scene_id: int = UnitConstants.get_scene_id(element.unit_prototype.resource_path)
+		if scene_id == Enums.SceneId.INVALID:
+			continue
 		var structure = src_queue.get_parent()
 		(
 			CommandBus
@@ -215,7 +221,7 @@ func _on_cancel_all_of_type():
 					"data":
 					{
 						"entity_id": structure.id,
-						"unit_type": element.unit_prototype.resource_path,
+						"unit_type": scene_id,
 					}
 				}
 			)
@@ -230,6 +236,9 @@ func _on_cancel_production():
 	var src_queue = element_to_source.get(element)
 	if src_queue == null:
 		return
+	var scene_id: int = UnitConstants.get_scene_id(element.unit_prototype.resource_path)
+	if scene_id == Enums.SceneId.INVALID:
+		return
 	var structure = src_queue.get_parent()
 	(
 		CommandBus
@@ -241,7 +250,7 @@ func _on_cancel_production():
 				"data":
 				{
 					"entity_id": structure.id,
-					"unit_type": element.unit_prototype.resource_path,
+					"unit_type": scene_id,
 				}
 			}
 		)

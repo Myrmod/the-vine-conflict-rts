@@ -509,18 +509,20 @@ func _execute_command(cmd: Dictionary):
 			var player = _resolve_player(cmd.player_id, "STRUCTURE_PLACED")
 			if player == null:
 				return
-			var structure_prototype = load(cmd.data.structure_prototype)
+			var structure_scene_id: int = cmd.data.structure_prototype
+			var structure_scene_path: String = UnitConstants.get_scene_path(structure_scene_id)
+			if structure_scene_path == "":
+				push_error("STRUCTURE_PLACED: unknown scene id %s" % structure_scene_id)
+				return
+			var structure_prototype = load(structure_scene_path)
 			if structure_prototype == null:
-				push_error("STRUCTURE_PLACED: cannot load %s" % cmd.data.structure_prototype)
+				push_error("STRUCTURE_PLACED: cannot load %s" % structure_scene_path)
 				return
 			var self_constructing = cmd.data.get("self_constructing", false)
 			var off_field_deploy = cmd.data.get("off_field_deploy", false)
 			var is_trickle = cmd.data.get("trickle", false)
-			var construction_cost = (
-				UnitConstants
-				. DEFAULT_PROPERTIES
-				. get(cmd.data.structure_prototype, {})
-				. get("costs", null)
+			var construction_cost = UnitConstants.get_default_properties(structure_scene_id).get(
+				"costs", null
 			)
 			if off_field_deploy:
 				# Cost already handled during queue production. Deploy with quick build.
@@ -528,7 +530,7 @@ func _execute_command(cmd: Dictionary):
 				if producer_id >= 0:
 					var producer = _resolve_unit(producer_id, "STRUCTURE_PLACED")
 					if producer != null and producer.has_node("ProductionQueue"):
-						producer.production_queue.deploy_completed(cmd.data.structure_prototype)
+						producer.production_queue.deploy_completed(structure_scene_id)
 				var unit = structure_prototype.instantiate()
 				MatchSignals.setup_and_spawn_unit.emit(unit, cmd.data.transform, player, true)
 				if unit is Structure:
@@ -546,7 +548,7 @@ func _execute_command(cmd: Dictionary):
 						push_warning(
 							(
 								"STRUCTURE_PLACED: player %s cannot afford %s"
-								% [player.id, cmd.data.structure_prototype]
+								% [player.id, structure_scene_path]
 							)
 						)
 						return
@@ -573,9 +575,14 @@ func _execute_command(cmd: Dictionary):
 				return
 			if structure is Structure and structure.is_disabled:
 				return
-			var unit_prototype = load(cmd.data.unit_type)
+			var unit_scene_id: int = cmd.data.unit_type
+			var unit_scene_path: String = UnitConstants.get_scene_path(unit_scene_id)
+			if unit_scene_path == "":
+				push_error("ENTITY_IS_QUEUED: unknown scene id %s" % unit_scene_id)
+				return
+			var unit_prototype = load(unit_scene_path)
 			if unit_prototype == null:
-				push_error("ENTITY_IS_QUEUED: cannot load %s" % cmd.data.unit_type)
+				push_error("ENTITY_IS_QUEUED: cannot load %s" % unit_scene_path)
 				return
 			if structure.has_node("ProductionQueue"):
 				structure.production_queue.produce(
@@ -588,11 +595,13 @@ func _execute_command(cmd: Dictionary):
 				return
 			if not _verify_unit_ownership(structure, cmd.player_id, "ENTITY_PRODUCTION_CANCELED"):
 				return
-			var unit_prototype = load(cmd.data.unit_type)
+			var canceled_scene_id: int = cmd.data.unit_type
+			var canceled_scene_path: String = UnitConstants.get_scene_path(canceled_scene_id)
+			var unit_prototype = load(canceled_scene_path)
 			if unit_prototype == null or not structure.has_node("ProductionQueue"):
 				return
 			for element in structure.production_queue.get_elements():
-				if element.unit_prototype.resource_path == cmd.data.unit_type:
+				if element.unit_prototype.resource_path == canceled_scene_path:
 					structure.production_queue.cancel(element)
 					break
 
