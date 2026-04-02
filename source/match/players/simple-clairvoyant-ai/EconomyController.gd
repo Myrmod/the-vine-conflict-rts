@@ -2,8 +2,8 @@ extends Node
 
 signal resources_required(resources, metadata)
 
-const CommandCenter = preload("res://source/factions/the_amuns/structures/CommandCenter.gd")
-const CommandCenterScene = preload("res://source/factions/the_amuns/structures/CommandCenter.tscn")
+const CommandCenter = preload("res://source/factions/the_amuns/structures/Bekhenet.gd")
+const CommandCenterScene = preload("res://source/factions/the_amuns/structures/Bekhenet.tscn")
 const Worker = preload("res://source/factions/the_amuns/units/Worker.gd")
 const WorkerScene = preload("res://source/factions/the_amuns/units/Worker.tscn")
 const CollectingResourcesSequentially = preload(

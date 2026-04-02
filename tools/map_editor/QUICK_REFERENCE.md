@@ -134,7 +134,7 @@ Validation errors appear in status bar.
 All entities reference their .tscn files:
 ```
 res://source/factions/the_amuns/units/Tank.tscn
-res://source/factions/the_amuns/structures/CommandCenter.tscn
+res://source/factions/the_amuns/structures/Bekhenet.tscn
 ```
 
 ### Player IDs

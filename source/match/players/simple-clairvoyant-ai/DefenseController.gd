@@ -3,7 +3,7 @@ extends Node
 signal resources_required(resources, metadata)
 
 const Worker = preload("res://source/factions/the_amuns/units/Worker.gd")
-const CommandCenter = preload("res://source/factions/the_amuns/structures/CommandCenter.gd")
+const CommandCenter = preload("res://source/factions/the_amuns/structures/Bekhenet.gd")
 const AGTurret = preload("res://source/factions/the_amuns/structures/AntiGroundTurret.gd")
 const AGTurretScene = preload("res://source/factions/the_amuns/structures/AntiGroundTurret.tscn")
 const AATurret = preload("res://source/factions/the_amuns/structures/AntiAirTurret.gd")

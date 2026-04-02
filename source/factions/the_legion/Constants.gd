@@ -3,6 +3,7 @@ class_name LegionConstants
 const STRUCTURES = {
 	"res://source/factions/the_legion/structures/CommandCenter.tscn":
 	{
+		"scene": "res://source/factions/the_legion/structures/CommandCenter.tscn",
 		"unit_name": "legion_CommandCenter",
 		"description": "Central command hub. Builds structures and defences",
 		"faction": Enums.Faction.LEGION,
@@ -35,6 +36,7 @@ const STRUCTURES = {
 	},
 	"res://source/factions/the_legion/structures/PowerPlant.tscn":
 	{
+		"scene": "res://source/factions/the_legion/structures/PowerPlant.tscn",
 		"unit_name": "legion_PowerPlant",
 		"description": "Generates energy to power other structures",
 		"faction": Enums.Faction.LEGION,
@@ -64,6 +66,7 @@ const STRUCTURES = {
 	},
 	"res://source/factions/the_legion/structures/Barracks.tscn":
 	{
+		"scene": "res://source/factions/the_legion/structures/Barracks.tscn",
 		"unit_name": "legion_Barracks",
 		"description": "Trains infantry units",
 		"faction": Enums.Faction.LEGION,
@@ -104,6 +107,7 @@ const DEFENCES = {}
 const INFANTRY = {
 	"res://source/factions/the_legion/units/Soldier.tscn":
 	{
+		"scene": "res://source/factions/the_legion/units/Soldier.tscn",
 		"unit_name": "legion_Soldier",
 		"description": "Light infantry armed with a laser rifle",
 		"faction": Enums.Faction.LEGION,

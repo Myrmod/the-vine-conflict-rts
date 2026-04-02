@@ -1,6 +1,6 @@
 class_name AmunsFaction extends Factions
 
-@export var spawn_unit = preload("res://source/factions/the_amuns/structures/CommandCenter.tscn")
+@export var spawn_unit = preload("res://source/factions/the_amuns/structures/Bekhenet.tscn")
 
 
 static func init() -> void:

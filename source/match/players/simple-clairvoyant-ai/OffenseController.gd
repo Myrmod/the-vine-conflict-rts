@@ -3,16 +3,16 @@ extends Node
 signal resources_required(resources, metadata)
 
 const Worker = preload("res://source/factions/the_amuns/units/Worker.gd")
-const CommandCenter = preload("res://source/factions/the_amuns/structures/CommandCenter.gd")
-const VehicleFactory = preload("res://source/factions/the_amuns/structures/VehicleFactory.gd")
+const CommandCenter = preload("res://source/factions/the_amuns/structures/Bekhenet.gd")
+const VehicleFactory = preload("res://source/factions/the_amuns/structures/Naucratis.gd")
 const VehicleFactoryScene = preload(
-	"res://source/factions/the_amuns/structures/VehicleFactory.tscn"
+	"res://source/factions/the_amuns/structures/Naucratis.tscn"
 )
 const Tank = preload("res://source/factions/the_amuns/units/Tank.gd")
 const TankScene = preload("res://source/factions/the_amuns/units/Tank.tscn")
-const AircraftFactory = preload("res://source/factions/the_amuns/structures/AircraftFactory.gd")
+const AircraftFactory = preload("res://source/factions/the_amuns/structures/Nemet.gd")
 const AircraftFactoryScene = preload(
-	"res://source/factions/the_amuns/structures/AircraftFactory.tscn"
+	"res://source/factions/the_amuns/structures/Nemet.tscn"
 )
 const Helicopter = preload("res://source/factions/the_amuns/units/Helicopter.gd")
 const HelicopterScene = preload("res://source/factions/the_amuns/units/Helicopter.tscn")

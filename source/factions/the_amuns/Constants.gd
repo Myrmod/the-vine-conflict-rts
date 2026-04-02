@@ -4,13 +4,14 @@ const SOUND_ROCKET_START = preload("res://assets/sound_effects/rocket1_start.mp3
 const SOUND_ROCKET_END = preload("res://assets/sound_effects/rocket1_end.mp3")
 
 const STRUCTURES = {
-	"res://source/factions/the_amuns/structures/CommandCenter.tscn":
+	"res://source/factions/the_amuns/structures/Bekhenet.tscn":
 	{
-		"unit_name": "amuns_CommandCenter",
+		"scene": "res://source/factions/the_amuns/structures/Bekhenet.tscn",
+		"unit_name": "Nemet",
 		"description": "Central command hub. Builds structures and defences",
 		"faction": Enums.Faction.AMUNS,
 		"production_tab_type": Enums.ProductionTabType.STRUCTURE,
-		"production_tab_grid_slot": Enums.ProductionTabGridSlots.F4,
+		"production_tab_grid_slot": Enums.ProductionTabGridSlots.F7,
 		"produces": [Enums.ProductionTabType.STRUCTURE, Enums.ProductionTabType.DEFENCES],
 		"structure_production_type": Enums.StructureProductionType.CONSTRUCT_ON_FIELD_AND_TRICKLE,
 		"max_concurrent_structures": 1,
@@ -32,16 +33,17 @@ const STRUCTURES = {
 			Enums.DamageTypes.ROCKET: 0.25,
 			Enums.DamageTypes.TESLA: 0.25,
 		},
-		"costs": {"credits": 8},
-		"build_time": 10.0,
+		"costs": {"credits": 2500},
+		"build_time": 25.0,
 	},
-	"res://source/factions/the_amuns/structures/VehicleFactory.tscn":
+	"res://source/factions/the_amuns/structures/Naucratis.tscn":
 	{
-		"unit_name": "amuns_VehicleFactory",
+		"scene": "res://source/factions/the_amuns/structures/Naucratis.tscn",
+		"unit_name": "Naucratis",
 		"description": "Produces ground vehicles",
 		"faction": Enums.Faction.AMUNS,
 		"production_tab_type": Enums.ProductionTabType.STRUCTURE,
-		"production_tab_grid_slot": Enums.ProductionTabGridSlots.F1,
+		"production_tab_grid_slot": Enums.ProductionTabGridSlots.F5,
 		"produces": [Enums.ProductionTabType.VEHICLE],
 		"sight_range": 8.0,
 		"hp": 16,
@@ -61,20 +63,23 @@ const STRUCTURES = {
 			Enums.DamageTypes.ROCKET: 0.25,
 			Enums.DamageTypes.TESLA: 0.25,
 		},
-		"costs": {"credits": 6},
-		"build_time": 8.0,
+		"costs": {"credits": 2000},
+		"build_time": 20.0,
 		"structure_requirements":
 		[
-			"res://source/factions/the_amuns/structures/CommandCenter.tscn",
+			"res://source/factions/the_amuns/structures/Bekhenet.tscn",
+			"res://source/factions/the_amuns/structures/Kislagh.tscn", # or Nemet
+			"res://source/factions/the_amuns/structures/Nemet.tscn", # or Kislagh
 		],
 	},
-	"res://source/factions/the_amuns/structures/AircraftFactory.tscn":
+	"res://source/factions/the_amuns/structures/Nemet.tscn":
 	{
-		"unit_name": "amuns_AircraftFactory",
+		"scene": "res://source/factions/the_amuns/structures/Nemet.tscn",
+		"unit_name": "Nemet",
 		"description": "Produces aircraft",
 		"faction": Enums.Faction.AMUNS,
 		"production_tab_type": Enums.ProductionTabType.STRUCTURE,
-		"production_tab_grid_slot": Enums.ProductionTabGridSlots.F2,
+		"production_tab_grid_slot": Enums.ProductionTabGridSlots.F4,
 		"produces": [Enums.ProductionTabType.AIR],
 		"sight_range": 8.0,
 		"hp": 16,
@@ -94,20 +99,21 @@ const STRUCTURES = {
 			Enums.DamageTypes.ROCKET: 0.25,
 			Enums.DamageTypes.TESLA: 0.25,
 		},
-		"costs": {"credits": 4},
-		"build_time": 8.0,
+		"costs": {"credits": 2000},
+		"build_time": 20.0,
 		"structure_requirements":
 		[
-			"res://source/factions/the_amuns/structures/CommandCenter.tscn",
+			"res://source/factions/the_amuns/structures/Bekhenet.tscn",
 		],
 	},
-	"res://source/factions/the_amuns/structures/Shipyard.tscn":
+	"res://source/factions/the_amuns/structures/Mni.tscn":
 	{
-		"unit_name": "amuns_Shipyard",
+		"scene": "res://source/factions/the_amuns/structures/Mni.tscn",
+		"unit_name": "Mni",
 		"description": "Produces naval units",
 		"faction": Enums.Faction.AMUNS,
 		"production_tab_type": Enums.ProductionTabType.STRUCTURE,
-		"production_tab_grid_slot": Enums.ProductionTabGridSlots.F3,
+		"production_tab_grid_slot": Enums.ProductionTabGridSlots.F6,
 		"produces": [Enums.ProductionTabType.WATER],
 		"sight_range": 8.0,
 		"hp": 16,
@@ -127,24 +133,26 @@ const STRUCTURES = {
 			Enums.DamageTypes.ROCKET: 0.25,
 			Enums.DamageTypes.TESLA: 0.25,
 		},
-		"costs": {"credits": 5},
-		"build_time": 8.0,
+		"costs": {"credits": 1500},
+		"build_time": 15.0,
 		"structure_requirements":
 		[
-			"res://source/factions/the_amuns/structures/CommandCenter.tscn",
+			"res://source/factions/the_amuns/structures/Bekhenet.tscn",
+			"res://source/factions/the_amuns/structures/Kislagh.tscn", # or Nemet
+			"res://source/factions/the_amuns/structures/Nemet.tscn", # or Kislagh
 		],
 	},
-	"res://source/factions/the_amuns/structures/Barracks.tscn":
+	"res://source/factions/the_amuns/structures/Kislagh.tscn":
 	{
-		"unit_name": "amuns_Barracks",
+		"scene": "res://source/factions/the_amuns/structures/Kislagh.tscn",
+		"unit_name": "Kislagh",
 		"description": "Trains infantry units",
 		"faction": Enums.Faction.AMUNS,
 		"production_tab_type": Enums.ProductionTabType.STRUCTURE,
-		"production_tab_grid_slot": Enums.ProductionTabGridSlots.F5,
+		"production_tab_grid_slot": Enums.ProductionTabGridSlots.F3,
 		"sight_range": 8.0,
 		"hp": 10,
 		"hp_max": 10,
-		"produces": [Enums.ProductionTabType.INFANTRY],
 		"armor":
 		{
 			Enums.DamageTypes.CANNON: 0.5,
@@ -164,15 +172,86 @@ const STRUCTURES = {
 		"energy_required": 5,
 		"structure_requirements":
 		[
-			"res://source/factions/the_amuns/structures/CommandCenter.tscn",
+			"res://source/factions/the_amuns/structures/Bekhenet.tscn",
 		],
 		"build_time": 6.0,
+	},
+	"res://source/factions/the_amuns/structures/Pylon.tscn":
+	{
+		"scene": "res://source/factions/the_amuns/structures/Pylon.tscn",
+		"unit_name": "Pylon",
+		"description": "Transforms vines into resources for the Amuns",
+		"faction": Enums.Faction.AMUNS,
+		"production_tab_type": Enums.ProductionTabType.STRUCTURE,
+		"production_tab_grid_slot": Enums.ProductionTabGridSlots.F1,
+		"sight_range": 8.0,
+		"hp": 10,
+		"hp_max": 10,
+		"armor":
+		{
+			Enums.DamageTypes.CANNON: 0.5,
+			Enums.DamageTypes.CORROSIVE: 0.0,
+			Enums.DamageTypes.CRUSH: 0.75,
+			Enums.DamageTypes.EXPLOSIVE: 0.0,
+			Enums.DamageTypes.FIRE: 0.0,
+			Enums.DamageTypes.LASER: 0.5,
+			Enums.DamageTypes.MELEE: 0.75,
+			Enums.DamageTypes.PLASMA: 0.25,
+			Enums.DamageTypes.PRISM: 0.5,
+			Enums.DamageTypes.RIFLE: 0.75,
+			Enums.DamageTypes.ROCKET: 0.25,
+			Enums.DamageTypes.TESLA: 0.25,
+		},
+		"costs": {"credits": 1000},
+		"energy_required": 0,
+		"structure_requirements":
+		[
+			"res://source/factions/the_amuns/structures/Bekhenet.tscn",
+		],
+		"build_time": 10.0,
+	},
+	"res://source/factions/the_amuns/structures/Altar.tscn":
+	{
+		"scene": "res://source/factions/the_amuns/structures/Altar.tscn",
+		"unit_name": "Altar",
+		"description": "Harvests vines around it",
+		"faction": Enums.Faction.AMUNS,
+		"production_tab_type": Enums.ProductionTabType.STRUCTURE,
+		"production_tab_grid_slot": Enums.ProductionTabGridSlots.F2,
+		"sight_range": 8.0,
+		"hp": 10,
+		"hp_max": 10,
+		"produces": [Enums.ProductionTabType.INFANTRY],
+		"armor":
+		{
+			Enums.DamageTypes.CANNON: 0.5,
+			Enums.DamageTypes.CORROSIVE: 0.0,
+			Enums.DamageTypes.CRUSH: 0.75,
+			Enums.DamageTypes.EXPLOSIVE: 0.0,
+			Enums.DamageTypes.FIRE: 0.0,
+			Enums.DamageTypes.LASER: 0.5,
+			Enums.DamageTypes.MELEE: 0.75,
+			Enums.DamageTypes.PLASMA: 0.25,
+			Enums.DamageTypes.PRISM: 0.5,
+			Enums.DamageTypes.RIFLE: 0.75,
+			Enums.DamageTypes.ROCKET: 0.25,
+			Enums.DamageTypes.TESLA: 0.25,
+		},
+		"costs": {"credits": 1500},
+		"energy_required": 0,
+		"structure_requirements":
+		[
+			"res://source/factions/the_amuns/structures/Bekhenet.tscn",
+			"res://source/factions/the_amuns/structures/Pylon.tscn",
+		],
+		"build_time": 15.0,
 	},
 }
 
 const DEFENCES = {
 	"res://source/factions/the_amuns/structures/WallPillar.tscn":
 	{
+		"scene": "res://source/factions/the_amuns/structures/WallPillar.tscn",
 		"unit_name": "amuns_WallPillar",
 		"description": "Defensive wall",
 		"faction": Enums.Faction.AMUNS,
@@ -200,13 +279,14 @@ const DEFENCES = {
 		"build_time": 5.0,
 		"structure_requirements":
 		[
-			"res://source/factions/the_amuns/structures/CommandCenter.tscn",
+			"res://source/factions/the_amuns/structures/Bekhenet.tscn",
 		],
 		## wall specific settings
 		"connection_length": 5,
 	},
 	"res://source/factions/the_amuns/structures/AntiGroundTurret.tscn":
 	{
+		"scene": "res://source/factions/the_amuns/structures/AntiGroundTurret.tscn",
 		"unit_name": "amuns_AntiGroundTurret",
 		"description": "Defensive turret that fires cannons at ground targets",
 		"faction": Enums.Faction.AMUNS,
@@ -249,11 +329,12 @@ const DEFENCES = {
 		"build_time": 5.0,
 		"structure_requirements":
 		[
-			"res://source/factions/the_amuns/structures/CommandCenter.tscn",
+			"res://source/factions/the_amuns/structures/Bekhenet.tscn",
 		],
 	},
 	"res://source/factions/the_amuns/structures/AntiAirTurret.tscn":
 	{
+		"scene": "res://source/factions/the_amuns/structures/AntiAirTurret.tscn",
 		"unit_name": "amuns_AntiAirTurret",
 		"description": "Defensive turret that fires rockets at air targets",
 		"faction": Enums.Faction.AMUNS,
@@ -296,7 +377,7 @@ const DEFENCES = {
 		"build_time": 5.0,
 		"structure_requirements":
 		[
-			"res://source/factions/the_amuns/structures/CommandCenter.tscn",
+			"res://source/factions/the_amuns/structures/Bekhenet.tscn",
 		],
 	},
 }
@@ -304,6 +385,7 @@ const DEFENCES = {
 const INFANTRY = {
 	"res://source/factions/the_amuns/units/Soldier.tscn":
 	{
+		"scene": "res://source/factions/the_amuns/units/Soldier.tscn",
 		"unit_name": "amuns_Soldier",
 		"description": "Light infantry armed with a laser rifle",
 		"faction": Enums.Faction.AMUNS,
@@ -345,6 +427,7 @@ const INFANTRY = {
 const VEHICLES = {
 	"res://source/factions/the_amuns/units/Worker.tscn":
 	{
+		"scene": "res://source/factions/the_amuns/units/Worker.tscn",
 		"unit_name": "amuns_Worker",
 		"description": "Unarmed construction and resource gathering vehicle",
 		"faction": Enums.Faction.AMUNS,
@@ -376,6 +459,7 @@ const VEHICLES = {
 	},
 	"res://source/factions/the_amuns/units/Tank.tscn":
 	{
+		"scene": "res://source/factions/the_amuns/units/Tank.tscn",
 		"unit_name": "amuns_Tank",
 		"description": "Heavy armored ground vehicle with an autocannon",
 		"faction": Enums.Faction.AMUNS,
@@ -423,6 +507,7 @@ const VEHICLES = {
 const AIR = {
 	"res://source/factions/the_amuns/units/Helicopter.tscn":
 	{
+		"scene": "res://source/factions/the_amuns/units/Helicopter.tscn",
 		"unit_name": "amuns_Helicopter",
 		"description": "Versatile attack helicopter armed with rockets",
 		"faction": Enums.Faction.AMUNS,
@@ -459,6 +544,7 @@ const AIR = {
 const NAVY = {
 	"res://source/factions/the_amuns/units/Drone.tscn":
 	{
+		"scene": "res://source/factions/the_amuns/units/Drone.tscn",
 		"unit_name": "amuns_Drone",
 		"description": "Light aquatic scout drone",
 		"faction": Enums.Faction.AMUNS,
