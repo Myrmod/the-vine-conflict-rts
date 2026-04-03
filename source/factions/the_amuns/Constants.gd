@@ -68,8 +68,8 @@ const STRUCTURES = {
 		"structure_requirements":
 		[
 			Enums.SceneId.AMUNS_BEKHENET,
-			Enums.SceneId.AMUNS_KISLAGH, # or Nemet
-			Enums.SceneId.AMUNS_NEMET, # or Kislagh
+			Enums.SceneId.AMUNS_KISLAGH,  # or Nemet
+			Enums.SceneId.AMUNS_NEMET,  # or Kislagh
 		],
 	},
 	Enums.SceneId.AMUNS_NEMET:
@@ -138,8 +138,8 @@ const STRUCTURES = {
 		"structure_requirements":
 		[
 			Enums.SceneId.AMUNS_BEKHENET,
-			Enums.SceneId.AMUNS_KISLAGH, # or Nemet
-			Enums.SceneId.AMUNS_NEMET, # or Kislagh
+			Enums.SceneId.AMUNS_KISLAGH,  # or Nemet
+			Enums.SceneId.AMUNS_NEMET,  # or Kislagh
 		],
 	},
 	Enums.SceneId.AMUNS_KISLAGH:
@@ -252,7 +252,7 @@ const DEFENCES = {
 	Enums.SceneId.AMUNS_WALL_PILLAR:
 	{
 		"scene": "res://source/factions/the_amuns/structures/WallPillar.tscn",
-		"unit_name": "amuns_WallPillar",
+		"unit_name": "Wall Pillar",
 		"description": "Defensive wall",
 		"faction": Enums.Faction.AMUNS,
 		"production_tab_type": Enums.ProductionTabType.DEFENCES,

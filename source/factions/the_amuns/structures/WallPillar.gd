@@ -24,7 +24,6 @@ func _get_wall_section_scene() -> PackedScene:
 
 func _finish_construction():
 	super()
-	_fix_backface_culling()
 	_hide_all_arms()
 	_connect_to_nearby_pillars()
 	_update_arm_visibility()
@@ -36,27 +35,14 @@ func _setup_color():
 	var holder := find_child("ModelHolder")
 	if holder == null or player == null:
 		return
-	var mat: Material = player.get_color_material()
+	var player_mat: Material = player.get_color_material()
 	for mesh in holder.find_children("*", "MeshInstance3D", true, false):
 		for surface_id in range(mesh.mesh.get_surface_count()):
 			var surface_mat: Material = mesh.get_active_material(surface_id)
 			if surface_mat == null:
 				continue
 			if surface_mat.resource_name == "PlayerColor":
-				mesh.set_surface_override_material(surface_id, mat)
-
-
-## Disable backface culling on all materials so both sides of the mesh render.
-## Workaround for flipped normals on the lower part of the pillar model.
-func _fix_backface_culling():
-	var holder := find_child("ModelHolder")
-	if holder == null:
-		return
-	for mesh in holder.find_children("*", "MeshInstance3D", true, false):
-		for surface_id in range(mesh.mesh.get_surface_count()):
-			var surface_mat = mesh.get_active_material(surface_id)
-			if surface_mat is StandardMaterial3D:
-				surface_mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+				mesh.set_surface_override_material(surface_id, player_mat)
 
 
 func _exit_tree():
