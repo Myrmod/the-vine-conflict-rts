@@ -1,4 +1,4 @@
-extends "res://source/match/units/Structure.gd"
+extends "res://source/factions/the_amuns/AmunStructure.gd"
 
 ## Arm names use Blender axes. GLB export: Blender +X → Godot +X, Blender +Y → Godot -Z.
 const ARM_DIRECTIONS := {

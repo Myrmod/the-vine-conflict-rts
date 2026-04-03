@@ -1,4 +1,4 @@
-extends "res://source/match/units/Structure.gd"
+extends "res://source/factions/the_amuns/AmunStructure.gd"
 
 const WaitingForTargets = preload("res://source/match/units/actions/WaitingForTargets.gd")
 

@@ -1,0 +1,26 @@
+[gd_scene format=3 uid="uid://db3ifrtpia3dr"]
+
+[ext_resource type="PackedScene" uid="uid://bs2jm62cmkbrk" path="res://addons/instant-realistic-light/light_scene.tscn" id="1_34en3"]
+[ext_resource type="PackedScene" uid="uid://bv6utwoiwp24f" path="res://assets_overide/Amuns/Defenses/Amuns_Wall_Pillar.glb" id="2_ugw2y"]
+[ext_resource type="Script" uid="uid://cwe34ax2chaey" path="res://source/shaders/3d/TeleportEffect.gd" id="3_tp_fx"]
+[ext_resource type="Script" uid="uid://cr4rtp3vvverk" path="res://tests/manual/TeleportShaderTest.gd" id="5_tst_ctrl"]
+
+[node name="TeleportShaderTest" type="Node3D" unique_id=2063759606]
+script = ExtResource("5_tst_ctrl")
+
+[node name="WorldEnvironment" parent="." unique_id=1058080967 instance=ExtResource("1_34en3")]
+
+[node name="Amuns_Wall_Pillar" parent="." unique_id=121468070 instance=ExtResource("2_ugw2y")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.5470605, 0, 0.09128213)
+visible = false
+
+[node name="TeleportEffect" type="Node3D" parent="Amuns_Wall_Pillar" unique_id=1092384575]
+visible = false
+script = ExtResource("3_tp_fx")
+
+[node name="Camera3D" type="Camera3D" parent="." unique_id=1786925338]
+transform = Transform3D(1, 0, 0, 0, 0.8660253, 0.50000024, 0, -0.50000024, 0.8660253, 0, 14.516891, 19.565523)
+current = true
+
+[node name="Amuns_Wall_Pillar2" parent="." unique_id=820736651 instance=ExtResource("2_ugw2y")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.5470605, 0, 0.09128213)
