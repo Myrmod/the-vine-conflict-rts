@@ -31,7 +31,7 @@ func _ready():
 	_remove_electricity_shader()
 	_create_forest_zone()
 	_create_vehicle_nav_blocker()
-	call_deferred("_setup_arc_sparking")
+	(func(): if is_instance_valid(self): _setup_arc_sparking()).call_deferred()
 	resource_changed.connect(_on_resource_changed)
 
 
