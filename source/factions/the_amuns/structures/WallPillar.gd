@@ -1,11 +1,12 @@
 extends "res://source/factions/the_amuns/AmunStructure.gd"
 
-## Arm names use Blender axes. GLB export: Blender +X → Godot +X, Blender +Y → Godot -Z.
-const ARM_DIRECTIONS := {
-	"arms_xp": Vector3(-1, 0, 0),
-	"arms_xn": Vector3(1, 0, 0),
-	"arms_yp": Vector3(0, 0, 1),
-	"arms_yn": Vector3(0, 0, -1),
+## Arm local directions in the GLB's coordinate space (post-export).
+## Blender +X/−X → Godot local +X/−X; Blender +Y/−Y → Godot local −Z/+Z.
+const ARM_LOCAL_DIRECTIONS := {
+	"arms_xp": Vector3(1, 0, 0),
+	"arms_xn": Vector3(-1, 0, 0),
+	"arms_yp": Vector3(0, 0, -1),
+	"arms_yn": Vector3(0, 0, 1),
 }
 
 var wall_sections: Array = []
@@ -231,7 +232,7 @@ func _find_arm_node(arm_name: String) -> Node3D:
 
 
 func _hide_all_arms() -> void:
-	for arm_name in ARM_DIRECTIONS:
+	for arm_name in ARM_LOCAL_DIRECTIONS:
 		var arm := _find_arm_node(arm_name)
 		if arm != null:
 			arm.visible = false
@@ -239,6 +240,10 @@ func _hide_all_arms() -> void:
 
 func _update_arm_visibility() -> void:
 	_hide_all_arms()
+
+	var holder := find_child("ModelHolder") as Node3D
+	if holder == null:
+		return
 
 	for section in wall_sections:
 		if not is_instance_valid(section):
@@ -254,8 +259,15 @@ func _update_arm_visibility() -> void:
 
 		var best_name := ""
 		var best_dot := -2.0
-		for arm_name in ARM_DIRECTIONS:
-			var dot: float = ARM_DIRECTIONS[arm_name].dot(dir)
+		for arm_name in ARM_LOCAL_DIRECTIONS:
+			var world_dir: Vector3 = (
+				(holder.global_transform.basis * ARM_LOCAL_DIRECTIONS[arm_name]).normalized()
+			)
+			world_dir.y = 0.0
+			if world_dir.length_squared() < 0.001:
+				continue
+			world_dir = world_dir.normalized()
+			var dot: float = world_dir.dot(dir)
 			if dot > best_dot:
 				best_dot = dot
 				best_name = arm_name

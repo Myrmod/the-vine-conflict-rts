@@ -1,9 +1,9 @@
-[gd_scene format=3 uid="uid://4q31t7ry747l"]
+[gd_scene format=3 uid="uid://c0tupxhcq5qnb"]
 
 [ext_resource type="Script" uid="uid://cr4rtp3vvverk" path="res://tests/manual/TeleportShaderTest.gd" id="1_y7h2q"]
 [ext_resource type="PackedScene" uid="uid://bs2jm62cmkbrk" path="res://addons/instant-realistic-light/light_scene.tscn" id="2_tlncu"]
 [ext_resource type="PackedScene" uid="uid://bv6utwoiwp24f" path="res://assets_overide/Amuns/Defenses/Amuns_Wall_Pillar.glb" id="3_xpxsh"]
-[ext_resource type="Shader" uid="uid://caa8uthjngdm3" path="res://tests/manual/refraction_glass.gdshader" id="4_refract"]
+[ext_resource type="Shader" path="res://tests/manual/refraction_glass.gdshader" id="4_refract"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_refract"]
 render_priority = 1
