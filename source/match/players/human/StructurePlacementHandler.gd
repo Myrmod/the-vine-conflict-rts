@@ -128,7 +128,11 @@ func _calculate_blueprint_position_validity():
 	var placement_validity = MatchUtils.Placement.validate_agent_placement_position(
 		_active_blueprint_node.global_position,
 		_pending_structure_radius,
-		get_tree().get_nodes_in_group("units") + get_tree().get_nodes_in_group("resource_units"),
+		(
+			get_tree().get_nodes_in_group("units")
+			+ get_tree().get_nodes_in_group("resource_units")
+			+ get_tree().get_nodes_in_group("forest_vines")
+		),
 		_pending_structure_navmap_rid,
 		_pending_skip_nav_check
 	)
@@ -140,9 +144,12 @@ func _calculate_blueprint_position_validity():
 
 
 func _player_has_enough_resources():
-	var construction_cost = UnitConstants.get_default_properties(
-		UnitConstants.get_scene_id(_pending_structure_prototype.resource_path)
-	)["costs"]
+	var construction_cost = (
+		UnitConstants
+		. get_default_properties(
+			UnitConstants.get_scene_id(_pending_structure_prototype.resource_path)
+		)["costs"]
+	)
 	return _player.has_resources(construction_cost)
 
 
@@ -311,7 +318,9 @@ func _cancel_structure_placement():
 func _finish_structure_placement():
 	var can_place = _off_field_deploy or _is_trickle or _player_has_enough_resources()
 	if can_place:
-		var structure_scene_id: int = UnitConstants.get_scene_id(_pending_structure_prototype.resource_path)
+		var structure_scene_id: int = UnitConstants.get_scene_id(
+			_pending_structure_prototype.resource_path
+		)
 		if structure_scene_id == Enums.SceneId.INVALID:
 			_cancel_structure_placement()
 			return

@@ -27,7 +27,7 @@ var _sub_action = null
 static func is_applicable(source_unit, target_unit):
 	if source_unit.attack_range == null:
 		return false
-	if target_unit is Vine:
+	if target_unit is Vine or target_unit is ForestVine:
 		return source_unit.can_attack_vines and target_unit.hp > 0
 	return (
 		"player" in target_unit

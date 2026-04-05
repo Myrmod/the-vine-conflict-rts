@@ -10,7 +10,7 @@
 [sub_resource type="BoxShape3D" id="BoxShape3D_forest"]
 size = Vector3(2, 0.6, 1)
 
-[node name="ForestVine_2_1" type="Area3D" unique_id=397871121 groups=["resource_units"]]
+[node name="ForestVine_2_1" type="Area3D" unique_id=397871121 groups=["forest_vines"]]
 script = ExtResource("1_forest")
 
 [node name="Geometry" type="Node3D" parent="." unique_id=1215881862]

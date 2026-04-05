@@ -45,6 +45,7 @@ enum OccupationType {
 	STRUCTURE = 1,
 	RESOURCE = 2,
 	RESOURCE_SPAWNER = 3,
+	FOREST = 4,
 }
 
 ## Command mode for unit orders. NORMAL is the default (right-click = move/attack).
@@ -165,6 +166,6 @@ enum SceneId {
 	RADIX_COMMAND_CENTER,
 	REMNANTS_COMMAND_CENTER,
 	NEUTRAL_FOREST_VINE_2_1,
+	NEUTRAL_RESOURCE_VINE,
+	NEUTRAL_RESOURCE_SPAWNER,
 }
-
-

@@ -1,6 +1,6 @@
 class_name ForestVine
 
-extends Vine
+extends Area3D
 
 const VineArcScript = preload("res://source/factions/neutral/structures/ResourceNode/VineArc.gd")
 
@@ -19,6 +19,34 @@ var forest_sight_multiplier: float = 0.5
 ## Extra radius around the vine that counts as forest zone (added to footprint).
 var forest_zone_padding: float = 0.5
 
+var armor: Dictionary = {}
+
+var hp: int = 0:
+	set(value):
+		hp = max(0, value)
+		hp_changed.emit()
+		if hp <= 0 and _alive:
+			_die()
+var hp_max: int = 0
+
+signal hp_changed
+
+var radius: float:
+	get:
+		var obs: Node = find_child("MovementObstacle")
+		if obs != null:
+			return obs.get("radius") as float
+		return 0.0
+var global_position_yless:
+	get:
+		return global_position * Vector3(1, 0, 1)
+var id: int
+var in_player_vision: bool = false
+
+var _alive: bool = true
+var _saved_id: int = -1
+var _occupied_cell: Vector2i
+var _footprint: Vector2i = Vector2i(2, 1)
 var _forest_zone: Area3D = null
 var _vehicle_nav_blocker: StaticBody3D = null
 var _arc_timer: Timer = null
@@ -26,33 +54,42 @@ var _neighbours: Array[ForestVine] = []
 
 
 func _ready():
-	super._ready()
-	# Forest vines don't glow — remove the electricity shader pass.
-	_remove_electricity_shader()
+	_parse_properties()
+	if _saved_id >= 0:
+		id = _saved_id
+		EntityRegistry.entities[id] = self
+		if EntityRegistry._next_id <= id:
+			EntityRegistry._next_id = id + 1
+	else:
+		id = EntityRegistry.register(self)
+	var map: Node = MatchGlobal.map
+	if map != null:
+		_occupied_cell = map.world_to_cell(global_position)
+		map.occupy_area(_occupied_cell, _footprint, Enums.OccupationType.FOREST)
+	_randomize_model_rotation()
 	_create_forest_zone()
 	_create_vehicle_nav_blocker()
 	(func(): if is_instance_valid(self): _setup_arc_sparking()).call_deferred()
-	resource_changed.connect(_on_resource_changed)
 
 
-func _on_resource_changed():
-	if resource <= 0:
-		queue_free()
+func _parse_properties():
+	var props: Dictionary = UnitConstants.get_default_properties(scene_file_path)
+	hp_max = props.get("hp_max", 10)
+	hp = props.get("hp", hp_max)
+	armor = props.get("armor", {})
+	_footprint = props.get("footprint", Vector2i(2, 1))
 
 
-func _remove_electricity_shader():
-	for mat in _cached_materials:
-		mat.next_pass = null
-	_electricity_material = null
-
-
-## Forest vines do not regenerate resources.
-func _on_tick_advanced():
-	pass
+func _randomize_model_rotation():
+	var model := get_node_or_null("Geometry/Model")
+	if model:
+		model.rotation.y = randf() * TAU
 
 
 func _exit_tree():
 	_cleanup_forest_zone()
+	if MatchGlobal.map != null:
+		MatchGlobal.map.clear_area(_occupied_cell, _footprint)
 	if _vehicle_nav_blocker != null:
 		_vehicle_nav_blocker.remove_from_group("vehicle_terrain_navigation_input")
 		MatchSignals.schedule_navigation_rebake.emit(NavigationConstants.Domain.TERRAIN_VEHICLE)
@@ -129,6 +166,12 @@ func _remove_forest_debuff(body: Node3D):
 			body.forest_sight_multiplier = 1.0
 
 
+func _die():
+	_alive = false
+	EntityRegistry.unregister(self)
+	queue_free()
+
+
 # --- Arc sparking between neighbouring vines ---
 
 
@@ -136,7 +179,7 @@ func _setup_arc_sparking():
 	if not is_inside_tree():
 		return
 	# Find nearby ForestVines once.
-	for vine in get_tree().get_nodes_in_group("resource_units"):
+	for vine in get_tree().get_nodes_in_group("forest_vines"):
 		if vine == self or not vine is ForestVine:
 			continue
 		if global_position.distance_to(vine.global_position) <= ARC_RANGE:

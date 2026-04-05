@@ -23,7 +23,12 @@ func _handle_event(event):
 
 
 func _on_unit_selected(unit):
-	if not unit is Structure and not unit is ResourceUnit and unit.player == _player:
+	if (
+		not unit is Structure
+		and not unit is ResourceUnit
+		and "player" in unit
+		and unit.player == _player
+	):
 		_handle_event(MatchConstants.VoiceNarrator.Events.UNIT_HELLO)
 	# TODO: handle building - perhaps with some sound instead of voice
 
@@ -31,7 +36,12 @@ func _on_unit_selected(unit):
 func _on_unit_action_requested(_ignore):
 	if get_tree().get_nodes_in_group("selected_units").any(
 		func(unit):
-			return not unit is Structure and not unit is ResourceUnit and unit.player == _player
+			return (
+				not unit is Structure
+				and not unit is ResourceUnit
+				and "player" in unit
+				and unit.player == _player
+			)
 	):
 		_handle_event(
 			(

@@ -125,6 +125,8 @@ func _serialize_match(match_node: Match) -> SaveGameResource:
 			save.entities_data.append(ed)
 		elif entity is ResourceUnit:
 			save.entities_data.append(_serialize_resource_entity(entity))
+		elif entity is ForestVine:
+			save.entities_data.append(_serialize_forest_vine(entity))
 		# Other resource entity types are part of the map and don't need saving
 	save.entity_registry_next_id = EntityRegistry._next_id
 
@@ -204,6 +206,20 @@ func _serialize_resource_entity(entity) -> Dictionary:
 	if entity.get("resource") != null:
 		data["resource_amount"] = entity.resource
 	return data
+
+
+func _serialize_forest_vine(entity) -> Dictionary:
+	var spath: String = entity.scene_file_path
+	if spath.is_empty():
+		spath = entity.get_script().resource_path.replace(".gd", ".tscn")
+	return {
+		"entity_type": "forest_vine",
+		"entity_id": entity.id,
+		"scene_path": spath,
+		"position": _vec3_to_arr(entity.global_position),
+		"rotation": _vec3_to_arr(entity.rotation),
+		"hp": entity.hp,
+	}
 
 
 func _serialize_entity(entity) -> Dictionary:

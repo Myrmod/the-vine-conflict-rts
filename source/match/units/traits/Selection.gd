@@ -67,7 +67,7 @@ func _update_circle_color():
 			_circle.color = _unit.player.color
 		else:
 			_circle.color = MatchConstants.DEFAULT_CIRCLE_COLOR
-	elif _unit.is_in_group("resource_units"):
+	elif _unit.is_in_group("resource_units") or _unit.is_in_group("forest_vines"):
 		_circle.color = MatchConstants.RESOURCE_CIRCLE_COLOR
 	else:
 		_circle.color = MatchConstants.DEFAULT_CIRCLE_COLOR

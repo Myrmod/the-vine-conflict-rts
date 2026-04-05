@@ -72,10 +72,12 @@ func _remove_dummy_nodes():
 func _sync_real_units_with_minimap_representations():
 	var units_synced = {}
 	var units_to_sync = (
-		get_tree().get_nodes_in_group("units") + get_tree().get_nodes_in_group("resource_units")
+		get_tree().get_nodes_in_group("units")
+		+ get_tree().get_nodes_in_group("resource_units")
+		+ get_tree().get_nodes_in_group("forest_vines")
 	)
 	for unit in units_to_sync:
-		if unit is ResourceUnit:
+		if unit is ResourceUnit or unit is ForestVine:
 			if unit.in_player_vision:
 				units_synced[unit] = 1
 				if not _unit_is_mapped(unit):

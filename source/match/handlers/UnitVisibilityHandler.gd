@@ -101,7 +101,11 @@ func _try_removing_dummy_structure(unit):
 func _update_resource_unit_dummies(revealed_units):
 	if _is_disabled():
 		return
-	for resource_unit in get_tree().get_nodes_in_group("resource_units"):
+	var obstruction_units = (
+		get_tree().get_nodes_in_group("resource_units")
+		+ get_tree().get_nodes_in_group("forest_vines")
+	)
+	for resource_unit in obstruction_units:
 		var in_vision = _is_in_vision_range(resource_unit, revealed_units)
 		resource_unit.in_player_vision = in_vision
 		if in_vision:

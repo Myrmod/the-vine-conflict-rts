@@ -11,10 +11,6 @@ const STRUCTURES = {
 		"scene": "res://source/factions/neutral/structures/ResourceNode/ForestVine_2_1.tscn",
 		"unit_name": "Forest Vine",
 		"description": "Dense overgrowth. Slows movement and reduces vision. Vehicles cannot pass.",
-		"tile_count": 2,
-		"resources_per_tile": 500,
-		"restock_rate": 1,
-		"restock_interval": 10,
 		"footprint": Vector2i(2, 1),
 		"hp": 10,
 		"hp_max": 10,
@@ -33,6 +29,42 @@ const STRUCTURES = {
 			Enums.DamageTypes.ROCKET: 0.0,
 			Enums.DamageTypes.TESLA: 0.0,
 		},
+	},
+	Enums.SceneId.NEUTRAL_RESOURCE_VINE:
+	{
+		"scene": "res://source/factions/neutral/structures/ResourceNode/ResourceVine.tscn",
+		"unit_name": "Resource Vine",
+		"description": "Harvestable vine growth. Workers collect resources from it.",
+		"tile_count": 1,
+		"resources_per_tile": 500,
+		"restock_rate": 1,
+		"restock_interval": 10,
+		"restock_delay": 100,
+		"footprint": Vector2i(1, 1),
+		"hp": 5,
+		"hp_max": 5,
+		"armor":
+		{
+			Enums.DamageTypes.CANNON: 0.0,
+			Enums.DamageTypes.CORROSIVE: 0.0,
+			Enums.DamageTypes.CRUSH: 0.0,
+			Enums.DamageTypes.EXPLOSIVE: 0.0,
+			Enums.DamageTypes.FIRE: 0.0,
+			Enums.DamageTypes.LASER: 0.0,
+			Enums.DamageTypes.MELEE: 0.0,
+			Enums.DamageTypes.PLASMA: 0.0,
+			Enums.DamageTypes.PRISM: 0.0,
+			Enums.DamageTypes.RIFLE: 0.0,
+			Enums.DamageTypes.ROCKET: 0.0,
+			Enums.DamageTypes.TESLA: 0.0,
+		},
+	},
+	Enums.SceneId.NEUTRAL_RESOURCE_SPAWNER:
+	{
+		"scene": "res://source/factions/neutral/structures/ResourceNode/ResourceSpawner.tscn",
+		"unit_name": "Resource Spawner",
+		"description": "Periodically generates resource vine growth nearby.",
+		"footprint": Vector2i(1, 1),
 	},
 }
 
