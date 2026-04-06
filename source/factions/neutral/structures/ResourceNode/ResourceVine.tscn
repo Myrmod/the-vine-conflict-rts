@@ -1,6 +1,6 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://xsi7drqgu476"]
 
-[ext_resource type="Script" path="res://source/factions/neutral/structures/ResourceNode/ResourceVine.gd" id="1_script"]
+[ext_resource type="Script" uid="uid://ff3iev2bp4mb" path="res://source/factions/neutral/structures/ResourceNode/ResourceVine.gd" id="1_script"]
 [ext_resource type="PackedScene" uid="uid://bhjr83uy4p4o0" path="res://source/generic-scenes-and-nodes/3d/ModelHolder.tscn" id="2_model"]
 [ext_resource type="PackedScene" uid="uid://cgsi062w5fjia" path="res://source/match/units/traits/Highlight.tscn" id="3_highlight"]
 [ext_resource type="PackedScene" uid="uid://3c1h14nqdumt" path="res://source/match/units/traits/Selection.tscn" id="4_selection"]
@@ -10,31 +10,32 @@
 [sub_resource type="BoxShape3D" id="BoxShape3D_rv"]
 size = Vector3(1, 0.6, 1)
 
-[node name="ResourceVine" type="Area3D" groups=["resource_units"]]
+[node name="ResourceVine" type="Area3D" unique_id=556443287 groups=["resource_units"]]
 script = ExtResource("1_script")
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=299428550]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.3, 0)
 shape = SubResource("BoxShape3D_rv")
 
-[node name="Geometry" type="Node3D" parent="."]
+[node name="Geometry" type="Node3D" parent="." unique_id=242527098]
 
-[node name="Model" parent="Geometry" instance=ExtResource("2_model")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
+[node name="ModelHolder" parent="Geometry" unique_id=1534369216 instance=ExtResource("2_model")]
+transform = Transform3D(0.015, 0, 0, 0, 0.015, 0, 0, 0, 0.015, 0, -0.58, 0)
+model_path = "Resources/VineTile.glb"
 center_xz = true
 
-[node name="Highlight" parent="." instance=ExtResource("3_highlight")]
+[node name="Highlight" parent="." unique_id=1919007947 instance=ExtResource("3_highlight")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
 visible = false
 radius = 0.6
 
-[node name="Selection" parent="." instance=ExtResource("4_selection")]
+[node name="Selection" parent="." unique_id=1037968896 instance=ExtResource("4_selection")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
 radius = 0.6
 
-[node name="MovementObstacle" parent="." instance=ExtResource("5_obstacle")]
+[node name="MovementObstacle" parent="." unique_id=1882433324 instance=ExtResource("5_obstacle")]
 radius = 0.6
 
-[node name="Targetability" parent="." instance=ExtResource("6_target")]
+[node name="Targetability" parent="." unique_id=1180995557 instance=ExtResource("6_target")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
 radius = 0.6

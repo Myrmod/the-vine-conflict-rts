@@ -33,7 +33,7 @@ func start_recording(match: Match):
 	mode = Mode.RECORD
 	replay = ReplayResource.new()  # Reset to a fresh replay
 	replay.tick_rate = MatchConstants.TICK_RATE
-	replay.settings = match.settings
+	replay.settings = match.settings.duplicate()
 	replay.map = (
 		match.map_source_path if not match.map_source_path.is_empty() else match.map.scene_file_path
 	)

@@ -44,7 +44,7 @@ func _ready():
 		id = EntityRegistry.register(self)
 
 	var map: Node = MatchGlobal.map
-	if map != null:
+	if is_instance_valid(map):
 		_occupied_cell = map.world_to_cell(global_position)
 		map.occupy_area(_occupied_cell, _footprint, Enums.OccupationType.RESOURCE_SPAWNER)
 
@@ -52,7 +52,7 @@ func _ready():
 
 
 func _exit_tree():
-	if MatchGlobal.map != null:
+	if is_instance_valid(MatchGlobal.map):
 		MatchGlobal.map.clear_area(_occupied_cell, _footprint)
 
 
@@ -99,6 +99,8 @@ func _try_spawn_vine():
 
 	var vine: ResourceVine = ResourceVineScene.instantiate() as ResourceVine
 	var model_path: String = TILE_MODEL_PATHS[randi() % TILE_MODEL_PATHS.size()]
-	(vine.get_node("Geometry/Model") as ModelHolder).model_path = model_path
+	var model_holder: ModelHolder = vine.get_node_or_null("Geometry/ModelHolder") as ModelHolder
+	if model_holder != null:
+		model_holder.model_path = model_path
 	vine.position = map.cell_to_world(best_cell)
 	get_parent().add_child(vine)

@@ -222,15 +222,17 @@ func set_map_data_from_resource(resource_path: String) -> void:
 		queue_redraw()
 		return
 
-	# Add to viewport FIRST so internal node paths ($TerrainMesh etc.) resolve
-	_viewport.add_child(_map_instance)
-
-	# Initialize terrain splatmaps BEFORE stripping scripts —
-	# TerrainSystem.set_map() needs its GDScript methods to be intact.
+	# Initialize terrain splatmaps BEFORE adding to tree and BEFORE stripping scripts —
+	# TerrainSystem.set_map() needs its GDScript methods to be intact but does not
+	# require being inside the scene tree.
 	MapSceneBuilder.initialize_terrain_from_meta(_map_instance)
 
-	# Now strip gameplay scripts so no Match-dependent _ready() runs
+	# Strip gameplay scripts BEFORE adding to the viewport so no Match-dependent
+	# _ready() code runs (e.g. ResourceSpawner accessing EntityRegistry/MatchGlobal).
 	_strip_gameplay_nodes(_map_instance)
+
+	# Now safe to add to viewport.
+	_viewport.add_child(_map_instance)
 
 	# Generate 2D terrain overlay from the MapResource data
 	var terrain_img := MinimapTerrainRenderer.generate_image_from_resource(map_resource)

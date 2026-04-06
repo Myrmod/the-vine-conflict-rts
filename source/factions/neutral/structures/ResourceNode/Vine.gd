@@ -10,16 +10,16 @@ var resource: int = 0:
 		var old = resource
 		resource = max(0, value)
 		if old != resource:
-			if resource < old:
-				_restock_delay_counter = 0
 			resource_changed.emit()
-			_update_electricity_intensity()
+			_update_energy_intensity()
+			if resource <= 0 and _alive:
+				_die()
 
 ## Maximum resources this vine can hold (tiles * resources_per_tile).
 var resource_max: int = 0
 
 ## Resources restored per restock event.
-var restock_rate: int = 1
+var restock_rate: int = 0
 
 ## Ticks between each restock event.
 var restock_interval: int = 10
@@ -50,22 +50,22 @@ var _alive: bool = true
 var _restock_counter: int = 0
 var _restock_delay_counter: int = 0
 var _cached_materials: Array[StandardMaterial3D] = []
-var _electricity_material: ShaderMaterial = null
+var _energy_material: ShaderMaterial = null
 
 
 func _ready():
 	_type = Enums.OccupationType.RESOURCE
 	_parse_vine_properties()
 	super._ready()
-	_setup_electricity_shader()
+	_setup_energy_shader()
 	_cache_materials()
 	_randomize_model_rotation()
 	MatchSignals.tick_advanced.connect(_on_tick_advanced)
-	_update_electricity_intensity()
+	_update_energy_intensity()
 
 
 func _randomize_model_rotation():
-	var model := get_node_or_null("Geometry/Model")
+	var model := get_node_or_null("Geometry/ModelHolder")
 	if model:
 		model.rotation.y = randf() * TAU
 
@@ -91,31 +91,22 @@ func is_harvestable() -> bool:
 
 
 func _on_tick_advanced():
-	if not _alive:
-		return
-	if resource < resource_max:
-		if _restock_delay_counter < restock_delay:
-			_restock_delay_counter += 1
-			return
-		_restock_counter += 1
-		if _restock_counter >= restock_interval:
-			_restock_counter = 0
-			resource = min(resource + restock_rate, resource_max)
+	pass
 
 
-func _setup_electricity_shader():
-	var shader := load("res://source/shaders/3d/electricity.gdshader") as Shader
+func _setup_energy_shader():
+	var shader := load("res://source/shaders/3d/vine_energy.gdshader") as Shader
 	if shader == null:
 		return
-	_electricity_material = ShaderMaterial.new()
-	_electricity_material.shader = shader
+	_energy_material = ShaderMaterial.new()
+	_energy_material.shader = shader
 	# Create noise images synchronously so the shader works immediately
 	var noise_img1 := _generate_noise_image(128, 42)
 	var noise_img2 := _generate_noise_image(128, 137)
-	_electricity_material.set_shader_parameter("noise", noise_img1)
-	_electricity_material.set_shader_parameter("noise2", noise_img2)
-	_electricity_material.set_shader_parameter("electricity_color", Color(0.746, 0.904, 1.0, 1.0))
-	_electricity_material.set_shader_parameter("intensity", 0.0)
+	_energy_material.set_shader_parameter("noise", noise_img1)
+	_energy_material.set_shader_parameter("noise2", noise_img2)
+	_energy_material.set_shader_parameter("energy_color", Color(0.746, 0.904, 1.0, 1.0))
+	_energy_material.set_shader_parameter("intensity", 0.0)
 
 
 func _generate_noise_image(size: int, seed_val: int) -> ImageTexture:
@@ -148,28 +139,28 @@ func _collect_materials_recursive(node: Node):
 				mat = mesh_inst.mesh.surface_get_material(surface_idx)
 			if mat is StandardMaterial3D:
 				var unique_mat: StandardMaterial3D = mat.duplicate()
-				if _electricity_material != null:
-					unique_mat.next_pass = _electricity_material
+				if _energy_material != null:
+					unique_mat.next_pass = _energy_material
 				mesh_inst.set_surface_override_material(surface_idx, unique_mat)
 				_cached_materials.append(unique_mat)
 	for child in node.get_children():
 		_collect_materials_recursive(child)
 
 
-func _update_electricity_intensity():
+func _update_energy_intensity():
 	if resource_max <= 0:
 		return
 	var ratio: float = float(resource) / float(resource_max)
-	# Electricity: off below 10%, scales up from 10% to 100%
-	if _electricity_material != null:
-		var elec_intensity: float = 0.0
+	# Energy glow: off below 10%, scales up from 10% to 100%
+	if _energy_material != null:
+		var energy_intensity: float = 0.0
 		if ratio >= 0.1:
-			elec_intensity = (ratio - 0.1) / 0.9
-		_electricity_material.set_shader_parameter("intensity", elec_intensity)
+			energy_intensity = (ratio - 0.1) / 0.9
+		_energy_material.set_shader_parameter("intensity", energy_intensity)
 
 
 func _die():
 	_alive = false
-	_update_electricity_intensity()
+	_update_energy_intensity()
 	EntityRegistry.unregister(self)
 	queue_free()

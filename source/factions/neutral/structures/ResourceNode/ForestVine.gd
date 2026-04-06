@@ -1,6 +1,8 @@
 class_name ForestVine
-
 extends Area3D
+
+# Default color for minimap and other systems expecting a color property
+@export var color: Color = Color(0.0, 0.3, 0.0) # dark green
 
 const VineArcScript = preload("res://source/factions/neutral/structures/ResourceNode/VineArc.gd")
 
@@ -63,7 +65,7 @@ func _ready():
 	else:
 		id = EntityRegistry.register(self)
 	var map: Node = MatchGlobal.map
-	if map != null:
+	if is_instance_valid(map):
 		_occupied_cell = map.world_to_cell(global_position)
 		map.occupy_area(_occupied_cell, _footprint, Enums.OccupationType.FOREST)
 	_randomize_model_rotation()
@@ -88,7 +90,7 @@ func _randomize_model_rotation():
 
 func _exit_tree():
 	_cleanup_forest_zone()
-	if MatchGlobal.map != null:
+	if is_instance_valid(MatchGlobal.map):
 		MatchGlobal.map.clear_area(_occupied_cell, _footprint)
 	if _vehicle_nav_blocker != null:
 		_vehicle_nav_blocker.remove_from_group("vehicle_terrain_navigation_input")
