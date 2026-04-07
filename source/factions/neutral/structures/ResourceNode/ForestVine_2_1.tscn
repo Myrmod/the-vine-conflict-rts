@@ -16,7 +16,7 @@ script = ExtResource("1_forest")
 [node name="Geometry" type="Node3D" parent="." unique_id=1215881862]
 
 [node name="Model" parent="Geometry" unique_id=771784897 instance=ExtResource("2_model")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.8, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.7, 0)
 model_path = "Resources/vine_forest_1.glb"
 center_xz = true
 
@@ -35,6 +35,7 @@ radius = 1.2
 
 [node name="MovementObstacle" parent="." unique_id=1472262420 instance=ExtResource("5_obstacle")]
 radius = 1.2
+affect_navigation_mesh = true
 
 [node name="Targetability" parent="." unique_id=372837888 instance=ExtResource("6_target")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)

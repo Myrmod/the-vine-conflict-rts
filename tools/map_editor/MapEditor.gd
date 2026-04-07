@@ -863,6 +863,9 @@ func _update_entity_ghost(pos):
 		if not packed:
 			return
 		_entity_ghost = packed.instantiate()
+		# Strip game script so _ready() doesn't access MatchGlobal/EntityRegistry.
+		# Visuals are handled by ModelHolder children which work independently.
+		_entity_ghost.set_script(null)
 		_entity_ghost.name = "EntityGhost"
 
 		if not brush.material_path.is_empty():
@@ -1065,6 +1068,9 @@ func _refresh_entity_previews():
 		if not scene:
 			continue
 		var inst = scene.instantiate()
+		# Strip the root game script so _ready() doesn't access MatchGlobal/EntityRegistry/
+		# MatchSignals etc. Visuals come from ModelHolder child nodes — no script needed.
+		inst.set_script(null)
 		inst.name = "EntityPreview_%s_%s" % [entity.scene_path.get_file(), str(entity.pos)]
 		var height_y: float = entity.get("y_offset", current_map.get_height_at(entity.pos))
 		inst.position = Vector3(entity.pos.x, height_y, entity.pos.y)

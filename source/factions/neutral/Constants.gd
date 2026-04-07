@@ -64,7 +64,7 @@ const STRUCTURES = {
 		"scene": "res://source/factions/neutral/structures/ResourceNode/ResourceSpawner.tscn",
 		"unit_name": "Resource Spawner",
 		"description": "Periodically generates resource vine growth nearby.",
-		"footprint": Vector2i(1, 1),
+		"footprint": Vector2i(3, 3),
 	},
 }
 

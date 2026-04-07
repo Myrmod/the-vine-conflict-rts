@@ -13,7 +13,7 @@ const ResourceVineScene: PackedScene = preload(
 ## Add entries here as new GLB variants are created in Blender.
 ## The spawner picks one at random and sets it as the model on the spawned tile.
 const TILE_MODEL_PATHS: Array[String] = [
-	"Resources/Leafs.glb",
+	"Resources/VineTile.glb",
 ]
 
 var id: int
@@ -30,7 +30,7 @@ var in_player_vision: bool = false
 
 var _saved_id: int = -1
 var _occupied_cell: Vector2i
-var _footprint: Vector2i = Vector2i(1, 1)
+var _footprint: Vector2i = Vector2i(3, 3)
 var _spawn_counter: int = 0
 
 
@@ -82,6 +82,8 @@ func _try_spawn_vine():
 				var candidate: Vector2i = Vector2i(center_cell.x + dx, center_cell.y + dz)
 				if not map.is_area_free(candidate, Vector2i(1, 1)):
 					continue
+				if map.get_cell_type_at_cell(candidate) != MapResource.CELL_GROUND:
+					continue
 				var world_pos: Vector3 = map.cell_to_world(candidate)
 				var dist_sq: float = (world_pos * Vector3(1, 0, 1)).distance_squared_to(
 					global_position * Vector3(1, 0, 1)
@@ -102,5 +104,7 @@ func _try_spawn_vine():
 	var model_holder: ModelHolder = vine.get_node_or_null("Geometry/ModelHolder") as ModelHolder
 	if model_holder != null:
 		model_holder.model_path = model_path
-	vine.position = map.cell_to_world(best_cell)
+	var spawn_pos: Vector3 = map.cell_to_world(best_cell)
+	spawn_pos.y = map.get_height_at_cell(best_cell)
+	vine.position = spawn_pos
 	get_parent().add_child(vine)

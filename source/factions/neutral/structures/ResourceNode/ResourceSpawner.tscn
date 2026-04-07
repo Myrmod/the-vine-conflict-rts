@@ -7,6 +7,7 @@
 [ext_resource type="PackedScene" uid="uid://d4cwip5hpxlmo" path="res://source/match/units/traits/MovementObstacle.tscn" id="5_obstacle"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_rs"]
+size = Vector3(3, 1, 3)
 
 [node name="ResourceSpawner" type="Area3D" unique_id=1098923213 groups=["resource_spawners"]]
 script = ExtResource("1_script")
@@ -14,20 +15,23 @@ script = ExtResource("1_script")
 [node name="Geometry" type="Node3D" parent="." unique_id=869894435]
 
 [node name="Model" parent="Geometry" unique_id=1256576300 instance=ExtResource("2_model")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
-model_path = "TODO"
+transform = Transform3D(0.3, 0, 0, 0, 0.3, 0, 0, 0, 0.3, 0, 0, 0)
+model_path = "Resources/VineHole.glb"
 fallback_cube_color = Color(0.4, 0.8, 0.2, 1)
+center_xz = true
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=231824978]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.1, 0.5, 0.1)
 shape = SubResource("BoxShape3D_rs")
 
 [node name="Highlight" parent="." unique_id=1808476221 instance=ExtResource("3_highlight")]
-visible = false
-radius = 0.6
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.1, -0.55, 0.1)
+radius = 1.5
 
 [node name="Selection" parent="." unique_id=1730737662 instance=ExtResource("4_selection")]
-radius = 0.6
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.1, -0.55, 0.1)
+radius = 1.5
 
 [node name="MovementObstacle" parent="." unique_id=1388102112 instance=ExtResource("5_obstacle")]
-radius = 0.6
+radius = 1.5
+affect_navigation_mesh = true

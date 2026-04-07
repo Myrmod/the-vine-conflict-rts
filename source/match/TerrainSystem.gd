@@ -102,8 +102,7 @@ func set_map(_map: MapResource):
 		# layer mask and height texture while sharing the same shader.
 		$HighGroundMesh.material_override = _terrain_shader_material.duplicate()
 
-	if not $WaterMesh.mesh:
-		$WaterMesh.mesh = PlaneMesh.new()
+	$WaterMesh.mesh = PlaneMesh.new()
 	$WaterMesh.mesh.size = _map.size
 	var water_y: float = Constants.LEVEL_HEIGHTS[Enums.HeightLevel.WATER]
 	$WaterMesh.position = Vector3(map.size.x / 2.0, water_y, map.size.y / 2.0)

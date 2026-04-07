@@ -38,6 +38,9 @@ static var _cache_loaded: bool = false
 ## When true, shift the loaded model so its AABB center sits at this node's XZ origin
 @export var center_xz: bool = false
 
+## When true, shift the loaded model so its AABB bottom sits at this node's Y origin
+@export var align_y_to_ground: bool = false
+
 @export_group("Collision")
 ## When true, auto-generate a CollisionShape3D sized from the model's AABB
 @export var auto_collision: bool = false
@@ -70,6 +73,7 @@ func load_model(path: String) -> void:
 			_loaded_source = override_path
 			_update_size_cache(path)
 			_apply_center_xz()
+			_apply_align_y_to_ground()
 			_rebuild_collision_shape()
 			return
 
@@ -80,6 +84,7 @@ func load_model(path: String) -> void:
 			_loaded_source = default_path
 			_update_size_cache(path)
 			_apply_center_xz()
+			_apply_align_y_to_ground()
 			_rebuild_collision_shape()
 			return
 
@@ -171,6 +176,21 @@ func _apply_center_xz() -> void:
 		if child is Node3D:
 			child.position.x -= center_x
 			child.position.z -= center_z
+
+
+func _apply_align_y_to_ground() -> void:
+	if not align_y_to_ground:
+		return
+	var points: PackedVector3Array = PackedVector3Array()
+	_gather_aabb_points(self, points)
+	if points.is_empty():
+		return
+	var min_y: float = points[0].y
+	for p in points:
+		min_y = minf(min_y, p.y)
+	for child in get_children():
+		if child is Node3D:
+			child.position.y -= min_y
 
 
 func _rebuild_collision_shape() -> void:

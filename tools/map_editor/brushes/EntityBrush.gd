@@ -14,6 +14,8 @@ var material_path: String = ""
 
 # Cached placement domains from the loaded scene
 var _placement_domains: Array = []
+# True when the entity is a tile-like type that can be drag-painted
+var _is_paintable: bool = false
 
 
 func _init(
@@ -136,6 +138,7 @@ func set_material_path(path: String):
 func _refresh_placement_domains():
 	"""Check the entity scene for placement_domains (structures) or movement_domains (units)."""
 	_placement_domains = []
+	_is_paintable = false
 
 	if scene_path.is_empty():
 		return
@@ -145,6 +148,8 @@ func _refresh_placement_domains():
 		return
 
 	var inst = packed.instantiate()
+	if inst is ForestVine or inst is ResourceVine:
+		_is_paintable = true
 	if inst.get("placement_domains") != null:
 		_placement_domains = Array(inst.placement_domains)
 	elif inst.get("movement_domains") != null:
@@ -166,7 +171,7 @@ func _refresh_placement_domains():
 
 
 func is_single_placement() -> bool:
-	return true
+	return not _is_paintable
 
 
 func get_brush_name() -> String:
