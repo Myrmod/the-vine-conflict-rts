@@ -35,3 +35,10 @@ radius = 1.5
 [node name="MovementObstacle" parent="." unique_id=1388102112 instance=ExtResource("5_obstacle")]
 radius = 1.5
 affect_navigation_mesh = true
+
+[node name="HoleLight" type="OmniLight3D" parent="." unique_id=1871858036]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.25, -0.2, 0)
+light_color = Color(0.2, 0.9, 0.15, 1)
+light_energy = 1.475
+light_bake_mode = 1
+shadow_enabled = true

@@ -33,6 +33,8 @@ var _occupied_cell: Vector2i
 var _footprint: Vector2i = Vector2i(3, 3)
 var _spawn_counter: int = 0
 
+var _energy_material: ShaderMaterial = null
+
 
 func _ready():
 	if _saved_id >= 0:
@@ -51,6 +53,7 @@ func _ready():
 			map.terrain_system.refresh_hole_mask()
 
 	MatchSignals.tick_advanced.connect(_on_tick_advanced)
+	_setup_energy_shader()
 
 
 func _exit_tree():
@@ -112,3 +115,56 @@ func _try_spawn_vine():
 	spawn_pos.y = map.get_height_at_cell(best_cell)
 	vine.position = spawn_pos
 	get_parent().add_child(vine)
+
+
+func _setup_energy_shader() -> void:
+	var shader: Shader = load("res://source/shaders/3d/vine_energy_radial.gdshader") as Shader
+	if shader == null:
+		return
+	_energy_material = ShaderMaterial.new()
+	_energy_material.shader = shader
+	_energy_material.set_shader_parameter("noise", _generate_noise_image(128, 42))
+	_energy_material.set_shader_parameter("energy_color", Color(0.2, 0.9, 0.15, 1.0))
+	_energy_material.set_shader_parameter("intensity", 0.5)
+	_energy_material.set_shader_parameter("brightness", 2.0)
+	_energy_material.set_shader_parameter("max_radius", 7.0)
+	_energy_material.set_shader_parameter("pulse_speed", 0.5)
+	_energy_material.set_shader_parameter("pulse_width", 0.12)
+	_energy_material.set_shader_parameter("pulse_count", 1)
+	_energy_material.set_shader_parameter("noise_strength", 0.5)
+	_apply_energy_to_geometry()
+
+
+func _generate_noise_image(size: int, seed_val: int) -> ImageTexture:
+	var fnl := FastNoiseLite.new()
+	fnl.seed = seed_val
+	fnl.noise_type = FastNoiseLite.TYPE_SIMPLEX_SMOOTH
+	fnl.frequency = 0.01
+	var img := Image.create(size, size, false, Image.FORMAT_RGBA8)
+	for y in range(size):
+		for x in range(size):
+			var val: float = (fnl.get_noise_2d(float(x), float(y)) + 1.0) * 0.5
+			img.set_pixel(x, y, Color(val, val, val, val))
+	return ImageTexture.create_from_image(img)
+
+
+func _apply_energy_to_geometry() -> void:
+	var geometry: Node = find_child("Geometry")
+	if geometry == null:
+		return
+	_apply_energy_recursive(geometry)
+
+
+func _apply_energy_recursive(node: Node) -> void:
+	if node is MeshInstance3D:
+		var mesh_inst: MeshInstance3D = node as MeshInstance3D
+		for surf_idx: int in range(mesh_inst.get_surface_override_material_count()):
+			var mat: Material = mesh_inst.get_surface_override_material(surf_idx)
+			if mat == null:
+				mat = mesh_inst.mesh.surface_get_material(surf_idx)
+			if mat is StandardMaterial3D:
+				var unique_mat: StandardMaterial3D = (mat as StandardMaterial3D).duplicate()
+				unique_mat.next_pass = _energy_material
+				mesh_inst.set_surface_override_material(surf_idx, unique_mat)
+	for child: Node in node.get_children():
+		_apply_energy_recursive(child)

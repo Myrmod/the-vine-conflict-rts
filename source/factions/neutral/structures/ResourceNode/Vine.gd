@@ -105,7 +105,7 @@ func _setup_energy_shader():
 	var noise_img2 := _generate_noise_image(128, 137)
 	_energy_material.set_shader_parameter("noise", noise_img1)
 	_energy_material.set_shader_parameter("noise2", noise_img2)
-	_energy_material.set_shader_parameter("energy_color", Color(0.746, 0.904, 1.0, 1.0))
+	_energy_material.set_shader_parameter("energy_color", Color(0.2, 0.9, 0.15, 1.0))
 	_energy_material.set_shader_parameter("intensity", 0.0)
 
 
