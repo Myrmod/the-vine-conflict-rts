@@ -12,6 +12,8 @@ signal collision_selected(value: int)  ## 1 = block, 0 = unblock
 signal auto_cliff_toggled(enabled: bool)
 signal cliff_y_offset_changed(value: float)
 signal mirror_toggled(mirrored: bool)
+signal alpha_erase_selected
+signal alpha_restore_selected
 
 const THUMBNAIL_DIR := "res://assets/ui/map_editor_thumbnails/"
 const THUMBNAIL_SIZE := Vector2(134, 134)
@@ -119,6 +121,23 @@ func _populate_normal_ground() -> void:
 	paint_btn.set_text_alignment(HorizontalAlignment.HORIZONTAL_ALIGNMENT_LEFT)
 	paint_btn.pressed.connect(func() -> void: height_level_selected.emit(0))
 	normal_ground_container.add_child(paint_btn)
+
+	var alpha_label: Label = Label.new()
+	alpha_label.text = "Terrain Transparency"
+	alpha_label.add_theme_color_override("font_color", Color(0.7, 0.85, 1.0))
+	normal_ground_container.add_child(alpha_label)
+
+	var erase_btn: Button = Button.new()
+	erase_btn.text = "◎ Paint Hole"
+	erase_btn.set_text_alignment(HorizontalAlignment.HORIZONTAL_ALIGNMENT_LEFT)
+	erase_btn.pressed.connect(func() -> void: alpha_erase_selected.emit())
+	normal_ground_container.add_child(erase_btn)
+
+	var restore_btn: Button = Button.new()
+	restore_btn.text = "◎ Restore Terrain"
+	restore_btn.set_text_alignment(HorizontalAlignment.HORIZONTAL_ALIGNMENT_LEFT)
+	restore_btn.pressed.connect(func() -> void: alpha_restore_selected.emit())
+	normal_ground_container.add_child(restore_btn)
 
 
 func _populate_water() -> void:

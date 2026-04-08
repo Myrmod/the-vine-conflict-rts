@@ -362,7 +362,9 @@ popup/item_1/id = 1
 
 [node name="BrushSize" type="SpinBox" parent="VBoxContainer/MainArea/LeftPalette/ScrollContainer/ScrollContent/Brushsettings/MarginContainer/VBoxContainer" unique_id=764435510]
 layout_mode = 2
-value = 5.0
+max_value = 10.0
+step = 0.1
+value = 1.0
 prefix = "Brush size:"
 
 [node name="ViewportArea" type="PanelContainer" parent="VBoxContainer/MainArea" unique_id=606799797]

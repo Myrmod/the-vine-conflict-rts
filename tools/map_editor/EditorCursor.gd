@@ -112,6 +112,14 @@ func set_cursor_position(grid_pos: Vector2i):
 		_circle_mesh_instance.position = Vector3(world_pos.x, 0.0, world_pos.z)
 
 
+func set_cursor_position_f(world_pos: Vector2) -> void:
+	"""Move circle cursor to a sub-cell world position. Hides the box square."""
+	if _cursor_mesh_instance:
+		_cursor_mesh_instance.visible = false
+	if _circle_mesh_instance:
+		_circle_mesh_instance.position = Vector3(world_pos.x, 0.0, world_pos.y)
+
+
 func set_affected_cells(positions: Array[Vector2i]):
 	"""Show all cells that will be affected (for symmetry preview)"""
 	if not _affected_cells_mesh:
@@ -131,7 +139,7 @@ func set_affected_cells(positions: Array[Vector2i]):
 		multimesh.set_instance_transform(i, local_transform)
 
 
-func set_brush_radius(cell_radius: int) -> void:
+func set_brush_radius(cell_radius: float) -> void:
 	"""Update the circle outline to match the brush radius in cells."""
 	# Radius in world units — half-cell extra to enclose the outer edge of cells
 	_circle_radius = (float(cell_radius) + 0.5) * FeatureFlags.grid_cell_size

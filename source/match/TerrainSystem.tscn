@@ -30,6 +30,9 @@ shader_parameter/ambient_tint = Color(0.4, 0.45, 0.55, 1)
 shader_parameter/normal_layer_priority = 8.0
 shader_parameter/terrain_brightness = 0.20000000298
 shader_parameter/grid_height_scale = 1.0
+shader_parameter/layer_mask_enabled = false
+shader_parameter/hole_mask_enabled = false
+shader_parameter/alpha_mask_enabled = false
 shader_parameter/blend_sharpness = 8.0
 shader_parameter/height_edge_sharpness = 16.0
 

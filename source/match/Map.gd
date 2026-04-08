@@ -83,7 +83,7 @@ func occupy_area(cell: Vector2i, footprint: Vector2i, _type: Enums.OccupationTyp
 	for x in range(footprint.x):
 		for y in range(footprint.y):
 			var c := Vector2i(cell.x + x, cell.y + y)
-			_grid[c] = _type || true
+			_grid[c] = _type
 
 
 func clear_area(cell: Vector2i, footprint: Vector2i) -> void:

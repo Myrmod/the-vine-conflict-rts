@@ -11,6 +11,8 @@ const _SLOPE_CARDINAL_DIRS: Array[Vector2i] = [
 	Vector2i(0, 1),
 	Vector2i(0, -1),
 ]
+const _RESOURCE_SPAWNER_SCENE_PATH: String = "res://source/factions/neutral/structures/ResourceNode/ResourceSpawner.tscn"
+const _RESOURCE_SPAWNER_FOOTPRINT: Vector2i = Vector2i(3, 3)
 
 @export var base_layer: TerrainType = Globals.terrain_types.front()
 
@@ -29,6 +31,12 @@ var _high_ground_height_texture: ImageTexture
 ## Layer mask textures: R8, white = render, black = discard.
 var _base_layer_mask_texture: ImageTexture
 var _high_ground_layer_mask_texture: ImageTexture
+
+## Terrain hole mask texture: white = render, black = discard.
+var _hole_mask_texture: ImageTexture
+
+## Paintable alpha mask texture: white = render, black = discard.
+var _alpha_mask_texture: ImageTexture
 
 ## Water mask texture: white where water cells exist, black elsewhere.
 ## Uploaded to the water shader so it can discard non-water fragments.
@@ -85,6 +93,8 @@ func resize_mesh(map_size: Vector2):
 	_high_ground_height_texture = null
 	_base_layer_mask_texture = null
 	_high_ground_layer_mask_texture = null
+	_hole_mask_texture = null
+	_alpha_mask_texture = null
 	_water_mask_texture = null
 	splat_textures.clear()
 	splat_images.clear()
@@ -114,6 +124,8 @@ func set_map(_map: MapResource):
 	_upload_splats_to_shader()
 	_upload_terrain_textures()
 	_upload_height_grid()
+	_upload_hole_mask()
+	_upload_alpha_mask()
 	_build_slope_meshes()
 	_upload_water_mask()
 
@@ -227,13 +239,175 @@ func update_height_at(_positions: Array[Vector2i]):
 	"""Efficiently update only the changed cells after a brush stroke."""
 	if not map or not _height_grid_texture:
 		_upload_height_grid()
+		_upload_hole_mask()
 		_build_slope_meshes()
 		return
 
 	# Rebuild the full image (RF images don't support partial update easily)
 	_upload_height_grid()
+	_upload_hole_mask()
 	_build_slope_meshes()
 	_upload_water_mask()
+
+
+func _upload_hole_mask() -> void:
+	if not map:
+		return
+
+	var img: Image = Image.create(size.x, size.y, false, Image.FORMAT_R8)
+	img.fill(Color(1, 0, 0, 0))
+	var has_holes: bool = _stamp_runtime_resource_spawner_holes(img)
+	if not has_holes:
+		has_holes = _stamp_resource_spawner_holes_from_resource(img)
+
+	if _hole_mask_texture:
+		_hole_mask_texture.update(img)
+	else:
+		_hole_mask_texture = ImageTexture.create_from_image(img)
+
+	_apply_hole_mask_to_materials(has_holes)
+
+
+func _apply_hole_mask_to_materials(has_holes: bool) -> void:
+	var base_mat: ShaderMaterial = $TerrainMesh.get_active_material(0) as ShaderMaterial
+	if base_mat:
+		base_mat.set_shader_parameter("hole_mask_tex", _hole_mask_texture)
+		base_mat.set_shader_parameter("hole_mask_enabled", has_holes)
+
+	var hg_mat: ShaderMaterial = $HighGroundMesh.get_active_material(0) as ShaderMaterial
+	if hg_mat:
+		hg_mat.set_shader_parameter("hole_mask_tex", _hole_mask_texture)
+		hg_mat.set_shader_parameter("hole_mask_enabled", has_holes)
+
+	for child: Node in $SlopeMeshes.get_children():
+		var slope_mesh: MeshInstance3D = child as MeshInstance3D
+		if slope_mesh == null:
+			continue
+		var slope_mat: ShaderMaterial = slope_mesh.get_active_material(0) as ShaderMaterial
+		if slope_mat:
+			slope_mat.set_shader_parameter("hole_mask_tex", _hole_mask_texture)
+			slope_mat.set_shader_parameter("hole_mask_enabled", has_holes)
+
+
+func _stamp_runtime_resource_spawner_holes(img: Image) -> bool:
+	var map_node: Node = _get_runtime_map_node()
+	if map_node == null:
+		return false
+
+	var occupied_grid_variant: Variant = map_node.get("_grid")
+	if not (occupied_grid_variant is Dictionary):
+		return false
+
+	var occupied_grid: Dictionary = occupied_grid_variant
+	var has_holes: bool = false
+
+	for cell_key: Variant in occupied_grid.keys():
+		if not (cell_key is Vector2i):
+			continue
+		var occupation: Variant = occupied_grid[cell_key]
+		# Legacy maps stored bool(true); new maps store OccupationType int
+		if occupation is bool:
+			continue
+		if occupation != Enums.OccupationType.RESOURCE_SPAWNER:
+			continue
+		_stamp_hole_footprint(img, cell_key)
+		has_holes = true
+
+	return has_holes
+
+
+func _stamp_resource_spawner_holes_from_resource(img: Image) -> bool:
+	var has_holes: bool = false
+
+	for entity_variant: Variant in map.placed_entities:
+		if not (entity_variant is Dictionary):
+			continue
+		var entity: Dictionary = entity_variant
+		var scene_path: String = entity.get("scene_path", "")
+		if scene_path != _RESOURCE_SPAWNER_SCENE_PATH:
+			continue
+
+		var pos_variant: Variant = entity.get("pos", Vector2i.ZERO)
+		var cell: Vector2i = Vector2i.ZERO
+		if pos_variant is Vector2:
+			var pos: Vector2 = pos_variant
+			cell = Vector2i(floor(pos.x), floor(pos.y))
+		elif pos_variant is Vector2i:
+			cell = pos_variant
+		else:
+			continue
+
+		_stamp_hole_footprint(img, cell)
+		has_holes = true
+
+	return has_holes
+
+
+func _stamp_hole_footprint(img: Image, origin_cell: Vector2i) -> void:
+	for x: int in range(_RESOURCE_SPAWNER_FOOTPRINT.x):
+		for y: int in range(_RESOURCE_SPAWNER_FOOTPRINT.y):
+			var cell: Vector2i = Vector2i(origin_cell.x + x, origin_cell.y + y)
+			if cell.x < 0 or cell.y < 0 or cell.x >= int(size.x) or cell.y >= int(size.y):
+				continue
+			img.set_pixel(cell.x, cell.y, Color(0, 0, 0, 0))
+
+
+func _get_runtime_map_node() -> Node:
+	var geometry_node: Node = get_parent()
+	if geometry_node == null:
+		return null
+
+	var map_node: Node = geometry_node.get_parent()
+	if map_node == null:
+		return null
+
+	var occupied_grid_variant: Variant = map_node.get("_grid")
+	if occupied_grid_variant == null:
+		return null
+
+	return map_node
+
+
+func refresh_hole_mask() -> void:
+	_upload_hole_mask()
+
+
+func _upload_alpha_mask() -> void:
+	if map == null:
+		return
+	if map.alpha_mask == null:
+		map._ensure_alpha_mask()
+	var img: Image = map.alpha_mask
+	if _alpha_mask_texture:
+		_alpha_mask_texture.update(img)
+	else:
+		_alpha_mask_texture = ImageTexture.create_from_image(img)
+	_apply_alpha_mask_to_materials()
+
+
+func _apply_alpha_mask_to_materials() -> void:
+	var base_mat: ShaderMaterial = $TerrainMesh.get_active_material(0) as ShaderMaterial
+	if base_mat:
+		base_mat.set_shader_parameter("alpha_mask_tex", _alpha_mask_texture)
+		base_mat.set_shader_parameter("alpha_mask_enabled", _alpha_mask_texture != null)
+
+	var hg_mat: ShaderMaterial = $HighGroundMesh.get_active_material(0) as ShaderMaterial
+	if hg_mat:
+		hg_mat.set_shader_parameter("alpha_mask_tex", _alpha_mask_texture)
+		hg_mat.set_shader_parameter("alpha_mask_enabled", _alpha_mask_texture != null)
+
+	for child: Node in $SlopeMeshes.get_children():
+		var slope_mesh: MeshInstance3D = child as MeshInstance3D
+		if slope_mesh == null:
+			continue
+		var slope_mat: ShaderMaterial = slope_mesh.get_active_material(0) as ShaderMaterial
+		if slope_mat:
+			slope_mat.set_shader_parameter("alpha_mask_tex", _alpha_mask_texture)
+			slope_mat.set_shader_parameter("alpha_mask_enabled", _alpha_mask_texture != null)
+
+
+func refresh_alpha_mask() -> void:
+	_upload_alpha_mask()
 
 
 # ============================================================
@@ -437,6 +611,10 @@ func _create_slope_region_mesh(region: Array[Vector2i]) -> void:
 		if slope_mat:
 			slope_mat.set_shader_parameter("layer_mask_enabled", false)
 			slope_mat.set_shader_parameter("grid_height_scale", 0.0)
+			slope_mat.set_shader_parameter("hole_mask_tex", _hole_mask_texture)
+			slope_mat.set_shader_parameter("hole_mask_enabled", _hole_mask_texture != null)
+			slope_mat.set_shader_parameter("alpha_mask_tex", _alpha_mask_texture)
+			slope_mat.set_shader_parameter("alpha_mask_enabled", _alpha_mask_texture != null)
 			var debug_layers: bool = FeatureFlags.debug_terrain_layers if FeatureFlags else false
 			slope_mat.set_shader_parameter("debug_layer_color_enabled", debug_layers)
 			slope_mat.set_shader_parameter("debug_layer_color", Color.ORANGE)
@@ -650,53 +828,6 @@ func rebuild_terrain_index_texture():
 func apply_texture_brush(positions: Array[Vector2i]):
 	if not map:
 		return
-
-	var modified_splats := {}
-
-	for pos in positions:
-		var px = pos.x
-		var py = pos.y
-
-		# Collect weights
-		var flat := []
-
-		for s in range(map.splatmaps.size()):
-			var c = map.splatmaps[s].get_pixel(px, py)
-			flat.append(c.r)
-			flat.append(c.g)
-			flat.append(c.b)
-			flat.append(c.a)
-
-		# Increase selected terrain
-		var terrain_id = base_layer.id  # or pass active terrain
-		var strength = 0.25
-
-		flat[terrain_id] += strength
-
-		# Clamp
-		for i in range(flat.size()):
-			flat[i] = clamp(flat[i], 0.0, 1.0)
-
-		# Normalize
-		var total := 0.0
-		for v in flat:
-			total += v
-
-		if total > 0.0001:
-			for i in range(flat.size()):
-				flat[i] /= total
-
-		# Write back
-		var index := 0
-		for s in range(map.splatmaps.size()):
-			var img = map.splatmaps[s]
-
-			var c = Color(flat[index], flat[index + 1], flat[index + 2], flat[index + 3])
-
-			img.set_pixel(px, py, c)
-			modified_splats[s] = true
-			index += 4
-
-	# Update textures ONCE per splat
-	for s in modified_splats.keys():
-		splat_textures[s].update(map.splatmaps[s])
+	if positions.is_empty():
+		return
+	_ensure_splat_textures()

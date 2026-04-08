@@ -36,6 +36,14 @@ const CELL_WATER_SLOPE := 4  ## Slope connecting water to ground (separate passa
 # Texture blending (RGBA splatmaps, 4 terrain layers per image)
 @export var splatmaps: Array[Image] = []
 
+# Paintable terrain transparency mask — stored as raw R8 bytes (1 byte per pixel,
+# row-major, top-to-bottom). 255 = opaque, 0 = transparent.
+# Image is NOT a Resource subclass so it cannot be @export-serialized directly.
+@export var alpha_mask_bytes: PackedByteArray = PackedByteArray()
+
+## Runtime Image reconstructed from alpha_mask_bytes. Do not persist directly.
+var alpha_mask: Image = null
+
 # Entity placements
 @export var placed_entities: Array[Dictionary] = []
 
@@ -81,6 +89,9 @@ func _init():
 
 	if cell_type_grid.is_empty():
 		_initialize_cell_type_grid()
+	# NOTE: _ensure_alpha_mask() is intentionally NOT called here.
+	# Godot sets @export properties AFTER _init(), so alpha_mask_bytes would
+	# still be empty at this point and the saved data would be lost.
 
 
 func _initialize_collision_grid():
@@ -93,6 +104,41 @@ func _initialize_height_grid():
 	var count = size.x * size.y
 	height_grid.resize(count)
 	height_grid.fill(0.0)
+
+
+func _ensure_alpha_mask() -> void:
+	var expected_bytes: int = size.x * size.y
+	# Always prefer saved bytes when they exist and match the current map size.
+	# This ensures a loaded map restores its painted mask even if alpha_mask
+	# was already (incorrectly) set to a white image from an earlier _init call.
+	if alpha_mask_bytes.size() == expected_bytes:
+		if (
+			alpha_mask == null
+			or alpha_mask.get_width() != size.x
+			or alpha_mask.get_height() != size.y
+		):
+			alpha_mask = Image.create_from_data(
+				size.x, size.y, false, Image.FORMAT_R8, alpha_mask_bytes
+			)
+		return
+	# No saved bytes — use existing correctly-sized image (active editor session)
+	if (
+		alpha_mask != null
+		and alpha_mask.get_width() == size.x
+		and alpha_mask.get_height() == size.y
+	):
+		return
+	# Create a fresh full-opaque mask
+	alpha_mask = Image.create(size.x, size.y, false, Image.FORMAT_R8)
+	alpha_mask.fill(Color(1, 0, 0, 0))
+	alpha_mask_bytes.resize(expected_bytes)
+	alpha_mask_bytes.fill(255)
+
+
+func pack_alpha_mask() -> void:
+	"""Sync alpha_mask Image → alpha_mask_bytes before saving."""
+	if alpha_mask != null:
+		alpha_mask_bytes = alpha_mask.get_data()
 
 
 func _initialize_water_grid():
@@ -133,6 +179,7 @@ func resize_map(new_size: Vector2i, terrain_count: int):
 	water_grid = _resized_float_grid(water_grid, old_size, 0.0)
 	cell_type_grid = _resized_byte_grid(cell_type_grid, old_size, CELL_GROUND)
 	_resize_splatmaps(terrain_count)
+	_resize_alpha_mask(old_size)
 
 	_remove_out_of_bounds_placements()
 
@@ -187,6 +234,18 @@ func _resize_splatmaps(terrain_count: int):
 		new_maps.append(new_img)
 
 	splatmaps = new_maps
+
+
+func _resize_alpha_mask(old_size: Vector2i) -> void:
+	_ensure_alpha_mask()  # make sure alpha_mask image is loaded from bytes first
+	var new_img: Image = Image.create(size.x, size.y, false, Image.FORMAT_R8)
+	new_img.fill(Color(1, 0, 0, 0))
+	if alpha_mask != null:
+		for y in range(mini(old_size.y, size.y)):
+			for x in range(mini(old_size.x, size.x)):
+				new_img.set_pixel(x, y, alpha_mask.get_pixel(x, y))
+	alpha_mask = new_img
+	alpha_mask_bytes = alpha_mask.get_data()
 
 
 # ============================================================

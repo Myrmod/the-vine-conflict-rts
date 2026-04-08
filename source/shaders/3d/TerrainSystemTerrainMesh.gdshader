@@ -64,8 +64,20 @@ uniform float height_edge_sharpness : hint_range(1.0, 64.0) = 16.0;
 // --- Layer mask (for split high-ground / low-ground planes) ---
 // R8 texture same size as grid: 1.0 = render, 0.0 = discard.
 // When not set (all white default) the full terrain is rendered.
-uniform sampler2D layer_mask_tex : filter_nearest;
+uniform sampler2D layer_mask_tex : hint_default_white, filter_nearest;
 uniform bool layer_mask_enabled = false;
+
+// --- Terrain hole mask ---
+// R8 texture same size as grid: 1.0 = render, 0.0 = discard.
+// Used for decorative cutouts such as the vine pit under ResourceSpawner.
+uniform sampler2D hole_mask_tex : hint_default_white, filter_nearest;
+uniform bool hole_mask_enabled = false;
+
+// --- Paintable alpha mask ---
+// R8 texture same size as grid: 1.0 = fully opaque, 0.0 = transparent (discard).
+// Painted by the AlphaBrush tool in the map editor.
+uniform sampler2D alpha_mask_tex : hint_default_white, filter_linear;
+uniform bool alpha_mask_enabled = false;
 
 // Debug: flat colour override for visualising terrain layers.
 uniform bool debug_layer_color_enabled = false;
@@ -140,6 +152,20 @@ void fragment() {
         vec2 mask_uv = min(UV, 1.0 - 0.5 / mask_ts);
         float mask_val = texture(layer_mask_tex, mask_uv).r;
         if (mask_val < 0.5) discard;
+    }
+
+    if (hole_mask_enabled) {
+        vec2 hole_ts = vec2(textureSize(hole_mask_tex, 0));
+        vec2 hole_uv = min(UV, 1.0 - 0.5 / hole_ts);
+        float hole_val = texture(hole_mask_tex, hole_uv).r;
+        if (hole_val < 0.5) discard;
+    }
+
+    if (alpha_mask_enabled) {
+        vec2 alpha_ts = vec2(textureSize(alpha_mask_tex, 0));
+        vec2 alpha_uv = min(UV, 1.0 - 0.5 / alpha_ts);
+        float alpha_val = texture(alpha_mask_tex, alpha_uv).r;
+        if (alpha_val < 0.5) discard;
     }
 
     vec2 tiled_uv = UV * uv_scale;

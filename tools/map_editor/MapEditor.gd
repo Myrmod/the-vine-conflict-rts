@@ -6,7 +6,14 @@ extends Control
 enum ViewMode { GAME_VIEW, COLLISION_VIEW }
 
 enum BrushType {
-	PAINT_COLLISION, ERASE, PLACE_ENTITY, PAINT_TEXTURE, PLACE_SPAWN, PAINT_HEIGHT, PAINT_SLOPE
+	PAINT_COLLISION,
+	ERASE,
+	PLACE_ENTITY,
+	PAINT_TEXTURE,
+	PLACE_SPAWN,
+	PAINT_HEIGHT,
+	PAINT_SLOPE,
+	PAINT_ALPHA
 }
 
 # Core systems
@@ -55,6 +62,9 @@ var _map_name_edit: LineEdit = null
 # Material selector for decorations
 var _material_option: OptionButton = null
 var _material_paths: Array[String] = []
+var _brush_size_spin: SpinBox = null
+var _texture_alpha_option: OptionButton = null
+var _texture_alpha_mode: int = TextureBrush.AlphaMode.SOFT
 
 # Auto cliff placement
 var auto_place_cliffs: bool = true
@@ -173,6 +183,8 @@ func _setup_ui_connections():
 		palette_select.auto_cliff_toggled.connect(_on_auto_cliff_toggled)
 		palette_select.cliff_y_offset_changed.connect(_on_cliff_y_offset_changed)
 		palette_select.mirror_toggled.connect(_on_mirror_toggled)
+		palette_select.alpha_erase_selected.connect(_on_palette_alpha_erase_selected)
+		palette_select.alpha_restore_selected.connect(_on_palette_alpha_restore_selected)
 
 	# Connect texture palette signals
 	if texture_select:
@@ -222,9 +234,10 @@ func _setup_ui_connections():
 		if brush_form:
 			brush_form.item_selected.connect(_on_brush_form_changed)
 		if brush_size_spin:
+			_brush_size_spin = brush_size_spin
 			brush_size_spin.min_value = 0
 			brush_size_spin.max_value = 10
-			brush_size_spin.step = 1
+			brush_size_spin.step = 0.1
 			brush_size_spin.value = 1
 			brush_size_spin.value_changed.connect(_on_brush_size_changed)
 
@@ -253,9 +266,25 @@ func _setup_ui_connections():
 			_material_option.item_selected.connect(_on_material_selected)
 			vbox.add_child(_material_option)
 
+			var alpha_label: Label = Label.new()
+			alpha_label.name = "TextureAlphaLabel"
+			alpha_label.text = "Alpha"
+			vbox.add_child(alpha_label)
+
+			_texture_alpha_option = OptionButton.new()
+			_texture_alpha_option.name = "TextureAlphaOption"
+			_texture_alpha_option.add_item("Solid", TextureBrush.AlphaMode.SOLID)
+			_texture_alpha_option.add_item("Soft", TextureBrush.AlphaMode.SOFT)
+			_texture_alpha_option.add_item("Airbrush", TextureBrush.AlphaMode.AIRBRUSH)
+			_texture_alpha_option.select(_texture_alpha_mode)
+			_texture_alpha_option.item_selected.connect(_on_texture_alpha_selected)
+			vbox.add_child(_texture_alpha_option)
+
 			# Hidden by default, shown when entity brush is active
 			mat_label.visible = false
 			_material_option.visible = false
+			alpha_label.visible = false
+			_texture_alpha_option.visible = false
 
 
 func _on_file_menu_item_selected(id: int):
@@ -402,6 +431,20 @@ func _on_mirror_toggled(mirrored: bool) -> void:
 		_update_entity_ghost_transform()
 
 
+func _on_palette_alpha_erase_selected() -> void:
+	_create_brush(BrushType.PAINT_ALPHA)
+	if current_brush is AlphaBrush:
+		current_brush.erase = true
+	_update_brush_info_label()
+
+
+func _on_palette_alpha_restore_selected() -> void:
+	_create_brush(BrushType.PAINT_ALPHA)
+	if current_brush is AlphaBrush:
+		current_brush.erase = false
+	_update_brush_info_label()
+
+
 func _on_palette_texture_selected_as_base_layer(terrain: TerrainType):
 	terrain_system.apply_base_layer(terrain)
 
@@ -410,6 +453,9 @@ func _on_palette_texture_selected(terrain: TerrainType):
 	"""Handle entity selection from palette"""
 	_create_brush(BrushType.PAINT_TEXTURE)
 	current_brush.set_texture(terrain)
+	_show_texture_alpha_selector(true)
+	if current_brush is TextureBrush:
+		current_brush.set_alpha_mode(_texture_alpha_mode as TextureBrush.AlphaMode)
 
 	# Update brush info
 	var brush_info = get_node_or_null("VBoxContainer/Toolbar/BrushInfo")
@@ -531,11 +577,18 @@ func _on_brush_form_changed(index: int):
 func _on_brush_size_changed(value: float):
 	"""Handle brush size change"""
 	if current_brush:
-		current_brush.brush_size = int(value)
+		current_brush.brush_size = value
 	if editor_cursor:
-		editor_cursor.set_brush_radius(int(value))
+		editor_cursor.set_brush_radius(value)
 	if status_label:
-		status_label.text = "Brush size: " + str(int(value))
+		status_label.text = "Brush size: %.1f" % value
+
+
+func _on_texture_alpha_selected(index: int) -> void:
+	_texture_alpha_mode = index
+	if current_brush is TextureBrush:
+		current_brush.set_alpha_mode(index as TextureBrush.AlphaMode)
+		_update_brush_info_label()
 
 
 func _on_material_selected(index: int):
@@ -584,10 +637,25 @@ func _show_material_selector(value: bool):
 		_material_option.visible = value
 
 
+func _show_texture_alpha_selector(value: bool) -> void:
+	var brush_settings = get_node_or_null(
+		"VBoxContainer/MainArea/LeftPalette/ScrollContainer/ScrollContent/Brushsettings"
+	)
+	if not brush_settings:
+		return
+	var alpha_label = brush_settings.get_node_or_null(
+		"MarginContainer/VBoxContainer/TextureAlphaLabel"
+	)
+	if alpha_label:
+		alpha_label.visible = value
+	if _texture_alpha_option:
+		_texture_alpha_option.visible = value
+
+
 func _create_brush(brush_type: BrushType):
 	"""Create and set the current brush"""
 	# Preserve current size/shape settings across brush switches
-	var prev_size := 1
+	var prev_size: float = 1.0
 	var prev_shape := EditorBrush.BrushShape.CIRCLE
 	if current_brush:
 		prev_size = current_brush.brush_size
@@ -601,6 +669,8 @@ func _create_brush(brush_type: BrushType):
 	# Hide material selector for non-entity brushes
 	if brush_type != BrushType.PLACE_ENTITY:
 		_show_material_selector(false)
+	if brush_type != BrushType.PAINT_TEXTURE:
+		_show_texture_alpha_selector(false)
 
 	match brush_type:
 		BrushType.PAINT_COLLISION:
@@ -627,16 +697,29 @@ func _create_brush(brush_type: BrushType):
 			current_brush = HeightBrush.new(current_map, symmetry_system, command_stack)
 		BrushType.PAINT_SLOPE:
 			current_brush = SlopeBrush.new(current_map, symmetry_system, command_stack)
+		BrushType.PAINT_ALPHA:
+			var _alpha_erase: bool = true
+			if current_brush is AlphaBrush:
+				_alpha_erase = current_brush.erase
+			current_brush = AlphaBrush.new(
+				current_map, symmetry_system, command_stack, _alpha_erase
+			)
 
 	# Restore size/shape
 	if current_brush:
 		current_brush.brush_size = prev_size
 		current_brush.brush_shape = prev_shape
+		if current_brush is TextureBrush:
+			current_brush.set_alpha_mode(_texture_alpha_mode as TextureBrush.AlphaMode)
+		if current_brush is AlphaBrush:
+			current_brush.set_alpha_mode(_texture_alpha_mode as AlphaBrush.AlphaMode)
 
 	# Sync cursor appearance to new brush
 	if editor_cursor and current_brush:
 		editor_cursor.set_cursor_color(current_brush.get_cursor_color())
 		editor_cursor.set_brush_radius(current_brush.brush_size)
+	if _brush_size_spin and current_brush:
+		_brush_size_spin.value = current_brush.brush_size
 
 	# Connect brush signals
 	if current_brush and current_brush.brush_applied.is_connected(_on_brush_applied):
@@ -676,6 +759,9 @@ func _on_brush_applied(positions: Array[Vector2i]):
 	if current_brush_type == BrushType.ERASE:
 		_refresh_entity_previews()
 		_refresh_spawn_previews()
+	if current_brush_type == BrushType.PAINT_ALPHA:
+		if terrain_system:
+			terrain_system.refresh_alpha_mask()
 
 
 func _process(delta):
@@ -779,6 +865,12 @@ func _try_paint_at_mouse(mouse_pos: Vector2):
 		if world_pos != null:
 			current_brush.apply_free(world_pos)
 		return
+	# Alt held = sub-cell placement for alpha brush
+	if Input.is_key_pressed(KEY_ALT) and current_brush is AlphaBrush:
+		var world_pos: Variant = _raycast_mouse_to_world_2d(mouse_pos)
+		if world_pos != null:
+			current_brush.apply_free(world_pos)
+		return
 	var grid_pos: Variant = _raycast_mouse_to_grid(mouse_pos)
 	if grid_pos == null:
 		return
@@ -798,6 +890,15 @@ func _update_cursor_at_mouse(mouse_pos: Vector2):
 			return
 		editor_cursor.set_visible_cursor(false)
 		_update_entity_ghost(world_pos)
+		return
+	# Alt held = sub-cell circle cursor for alpha brush
+	if Input.is_key_pressed(KEY_ALT) and current_brush is AlphaBrush:
+		var world_pos: Variant = _raycast_mouse_to_world_2d(mouse_pos)
+		if world_pos == null:
+			editor_cursor.set_visible_cursor(false)
+			return
+		editor_cursor.set_visible_cursor(true)
+		editor_cursor.set_cursor_position_f(world_pos)
 		return
 	var grid_pos: Variant = _raycast_mouse_to_grid(mouse_pos)
 	if grid_pos == null:
@@ -1325,6 +1426,9 @@ func save_map(path: String):
 
 	# Generate merged collision shapes before saving
 	current_map.collision_shapes = CollisionShapeBuilder.build_all(current_map)
+
+	# Sync alpha mask Image → bytes so it persists in the .tres file
+	current_map.pack_alpha_mask()
 
 	# Capture lighting & environment from the editor viewport
 	_capture_lighting_to_map_resource()

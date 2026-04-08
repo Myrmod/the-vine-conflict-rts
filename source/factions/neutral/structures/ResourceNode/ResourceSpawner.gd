@@ -47,6 +47,8 @@ func _ready():
 	if is_instance_valid(map):
 		_occupied_cell = map.world_to_cell(global_position)
 		map.occupy_area(_occupied_cell, _footprint, Enums.OccupationType.RESOURCE_SPAWNER)
+		if is_instance_valid(map.terrain_system):
+			map.terrain_system.refresh_hole_mask()
 
 	MatchSignals.tick_advanced.connect(_on_tick_advanced)
 
@@ -54,6 +56,8 @@ func _ready():
 func _exit_tree():
 	if is_instance_valid(MatchGlobal.map):
 		MatchGlobal.map.clear_area(_occupied_cell, _footprint)
+		if is_instance_valid(MatchGlobal.map.terrain_system):
+			MatchGlobal.map.terrain_system.refresh_hole_mask()
 
 
 func _on_tick_advanced():
