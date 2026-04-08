@@ -72,7 +72,7 @@ fit_content = true
 
 [node name="ConceptDesign" type="Label" parent="PanelContainer/MarginContainer/VBoxContainer/PanelContainer/MarginContainer/VBoxContainer" unique_id=355223120]
 layout_mode = 2
-text = "CONCEPT"
+text = "CONCEPT & Game Design"
 
 [node name="ConceptDesignText" type="RichTextLabel" parent="PanelContainer/MarginContainer/VBoxContainer/PanelContainer/MarginContainer/VBoxContainer" unique_id=707578111]
 layout_mode = 2
