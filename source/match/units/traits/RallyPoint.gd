@@ -18,6 +18,8 @@ var target_unit = null:
 
 
 func _ready():
+	if not _unit.has_signal("selected"):
+		return
 	_animation_player.play("idle")
 	visible = _unit.is_in_group("selected_units")
 	_unit.selected.connect(_show)

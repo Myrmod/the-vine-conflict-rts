@@ -19,6 +19,8 @@ var _bar_value_initialized = false
 func _ready():
 	if Engine.is_editor_hint():
 		return
+	if not _unit.has_signal("hp_changed"):
+		return
 	hide()
 	_actual_bar.layers = 2
 	_recalulate_bar_value()
@@ -29,7 +31,7 @@ func _ready():
 
 
 func _recalulate_bar_value():
-	if _unit.hp == null or _unit.hp_max == null:
+	if _unit.get("hp") == null or _unit.get("hp_max") == null:
 		return
 	var old_value = _actual_bar.texture.gradient.get_offset(1)
 	var new_value = float(_unit.hp) / _unit.hp_max
