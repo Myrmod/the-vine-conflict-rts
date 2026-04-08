@@ -1,4 +1,4 @@
-# Catogeries:
+# Categories:
 ## Infantry:
 ### The phase seedling:
 #### General

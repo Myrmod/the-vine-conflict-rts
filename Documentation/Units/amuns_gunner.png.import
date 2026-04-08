@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cky2u8ya6t0kj"
-path="res://.godot/imported/The_Amuns_art.png-f70c91ef9a799afd6c9fbfeaa992b397.ctex"
+uid="uid://b6oyd0ub3tvxi"
+path="res://.godot/imported/amuns_gunner.png-a44f3a5346e55575047784c577cd0425.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://Documentation/Factions/The_Amuns/The_Amuns_art.png"
-dest_files=["res://.godot/imported/The_Amuns_art.png-f70c91ef9a799afd6c9fbfeaa992b397.ctex"]
+source_file="res://Documentation/Units/amuns_gunner.png"
+dest_files=["res://.godot/imported/amuns_gunner.png-a44f3a5346e55575047784c577cd0425.ctex"]
 
 [params]
 

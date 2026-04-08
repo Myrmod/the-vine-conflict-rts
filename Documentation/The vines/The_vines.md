@@ -36,7 +36,7 @@ Mutating fauna and flora.
 Developing self-defense responses.
 The terraform system is running without its architects.
 
- ## The Amuns’ Perspective:
+## The Amuns' Perspective:
 
 - When The Amuns detect the activation, they don’t return out of greed. They return because:
 
@@ -61,7 +61,7 @@ Adaptive.
 
 - Now the Vines don’t belong to The Amuns anymore.
 They belong to themselves.
-So your the plant faction isn’t just defending territory.
+So the plant faction isn't just defending territory.
 They’re defending their right to exist.
 
 # The Conflict:
@@ -76,7 +76,7 @@ The Vines are the next step in human progress, Energy crises ended because of th
 Cities powered by Vine reactors are cleaner and richer.
 People augmented with Vine bio-tech live longer.
 
-Some even view it as spiritual that the gods has returned through these vines.
+Some even view it as spiritual that the gods have returned through these vines.
 
 - They think they are saving humanity through the vines.
 
@@ -84,7 +84,7 @@ Some even view it as spiritual that the gods has returned through these vines.
 
 They saw the vines destroy homes, mutated villages, awaken an evil species, they have seen children mutated.
 
-They believe that the vines are an infection.They saw coropate benefit from the vines, aliens attacking their homeworld.
+They believe that the vines are an infection. They saw corporate benefit from the vines, aliens attacking their homeworld.
 
 Their purpose is to destroy these vines.
 

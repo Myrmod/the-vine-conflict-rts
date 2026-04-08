@@ -8,8 +8,8 @@
   - delivery rate: 100 res per second
 
 ## pro vines:
-- they use refineries are normal harveters
-- harvestering stats:
+- they use refineries are normal harvesters
+- harvesting stats:
   - capacity:500
   - speed:1
   - harvest rate:100 res per second
@@ -21,8 +21,8 @@
  - capacity: infinite
  - speed:0
  - harvester rate:75 res per second
- - deelivery rate: 75 per second
- - boost feild growth per 5 % per building
+  - delivery rate: 75 per second
+  - boost field growth per 5% per building
 
 ## The Amuns:
 - they terraform vines into amuns matter by building refinery nodes that can build obelisks.

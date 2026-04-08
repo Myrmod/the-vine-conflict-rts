@@ -1,4 +1,4 @@
-# Catogeries:
+# Categories:
 ## Infantry:
 ### basic inf:
 #### General

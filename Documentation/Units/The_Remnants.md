@@ -1,4 +1,4 @@
-# Catogeries:
+# Categories:
 ## Infantry:
 ### basic inf:
 #### General
@@ -20,6 +20,6 @@
 - attack_speed: 2
 
 #### Abilities:
-- can activate sprint to gain 0.25 ms for 10 secons
+- can activate sprint to gain 0.25 m/s for 10 seconds
 
 #### Trait

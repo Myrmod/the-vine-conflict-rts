@@ -1,4 +1,4 @@
-# Catogeries:
+# Categories:
 ## Infantry:
 ### The phase caster:
 #### General
@@ -21,7 +21,7 @@
 
 #### Abilities:
 - can teleport short distances(t1)
-- can activate stealth (ability purshace needed t2)
+- can activate stealth (ability purchase needed t2)
 
 #### Trait
 
