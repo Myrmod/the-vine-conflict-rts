@@ -1,0 +1,310 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://source/main-menu/Lobby.gd" id="1_lobby"]
+[ext_resource type="Theme" uid="uid://c2kgsk4ffhbwo" path="res://source/resources/main_menu.theme" id="2_theme"]
+[ext_resource type="PackedScene" uid="uid://dij5xr8swlfdx" path="res://source/main-menu/Background.tscn" id="3_bg"]
+[ext_resource type="Script" uid="uid://glk5al2y6l2w" path="res://source/main-menu/MapPreview.gd" id="4_mappreview"]
+
+[node name="Lobby" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("2_theme")
+script = ExtResource("1_lobby")
+
+[node name="Background" parent="." instance=ExtResource("3_bg")]
+layout_mode = 1
+
+[node name="BrowsePanel" type="PanelContainer" parent="."]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -500.0
+offset_top = -350.0
+offset_right = 500.0
+offset_bottom = 350.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="BrowseMargin" type="MarginContainer" parent="BrowsePanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 20
+
+[node name="BrowseVBox" type="VBoxContainer" parent="BrowsePanel/BrowseMargin"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="BrowseTitle" type="Label" parent="BrowsePanel/BrowseMargin/BrowseVBox"]
+layout_mode = 2
+text = "Multiplayer Lobby"
+horizontal_alignment = 1
+
+[node name="Panel" type="Panel" parent="BrowsePanel/BrowseMargin/BrowseVBox/BrowseTitle"]
+show_behind_parent = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="BrowseContent" type="HBoxContainer" parent="BrowsePanel/BrowseMargin/BrowseVBox"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 10
+
+[node name="GamesSection" type="VBoxContainer" parent="BrowsePanel/BrowseMargin/BrowseVBox/BrowseContent"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 2.0
+theme_override_constants/separation = 5
+
+[node name="GamesLabel" type="Label" parent="BrowsePanel/BrowseMargin/BrowseVBox/BrowseContent/GamesSection"]
+layout_mode = 2
+text = "Available Games"
+horizontal_alignment = 1
+
+[node name="GamesList" type="ItemList" parent="BrowsePanel/BrowseMargin/BrowseVBox/BrowseContent/GamesSection"]
+layout_mode = 2
+size_flags_vertical = 3
+focus_mode = 0
+
+[node name="ChatSection" type="VBoxContainer" parent="BrowsePanel/BrowseMargin/BrowseVBox/BrowseContent"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 5
+
+[node name="ChatLabel" type="Label" parent="BrowsePanel/BrowseMargin/BrowseVBox/BrowseContent/ChatSection"]
+layout_mode = 2
+text = "Chat"
+horizontal_alignment = 1
+
+[node name="BrowseChatDisplay" type="RichTextLabel" parent="BrowsePanel/BrowseMargin/BrowseVBox/BrowseContent/ChatSection"]
+layout_mode = 2
+size_flags_vertical = 3
+bbcode_enabled = true
+scroll_following = true
+
+[node name="ChatInputRow" type="HBoxContainer" parent="BrowsePanel/BrowseMargin/BrowseVBox/BrowseContent/ChatSection"]
+layout_mode = 2
+
+[node name="BrowseChatInput" type="LineEdit" parent="BrowsePanel/BrowseMargin/BrowseVBox/BrowseContent/ChatSection/ChatInputRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+placeholder_text = "Type a message..."
+
+[node name="BrowseSendButton" type="Button" parent="BrowsePanel/BrowseMargin/BrowseVBox/BrowseContent/ChatSection/ChatInputRow"]
+layout_mode = 2
+text = "Send"
+
+[node name="BrowseButtons" type="HBoxContainer" parent="BrowsePanel/BrowseMargin/BrowseVBox"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="CreateButton" type="Button" parent="BrowsePanel/BrowseMargin/BrowseVBox/BrowseButtons"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Create Game"
+
+[node name="JoinButton" type="Button" parent="BrowsePanel/BrowseMargin/BrowseVBox/BrowseButtons"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Join Game"
+
+[node name="DirectConnectButton" type="Button" parent="BrowsePanel/BrowseMargin/BrowseVBox/BrowseButtons"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Direct Connect"
+
+[node name="BrowseBackButton" type="Button" parent="BrowsePanel/BrowseMargin/BrowseVBox/BrowseButtons"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Back"
+
+[node name="RoomPanel" type="PanelContainer" parent="."]
+visible = false
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -670.5
+offset_top = -429.0
+offset_right = 670.5
+offset_bottom = 429.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="RoomMargin" type="MarginContainer" parent="RoomPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 20
+
+[node name="RoomVBox" type="VBoxContainer" parent="RoomPanel/RoomMargin"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="RoomTitle" type="Label" parent="RoomPanel/RoomMargin/RoomVBox"]
+layout_mode = 2
+text = "Game Room"
+horizontal_alignment = 1
+
+[node name="Panel" type="Panel" parent="RoomPanel/RoomMargin/RoomVBox/RoomTitle"]
+show_behind_parent = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="RoomContent" type="HBoxContainer" parent="RoomPanel/RoomMargin/RoomVBox"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 10
+
+[node name="MapSection" type="VBoxContainer" parent="RoomPanel/RoomMargin/RoomVBox/RoomContent"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 3.0
+theme_override_constants/separation = 5
+
+[node name="MapLabel" type="Label" parent="RoomPanel/RoomMargin/RoomVBox/RoomContent/MapSection"]
+layout_mode = 2
+text = "Map"
+horizontal_alignment = 1
+
+[node name="Panel" type="Panel" parent="RoomPanel/RoomMargin/RoomVBox/RoomContent/MapSection/MapLabel"]
+show_behind_parent = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="MapRow" type="HBoxContainer" parent="RoomPanel/RoomMargin/RoomVBox/RoomContent/MapSection"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 4
+
+[node name="RoomMapList" type="ItemList" parent="RoomPanel/RoomMargin/RoomVBox/RoomContent/MapSection/MapRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 1.5
+focus_mode = 0
+
+[node name="MapInfoMargin" type="MarginContainer" parent="RoomPanel/RoomMargin/RoomVBox/RoomContent/MapSection/MapRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/margin_left = 4
+theme_override_constants/margin_top = 4
+theme_override_constants/margin_right = 4
+theme_override_constants/margin_bottom = 4
+
+[node name="MapInfoVBox" type="VBoxContainer" parent="RoomPanel/RoomMargin/RoomVBox/RoomContent/MapSection/MapRow/MapInfoMargin"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="RoomMapPreview" type="Control" parent="RoomPanel/RoomMargin/RoomVBox/RoomContent/MapSection/MapRow/MapInfoMargin/MapInfoVBox"]
+custom_minimum_size = Vector2(200, 200)
+layout_mode = 2
+script = ExtResource("4_mappreview")
+
+[node name="RoomMapDetails" type="RichTextLabel" parent="RoomPanel/RoomMargin/RoomVBox/RoomContent/MapSection/MapRow/MapInfoMargin/MapInfoVBox"]
+layout_mode = 2
+bbcode_enabled = true
+text = "[u]Players:[/u] -
+[u]Size:[/u] -"
+
+[node name="RightSection" type="VBoxContainer" parent="RoomPanel/RoomMargin/RoomVBox/RoomContent"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 5
+
+[node name="PlayersLabel" type="Label" parent="RoomPanel/RoomMargin/RoomVBox/RoomContent/RightSection"]
+layout_mode = 2
+text = "Players"
+horizontal_alignment = 1
+
+[node name="Panel" type="Panel" parent="RoomPanel/RoomMargin/RoomVBox/RoomContent/RightSection/PlayersLabel"]
+show_behind_parent = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="PlayerGrid" type="VBoxContainer" parent="RoomPanel/RoomMargin/RoomVBox/RoomContent/RightSection"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="RoomChatLabel" type="Label" parent="RoomPanel/RoomMargin/RoomVBox/RoomContent/RightSection"]
+layout_mode = 2
+text = "Chat"
+horizontal_alignment = 1
+
+[node name="RoomChatDisplay" type="RichTextLabel" parent="RoomPanel/RoomMargin/RoomVBox/RoomContent/RightSection"]
+custom_minimum_size = Vector2(0, 120)
+layout_mode = 2
+size_flags_vertical = 3
+bbcode_enabled = true
+scroll_following = true
+
+[node name="RoomChatRow" type="HBoxContainer" parent="RoomPanel/RoomMargin/RoomVBox/RoomContent/RightSection"]
+layout_mode = 2
+
+[node name="RoomChatInput" type="LineEdit" parent="RoomPanel/RoomMargin/RoomVBox/RoomContent/RightSection/RoomChatRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+placeholder_text = "Type a message..."
+
+[node name="RoomSendButton" type="Button" parent="RoomPanel/RoomMargin/RoomVBox/RoomContent/RightSection/RoomChatRow"]
+layout_mode = 2
+text = "Send"
+
+[node name="RoomButtons" type="HBoxContainer" parent="RoomPanel/RoomMargin/RoomVBox"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="StartButton" type="Button" parent="RoomPanel/RoomMargin/RoomVBox/RoomButtons"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "START"
+
+[node name="ReadyButton" type="Button" parent="RoomPanel/RoomMargin/RoomVBox/RoomButtons"]
+visible = false
+layout_mode = 2
+size_flags_horizontal = 3
+text = "READY"
+
+[node name="LeaveButton" type="Button" parent="RoomPanel/RoomMargin/RoomVBox/RoomButtons"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "LEAVE"
+
+[connection signal="item_selected" from="RoomPanel/RoomMargin/RoomVBox/RoomContent/MapSection/MapRow/RoomMapList" to="." method="_on_map_list_item_selected"]
+[connection signal="pressed" from="BrowsePanel/BrowseMargin/BrowseVBox/BrowseButtons/CreateButton" to="." method="_on_create_button_pressed"]
+[connection signal="pressed" from="BrowsePanel/BrowseMargin/BrowseVBox/BrowseButtons/JoinButton" to="." method="_on_join_button_pressed"]
+[connection signal="pressed" from="BrowsePanel/BrowseMargin/BrowseVBox/BrowseButtons/DirectConnectButton" to="." method="_on_direct_connect_pressed"]
+[connection signal="pressed" from="BrowsePanel/BrowseMargin/BrowseVBox/BrowseButtons/BrowseBackButton" to="." method="_on_browse_back_pressed"]
+[connection signal="pressed" from="BrowsePanel/BrowseMargin/BrowseVBox/BrowseContent/ChatSection/ChatInputRow/BrowseSendButton" to="." method="_on_browse_send_pressed"]
+[connection signal="text_submitted" from="BrowsePanel/BrowseMargin/BrowseVBox/BrowseContent/ChatSection/ChatInputRow/BrowseChatInput" to="." method="_on_browse_chat_submitted"]
+[connection signal="pressed" from="RoomPanel/RoomMargin/RoomVBox/RoomButtons/StartButton" to="." method="_on_start_button_pressed"]
+[connection signal="pressed" from="RoomPanel/RoomMargin/RoomVBox/RoomButtons/ReadyButton" to="." method="_on_ready_button_pressed"]
+[connection signal="pressed" from="RoomPanel/RoomMargin/RoomVBox/RoomButtons/LeaveButton" to="." method="_on_leave_button_pressed"]
+[connection signal="pressed" from="RoomPanel/RoomMargin/RoomVBox/RoomContent/RightSection/RoomChatRow/RoomSendButton" to="." method="_on_room_send_pressed"]
+[connection signal="text_submitted" from="RoomPanel/RoomMargin/RoomVBox/RoomContent/RightSection/RoomChatRow/RoomChatInput" to="." method="_on_room_chat_submitted"]

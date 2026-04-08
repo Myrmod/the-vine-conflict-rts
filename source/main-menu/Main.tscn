@@ -48,6 +48,10 @@ alignment = 1
 layout_mode = 2
 text = "Play"
 
+[node name="Multiplayer" type="Button" parent="PanelContainer/MarginContainer/VBoxContainer" unique_id=1314584848]
+layout_mode = 2
+text = "Multiplayer"
+
 [node name="CampaignButton" type="Button" parent="PanelContainer/MarginContainer/VBoxContainer" unique_id=1118820947]
 layout_mode = 2
 text = "Campaign
@@ -60,6 +64,10 @@ text = "Load"
 [node name="ReplayButton" type="Button" parent="PanelContainer/MarginContainer/VBoxContainer" unique_id=1256572013]
 layout_mode = 2
 text = "Replays"
+
+[node name="MapEditorButton" type="Button" parent="PanelContainer/MarginContainer/VBoxContainer" unique_id=2072602615]
+layout_mode = 2
+text = "Map Editor"
 
 [node name="OptionsButton" type="Button" parent="PanelContainer/MarginContainer/VBoxContainer" unique_id=1810888099]
 layout_mode = 2
@@ -74,7 +82,10 @@ layout_mode = 2
 text = "Quit"
 
 [connection signal="pressed" from="PanelContainer/MarginContainer/VBoxContainer/PlayButton" to="." method="_on_play_button_pressed"]
+[connection signal="pressed" from="PanelContainer/MarginContainer/VBoxContainer/Multiplayer" to="." method="_on_multiplayer_button_pressed"]
+[connection signal="pressed" from="PanelContainer/MarginContainer/VBoxContainer/LoadButton" to="." method="_on_Load_button_pressed"]
 [connection signal="pressed" from="PanelContainer/MarginContainer/VBoxContainer/ReplayButton" to="." method="_on_replay_button_pressed"]
+[connection signal="pressed" from="PanelContainer/MarginContainer/VBoxContainer/MapEditorButton" to="." method="_on_map_editor_button_pressed"]
 [connection signal="pressed" from="PanelContainer/MarginContainer/VBoxContainer/OptionsButton" to="." method="_on_options_button_pressed"]
 [connection signal="pressed" from="PanelContainer/MarginContainer/VBoxContainer/CreditsButton" to="." method="_on_credits_button_pressed"]
 [connection signal="pressed" from="PanelContainer/MarginContainer/VBoxContainer/QuitButton" to="." method="_on_quit_button_pressed"]

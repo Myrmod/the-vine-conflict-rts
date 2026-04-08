@@ -1,41 +1,62 @@
 extends PanelContainer
 
 const Unit = preload("res://source/match/units/Unit.gd")
+const Structure = preload("res://source/match/units/Structure.gd")
 const Moving = preload("res://source/match/units/actions/Moving.gd")
+const ResourceUnit = preload("res://source/match/units/non-player/ResourceUnit.gd")
 
 const GROUND_LEVEL_PLANE = Plane(Vector3.UP, 0)
 const MINIMAP_PIXELS_PER_WORLD_METER = 2
 
 var _unit_to_corresponding_node_mapping = {}
+var _orphaned_minimap_nodes = []
 var _camera_movement_active = false
 
 @onready var _match = find_parent("Match")
 @onready var _camera_indicator = find_child("CameraIndicator")
 @onready var _viewport_background = find_child("Background")
 @onready var _texture_rect = find_child("MinimapTextureRect")
+@onready var _fog_of_war_mask = find_child("FogOfWarMask")
 
 @export var MaxSize = 100
+
 
 func _ready():
 	if not FeatureFlags.show_minimap:
 		queue_free()
 	_remove_dummy_nodes()
 	await _match.ready  # make sure Match is ready as it may change map on setup
-	
-	var viewport_size = (_match.find_child("Map").size * MINIMAP_PIXELS_PER_WORLD_METER)
+	_setup_fog_of_war_texture()
+
+	var map_node = _match.find_child("Map")
+	var viewport_size = map_node.size * MINIMAP_PIXELS_PER_WORLD_METER
 	find_child("MinimapViewport").size = viewport_size
-	
+
+	# Replace the flat gray background with a terrain overview image
+	_generate_terrain_background(map_node)
+
 	await get_tree().process_frame
 
-	get_parent().pivot_offset = Vector2(0, viewport_size.y)
-	var larger_dimension = max(viewport_size.x, viewport_size.y)
-	var scale_factor = 1.0
+	# Fixed display size — the TextureRect's STRETCH_KEEP_ASPECT_CENTERED
+	# fits the map inside this square; empty areas remain black.
+	var display_size = MaxSize * 2
+	custom_minimum_size = Vector2(display_size, display_size)
+	_texture_rect.custom_minimum_size = Vector2(display_size, display_size)
 
-	if larger_dimension > MaxSize:
-		scale_factor = MaxSize / larger_dimension * 2
-	get_parent().scale = Vector2(scale_factor, scale_factor)
-	
+	# Black background behind letterboxed areas
+	var black_style = StyleBoxFlat.new()
+	black_style.bg_color = Color.BLACK
+	add_theme_stylebox_override("panel", black_style)
+
 	_texture_rect.gui_input.connect(_on_gui_input)
+
+
+func _setup_fog_of_war_texture():
+	var combined_viewport: SubViewport = _match.find_child("CombinedViewport")
+	if combined_viewport != null and _fog_of_war_mask != null:
+		_fog_of_war_mask.material.set_shader_parameter(
+			"reference_texture", combined_viewport.get_texture()
+		)
 
 
 func _physics_process(_delta):
@@ -51,18 +72,57 @@ func _remove_dummy_nodes():
 func _sync_real_units_with_minimap_representations():
 	var units_synced = {}
 	var units_to_sync = (
-		get_tree().get_nodes_in_group("units") + get_tree().get_nodes_in_group("resource_units")
+		get_tree().get_nodes_in_group("units")
+		+ get_tree().get_nodes_in_group("resource_units")
+		+ get_tree().get_nodes_in_group("forest_vines")
 	)
 	for unit in units_to_sync:
-		if not unit.visible:
-			continue
-		units_synced[unit] = 1
-		if not _unit_is_mapped(unit):
-			_map_unit(unit)
-		_sync_unit(unit)
+		if unit is ResourceUnit or unit is ForestVine:
+			if unit.in_player_vision:
+				units_synced[unit] = 1
+				if not _unit_is_mapped(unit):
+					_map_unit(unit)
+				_sync_unit(unit)
+			else:
+				# Not in vision: keep existing dot frozen, mark as synced so it isn't removed
+				units_synced[unit] = 1
+				if not _unit_is_mapped(unit):
+					_map_unit(unit)
+					_sync_unit(unit)
+		elif unit is Structure:
+			if unit.visible:
+				units_synced[unit] = 1
+				if not _unit_is_mapped(unit):
+					_map_unit(unit)
+				_sync_unit(unit)
+			elif _unit_is_mapped(unit):
+				# Structure in fog: keep dot frozen
+				units_synced[unit] = 1
+		else:
+			if not unit.visible:
+				continue
+			units_synced[unit] = 1
+			if not _unit_is_mapped(unit):
+				_map_unit(unit)
+			_sync_unit(unit)
+	# Orphan minimap nodes for units destroyed outside vision
+	var units_to_cleanup = []
 	for mapped_unit in _unit_to_corresponding_node_mapping:
 		if not mapped_unit in units_synced:
-			_cleanup_mapping(mapped_unit)
+			if not is_instance_valid(mapped_unit):
+				_orphaned_minimap_nodes.append(
+					{
+						"node": _unit_to_corresponding_node_mapping[mapped_unit],
+						"position": _unit_to_corresponding_node_mapping[mapped_unit].position
+					}
+				)
+			units_to_cleanup.append(mapped_unit)
+	for unit in units_to_cleanup:
+		if is_instance_valid(unit):
+			_cleanup_mapping(unit)
+		else:
+			_unit_to_corresponding_node_mapping.erase(unit)
+	_check_orphaned_minimap_nodes()
 
 
 func _unit_is_mapped(unit):
@@ -91,6 +151,35 @@ func _sync_unit(unit):
 func _cleanup_mapping(unit):
 	_unit_to_corresponding_node_mapping[unit].queue_free()
 	_unit_to_corresponding_node_mapping.erase(unit)
+
+
+func _check_orphaned_minimap_nodes():
+	var visibility_handler = find_parent("Match").find_child("UnitVisibilityHandler")
+	if visibility_handler == null or visibility_handler._is_disabled():
+		for entry in _orphaned_minimap_nodes:
+			entry["node"].queue_free()
+		_orphaned_minimap_nodes.clear()
+		return
+	var revealed_units = get_tree().get_nodes_in_group("units").filter(
+		func(unit): return unit.is_in_group("revealed_units")
+	)
+	var to_remove = []
+	for entry in _orphaned_minimap_nodes:
+		var in_vision = false
+		for revealed_unit in revealed_units:
+			if revealed_unit.is_revealing() and revealed_unit.sight_range != null:
+				var orphan_world_pos = entry["position"] / MINIMAP_PIXELS_PER_WORLD_METER
+				var unit_pos = Vector2(
+					revealed_unit.global_position.x, revealed_unit.global_position.z
+				)
+				if unit_pos.distance_to(orphan_world_pos) <= revealed_unit.sight_range + 2.0:
+					in_vision = true
+					break
+		if in_vision:
+			to_remove.append(entry)
+	for entry in to_remove:
+		entry["node"].queue_free()
+		_orphaned_minimap_nodes.erase(entry)
 
 
 func _update_camera_indicator():
@@ -162,7 +251,7 @@ func _issue_movement_action(position_2d_within_texture_rect):
 	if world_position_2d == null:
 		return
 	var abstract_world_position_3d = Vector3(world_position_2d.x, 0, world_position_2d.y)
-	
+
 	#Leaving this temporarily because maybe the OG writer knew something I don't?
 	#var camera = get_viewport().get_camera_3d()
 	#var target_point_on_colliding_surface = camera.get_ray_intersection(
@@ -175,13 +264,14 @@ func _issue_movement_action(position_2d_within_texture_rect):
 	var ray_from = Vector3(world_position_2d.x, 1000.0, world_position_2d.y)
 	var ray_to = Vector3(world_position_2d.x, -1000.0, world_position_2d.y)
 	var query = PhysicsRayQueryParameters3D.create(ray_from, ray_to)
-	query.collision_mask = 1 #Landscape Collision channel
+	query.collision_mask = 1  #Landscape Collision channel
 	var result = space_state.intersect_ray(query)
 
 	if result:
 		MatchSignals.terrain_targeted.emit(result.position)
 	else:
 		MatchSignals.terrain_targeted.emit(abstract_world_position_3d)
+
 
 func _on_gui_input(event):
 	if event is InputEventMouseButton:
@@ -194,3 +284,33 @@ func _on_gui_input(event):
 			_issue_movement_action(event.position)
 	elif event is InputEventMouseMotion and _camera_movement_active:
 		_try_teleporting_camera_based_on_local_texture_rect_position(event.position)
+
+
+func _generate_terrain_background(map_node: Node3D) -> void:
+	"""Replace the flat ColorRect background with a terrain overview."""
+	var img := MinimapTerrainRenderer.generate_image_from_map(map_node)
+	if img == null:
+		return
+
+	# Scale the 1px-per-cell image up to the minimap viewport resolution
+	var viewport_size_i: Vector2i = find_child("MinimapViewport").size
+	img.resize(viewport_size_i.x, viewport_size_i.y, Image.INTERPOLATE_NEAREST)
+
+	var tex := ImageTexture.create_from_image(img)
+
+	# Replace the Background ColorRect with a TextureRect
+	if _viewport_background:
+		var tex_rect := TextureRect.new()
+		tex_rect.name = "Background"
+		tex_rect.texture = tex
+		tex_rect.stretch_mode = TextureRect.STRETCH_SCALE
+		tex_rect.set_anchors_preset(Control.PRESET_FULL_RECT)
+		tex_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+		var parent = _viewport_background.get_parent()
+		var idx = _viewport_background.get_index()
+		_viewport_background.queue_free()
+
+		parent.add_child(tex_rect)
+		parent.move_child(tex_rect, idx)
+		_viewport_background = tex_rect

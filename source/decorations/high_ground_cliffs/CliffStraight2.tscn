@@ -1,0 +1,12 @@
+[gd_scene format=3 uid="uid://c1hku1b7s78bx"]
+
+[ext_resource type="Script" uid="uid://bysf721q4x37n" path="res://source/generic-scenes-and-nodes/3d/ModelHolder.gd" id="1_pgsyk"]
+
+[node name="CliffStraight2" type="Node3D" unique_id=634829028]
+
+[node name="ModelHolder" type="Node3D" parent="." unique_id=1735832108]
+transform = Transform3D(-0.0422373, 0, 0.26667586, 0, 0.27, 0, -0.26667586, 0, -0.0422373, 0, -0.9, 0)
+script = ExtResource("1_pgsyk")
+model_path = "RockPack1/CliffPartials/CliffStraight_2.res"
+material_path = "RockPack1/Materials/Cliff_Material_Photoscan.tres"
+auto_collision = true

@@ -1,6 +1,6 @@
-extends Node
-
 class_name Constants
+
+extends Node
 
 enum PlayerType {
 	NONE = 0,
@@ -38,12 +38,22 @@ const COLORS = [
 	Color("2f4f4f"),
 ]
 
+## The world-space height for each level (tuneable)
+const LEVEL_HEIGHTS := {
+	Enums.HeightLevel.WATER: -0.2,
+	Enums.HeightLevel.GROUND: 0.0,
+	Enums.HeightLevel.HIGH_GROUND: 2.0,
+	Enums.HeightLevel.AIR: 3.0,
+}
+
+
 static func get_options_file_path() -> String:
 	return (
 		"user://options.tres"
 		if not FeatureFlags.save_user_files_in_tmp
 		else "res://tmp/options.tres"
 	)
+
 
 # gdlint: ignore=class-variable-name
 var OPTIONS_FILE_PATH: String:

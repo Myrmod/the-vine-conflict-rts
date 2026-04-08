@@ -5,3 +5,4 @@
 [node name="FeatureFlags" type="Node"]
 script = ExtResource("1_wihie")
 god_mode = true
+debug_disconnect = true

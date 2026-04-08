@@ -1,23 +1,57 @@
+# This is the HUMAN PLAYER INPUT HANDLER that bridges the UI with the unified command system.
+# When a human player clicks a target or presses a button, UI signals (terrain_targeted, unit_targeted, etc.)
+# fire from MatchSignals. This controller responds by determining:
+# 1. Which units are selected and can perform the action
+# 2. What action they should perform and on what target
+# 3. Converting that to a Command object with correct data format
+# 4. Queuing the command through CommandBus.push_command()
+#
+# Critical: Commands are queued for (current_tick + 1) to allow the command to execute
+# in the next game tick. Both human and AI decisions go through this exact same pipeline,
+# which ensures deterministic replays: same commands in same order = identical game outcome.
+# See CommandBus.gd and Match._execute_command() for how commands become actual game changes.
 extends Node
 
 class_name UnitActionsController
 
 const Structure = preload("res://source/match/units/Structure.gd")
-const ResourceUnit = preload("res://source/match/units/non-player/ResourceUnit.gd")
+const FormationPreviewScript = preload("res://source/match/players/human/FormationPreview.gd")
+
+@onready var _player = get_parent()
+@onready var _formation_preview: Node3D = null
+
 
 func _ready():
 	MatchSignals.terrain_targeted.connect(_on_terrain_targeted)
+	MatchSignals.terrain_drag_updated.connect(_on_terrain_drag_updated)
+	MatchSignals.terrain_drag_finished.connect(_on_terrain_drag_finished)
 	MatchSignals.unit_targeted.connect(_on_unit_targeted)
 	MatchSignals.unit_spawned.connect(_on_unit_spawned)
 	MatchSignals.navigate_unit_to_rally_point.connect(_on_navigate_unit_to_rally_point)
 
+	# FormationPreview is a Node3D — must live under Match (a Node3D) so
+	# world-space positions work.  UnitActionsController is a plain Node
+	# parented to the Human player, so we climb up to Match.
+	_formation_preview = Node3D.new()
+	_formation_preview.set_script(FormationPreviewScript)
+	_formation_preview.name = "FormationPreview"
+	call_deferred("_attach_formation_preview")
 
-func _try_navigating_selected_units_towards_position(target_point):
+
+func _attach_formation_preview() -> void:
+	var match_node = find_parent("Match")
+	if match_node:
+		match_node.add_child(_formation_preview)
+
+
+func _try_navigating_selected_units_towards_position(target_point, queued: bool = false):
+	# Filter selected units to find which ones can move to the target terrain position.
+	# Checks: unit belongs to human player, unit supports terrain movement, Moving action is applicable
 	var terrain_units_to_move = get_tree().get_nodes_in_group("selected_units").filter(
 		func(unit):
 			return (
 				unit.is_in_group("controlled_units")
-				and unit.movement_domain == NavigationConstants.Domain.TERRAIN
+				and unit.get_nav_domain() == NavigationConstants.Domain.TERRAIN
 				and Actions.Moving.is_applicable(unit)
 			)
 	)
@@ -25,38 +59,57 @@ func _try_navigating_selected_units_towards_position(target_point):
 		func(unit):
 			return (
 				unit.is_in_group("controlled_units")
-				and unit.movement_domain == NavigationConstants.Domain.AIR
+				and unit.get_nav_domain() == NavigationConstants.Domain.AIR
 				and Actions.Moving.is_applicable(unit)
 			)
 	)
-	var new_unit_targets = Utils.MatchUtils.Movement.crowd_moved_to_new_pivot(
-		terrain_units_to_move, target_point
-	)
-	new_unit_targets += Utils.MatchUtils.Movement.crowd_moved_to_new_pivot(
-		air_units_to_move, target_point
-	)
+	# Calculate new positions for units to move to (circle spread around target)
+	var new_unit_targets = MatchUtils.Movement.circle_spread(terrain_units_to_move, target_point)
+	new_unit_targets += MatchUtils.Movement.circle_spread(air_units_to_move, target_point)
 
-	CommandBus.push_command({
-		"tick": Match.tick + 1,
-		"type": Enums.CommandType.MOVE,
-		"data": {
-			"targets": new_unit_targets.map(
-				func(t): return {"unit": t[0].id, "pos": t[1]}
-			)
+	# Queue a MOVE command through CommandBus. This will:
+	# 1. Be recorded by ReplayRecorder for replay capability
+	# 2. Execute in next tick when Match._process_commands_for_tick() runs
+	# 3. Assign Actions.Moving to each selected unit
+	# 4. Be deterministically replayed with identical behavior (same tick, same command data)
+	CommandBus.push_command(
+		{
+			"tick": Match.tick + 1,
+			"type": Enums.CommandType.MOVE,
+			"player_id": _player.id,
+			"data":
+			{
+				"targets": new_unit_targets.map(func(t): return {"unit": t[0].id, "pos": t[1]}),
+				"queued": queued,
+			}
 		}
-	})
+	)
+	if not new_unit_targets.is_empty():
+		MatchSignals.movement_targets_assigned.emit(new_unit_targets)
 
 
 func _try_setting_rally_points(target_point: Vector3):
+	# Set rally points through CommandBus so the action is recorded for replay determinism
 	var controlled_structures = get_tree().get_nodes_in_group("selected_units").filter(
 		func(unit):
 			return unit.is_in_group("controlled_units") and unit.find_child("RallyPoint") != null
 	)
 	for structure in controlled_structures:
-		var rally_point = structure.find_child("RallyPoint")
-		if rally_point != null:
-			rally_point.target_unit = null
-			rally_point.global_position = target_point
+		(
+			CommandBus
+			. push_command(
+				{
+					"tick": Match.tick + 1,
+					"type": Enums.CommandType.SET_RALLY_POINT,
+					"player_id": _player.id,
+					"data":
+					{
+						"entity_id": structure.id,
+						"position": target_point,
+					}
+				}
+			)
+		)
 
 
 func _try_ordering_selected_workers_to_construct_structure(potential_structure):
@@ -71,16 +124,61 @@ func _try_ordering_selected_workers_to_construct_structure(potential_structure):
 			)
 	)
 
-	CommandBus.push_command({
-		"tick": Match.tick + 1,
-		"type": Enums.CommandType.CONSTRUCTING,
-		"data": {
-			"selected_constructors": selected_constructors.map(func(unit): return unit.id),
-			"structure": structure.id,
-			"rotation": structure.global_rotation,
-			"position": structure.global_transform.origin,
+	CommandBus.push_command(
+		{
+			"tick": Match.tick + 1,
+			"type": Enums.CommandType.CONSTRUCTING,
+			"player_id": _player.id,
+			"data":
+			{
+				"selected_constructors":
+				selected_constructors.map(
+					func(unit): return {
+						"unit": unit.id,
+						"pos": unit.global_position,
+						"rot": unit.global_rotation,
+					}
+				),
+				"structure": structure.id,
+				"rotation": structure.global_rotation,
+				"position": structure.global_transform.origin,
+			}
 		}
-	})
+	)
+
+
+func _force_attack_selected_units_on(target_unit):
+	var attackers = get_tree().get_nodes_in_group("selected_units").filter(
+		func(unit):
+			return (
+				unit.is_in_group("controlled_units")
+				and unit.attack_range != null
+				and unit.attack_range > 0
+				and unit != target_unit
+			)
+	)
+	if attackers.is_empty():
+		return
+	CommandBus.push_command(
+		{
+			"tick": Match.tick + 1,
+			"type": Enums.CommandType.AUTO_ATTACKING,
+			"player_id": _player.id,
+			"data":
+			{
+				"targets":
+				attackers.map(
+					func(unit): return {
+						"unit": unit.id,
+						"pos": unit.global_position,
+						"rot": unit.global_rotation
+					}
+				),
+				"target_unit": target_unit.id,
+				"force": true,
+			}
+		}
+	)
 
 
 func _navigate_selected_units_towards_unit(target_unit):
@@ -95,69 +193,137 @@ func _navigate_selected_units_towards_unit(target_unit):
 
 func _navigate_unit_towards_unit(unit, target_unit):
 	if Actions.CollectingResourcesSequentially.is_applicable(unit, target_unit):
-		# unit.action = Actions.CollectingResourcesSequentially.new(target_unit)
-		CommandBus.push_command({
-			"tick": Match.tick + 1,
-			"type": Enums.CommandType.COLLECTING_RESOURCES_SEQUENTIALLY,
-			"data": {
-				"targets": [unit.id],
-				"target_unit": target_unit.id,
-			}
-		})
+		(
+			CommandBus
+			. push_command(
+				{
+					"tick": Match.tick + 1,
+					"type": Enums.CommandType.COLLECTING_RESOURCES_SEQUENTIALLY,
+					"player_id": _player.id,
+					"data":
+					{
+						"targets":
+						[
+							{
+								"unit": unit.id,
+								"pos": unit.global_position,
+								"rot": unit.global_rotation
+							}
+						],
+						"target_unit": target_unit.id,
+					}
+				}
+			)
+		)
 
 		return true
-	if Actions.AutoAttacking.is_applicable(unit, target_unit):
-		# unit.action = Actions.AutoAttacking.new(target_unit)
-		CommandBus.push_command({
-			"tick": Match.tick + 1,
-			"type": Enums.CommandType.AUTO_ATTACKING,
-			"data": {
-				"targets": [unit.id],
-				"target_unit": target_unit.id,
-			}
-		})
+	if (
+		not (target_unit is Vine or target_unit is ForestVine)
+		and Actions.AutoAttacking.is_applicable(unit, target_unit)
+	):
+		(
+			CommandBus
+			. push_command(
+				{
+					"tick": Match.tick + 1,
+					"type": Enums.CommandType.AUTO_ATTACKING,
+					"player_id": _player.id,
+					"data":
+					{
+						"targets":
+						[
+							{
+								"unit": unit.id,
+								"pos": unit.global_position,
+								"rot": unit.global_rotation
+							}
+						],
+						"target_unit": target_unit.id,
+					}
+				}
+			)
+		)
 		return true
 	if Actions.Constructing.is_applicable(unit, target_unit):
-		unit.action = Actions.Constructing.new(target_unit)
-		CommandBus.push_command({
-			"tick": Match.tick + 1,
-			"type": Enums.CommandType.CONSTRUCTING,
-			"data": {
-				"selected_constructors": [unit.id],
-				"structure": target_unit.id,
-				"rotation": target_unit.global_rotation,
-				"position": target_unit.global_transform.origin,
-			}
-		})
+		(
+			CommandBus
+			. push_command(
+				{
+					"tick": Match.tick + 1,
+					"type": Enums.CommandType.CONSTRUCTING,
+					"player_id": _player.id,
+					"data":
+					{
+						"selected_constructors":
+						[
+							{
+								"unit": unit.id,
+								"pos": unit.global_position,
+								"rot": unit.global_rotation
+							}
+						],
+						"structure": target_unit.id,
+						"rotation": target_unit.global_rotation,
+						"position": target_unit.global_transform.origin,
+					}
+				}
+			)
+		)
 		return true
 	if (
 		(target_unit.is_in_group("adversary_units") or target_unit.is_in_group("controlled_units"))
 		and Actions.Following.is_applicable(unit)
 	):
-		# unit.action = Actions.Following.new(target_unit)
-		CommandBus.push_command({
-			"tick": Match.tick + 1,
-			"type": Enums.CommandType.FOLLOWING,
-			"data": {
-				"targets": [unit.id],
-				"target_unit": target_unit.id,
-			}
-		})
+		(
+			CommandBus
+			. push_command(
+				{
+					"tick": Match.tick + 1,
+					"type": Enums.CommandType.FOLLOWING,
+					"player_id": _player.id,
+					"data":
+					{
+						"targets":
+						[
+							{
+								"unit": unit.id,
+								"pos": unit.global_position,
+								"rot": unit.global_rotation
+							}
+						],
+						"target_unit": target_unit.id,
+					}
+				}
+			)
+		)
 		return true
 	if Actions.MovingToUnit.is_applicable(unit):
-		# unit.action = Actions.MovingToUnit.new(target_unit)
-		CommandBus.push_command({
-			"tick": Match.tick + 1,
-			"type": Enums.CommandType.MOVING_TO_UNIT,
-			"data": {
-				"targets": [unit.id],
-				"target_unit": target_unit.id,
-			}
-		})
+		(
+			CommandBus
+			. push_command(
+				{
+					"tick": Match.tick + 1,
+					"type": Enums.CommandType.MOVING_TO_UNIT,
+					"player_id": _player.id,
+					"data":
+					{
+						"targets":
+						[
+							{
+								"unit": unit.id,
+								"pos": unit.global_position,
+								"rot": unit.global_rotation
+							}
+						],
+						"target_unit": target_unit.id,
+					}
+				}
+			)
+		)
 		return true
 	if _try_setting_rally_point_to_unit(unit, target_unit):
 		return true
-	return false # gdlint: ignore = max-returns
+	return false  # gdlint: ignore = max-returns
 
 
 func _try_setting_rally_point_to_unit(unit, target_unit):
@@ -170,16 +336,254 @@ func _try_setting_rally_point_to_unit(unit, target_unit):
 	var rally_point = unit.find_child("RallyPoint")
 	if rally_point == null:
 		return false
-	rally_point.target_unit = target_unit
+	# Set rally point to unit through CommandBus for replay determinism
+	(
+		CommandBus
+		. push_command(
+			{
+				"tick": Match.tick + 1,
+				"type": Enums.CommandType.SET_RALLY_POINT_TO_UNIT,
+				"player_id": _player.id,
+				"data":
+				{
+					"entity_id": unit.id,
+					"target_unit": target_unit.id,
+				}
+			}
+		)
+	)
 	return true
 
 
 func _on_terrain_targeted(position):
-	_try_navigating_selected_units_towards_position(position)
+	var mode = MatchSignals.active_command_mode
+	if mode != Enums.UnitCommandMode.NORMAL:
+		_handle_command_mode_click(position, mode)
+		MatchSignals.active_command_mode = Enums.UnitCommandMode.NORMAL
+		MatchSignals.command_mode_changed.emit(Enums.UnitCommandMode.NORMAL)
+		return
+	var is_queued = Input.is_key_pressed(KEY_SHIFT)
+	_try_navigating_selected_units_towards_position(position, is_queued)
 	_try_setting_rally_points(position)
 
 
+func _on_terrain_drag_updated(start_pos: Vector3, current_pos: Vector3) -> void:
+	var units := _get_movable_selected_units()
+	if units.is_empty():
+		_formation_preview.hide_preview()
+		return
+	var spread := MatchUtils.Movement.line_spread(units, start_pos, current_pos)
+	var positions: Array = []
+	var radii: Array = []
+	for pair in spread:
+		positions.append(pair[1])
+		radii.append(pair[0].radius if pair[0].radius else 0.5)
+	var forward_dir := current_pos - start_pos
+	forward_dir.y = 0.0
+	_formation_preview.show_preview(positions, radii, forward_dir)
+
+
+func _on_terrain_drag_finished(start_pos: Vector3, end_pos: Vector3) -> void:
+	_formation_preview.hide_preview()
+
+	# Patrol mode is excluded from drag-spread.
+	var mode = MatchSignals.active_command_mode
+	if mode == Enums.UnitCommandMode.PATROL:
+		_handle_command_mode_click(end_pos, mode)
+		MatchSignals.active_command_mode = Enums.UnitCommandMode.NORMAL
+		MatchSignals.command_mode_changed.emit(Enums.UnitCommandMode.NORMAL)
+		return
+
+	var is_queued = Input.is_key_pressed(KEY_SHIFT)
+	var movable_units := _get_movable_selected_units()
+	if movable_units.is_empty():
+		_try_setting_rally_points(end_pos)
+		return
+
+	var terrain_units := movable_units.filter(
+		func(u): return u.get_nav_domain() == NavigationConstants.Domain.TERRAIN
+	)
+	var air_units := movable_units.filter(
+		func(u): return u.get_nav_domain() == NavigationConstants.Domain.AIR
+	)
+
+	var targets: Array = MatchUtils.Movement.line_spread(terrain_units, start_pos, end_pos)
+	targets += MatchUtils.Movement.line_spread(air_units, start_pos, end_pos)
+
+	var cmd_type: int
+	if mode == Enums.UnitCommandMode.ATTACK_MOVE:
+		cmd_type = Enums.CommandType.ATTACK_MOVE
+	elif mode == Enums.UnitCommandMode.MOVE:
+		cmd_type = Enums.CommandType.MOVE_NO_ATTACK
+	elif mode == Enums.UnitCommandMode.REVERSE_MOVE:
+		cmd_type = Enums.CommandType.REVERSE_MOVE
+	else:
+		cmd_type = Enums.CommandType.MOVE
+
+	# Reset command mode if it was active.
+	if mode != Enums.UnitCommandMode.NORMAL:
+		MatchSignals.active_command_mode = Enums.UnitCommandMode.NORMAL
+		MatchSignals.command_mode_changed.emit(Enums.UnitCommandMode.NORMAL)
+
+	CommandBus.push_command(
+		{
+			"tick": Match.tick + 1,
+			"type": cmd_type,
+			"player_id": _player.id,
+			"data":
+			{
+				"targets": targets.map(func(t): return {"unit": t[0].id, "pos": t[1]}),
+				"queued": is_queued,
+			}
+		}
+	)
+	if not targets.is_empty():
+		MatchSignals.movement_targets_assigned.emit(targets)
+	_try_setting_rally_points(end_pos)
+
+
+func _handle_command_mode_click(position: Vector3, mode: int):
+	var is_queued = Input.is_key_pressed(KEY_SHIFT)
+	var movable_units = _get_movable_selected_units()
+	if movable_units.is_empty():
+		return
+	match mode:
+		Enums.UnitCommandMode.ATTACK_MOVE:
+			_push_positional_command(
+				Enums.CommandType.ATTACK_MOVE, movable_units, position, is_queued
+			)
+		Enums.UnitCommandMode.MOVE:
+			_push_positional_command(
+				Enums.CommandType.MOVE_NO_ATTACK, movable_units, position, is_queued
+			)
+		Enums.UnitCommandMode.PATROL:
+			_push_patrol_command(movable_units, position, is_queued)
+		Enums.UnitCommandMode.REVERSE_MOVE:
+			var reverse_units = movable_units.filter(
+				func(u): return Actions.ReverseMoving.is_applicable(u)
+			)
+			if not reverse_units.is_empty():
+				_push_positional_command(
+					Enums.CommandType.REVERSE_MOVE, reverse_units, position, is_queued
+				)
+
+
+func _get_movable_selected_units() -> Array:
+	return get_tree().get_nodes_in_group("selected_units").filter(
+		func(unit):
+			return unit.is_in_group("controlled_units") and Actions.Moving.is_applicable(unit)
+	)
+
+
+func _push_positional_command(cmd_type: int, units: Array, target_point: Vector3, queued: bool):
+	var terrain_units = units.filter(
+		func(u): return u.get_nav_domain() == NavigationConstants.Domain.TERRAIN
+	)
+	var air_units = units.filter(
+		func(u): return u.get_nav_domain() == NavigationConstants.Domain.AIR
+	)
+	var targets = MatchUtils.Movement.circle_spread(terrain_units, target_point)
+	targets += MatchUtils.Movement.circle_spread(air_units, target_point)
+	CommandBus.push_command(
+		{
+			"tick": Match.tick + 1,
+			"type": cmd_type,
+			"player_id": _player.id,
+			"data":
+			{
+				"targets": targets.map(func(t): return {"unit": t[0].id, "pos": t[1]}),
+				"queued": queued,
+			}
+		}
+	)
+	if not targets.is_empty():
+		MatchSignals.movement_targets_assigned.emit(targets)
+
+
+func _push_patrol_command(units: Array, target_point: Vector3, queued: bool):
+	var terrain_units = units.filter(
+		func(u): return u.get_nav_domain() == NavigationConstants.Domain.TERRAIN
+	)
+	var air_units = units.filter(
+		func(u): return u.get_nav_domain() == NavigationConstants.Domain.AIR
+	)
+	var targets = MatchUtils.Movement.circle_spread(terrain_units, target_point)
+	targets += MatchUtils.Movement.circle_spread(air_units, target_point)
+	# Patrol origin: use the crowd pivot of the selected units as point_a
+	var all_units = terrain_units + air_units
+	var origin = (
+		MatchUtils.Movement.calculate_aabb_crowd_pivot_yless(all_units)
+		if not all_units.is_empty()
+		else target_point
+	)
+	CommandBus.push_command(
+		{
+			"tick": Match.tick + 1,
+			"type": Enums.CommandType.PATROL,
+			"player_id": _player.id,
+			"data":
+			{
+				"targets": targets.map(func(t): return {"unit": t[0].id, "pos": t[1]}),
+				"patrol_origin": origin,
+				"queued": queued,
+			}
+		}
+	)
+	if not targets.is_empty():
+		MatchSignals.movement_targets_assigned.emit(targets)
+
+
+func push_stop_command():
+	var selected = get_tree().get_nodes_in_group("selected_units").filter(
+		func(unit): return unit.is_in_group("controlled_units")
+	)
+	if selected.is_empty():
+		return
+	CommandBus.push_command(
+		{
+			"tick": Match.tick + 1,
+			"type": Enums.CommandType.STOP,
+			"player_id": _player.id,
+			"data":
+			{
+				"targets": selected.map(func(u): return {"unit": u.id}),
+			}
+		}
+	)
+
+
+func push_hold_position_command():
+	var selected = get_tree().get_nodes_in_group("selected_units").filter(
+		func(unit): return unit.is_in_group("controlled_units")
+	)
+	if selected.is_empty():
+		return
+	var is_queued = Input.is_key_pressed(KEY_SHIFT)
+	CommandBus.push_command(
+		{
+			"tick": Match.tick + 1,
+			"type": Enums.CommandType.HOLD_POSITION,
+			"player_id": _player.id,
+			"data":
+			{
+				"targets": selected.map(func(u): return {"unit": u.id}),
+				"queued": is_queued,
+			}
+		}
+	)
+
+
 func _on_unit_targeted(unit):
+	var mode = MatchSignals.active_command_mode
+	if mode == Enums.UnitCommandMode.ATTACK_MOVE:
+		# Force-attack the clicked unit (even allies)
+		_force_attack_selected_units_on(unit)
+		MatchSignals.active_command_mode = Enums.UnitCommandMode.NORMAL
+		MatchSignals.command_mode_changed.emit(Enums.UnitCommandMode.NORMAL)
+		var targetability = unit.find_child("Targetability")
+		if targetability != null:
+			targetability.animate()
+		return
 	if _navigate_selected_units_towards_unit(unit):
 		var targetability = unit.find_child("Targetability")
 		if targetability != null:
@@ -191,15 +595,30 @@ func _on_unit_spawned(unit):
 
 
 func _on_navigate_unit_to_rally_point(unit, rally_point):
+	# Only handle rally points for units owned by this controller's player.
+	# In multiplayer each peer has one local Human — without this check the
+	# signal (which fires for ALL production) would make every peer generate
+	# a rally command with *its own* player_id, causing duplicates and desyncs.
+	if unit.player != _player:
+		return
 	if rally_point.target_unit != null:
 		_navigate_unit_towards_unit(unit, rally_point.target_unit)
 	elif rally_point.global_position != rally_point.get_parent().global_position:
-		CommandBus.push_command({
-			"tick": Match.tick + 1,
-			"type": Enums.CommandType.MOVE,
-			"data": {
-				"targets": [unit].map(
-					func(t): return {"unit": t.id, "pos": rally_point.global_position}
-				)
+		CommandBus.push_command(
+			{
+				"tick": Match.tick + 1,
+				"type": Enums.CommandType.MOVE,
+				"player_id": _player.id,
+				"data":
+				{
+					"targets":
+					[
+						{
+							"unit": unit.id,
+							"pos": rally_point.global_position,
+							"rot": unit.global_rotation
+						}
+					]
+				}
 			}
-		})
+		)

@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://bhjr83uy4p4o0"]
+
+[ext_resource type="Script" uid="uid://bysf721q4x37n" path="res://source/generic-scenes-and-nodes/3d/ModelHolder.gd" id="1_script"]
+
+[node name="ModelHolder" type="Node3D" unique_id=841406932]
+script = ExtResource("1_script")

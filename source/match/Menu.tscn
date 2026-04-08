@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" uid="uid://dnfne73ohfqkg" path="res://source/match/Menu.gd" id="1_f256e"]
 [ext_resource type="Shader" uid="uid://c4hdqt5bbe6oh" path="res://source/shaders/2d/blurr.gdshader" id="1_mukhw"]
+[ext_resource type="Script" path="res://source/main-menu/SaveList.gd" id="3_slist"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_2eh7x"]
 shader = ExtResource("1_mukhw")
@@ -29,42 +30,121 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 0
 
-[node name="PanelContainer" type="PanelContainer" parent="CenterContainer" unique_id=79404585]
+[node name="MainPanel" type="PanelContainer" parent="CenterContainer"]
 layout_mode = 2
 
-[node name="MarginContainer" type="MarginContainer" parent="CenterContainer/PanelContainer" unique_id=88993433]
+[node name="MarginContainer" type="MarginContainer" parent="CenterContainer/MainPanel"]
 layout_mode = 2
 theme_override_constants/margin_left = 20
 theme_override_constants/margin_top = 20
 theme_override_constants/margin_right = 20
 theme_override_constants/margin_bottom = 20
 
-[node name="VBoxContainer" type="VBoxContainer" parent="CenterContainer/PanelContainer/MarginContainer" unique_id=2007327522]
+[node name="VBoxContainer" type="VBoxContainer" parent="CenterContainer/MainPanel/MarginContainer"]
 custom_minimum_size = Vector2(400, 0)
 layout_mode = 2
 theme_override_constants/separation = 10
 
-[node name="ResumeButton" type="Button" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer" unique_id=1774179316]
+[node name="ResumeButton" type="Button" parent="CenterContainer/MainPanel/MarginContainer/VBoxContainer"]
 layout_mode = 2
 focus_mode = 0
 text = "Resume"
 
-[node name="LoadButton" type="Button" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer" unique_id=664268419]
+[node name="LoadButton" type="Button" parent="CenterContainer/MainPanel/MarginContainer/VBoxContainer"]
 layout_mode = 2
 text = "Load"
 
-[node name="SaveButton" type="Button" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer" unique_id=662634258]
+[node name="SaveButton" type="Button" parent="CenterContainer/MainPanel/MarginContainer/VBoxContainer"]
 layout_mode = 2
 text = "Save"
 
-[node name="RestartButton" type="Button" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer" unique_id=1797824459]
+[node name="RestartButton" type="Button" parent="CenterContainer/MainPanel/MarginContainer/VBoxContainer"]
 layout_mode = 2
 text = "Restart"
 
-[node name="ExitButton" type="Button" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer" unique_id=70838531]
+[node name="ExitButton" type="Button" parent="CenterContainer/MainPanel/MarginContainer/VBoxContainer"]
 layout_mode = 2
 focus_mode = 0
 text = "Exit"
 
-[connection signal="pressed" from="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/ResumeButton" to="." method="_on_resume_button_pressed"]
-[connection signal="pressed" from="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/ExitButton" to="." method="_on_exit_button_pressed"]
+[node name="SavePanel" type="PanelContainer" parent="CenterContainer"]
+visible = false
+layout_mode = 2
+
+[node name="MarginContainer" type="MarginContainer" parent="CenterContainer/SavePanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 20
+
+[node name="VBoxContainer" type="VBoxContainer" parent="CenterContainer/SavePanel/MarginContainer"]
+custom_minimum_size = Vector2(400, 0)
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="Label" type="Label" parent="CenterContainer/SavePanel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+text = "Save Name:"
+
+[node name="SaveNameEdit" type="LineEdit" parent="CenterContainer/SavePanel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+placeholder_text = "Enter save name..."
+
+[node name="HBoxContainer" type="HBoxContainer" parent="CenterContainer/SavePanel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="SaveBackButton" type="Button" parent="CenterContainer/SavePanel/MarginContainer/VBoxContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Back"
+
+[node name="ConfirmSaveButton" type="Button" parent="CenterContainer/SavePanel/MarginContainer/VBoxContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Save"
+
+[node name="LoadPanel" type="PanelContainer" parent="CenterContainer"]
+visible = false
+layout_mode = 2
+
+[node name="MarginContainer" type="MarginContainer" parent="CenterContainer/LoadPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 20
+
+[node name="VBoxContainer" type="VBoxContainer" parent="CenterContainer/LoadPanel/MarginContainer"]
+custom_minimum_size = Vector2(400, 0)
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="Label" type="Label" parent="CenterContainer/LoadPanel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+text = "Load Save:"
+
+[node name="ScrollContainer" type="ScrollContainer" parent="CenterContainer/LoadPanel/MarginContainer/VBoxContainer"]
+custom_minimum_size = Vector2(0, 300)
+layout_mode = 2
+
+[node name="SaveList" type="VBoxContainer" parent="CenterContainer/LoadPanel/MarginContainer/VBoxContainer/ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+script = ExtResource("3_slist")
+
+[node name="LoadBackButton" type="Button" parent="CenterContainer/LoadPanel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+text = "Back"
+
+[connection signal="pressed" from="CenterContainer/MainPanel/MarginContainer/VBoxContainer/ResumeButton" to="." method="_on_resume_button_pressed"]
+[connection signal="pressed" from="CenterContainer/MainPanel/MarginContainer/VBoxContainer/LoadButton" to="." method="_on_load_button_pressed"]
+[connection signal="pressed" from="CenterContainer/MainPanel/MarginContainer/VBoxContainer/SaveButton" to="." method="_on_save_button_pressed"]
+[connection signal="pressed" from="CenterContainer/MainPanel/MarginContainer/VBoxContainer/RestartButton" to="." method="_on_restart_button_pressed"]
+[connection signal="pressed" from="CenterContainer/MainPanel/MarginContainer/VBoxContainer/ExitButton" to="." method="_on_exit_button_pressed"]
+[connection signal="text_submitted" from="CenterContainer/SavePanel/MarginContainer/VBoxContainer/SaveNameEdit" to="." method="_on_save_name_submitted"]
+[connection signal="pressed" from="CenterContainer/SavePanel/MarginContainer/VBoxContainer/HBoxContainer/SaveBackButton" to="." method="_on_save_back_button_pressed"]
+[connection signal="pressed" from="CenterContainer/SavePanel/MarginContainer/VBoxContainer/HBoxContainer/ConfirmSaveButton" to="." method="_on_confirm_save_button_pressed"]
+[connection signal="save_selected" from="CenterContainer/LoadPanel/MarginContainer/VBoxContainer/ScrollContainer/SaveList" to="." method="_on_save_selected"]
+[connection signal="pressed" from="CenterContainer/LoadPanel/MarginContainer/VBoxContainer/LoadBackButton" to="." method="_on_load_back_button_pressed"]

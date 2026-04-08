@@ -2,21 +2,26 @@ extends Node
 
 signal resources_required(resources, metadata)
 
-const Worker = preload("res://source/match/units/Worker.gd")
-const CommandCenter = preload("res://source/match/units/CommandCenter.gd")
-const VehicleFactory = preload("res://source/match/units/VehicleFactory.gd")
-const VehicleFactoryScene = preload("res://source/match/units/VehicleFactory.tscn")
-const Tank = preload("res://source/match/units/Tank.gd")
-const TankScene = preload("res://source/match/units/Tank.tscn")
-const AircraftFactory = preload("res://source/match/units/AircraftFactory.gd")
-const AircraftFactoryScene = preload("res://source/match/units/AircraftFactory.tscn")
-const Helicopter = preload("res://source/match/units/Helicopter.gd")
-const HelicopterScene = preload("res://source/match/units/Helicopter.tscn")
+const Worker = preload("res://source/factions/the_amuns/units/Worker.gd")
+const CommandCenter = preload("res://source/factions/the_amuns/structures/Bekhenet.gd")
+const VehicleFactory = preload("res://source/factions/the_amuns/structures/Naucratis.gd")
+const VehicleFactoryScene = preload(
+	"res://source/factions/the_amuns/structures/Naucratis.tscn"
+)
+const Tank = preload("res://source/factions/the_amuns/units/Tank.gd")
+const TankScene = preload("res://source/factions/the_amuns/units/Tank.tscn")
+const AircraftFactory = preload("res://source/factions/the_amuns/structures/Nemet.gd")
+const AircraftFactoryScene = preload(
+	"res://source/factions/the_amuns/structures/Nemet.tscn"
+)
+const Helicopter = preload("res://source/factions/the_amuns/units/Helicopter.gd")
+const HelicopterScene = preload("res://source/factions/the_amuns/units/Helicopter.tscn")
 const AutoAttackingBattlegroup = preload(
 	"res://source/match/players/simple-clairvoyant-ai/AutoAttackingBattlegroup.gd"
 )
 
-const REFRESH_INTERVAL_S = 1.0 / 60.0 * 30.0
+# Tick-based refresh interval. At TICK_RATE 10, 5 ticks = 0.5 s.
+const REFRESH_INTERVAL_TICKS = 5
 
 var _player = null
 var _primary_structure_scene = null
@@ -29,6 +34,8 @@ var _battlegroup_under_forming = null
 var _battlegroups = []
 
 @onready var _ai = get_parent()
+
+var _ticks_until_refresh = REFRESH_INTERVAL_TICKS
 
 
 func setup(player):
@@ -53,7 +60,7 @@ func setup(player):
 		if _ai.secondary_offensive_structure == _ai.OffensiveStructure.VEHICLE_FACTORY
 		else HelicopterScene
 	)
-	_setup_refresh_timer()
+	MatchSignals.tick_advanced.connect(_on_tick_advanced)
 	_try_creating_new_battlegroup()
 	_attach_current_battle_units()
 	MatchSignals.unit_spawned.connect(_on_unit_spawned)
@@ -73,20 +80,22 @@ func provision(resources, metadata):
 		assert(false, "unexpected flow")
 
 
-func _setup_refresh_timer():
-	var timer = Timer.new()
-	add_child(timer)
-	timer.timeout.connect(_on_refresh_timer_timeout)
-	timer.start(REFRESH_INTERVAL_S)
+func _on_tick_advanced():
+	_ticks_until_refresh -= 1
+	if _ticks_until_refresh > 0:
+		return
+	_ticks_until_refresh = REFRESH_INTERVAL_TICKS
+	_on_refresh_timer_timeout()
 
 
 func _provision_structure(structure_scene, resources, metadata):
 	assert(
-		resources == UnitConstants.CONSTRUCTION_COSTS[structure_scene.resource_path],
+		resources
+		== UnitConstants.get_default_properties(UnitConstants.get_scene_id(structure_scene.resource_path))["costs"],
 		"unexpected amount of resources"
 	)
 	var workers = get_tree().get_nodes_in_group("units").filter(
-		func(unit): return unit is Worker and unit.player == _player
+		func(unit): return unit is ResourceGatherer and unit.player == _player
 	)
 	_number_of_pending_structure_resource_requests[metadata] -= 1
 	if workers.is_empty():
@@ -96,30 +105,65 @@ func _provision_structure(structure_scene, resources, metadata):
 
 func _provision_unit(unit_scene, structure_producing_unit, resources, metadata):
 	assert(
-		resources == UnitConstants.PRODUCTION_COSTS[unit_scene.resource_path],
+		resources
+		== UnitConstants.get_default_properties(UnitConstants.get_scene_id(unit_scene.resource_path))["costs"],
 		"unexpected amount of resources"
 	)
 	if structure_producing_unit == null:
 		return
 	_number_of_pending_unit_resource_requests[metadata] -= 1
-	structure_producing_unit.production_queue.produce(unit_scene, true)
+	# Queue production through CommandBus for replay determinism
+	(
+		CommandBus
+		. push_command(
+			{
+				"tick": Match.tick + 1,
+				"type": Enums.CommandType.ENTITY_IS_QUEUED,
+				"player_id": _player.id,
+				"data":
+				{
+					"entity_id": structure_producing_unit.id,
+					"unit_type": UnitConstants.get_scene_id(unit_scene.resource_path),
+					"time_total":
+					UnitConstants.get_default_properties(
+						UnitConstants.get_scene_id(unit_scene.resource_path)
+					)["build_time"],
+					"ignore_limit": true,
+				}
+			}
+		)
+	)
 
 
 func _try_creating_new_battlegroup():
 	if not _battlegroups.is_empty():
 		_enforce_secondary_structure_existence()
 	if _battlegroups.size() == _ai.expected_number_of_battlegroups:
+		# Cancel all production at the primary structure through CommandBus
 		var primary_structure = _primary_structure()
 		if primary_structure != null:
-			primary_structure.production_queue.cancel_all()
+			(
+				CommandBus
+				. push_command(
+					{
+						"tick": Match.tick + 1,
+						"type": Enums.CommandType.PRODUCTION_CANCEL_ALL,
+						"player_id": _player.id,
+						"data":
+						{
+							"entity_id": primary_structure.id,
+						}
+					}
+				)
+			)
 		_battlegroup_under_forming = null
 		return false
 	var adversary_players = get_tree().get_nodes_in_group("players").filter(
-		func(player): return player != _player
+		func(player): return player != _player and player.team != _player.team
 	)
-	adversary_players.shuffle()
+	MatchUtils.rng_shuffle(adversary_players)
 	var battlegroup = AutoAttackingBattlegroup.new(
-		_ai.expected_number_of_units_in_battlegroup, adversary_players
+		_ai.expected_number_of_units_in_battlegroup, adversary_players, _player
 	)
 	_battlegroups.append(battlegroup)
 	battlegroup.tree_exited.connect(_on_battlegroup_died.bind(battlegroup))
@@ -137,35 +181,54 @@ func _attach_current_battle_units():
 
 
 func _construct_structure(structure_scene):
-	var construction_cost = UnitConstants.CONSTRUCTION_COSTS[structure_scene.resource_path]
-	assert(
-		_player.has_resources(construction_cost),
-		"player should have enough resources at this point"
-	)
+	var construction_cost = UnitConstants.get_default_properties(
+		UnitConstants.get_scene_id(structure_scene.resource_path)
+	)["costs"]
+	# Pre-check resources as an optimistic filter. The authoritative check happens in
+	# Match._execute_command() — another command may spend the resources before execution.
+	if not _player.has_resources(construction_cost):
+		return
 	# TODO: introduce actual algorithm which takes enemy positions into account
 	var ccs = get_tree().get_nodes_in_group("units").filter(
 		func(unit): return unit is CommandCenter and unit.player == _player
 	)
 	var workers = get_tree().get_nodes_in_group("units").filter(
-		func(unit): return unit is Worker and unit.player == _player
+		func(unit): return unit is ResourceGatherer and unit.player == _player
 	)
 	var unit_to_spawn = structure_scene.instantiate()
 	var reference_position_for_placement = (
 		ccs[0].global_position if not ccs.is_empty() else workers[0].global_position
 	)
-	var placement_position = Utils.MatchUtils.Placement.find_valid_position_radially(
+	var placement_position = MatchUtils.Placement.find_valid_position_radially(
 		reference_position_for_placement,
 		unit_to_spawn.radius + UnitConstants.EMPTY_SPACE_RADIUS_SURROUNDING_STRUCTURE_M,
 		find_parent("Match").navigation.get_navigation_map_rid_by_domain(
-			unit_to_spawn.movement_domain
+			unit_to_spawn.get_nav_domain()
 		),
 		get_tree()
 	)
 	var target_transform = Transform3D(Basis(), placement_position).looking_at(
 		placement_position + Vector3(-1, 0, 1), Vector3.UP
 	)
-	_player.subtract_resources(construction_cost)
-	MatchSignals.setup_and_spawn_unit.emit(unit_to_spawn, target_transform, _player)
+	# Free the temporary instance used for radius/domain calculation
+	unit_to_spawn.free()
+	# Place structure through CommandBus — resources deducted by Match._execute_command()
+	(
+		CommandBus
+		. push_command(
+			{
+				"tick": Match.tick + 1,
+				"type": Enums.CommandType.STRUCTURE_PLACED,
+				"player_id": _player.id,
+				"data":
+				{
+					"structure_prototype": UnitConstants.get_scene_id(structure_scene.resource_path),
+					"transform": target_transform,
+					"self_constructing": true,
+				}
+			}
+		)
+	)
 	_enforce_primary_units_production.call_deferred()
 
 
@@ -187,7 +250,8 @@ func _enforce_structure_existence(structure, structure_scene, type):
 			_number_of_pending_structure_resource_requests.get(type, 0) + 1
 		)
 		resources_required.emit(
-			UnitConstants.CONSTRUCTION_COSTS[structure_scene.resource_path], type
+			UnitConstants.get_default_properties(UnitConstants.get_scene_id(structure_scene.resource_path))["costs"],
+			type
 		)
 
 
@@ -208,7 +272,8 @@ func _enforce_units_production(structure, unit_scene, type):
 			_number_of_pending_unit_resource_requests.get(type, 0) + 1
 		)
 		resources_required.emit(
-			UnitConstants.PRODUCTION_COSTS[unit_scene.resource_path], type
+			UnitConstants.get_default_properties(UnitConstants.get_scene_id(unit_scene.resource_path))["costs"],
+			type
 		)
 
 

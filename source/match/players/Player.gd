@@ -1,43 +1,70 @@
-extends Node3D
-
 class_name Player
+
+extends Node3D
 
 signal changed
 
-@export var resource_a = 0:
+# Maybe PlayerData.gd should be incorporated into this, feels duplicate?
+
+@export var credits = 10:
 	set(value):
-		resource_a = value
+		credits = value
 		emit_changed()
-@export var resource_b = 0:
+		MatchSignals.player_resource_changed.emit(self, credits, Enums.ResourceType.CREDITS)
+@export var energy = 0:
 	set(value):
-		resource_b = value
-		emit_changed()
+		energy = value
+		MatchSignals.player_resource_changed.emit(self, energy, Enums.ResourceType.ENERGY)
+
 @export var color = Color.WHITE
+@export var support_powers = {}
+
+var id: int
+# TEAM SYSTEM: Integer team identifier for team-based gameplay.
+# Units with the same team ID cannot attack each other. Teams also share vision - all units
+# of teammates are automatically revealed to a player (see Match._setup_unit_groups()).
+# Default (0) is assigned by Play.gd: first player=team 0, second player=team 1, etc.
+# Custom team values can be set to create alliances or custom match configurations.
+var team: int = 0
+## Persistent identity for reconnection — copied from PlayerSettings.uuid.
+var uuid: String = ""
+var faction: Enums.Faction:
+	set(_faction):
+		faction = _faction
 
 var _color_material = null
-var id: int
+
 
 func _ready():
 	id = PlayerManager.add_player()
 
 
-func add_resources(resources):
+func add_resources(resources, _resource_type = null):
 	for resource in resources:
-		set(resource, get(resource) + resources[resource])
+		var current = get(resource)
+		if current == null:
+			current = 0
+		set(resource, current + resources[resource])
 
 
 func has_resources(resources):
 	if FeatureFlags.allow_resources_deficit_spending:
 		return true
 	for resource in resources:
-		if get(resource) < resources[resource]:
+		var current = get(resource)
+		if current == null:
+			current = 0
+		if current < resources[resource]:
 			return false
 	return true
 
 
 func subtract_resources(resources):
 	for resource in resources:
-		set(resource, get(resource) - resources[resource])
+		var current = get(resource)
+		if current == null:
+			current = 0
+		set(resource, current - resources[resource])
 
 
 func get_color_material():
@@ -51,3 +78,8 @@ func get_color_material():
 
 func emit_changed():
 	changed.emit()
+
+
+func initialize_resources(resources):
+	credits = resources["credits"]
+	energy = resources["energy"]

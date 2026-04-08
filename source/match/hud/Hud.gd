@@ -1,0 +1,1736 @@
+extends CanvasLayer
+
+const TOOLTIP = preload("res://source/utils/Tooltip.tscn")
+const Structure = preload("res://source/match/units/Structure.gd")
+const _COMMAND_CURSOR = preload("res://assets/ui/icons/cross-hair_icon.png")
+const _COMMAND_DEFS: Array[Dictionary] = [
+	{
+		"name": "Attack Move",
+		"key": "attack_move",
+		"desc": "Move to target, engaging enemies on the way",
+		"movement": true,
+	},
+	{
+		"name": "Stop",
+		"key": "stop",
+		"desc": "Stop and cancel current orders",
+	},
+	{
+		"name": "Hold Position",
+		"key": "hold_position",
+		"desc": "Stay in place, attack enemies in range",
+	},
+	{
+		"name": "Move",
+		"key": "move",
+		"desc": "Move to target without attacking",
+		"movement": true,
+	},
+	{
+		"name": "Patrol",
+		"key": "patrol",
+		"desc": "Patrol between current position and target",
+		"movement": true,
+	},
+	{
+		"name": "Reverse Move",
+		"key": "reverse_move",
+		"desc": "Move backwards to target without turning around",
+		"movement": true,
+	},
+	{
+		"name": "All Army",
+		"key": "select_all_army",
+		"desc": "Select all army units (Shift: on screen only)",
+		"options_only": true,
+	},
+]
+
+## TODO: in replay mode we change the UI
+@export var is_replay_mode: bool = false
+
+var tooltip: Tooltip
+var current_player: PlayerSettings
+var _visible_player_id: int = 0
+var _faction_grid_data: Dictionary = {}
+var _active_tab_type: int = Enums.ProductionTabType.STRUCTURE
+## Structures owned by the local player that produce items for _active_tab_type
+var _active_producers: Array = []
+## Index into _active_producers for the currently selected producer
+var _active_producer_index: int = 0
+## Unit currently shown in the portrait
+var _portrait_unit: Node = null
+var _portrait_hp_connection: Callable
+var _command_buttons: Array[Button] = []
+
+## Currently observed production queue for grid button display
+var _grid_observed_queue = null
+## Map of scene_path → grid Button for the current grid layout
+var _grid_scene_to_button: Dictionary = {}
+## Map of slot index → scene_path for hotkey resolution
+var _grid_slot_to_scene: Dictionary = {}
+## Tracks whether a slot is a structure (true) or unit (false) for hotkey handling
+var _grid_slot_is_structure: Dictionary = {}
+
+@onready var super_weapons_container: GridContainer = $SuperWeaponsHBoxContainer
+@onready var game_timer_richtext_label: RichTextLabel = $GameTimer/Panel/BoxContainer/RichTextLabel
+@onready var production_queue: ProductionQueue = $ProductionQueue
+@onready var unit_info_container: VBoxContainer = $UnitInfoVBoxContainer
+@onready
+var unit_portrait_viewport: SubViewport = $UnitInfoVBoxContainer/HBoxContainer/UnitPortraitMarginContainer/UnitPortrait/SubViewportContainer/UnitPortraitViewport
+@onready
+var unit_portrait_panel: PanelContainer = $UnitInfoVBoxContainer/HBoxContainer/UnitPortraitMarginContainer/UnitPortrait
+@onready
+var unit_specific_ability_h_box_container: HBoxContainer = $UnitInfoVBoxContainer/UnitAbilityHBoxContainerWrapper/UnitAbilityHBoxContainer
+@onready
+var unit_ability_container: HBoxContainer = $UnitInfoVBoxContainer/AbilityHBoxContainerWrapper/AbilityHBoxContainer
+@onready var support_powers_container: GridContainer = $LeftMarginContainer/SupportPowers
+@onready
+var energy_bar: ProgressBar = $RightMarginContainer/HBoxContainer/LeftVBoxContainer/MarginContainer/EnergyBar
+@onready
+var energy_label: Label = $RightMarginContainer/HBoxContainer/LeftVBoxContainer/MarginContainer/EnergyBar/EnergyLabel
+@onready
+var minimap: PanelContainer = $RightMarginContainer/HBoxContainer/RightVBoxContainer/MapMarginContainer/Minimap
+@onready
+var hitpoints: RichTextLabel = $UnitInfoVBoxContainer/HBoxContainer/UnitInformation/Hitpoints
+@onready
+var attack_button: Button = $UnitInfoVBoxContainer/HBoxContainer/UnitInformation/AttackAndArmor/AttackButton
+@onready
+var armor_button: Button = $UnitInfoVBoxContainer/HBoxContainer/UnitInformation/AttackAndArmor/ArmorButton
+@onready
+var status_effects: HBoxContainer = $UnitInfoVBoxContainer/HBoxContainer/UnitInformation/StatusEffects
+
+# BuildingModificationMenuTabs
+@onready
+var repair_button: Button = $RightMarginContainer/HBoxContainer/RightVBoxContainer/ProductionMenuTabs/VBoxContainer/HBoxContainer/RepairButton
+@onready
+var sell_button: Button = $RightMarginContainer/HBoxContainer/RightVBoxContainer/ProductionMenuTabs/VBoxContainer/HBoxContainer/SellButton
+@onready
+var disable_button: Button = $RightMarginContainer/HBoxContainer/RightVBoxContainer/ProductionMenuTabs/VBoxContainer/HBoxContainer/DisableButton
+
+# ResourcesContainer
+@onready
+var credits_label: Label = $RightMarginContainer/HBoxContainer/RightVBoxContainer/ProductionMenuTabs/VBoxContainer/HBoxContainer/ResourcesContainer/Panel/HBoxContainer/Credits
+@onready
+var secondary_resource_label: Label = $RightMarginContainer/HBoxContainer/RightVBoxContainer/ProductionMenuTabs/VBoxContainer/HBoxContainer/ResourcesContainer/Panel/HBoxContainer/Secondary
+
+# Production
+@onready
+var production_tab_bar: TabBar = $RightMarginContainer/HBoxContainer/RightVBoxContainer/ProductionMenuTabs/VBoxContainer/ProductionTabBar
+@onready
+var production_tab_bar_overflow: TabBar = $RightMarginContainer/HBoxContainer/RightVBoxContainer/ProductionMenuTabs/VBoxContainer/ProductionTabBarOverflow
+@onready
+var production_grid: GridContainer = $RightMarginContainer/HBoxContainer/RightVBoxContainer/ProductionMenuTabs/VBoxContainer/ProductionGrid
+
+# ControlGroups
+@onready
+var control_groups_container: VBoxContainer = $RightMarginContainer/HBoxContainer/RightVBoxContainer/HBoxContainer/ControlGroupsVBoxContainer
+
+# Ping overlay
+@onready var ping_container: VBoxContainer = $PingContainer
+var _ping_labels: Dictionary = {}
+const _PING_UPDATE_TICKS = 10  # update every 1s at TICK_RATE 10
+var _ping_tick_counter: int = 0
+
+
+func _ready() -> void:
+	tooltip = TOOLTIP.instantiate()
+	add_child(tooltip)
+
+	init_building_modification_buttons()
+
+	production_tab_bar.tab_changed.connect(_on_production_tab_changed)
+	production_tab_bar_overflow.tab_changed.connect(_on_overflow_tab_changed)
+
+	# Show hotkey in tab tooltips
+	var hs_ready = Globals.hotkey_settings
+	for i in range(production_tab_bar.tab_count):
+		if i < hs_ready.TAB_NAMES.size():
+			var tab_name := production_tab_bar.get_tab_title(i)
+			var key_label := hs_ready.get_key_label(hs_ready.TAB_NAMES[i])
+			production_tab_bar.set_tab_tooltip(i, "%s  [%s]" % [tab_name, key_label])
+
+	MatchSignals.tick_advanced.connect(set_timer)
+	MatchSignals.tick_advanced.connect(_update_ping_display)
+	MatchSignals.unit_spawned.connect(_on_unit_changed)
+	MatchSignals.unit_died.connect(_on_unit_changed)
+	MatchSignals.unit_construction_finished.connect(_on_unit_changed)
+	MatchSignals.unit_construction_finished.connect(_on_structure_construction_finished)
+	MatchSignals.structure_disabled_changed.connect(_on_unit_changed)
+	MatchSignals.player_resource_changed.connect(update_resource_label)
+	MatchSignals.unit_selected.connect(_on_structure_selected)
+	MatchSignals.unit_selected.connect(_on_unit_selected_portrait)
+	MatchSignals.unit_deselected.connect(_on_unit_deselected_portrait)
+	MatchSignals.unit_died.connect(_on_unit_died_portrait)
+	MatchSignals.control_group_changed.connect(_on_control_group_changed)
+	MatchSignals.unit_died.connect(_on_unit_died_refresh_control_groups)
+
+	production_tab_bar.tab_clicked.connect(_on_production_tab_clicked)
+	production_tab_bar_overflow.tab_clicked.connect(_on_overflow_tab_clicked)
+
+	unit_portrait_panel.mouse_entered.connect(_on_portrait_hover)
+	unit_portrait_panel.mouse_exited.connect(_on_portrait_hover_exit)
+	_init_ability_buttons()
+	_init_control_group_buttons()
+
+	support_powers_container.visible = false
+	super_weapons_container.visible = false
+	MatchSignals.command_mode_changed.connect(_on_command_mode_changed)
+
+
+func _process(_delta: float) -> void:
+	# Update grid button timers every frame so the countdown stays current.
+	_update_all_grid_button_displays()
+
+
+func init_building_modification_buttons():
+	repair_button.pressed.connect(
+		func(): MatchSignals.structure_action_started.emit(Enums.CommandType.REPAIR_ENTITY)
+	)
+	sell_button.pressed.connect(
+		func(): MatchSignals.structure_action_started.emit(Enums.CommandType.SELL_ENTITY)
+	)
+	disable_button.pressed.connect(
+		func(): MatchSignals.structure_action_started.emit(Enums.CommandType.DISABLE_ENTITY)
+	)
+
+	var hs = Globals.hotkey_settings
+	repair_button.mouse_entered.connect(
+		_on_action_button_hover.bind("Repair", hs.get_key_label("repair"))
+	)
+	repair_button.mouse_exited.connect(_on_production_button_exit)
+	sell_button.mouse_entered.connect(
+		_on_action_button_hover.bind("Sell", hs.get_key_label("sell"))
+	)
+	sell_button.mouse_exited.connect(_on_production_button_exit)
+	disable_button.mouse_entered.connect(
+		_on_action_button_hover.bind("Disable", hs.get_key_label("disable"))
+	)
+	disable_button.mouse_exited.connect(_on_production_button_exit)
+
+
+func _on_action_button_hover(action_name: String, hotkey: String) -> void:
+	tooltip.set_content("%s  [%s]" % [action_name, hotkey], {})
+	tooltip.toggle(true)
+
+
+func set_timer():
+	if Match.tick % MatchConstants.TICK_RATE == 0:
+		game_timer_richtext_label.text = Utils.seconds_to_time(
+			Match.tick / MatchConstants.TICK_RATE
+		)
+	# Refresh grid displays periodically so trickle/off-field progress is visible
+	_update_all_grid_button_displays()
+
+
+func set_replay_mode(mode: bool) -> void:
+	is_replay_mode = mode
+
+
+func set_player_settings(settings: MatchSettings):
+	current_player = settings.players[settings.visible_player]
+	_visible_player_id = settings.visible_player
+
+	_set_player_faction()
+
+	# set starting resources
+	energy_bar.max_value = 0
+	energy_bar.value = 0
+	energy_bar.visible = false
+
+	# TODO: implement for relevant factions
+	secondary_resource_label.visible = false
+
+
+func _set_player_faction():
+	var faction_class = Factions.get_faction_by_enum(current_player.faction)
+	faction_class.init()
+	_faction_grid_data = Factions.get_production_grid()
+	_active_tab_type = Enums.ProductionTabType.STRUCTURE
+	production_tab_bar.current_tab = _active_tab_type
+	_refresh_tab()
+
+
+## Called when the player clicks a different production tab (STRUCTURE, DEFENCES, etc.)
+func _on_production_tab_changed(tab_index: int) -> void:
+	_active_tab_type = tab_index
+	_refresh_tab()
+
+
+## Called when the player clicks a different producer in the overflow bar
+func _on_overflow_tab_changed(tab_index: int) -> void:
+	_active_producer_index = tab_index
+	_update_observed_producer()
+
+
+## Called when any unit spawns, dies, or finishes construction — refresh if relevant
+func _on_unit_changed(_unit) -> void:
+	_refresh_tab()
+
+
+## When a controlled structure is selected, switch to its first production tab
+func _on_structure_selected(unit) -> void:
+	if not unit is Structure:
+		return
+	if not unit.is_in_group("controlled_units"):
+		return
+	if unit.produces.is_empty():
+		return
+	if unit.is_under_construction():
+		return
+	var tab_type: int = unit.produces[0]
+	if tab_type != _active_tab_type:
+		production_tab_bar.current_tab = tab_type
+	# Select this structure in the overflow if it's among the producers
+	var producers = _find_producers_for_tab(tab_type)
+	var idx = producers.find(unit)
+	if idx >= 0 and idx != _active_producer_index:
+		_active_producer_index = idx
+		if production_tab_bar_overflow.tab_count > idx:
+			production_tab_bar_overflow.current_tab = idx
+		else:
+			_update_observed_producer()
+
+
+## When a selected structure finishes construction, switch to its production tab
+func _on_structure_construction_finished(unit) -> void:
+	if not unit is Structure:
+		return
+	if not unit.is_in_group("selected_units"):
+		return
+	if not unit.is_in_group("controlled_units"):
+		return
+	if unit.produces.is_empty():
+		return
+	var tab_type: int = unit.produces[0]
+	if tab_type != _active_tab_type:
+		production_tab_bar.current_tab = tab_type
+	var producers = _find_producers_for_tab(tab_type)
+	var idx = producers.find(unit)
+	if idx >= 0:
+		_active_producer_index = idx
+		if production_tab_bar_overflow.tab_count > idx:
+			production_tab_bar_overflow.current_tab = idx
+		else:
+			_update_observed_producer()
+
+
+## Double-click on production tab → move camera to active structure
+var _last_tab_click_time: int = 0
+var _last_tab_click_index: int = -1
+var _last_tab_hotkey_time: int = 0
+var _last_tab_hotkey_index: int = -1
+const TAB_DOUBLE_CLICK_MS = 500
+
+
+func _on_production_tab_clicked(tab_index: int) -> void:
+	var now = Time.get_ticks_msec()
+	if tab_index == _last_tab_click_index and now - _last_tab_click_time <= TAB_DOUBLE_CLICK_MS:
+		_move_camera_to_active_producer()
+		_last_tab_click_index = -1
+		_last_tab_click_time = 0
+	else:
+		_last_tab_click_index = tab_index
+		_last_tab_click_time = now
+
+
+## Double-click on overflow tab → move camera to that structure
+var _last_overflow_click_time: int = 0
+var _last_overflow_click_index: int = -1
+
+
+func _on_overflow_tab_clicked(tab_index: int) -> void:
+	var now = Time.get_ticks_msec()
+	if (
+		tab_index == _last_overflow_click_index
+		and now - _last_overflow_click_time <= TAB_DOUBLE_CLICK_MS
+	):
+		_move_camera_to_active_producer()
+		_last_overflow_click_index = -1
+		_last_overflow_click_time = 0
+	else:
+		_last_overflow_click_index = tab_index
+		_last_overflow_click_time = now
+
+
+func _move_camera_to_active_producer() -> void:
+	if _active_producers.is_empty():
+		return
+	var idx := clampi(_active_producer_index, 0, _active_producers.size() - 1)
+	var structure = _active_producers[idx]
+	if structure == null or not is_instance_valid(structure):
+		return
+	var camera = get_viewport().get_camera_3d()
+	if camera and camera.has_method("set_position_safely"):
+		camera.set_position_safely(structure.global_position)
+
+
+## Master refresh: updates overflow bar + production grid for the active tab type
+func _refresh_tab() -> void:
+	_refresh_overflow_bar()
+	_populate_production_grid(_faction_grid_data, _active_tab_type)
+
+
+## Find all controlled structures that produce items for the active tab type,
+## populate the overflow bar with them, and clamp the selected index.
+func _refresh_overflow_bar() -> void:
+	_active_producers = _find_producers_for_tab(_active_tab_type)
+	_active_producer_index = clampi(
+		_active_producer_index, 0, maxi(_active_producers.size() - 1, 0)
+	)
+
+	# Hide overflow when 0-1 producers, show otherwise
+	production_tab_bar_overflow.visible = (_active_producers.size() > 1)
+
+	# Block tab_changed while rebuilding to avoid resetting index
+	if production_tab_bar_overflow.tab_changed.is_connected(_on_overflow_tab_changed):
+		production_tab_bar_overflow.tab_changed.disconnect(_on_overflow_tab_changed)
+
+	# Clear existing tabs
+	while production_tab_bar_overflow.tab_count > 0:
+		production_tab_bar_overflow.remove_tab(0)
+
+	for i in range(_active_producers.size()):
+		production_tab_bar_overflow.add_tab(str(i + 1))
+
+	if not _active_producers.is_empty():
+		production_tab_bar_overflow.current_tab = (_active_producer_index)
+
+	# Reconnect after rebuild
+	production_tab_bar_overflow.tab_changed.connect(_on_overflow_tab_changed)
+
+	_update_observed_producer()
+
+
+## Tell the HUD ProductionQueue widget to observe all producers,
+## and the grid to observe only the active one.
+func _update_observed_producer() -> void:
+	_detach_grid_queue()
+	# Global queue observes ALL producing structures
+	var all_producers := _find_all_producers()
+	production_queue.observe_structures(all_producers)
+	if _active_producers.is_empty():
+		_update_all_grid_button_displays()
+		return
+	var idx := clampi(_active_producer_index, 0, _active_producers.size() - 1)
+	var structure = _active_producers[idx]
+	_attach_grid_queue(structure)
+
+
+## Return all constructed, controlled structures whose `produces` array contains tab_type.
+func _find_producers_for_tab(tab_type: int) -> Array:
+	var result: Array = []
+	var controlled = get_tree().get_nodes_in_group("controlled_units")
+	for unit in controlled:
+		if not "produces" in unit:
+			continue
+		if unit.produces.is_empty():
+			continue
+		if unit.is_under_construction():
+			continue
+		if "is_disabled" in unit and unit.is_disabled:
+			continue
+		if unit.produces.has(tab_type):
+			result.append(unit)
+	return result
+
+
+## Return ALL constructed, controlled structures that have a ProductionQueue.
+func _find_all_producers() -> Array:
+	var result: Array = []
+	var controlled = get_tree().get_nodes_in_group("controlled_units")
+	for unit in controlled:
+		if not "production_queue" in unit:
+			continue
+		if unit.production_queue == null:
+			continue
+		if unit.is_under_construction():
+			continue
+		if "is_disabled" in unit and unit.is_disabled:
+			continue
+		result.append(unit)
+	return result
+
+
+func _populate_production_grid(grid_data: Dictionary, tab_type: int) -> void:
+	var buttons = production_grid.get_children()
+	var hs = Globals.hotkey_settings
+	var has_producer := not _active_producers.is_empty()
+	_grid_scene_to_button.clear()
+	_grid_slot_to_scene.clear()
+	_grid_slot_is_structure.clear()
+	# Reset all buttons to empty state
+	for i in range(buttons.size()):
+		var button: Button = buttons[i]
+		button.icon = null
+		button.text = ""
+		button.disabled = true
+		_disconnect_all(button.mouse_entered)
+		_disconnect_all(button.mouse_exited)
+		_disconnect_all(button.pressed)
+		_disconnect_all(button.gui_input)
+		_ensure_grid_labels(button)
+		_update_grid_button_queue_display(button, "")
+
+	# Assign entries to their designated grid slot
+	var entries = grid_data.get(tab_type, [])
+	for entry in entries:
+		var slot: int = entry.get("production_tab_grid_slot", -1)
+		if slot < 0 or slot >= buttons.size():
+			continue
+		var button: Button = buttons[slot]
+		var scene_path: String = entry.get("scene_path", "")
+		var unit_name := scene_path.get_file().get_basename()
+		var icon_path := "res://assets/ui/icons/%s.png" % unit_name
+		# Disable when no producer or structure requirements not met
+		var reqs_met := _check_structure_requirements(entry)
+		button.disabled = not has_producer or not reqs_met
+		button.expand_icon = true
+		if ResourceLoader.exists(icon_path):
+			button.icon = load(icon_path)
+		else:
+			button.text = unit_name[0]
+
+		_grid_scene_to_button[scene_path] = button
+		_grid_slot_to_scene[slot] = scene_path
+
+		var slot_name: String = hs.SLOT_NAMES[slot] if slot < hs.SLOT_NAMES.size() else ""
+		var hotkey_label: String = hs.get_key_label(slot_name) if slot_name != "" else ""
+		var stats := _build_entry_stats(entry)
+		button.mouse_entered.connect(
+			_on_production_button_hover.bind(unit_name, stats, hotkey_label)
+		)
+		button.mouse_exited.connect(_on_production_button_exit)
+
+		var is_structure := UnitHelper.is_structure(scene_path)
+		_grid_slot_is_structure[slot] = is_structure
+		if is_structure:
+			button.gui_input.connect(_on_structure_grid_button_gui_input.bind(scene_path))
+		else:
+			button.gui_input.connect(_on_grid_button_gui_input.bind(scene_path))
+
+	_update_all_grid_button_displays()
+
+
+## Decide whether to place a structure or queue unit production.
+func _on_production_button_pressed(scene_path: String) -> void:
+	var is_structure := UnitHelper.is_structure(scene_path)
+	if is_structure:
+		_try_produce_structure(scene_path)
+	else:
+		if _active_producers.is_empty():
+			return
+		var idx := clampi(_active_producer_index, 0, _active_producers.size() - 1)
+		var producer = _active_producers[idx]
+		if producer == null or not is_instance_valid(producer):
+			return
+		ProductionQueue._generate_unit_production_command(
+			producer.id, scene_path, producer.player.id
+		)
+
+
+## Shared entry-point for placing / queueing a structure.
+## Handles OFF_FIELD queuing, ON_FIELD direct placement, and
+## the max_concurrent_structures limit for both modes.
+func _try_produce_structure(scene_path: String) -> void:
+	if _active_producers.is_empty():
+		return
+	# If a paused under-construction structure exists, resume it first.
+	if _resume_paused_structure(scene_path):
+		return
+	var idx := clampi(_active_producer_index, 0, _active_producers.size() - 1)
+	var producer = _active_producers[idx]
+	if producer == null or not is_instance_valid(producer):
+		return
+	var prod_type: int = (
+		producer.get("structure_production_type")
+		if producer != null
+		else Enums.StructureProductionType.CONSTRUCT_ON_FIELD_AND_TRICKLE
+	)
+	var max_conc: int = producer.get("max_concurrent_structures") if producer != null else 1
+	# Determine the production tab of the structure being placed
+	var target_tab: int = UnitConstants.get_default_properties(scene_path).get(
+		"production_tab_type", -1
+	)
+	var scene_id: int = UnitConstants.get_scene_id(scene_path)
+	if scene_id == Enums.SceneId.INVALID:
+		return
+	if _is_off_field(prod_type):
+		# OFF_FIELD: deploy a completed structure, unpause a paused one, or queue new
+		if (
+			producer.production_queue != null
+			and producer.production_queue.has_completed(scene_id)
+		):
+			MatchSignals.pending_off_field_deploy = true
+			MatchSignals.pending_trickle = false
+			MatchSignals.pending_off_field_producer_id = producer.id
+			var prototype = load(scene_path)
+			if prototype:
+				MatchSignals.place_structure.emit(prototype)
+		elif producer.production_queue != null and _resume_paused_off_field(producer, scene_id):
+			pass  # unpaused via command
+		else:
+			var in_progress := 0
+			if producer.production_queue != null:
+				in_progress += (producer.production_queue.structure_count_in_queue_for_tab(
+					target_tab
+				))
+			if in_progress < max_conc and producer.production_queue != null:
+				ProductionQueue._generate_unit_production_command(
+					producer.id, scene_path, producer.player.id
+				)
+	else:
+		# ON_FIELD: enforce concurrent limit per tab, then place
+		var under_construction_count := 0
+		for unit in get_tree().get_nodes_in_group("controlled_units"):
+			if not (unit is Structure and unit.is_under_construction()):
+				continue
+			var upath: String = unit.scene_file_path
+			var utab = UnitConstants.get_default_properties(upath).get(
+				"production_tab_type", -1
+			)
+			if utab == target_tab:
+				under_construction_count += 1
+		if under_construction_count < max_conc:
+			var is_trickle := _is_trickle(prod_type)
+			MatchSignals.pending_trickle = is_trickle
+			MatchSignals.pending_off_field_deploy = false
+			var prototype = load(scene_path)
+			if prototype:
+				MatchSignals.place_structure.emit(prototype)
+
+
+func _unhandled_key_input(event: InputEvent) -> void:
+	if not event is InputEventKey or not event.pressed:
+		return
+
+	# Ctrl+F1 toggles ping overlay
+	if event.keycode == KEY_F1 and event.ctrl_pressed:
+		ping_container.visible = not ping_container.visible
+		get_viewport().set_input_as_handled()
+		return
+
+	var physical: Key = event.physical_keycode
+	var hs = Globals.hotkey_settings
+
+	# Escape / right-click cancels active command mode
+	if physical == KEY_ESCAPE and MatchSignals.active_command_mode != Enums.UnitCommandMode.NORMAL:
+		MatchSignals.active_command_mode = Enums.UnitCommandMode.NORMAL
+		MatchSignals.command_mode_changed.emit(Enums.UnitCommandMode.NORMAL)
+		get_viewport().set_input_as_handled()
+		return
+
+	# Unit command hotkeys (immediate or mode-setting)
+	if _handle_unit_command_hotkey(physical, event, hs):
+		get_viewport().set_input_as_handled()
+		return
+
+	# Structure action hotkeys (from HotkeySettings)
+	for action_name in hs.STRUCTURE_ACTION_NAMES:
+		if physical == hs.structure_action_bindings.get(action_name, -1):
+			var cmd_type = _structure_action_name_to_command(action_name)
+			if cmd_type >= 0:
+				MatchSignals.structure_action_started.emit(cmd_type)
+			get_viewport().set_input_as_handled()
+			return
+
+	# Tab-switching hotkeys (from HotkeySettings)
+	for i in range(hs.TAB_NAMES.size()):
+		var tab_name = hs.TAB_NAMES[i]
+		if physical == hs.tab_bindings.get(tab_name, -1):
+			if i < production_tab_bar.tab_count:
+				var now = Time.get_ticks_msec()
+				if production_tab_bar.current_tab == i:
+					if (
+						i == _last_tab_hotkey_index
+						and now - _last_tab_hotkey_time <= TAB_DOUBLE_CLICK_MS
+					):
+						_move_camera_to_active_producer()
+						_last_tab_hotkey_index = -1
+						_last_tab_hotkey_time = 0
+					elif _active_producers.size() > 1:
+						var next := (_active_producer_index + 1) % _active_producers.size()
+						production_tab_bar_overflow.current_tab = next
+						_last_tab_hotkey_index = i
+						_last_tab_hotkey_time = now
+					else:
+						_last_tab_hotkey_index = i
+						_last_tab_hotkey_time = now
+				else:
+					production_tab_bar.current_tab = i
+					_last_tab_hotkey_index = -1
+					_last_tab_hotkey_time = 0
+			get_viewport().set_input_as_handled()
+			return
+
+	# Production grid hotkeys
+	var buttons = production_grid.get_children()
+	for i in range(buttons.size()):
+		var slot = hs.SLOT_NAMES[i]
+		if not hs.bindings.has(slot):
+			continue
+		if event.keycode == hs.bindings[slot] and not buttons[i].disabled:
+			var sp: String = _grid_slot_to_scene.get(i, "")
+			if sp != "":
+				_on_production_button_pressed(sp)
+			get_viewport().set_input_as_handled()
+			return
+
+
+func _handle_unit_command_hotkey(physical: Key, event: InputEventKey, hs: HotkeySettings) -> bool:
+	if physical == hs.unit_command_bindings.get("stop", -1):
+		var uac = _find_unit_actions_controller()
+		if uac:
+			uac.push_stop_command()
+		return true
+	if physical == hs.unit_command_bindings.get("hold_position", -1):
+		var uac = _find_unit_actions_controller()
+		if uac:
+			uac.push_hold_position_command()
+		return true
+	var mode_map := {
+		hs.unit_command_bindings.get("attack_move", -1): Enums.UnitCommandMode.ATTACK_MOVE,
+		hs.unit_command_bindings.get("move", -1): Enums.UnitCommandMode.MOVE,
+		hs.unit_command_bindings.get("patrol", -1): Enums.UnitCommandMode.PATROL,
+		hs.unit_command_bindings.get("reverse_move", -1): Enums.UnitCommandMode.REVERSE_MOVE,
+	}
+	if mode_map.has(physical):
+		var mode = mode_map[physical]
+		MatchSignals.active_command_mode = mode
+		MatchSignals.command_mode_changed.emit(mode)
+		return true
+	if physical == hs.unit_command_bindings.get("select_all_army", -1):
+		if event.shift_pressed:
+			_select_all_on_screen()
+		else:
+			_select_all_army()
+		return true
+	return false
+
+
+func _select_all_army() -> void:
+	MatchSignals.deselect_all_units.emit()
+	for unit in get_tree().get_nodes_in_group("controlled_units"):
+		if unit is Unit and unit.type != "Worker" and not unit is Structure:
+			var sel = unit.find_child("Selection")
+			if sel:
+				sel.select()
+
+
+func _select_all_on_screen() -> void:
+	MatchSignals.deselect_all_units.emit()
+	var camera = get_viewport().get_camera_3d()
+	if camera == null:
+		return
+	for unit in get_tree().get_nodes_in_group("controlled_units"):
+		if not unit is Unit or unit.type == "Worker" or unit is Structure:
+			continue
+		if not camera.is_position_behind(unit.global_position):
+			var screen_pos = camera.unproject_position(unit.global_position)
+			var vp_size = get_viewport().get_visible_rect().size
+			if (
+				screen_pos.x >= 0
+				and screen_pos.x <= vp_size.x
+				and screen_pos.y >= 0
+				and screen_pos.y <= vp_size.y
+			):
+				var sel = unit.find_child("Selection")
+				if sel:
+					sel.select()
+
+
+func _find_unit_actions_controller():
+	var match_node = find_parent("Match")
+	if match_node == null:
+		return null
+	for player in get_tree().get_nodes_in_group("players"):
+		var uac = player.find_child("UnitActionsController")
+		if uac != null:
+			return uac
+	return null
+
+
+func _on_command_mode_changed(mode: int) -> void:
+	if mode == Enums.UnitCommandMode.NORMAL:
+		Input.set_custom_mouse_cursor(null)
+	else:
+		(
+			Input
+			. set_custom_mouse_cursor(
+				_COMMAND_CURSOR,
+				Input.CURSOR_ARROW,
+				Vector2(16, 16),
+			)
+		)
+
+
+static func _structure_action_name_to_command(action_name: String) -> int:
+	match action_name:
+		"repair":
+			return Enums.CommandType.REPAIR_ENTITY
+		"sell":
+			return Enums.CommandType.SELL_ENTITY
+		"disable":
+			return Enums.CommandType.DISABLE_ENTITY
+	return -1
+
+
+static func _disconnect_all(sig: Signal) -> void:
+	for conn in sig.get_connections():
+		sig.disconnect(conn["callable"])
+
+
+static func _build_entry_stats(entry: Dictionary) -> Dictionary:
+	var stats := {}
+	if entry.has("hp_max"):
+		stats["HP"] = entry["hp_max"]
+	if entry.has("costs"):
+		stats["Cost"] = entry["costs"].get("resource", 0)
+	if entry.has("build_time"):
+		stats["Build"] = "%ss" % entry["build_time"]
+	return stats
+
+
+func _on_production_button_hover(
+	unit_name: String, stats: Dictionary, hotkey_label: String
+) -> void:
+	var title := unit_name
+	if hotkey_label != "":
+		title += "  [%s]" % hotkey_label
+	tooltip.set_content(title, stats)
+	tooltip.toggle(true)
+
+
+func _on_production_button_exit() -> void:
+	tooltip.toggle(false)
+
+
+# ── PRODUCTION GRID QUEUE DISPLAY ──────────────────────────────────────────
+
+
+## Ensure a grid button has TimeLabel and CountLabel children.
+func _ensure_grid_labels(button: Button) -> void:
+	if not button.has_node("TimeLabel"):
+		var tl := Label.new()
+		tl.name = "TimeLabel"
+		tl.add_theme_font_size_override("font_size", 10)
+		tl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+		tl.vertical_alignment = VERTICAL_ALIGNMENT_BOTTOM
+		tl.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
+		tl.offset_left = -60
+		tl.offset_top = -16
+		tl.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+		tl.grow_vertical = Control.GROW_DIRECTION_BEGIN
+		tl.visible = false
+		button.add_child(tl)
+	if not button.has_node("CountLabel"):
+		var cl := Label.new()
+		cl.name = "CountLabel"
+		cl.add_theme_font_size_override("font_size", 10)
+		cl.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+		cl.vertical_alignment = VERTICAL_ALIGNMENT_TOP
+		cl.set_anchors_preset(Control.PRESET_TOP_LEFT)
+		cl.offset_right = 24
+		cl.offset_bottom = 16
+		cl.visible = false
+		button.add_child(cl)
+
+
+func _detach_grid_queue() -> void:
+	if _grid_observed_queue != null:
+		if _grid_observed_queue.element_enqueued.is_connected(_on_grid_queue_changed):
+			_grid_observed_queue.element_enqueued.disconnect(_on_grid_queue_changed)
+		if _grid_observed_queue.element_removed.is_connected(_on_grid_queue_changed):
+			_grid_observed_queue.element_removed.disconnect(_on_grid_queue_changed)
+		_grid_observed_queue = null
+
+
+func _attach_grid_queue(structure) -> void:
+	if structure == null or not is_instance_valid(structure):
+		_update_all_grid_button_displays()
+		return
+	if not "production_queue" in structure or structure.production_queue == null:
+		_update_all_grid_button_displays()
+		return
+	_grid_observed_queue = structure.production_queue
+	_grid_observed_queue.element_enqueued.connect(_on_grid_queue_changed)
+	_grid_observed_queue.element_removed.connect(_on_grid_queue_changed)
+	_update_all_grid_button_displays()
+
+
+func _on_grid_queue_changed(_element) -> void:
+	_update_all_grid_button_displays()
+
+
+func _update_all_grid_button_displays() -> void:
+	for scene_path in _grid_scene_to_button:
+		var button: Button = _grid_scene_to_button[scene_path]
+		_update_grid_button_queue_display(button, scene_path)
+
+
+func _update_structure_slot_display(
+	time_label: Label, count_label: Label, scene_path: String
+) -> void:
+	var scene_id: int = UnitConstants.get_scene_id(scene_path)
+	if scene_id == Enums.SceneId.INVALID:
+		time_label.visible = false
+		count_label.visible = false
+		return
+	# Check for OFF_FIELD production in the active producer's queue
+	if not _active_producers.is_empty():
+		var pidx := clampi(_active_producer_index, 0, _active_producers.size() - 1)
+		var producer = _active_producers[pidx]
+		if producer != null and is_instance_valid(producer):
+			var prod_type: int = (
+				producer.get("structure_production_type")
+				if producer != null
+				else Enums.StructureProductionType.CONSTRUCT_ON_FIELD_AND_TRICKLE
+			)
+			if _is_off_field(prod_type):
+				if (
+					producer.production_queue != null
+					and producer.production_queue.has_completed(scene_id)
+				):
+					time_label.text = tr("READY")
+					time_label.visible = true
+					count_label.visible = false
+					return
+				if producer.production_queue != null:
+					for el in producer.production_queue.get_elements():
+						if el.unit_prototype.resource_path == scene_path:
+							var pct := int(el.progress() * 100.0)
+							time_label.text = ("%d%% ||" % pct if el.paused else "%d%%" % pct)
+							time_label.visible = true
+							count_label.visible = false
+							return
+				time_label.visible = false
+				count_label.visible = false
+				return
+
+	# ON_FIELD: check under-construction structures in the world
+	var building_count := 0
+	var best_progress := 0.0
+	var any_paused := false
+	for unit in get_tree().get_nodes_in_group("controlled_units"):
+		if not unit is Structure:
+			continue
+		var unit_scene: String = unit.get_script().resource_path.replace(".gd", ".tscn")
+		if unit_scene != scene_path:
+			continue
+		if unit.is_under_construction():
+			building_count += 1
+			if unit.is_construction_paused:
+				any_paused = true
+			if unit.construction_progress > best_progress:
+				best_progress = unit.construction_progress
+	if building_count > 0:
+		var pct := int(best_progress * 100.0)
+		time_label.text = ("%d%% ||" % pct if any_paused else "%d%%" % pct)
+		time_label.visible = true
+		if building_count > 1:
+			count_label.text = "x%d" % building_count
+			count_label.visible = true
+		else:
+			count_label.visible = false
+		return
+	time_label.visible = false
+	count_label.visible = false
+
+
+func _update_grid_button_queue_display(button: Button, scene_path: String) -> void:
+	var time_label = button.get_node_or_null("TimeLabel")
+	var count_label = button.get_node_or_null("CountLabel")
+	if time_label == null or count_label == null:
+		return
+	if scene_path == "":
+		time_label.visible = false
+		count_label.visible = false
+		return
+
+	# ── Construction progress for structure slots ──
+	if UnitHelper.is_structure(scene_path):
+		_update_structure_slot_display(time_label, count_label, scene_path)
+		return
+
+	# ── Production queue display for unit slots ──
+	if _grid_observed_queue == null:
+		time_label.visible = false
+		count_label.visible = false
+		return
+
+	# Gather elements of this type from the observed queue
+	var all_elements = _grid_observed_queue.get_elements()
+	var type_elements: Array = []
+	for el in all_elements:
+		if el.unit_prototype.resource_path == scene_path:
+			type_elements.append(el)
+
+	if type_elements.is_empty():
+		time_label.visible = false
+		count_label.visible = false
+		return
+
+	# Show timer for the producing element of this type
+	var producing_element = null
+	for el in type_elements:
+		if el.is_producing(all_elements):
+			producing_element = el
+			break
+	if producing_element != null:
+		time_label.text = "%.1fs" % producing_element.time_left
+		time_label.visible = true
+	else:
+		time_label.visible = false
+
+	# Show count
+	if type_elements.size() > 1:
+		count_label.text = "x%d" % type_elements.size()
+		count_label.visible = true
+	else:
+		count_label.visible = false
+
+
+func _on_structure_grid_button_gui_input(event: InputEvent, scene_path: String) -> void:
+	if not event is InputEventMouseButton or not event.pressed:
+		return
+	# gui_input fires even on disabled buttons — block when no producer
+	if _active_producers.is_empty():
+		return
+	if event.button_index == MOUSE_BUTTON_LEFT:
+		_try_produce_structure(scene_path)
+	elif event.button_index == MOUSE_BUTTON_RIGHT:
+		_cancel_building_structure(scene_path)
+
+
+func _resume_paused_structure(scene_path: String) -> bool:
+	## Unpause the most-progressed paused structure of this type.
+	## Returns true if a command was sent, false if nothing to resume.
+	var best = null
+	var best_progress := -1.0
+	for unit in get_tree().get_nodes_in_group("controlled_units"):
+		if not unit is Structure:
+			continue
+		if not unit.is_under_construction():
+			continue
+		if not unit.is_construction_paused:
+			continue
+		var unit_scene: String = unit.get_script().resource_path.replace(".gd", ".tscn")
+		if unit_scene != scene_path:
+			continue
+		if unit.construction_progress > best_progress:
+			best_progress = unit.construction_progress
+			best = unit
+	if best == null:
+		return false
+	(
+		CommandBus
+		. push_command(
+			{
+				"tick": Match.tick + 1,
+				"type": Enums.CommandType.PAUSE_CONSTRUCTION,
+				"player_id": best.player.id,
+				"data": {"entity_id": best.id},
+			}
+		)
+	)
+	return true
+
+
+## Unpause a paused off-field queue element of this type. Returns true if found.
+func _resume_paused_off_field(producer, scene_id: int) -> bool:
+	var scene_path: String = UnitConstants.get_scene_path(scene_id)
+	if scene_path == "":
+		return false
+	for el in producer.production_queue.get_elements():
+		if el.unit_prototype.resource_path == scene_path and el.paused:
+			(
+				CommandBus
+				. push_command(
+					{
+						"tick": Match.tick + 1,
+						"type": Enums.CommandType.ENTITY_PRODUCTION_PAUSED,
+						"player_id": producer.player.id,
+						"data": {"entity_id": producer.id, "unit_type": scene_id},
+					}
+				)
+			)
+			return true
+	return false
+
+
+func _cancel_building_structure(scene_path: String) -> void:
+	var scene_id: int = UnitConstants.get_scene_id(scene_path)
+	if scene_id == Enums.SceneId.INVALID:
+		return
+	# Check if the active producer uses OFF_FIELD mode
+	if not _active_producers.is_empty():
+		var idx := clampi(_active_producer_index, 0, _active_producers.size() - 1)
+		var producer = _active_producers[idx]
+		if producer != null and is_instance_valid(producer):
+			var prod_type: int = (
+				producer.get("structure_production_type")
+				if producer != null
+				else Enums.StructureProductionType.CONSTRUCT_ON_FIELD_AND_TRICKLE
+			)
+			if _is_off_field(prod_type):
+				# OFF_FIELD: check queue for completed, producing, or paused elements
+				if producer.production_queue != null:
+					# First: try to cancel a completed (ready) element
+					for el in producer.production_queue.get_elements():
+						if el.unit_prototype.resource_path == scene_path and el.completed:
+							(
+								CommandBus
+								. push_command(
+									{
+										"tick": Match.tick + 1,
+										"type": Enums.CommandType.ENTITY_PRODUCTION_CANCELED,
+										"player_id": producer.player.id,
+										"data": {"entity_id": producer.id, "unit_type": scene_id},
+									}
+								)
+							)
+							return
+					# Second: pause an active (non-paused, non-completed) element
+					for el in producer.production_queue.get_elements():
+						if (
+							el.unit_prototype.resource_path == scene_path
+							and not el.paused
+							and not el.completed
+						):
+							(
+								CommandBus
+								. push_command(
+									{
+										"tick": Match.tick + 1,
+										"type": Enums.CommandType.ENTITY_PRODUCTION_PAUSED,
+										"player_id": producer.player.id,
+										"data": {"entity_id": producer.id, "unit_type": scene_id},
+									}
+								)
+							)
+							return
+					# Third: cancel a paused element
+					for el in producer.production_queue.get_elements():
+						if el.unit_prototype.resource_path == scene_path and el.paused:
+							(
+								CommandBus
+								. push_command(
+									{
+										"tick": Match.tick + 1,
+										"type": Enums.CommandType.ENTITY_PRODUCTION_CANCELED,
+										"player_id": producer.player.id,
+										"data": {"entity_id": producer.id, "unit_type": scene_id},
+									}
+								)
+							)
+							return
+				return
+
+	# ON_FIELD: pause/cancel structures on the map
+	var unpaused: Array = []
+	var paused: Array = []
+	for unit in get_tree().get_nodes_in_group("controlled_units"):
+		if not unit is Structure:
+			continue
+		if not unit.is_under_construction():
+			continue
+		var unit_scene: String = unit.get_script().resource_path.replace(".gd", ".tscn")
+		if unit_scene != scene_path:
+			continue
+		if unit.is_construction_paused:
+			paused.append(unit)
+		else:
+			unpaused.append(unit)
+
+	# 1st right-click: pause the least-progressed unpaused structure.
+	if not unpaused.is_empty():
+		var best = unpaused[0]
+		for u in unpaused:
+			if u.construction_progress < best.construction_progress:
+				best = u
+		(
+			CommandBus
+			. push_command(
+				{
+					"tick": Match.tick + 1,
+					"type": Enums.CommandType.PAUSE_CONSTRUCTION,
+					"player_id": best.player.id,
+					"data": {"entity_id": best.id},
+				}
+			)
+		)
+		return
+
+	# 2nd right-click: cancel the least-progressed paused structure.
+	if not paused.is_empty():
+		var best = paused[0]
+		for u in paused:
+			if u.construction_progress < best.construction_progress:
+				best = u
+		(
+			CommandBus
+			. push_command(
+				{
+					"tick": Match.tick + 1,
+					"type": Enums.CommandType.CANCEL_CONSTRUCTION,
+					"player_id": best.player.id,
+					"data": {"entity_id": best.id},
+				}
+			)
+		)
+
+
+func _on_grid_button_gui_input(event: InputEvent, scene_path: String) -> void:
+	if not event is InputEventMouseButton or not event.pressed:
+		return
+	if _active_producers.is_empty():
+		return
+	var idx := clampi(_active_producer_index, 0, _active_producers.size() - 1)
+	var producer = _active_producers[idx]
+	if producer == null or not is_instance_valid(producer):
+		return
+
+	if event.button_index == MOUSE_BUTTON_LEFT:
+		# Left-click: if paused elements exist for this type, resume; otherwise queue
+		if _grid_has_paused_elements(scene_path):
+			_grid_toggle_pause(producer, scene_path)
+		else:
+			var count := 5 if event.shift_pressed else 1
+			for i in count:
+				ProductionQueue._generate_unit_production_command(
+					producer.id, scene_path, producer.player.id
+				)
+	elif event.button_index == MOUSE_BUTTON_RIGHT:
+		if event.shift_pressed:
+			_grid_cancel_all_of_type(producer, scene_path)
+		else:
+			_grid_right_click(producer, scene_path)
+
+
+func _grid_has_paused_elements(scene_path: String) -> bool:
+	if _grid_observed_queue == null:
+		return false
+	for el in _grid_observed_queue.get_elements():
+		if el.unit_prototype.resource_path == scene_path and el.paused:
+			return true
+	return false
+
+
+func _grid_right_click(producer, scene_path: String) -> void:
+	if _grid_observed_queue == null:
+		return
+	var all_elements = _grid_observed_queue.get_elements()
+	var is_producing := false
+	for el in all_elements:
+		if el.unit_prototype.resource_path == scene_path and el.is_producing(all_elements):
+			is_producing = true
+			break
+	if is_producing:
+		_grid_toggle_pause(producer, scene_path)
+	else:
+		_grid_cancel_one(producer, scene_path)
+
+
+func _grid_toggle_pause(producer, scene_path: String) -> void:
+	var scene_id: int = UnitConstants.get_scene_id(scene_path)
+	if scene_id == Enums.SceneId.INVALID:
+		return
+	(
+		CommandBus
+		. push_command(
+			{
+				"tick": Match.tick + 1,
+				"type": Enums.CommandType.ENTITY_PRODUCTION_PAUSED,
+				"player_id": producer.player.id,
+				"data":
+				{
+					"entity_id": producer.id,
+					"unit_type": scene_id,
+				}
+			}
+		)
+	)
+
+
+func _grid_cancel_one(producer, scene_path: String) -> void:
+	var scene_id: int = UnitConstants.get_scene_id(scene_path)
+	if scene_id == Enums.SceneId.INVALID:
+		return
+	(
+		CommandBus
+		. push_command(
+			{
+				"tick": Match.tick + 1,
+				"type": Enums.CommandType.ENTITY_PRODUCTION_CANCELED,
+				"player_id": producer.player.id,
+				"data":
+				{
+					"entity_id": producer.id,
+					"unit_type": scene_id,
+				}
+			}
+		)
+	)
+
+
+func _grid_cancel_all_of_type(producer, scene_path: String) -> void:
+	if _grid_observed_queue == null:
+		return
+	var scene_id: int = UnitConstants.get_scene_id(scene_path)
+	if scene_id == Enums.SceneId.INVALID:
+		return
+	for el in _grid_observed_queue.get_elements():
+		if el.unit_prototype.resource_path == scene_path:
+			(
+				CommandBus
+				. push_command(
+					{
+						"tick": Match.tick + 1,
+						"type": Enums.CommandType.ENTITY_PRODUCTION_CANCELED,
+						"player_id": producer.player.id,
+						"data":
+						{
+							"entity_id": producer.id,
+							"unit_type": scene_id,
+						}
+					}
+				)
+			)
+
+
+## resource is the updated value, not the delta
+func update_resource_label(player, resource: int, type: Enums.ResourceType):
+	if player.id != _visible_player_id:
+		return
+	match type:
+		Enums.ResourceType.CREDITS:
+			credits_label.text = str(resource) + "$"
+
+		Enums.ResourceType.ENERGY:
+			var total_provided := _calculate_total_energy_provided()
+			energy_bar.max_value = total_provided
+			energy_bar.value = resource
+			energy_bar.visible = total_provided > 0
+			energy_label.text = "%d / %d" % [resource, total_provided]
+
+		_:
+			push_warning("Resource of unknown type updated: ", type)
+
+
+## Sum energy_provided across all constructed, controlled structures.
+func _calculate_total_energy_provided() -> int:
+	var total := 0
+	for unit in get_tree().get_nodes_in_group("controlled_units"):
+		if not unit is Structure:
+			continue
+		if unit.is_under_construction():
+			continue
+		if "energy_provided" in unit:
+			total += unit.energy_provided
+	return total
+
+
+## Check whether all structure_requirements for a grid entry are met.
+## Returns true if the entry has no requirements or all are satisfied.
+func _check_structure_requirements(entry: Dictionary) -> bool:
+	var reqs: Array = entry.get("structure_requirements", [])
+	if reqs.is_empty():
+		return true
+	var controlled = get_tree().get_nodes_in_group("controlled_units")
+	for req in reqs:
+		var req_id: int = UnitConstants.get_scene_id(req)
+		if req_id == Enums.SceneId.INVALID:
+			continue
+		var found := false
+		for unit in controlled:
+			if not unit is Structure:
+				continue
+			if unit.is_under_construction():
+				continue
+			var unit_scene_id: int = UnitConstants.get_scene_id(
+				unit.get_script().resource_path.replace(".gd", ".tscn")
+			)
+			if unit_scene_id == req_id:
+				found = true
+				break
+		if not found:
+			return false
+	return true
+
+
+## Returns true if the production type is OFF_FIELD (structure built in queue before placement).
+static func _is_off_field(prod_type) -> bool:
+	return (
+		prod_type
+		in [
+			Enums.StructureProductionType.CONSTRUCT_OFF_FIELD_AND_TRICKLE,
+			Enums.StructureProductionType.CONSTRUCT_OFF_FIELD_AND_DONT_TRICKLE,
+		]
+	)
+
+
+## Returns true if the production type uses trickle cost.
+static func _is_trickle(prod_type) -> bool:
+	return (
+		prod_type
+		in [
+			Enums.StructureProductionType.CONSTRUCT_ON_FIELD_AND_TRICKLE,
+			Enums.StructureProductionType.CONSTRUCT_OFF_FIELD_AND_TRICKLE,
+		]
+	)
+
+
+# ── CONTROL GROUP HUD ──────────────────────────────────────────────────────
+
+
+func _init_control_group_buttons():
+	var group_handler = find_parent("Match").find_child("UnitGroupSelectionHandler")
+	for i in range(control_groups_container.get_child_count()):
+		var button: Button = control_groups_container.get_child(i)
+		button.visible = false
+		var group_id = i + 1
+		if group_id <= 9 and group_handler != null:
+			button.pressed.connect(group_handler.access_group.bind(group_id))
+
+
+func _on_control_group_changed(_group_id: int) -> void:
+	_refresh_control_group_buttons()
+
+
+func _on_unit_died_refresh_control_groups(_unit) -> void:
+	# Defer so group membership is updated before we check
+	_refresh_control_group_buttons.call_deferred()
+
+
+func _refresh_control_group_buttons() -> void:
+	var buttons = control_groups_container.get_children()
+	# Groups 1-9 map to buttons 0-8; button 9 (text "0") is unused
+	for i in range(buttons.size()):
+		var group_id = i + 1
+		if group_id > 9:
+			buttons[i].visible = false
+			continue
+		var group_name = "unit_group_%d" % group_id
+		var units = get_tree().get_nodes_in_group(group_name)
+		if units.is_empty():
+			buttons[i].visible = false
+			continue
+		# Only show if all units in the group are alive (still valid)
+		var all_alive = true
+		for unit in units:
+			if not is_instance_valid(unit):
+				all_alive = false
+				break
+		if not all_alive:
+			buttons[i].visible = false
+			continue
+		buttons[i].visible = true
+		buttons[i].text = "%d (%d)" % [group_id, units.size()]
+		# Set icon to the most common unit type in this group
+		var type_counts: Dictionary = {}
+		for unit in units:
+			var unit_type: String = unit.type if "type" in unit else ""
+			if unit_type != "":
+				type_counts[unit_type] = type_counts.get(unit_type, 0) + 1
+		var best_type := ""
+		var best_count := 0
+		for t in type_counts:
+			if type_counts[t] > best_count:
+				best_count = type_counts[t]
+				best_type = t
+		var icon_path := "res://assets/ui/icons/%s.png" % best_type
+		if best_type != "" and ResourceLoader.exists(icon_path):
+			buttons[i].icon = load(icon_path)
+		else:
+			buttons[i].icon = null
+
+
+# ── UNIT PORTRAIT & ABILITIES ──────────────────────────────────────────────
+
+
+func _on_unit_selected_portrait(unit) -> void:
+	_disconnect_portrait_hp()
+	_portrait_unit = unit
+	unit_info_container.visible = true
+	unit_portrait_viewport.show_unit(unit)
+	_update_ability_buttons(unit)
+	_update_unit_info_panel()
+	if _portrait_unit.has_signal("hp_changed"):
+		_portrait_hp_connection = _update_unit_info_panel
+		_portrait_unit.hp_changed.connect(_portrait_hp_connection)
+	if _portrait_unit.has_signal("resource_changed"):
+		if not _portrait_unit.resource_changed.is_connected(_update_unit_info_panel):
+			_portrait_unit.resource_changed.connect(_update_unit_info_panel)
+
+
+func _on_unit_deselected_portrait(unit) -> void:
+	if unit != _portrait_unit:
+		return
+	var remaining = get_tree().get_nodes_in_group("selected_units")
+	if not remaining.is_empty():
+		_on_unit_selected_portrait(remaining[0])
+	else:
+		_disconnect_portrait_hp()
+		_portrait_unit = null
+		unit_portrait_viewport.clear()
+		_hide_ability_buttons()
+		_clear_unit_info_panel()
+		unit_info_container.visible = false
+
+
+func _on_unit_died_portrait(unit) -> void:
+	if unit == _portrait_unit:
+		_disconnect_portrait_hp()
+		_portrait_unit = null
+		unit_portrait_viewport.clear()
+		_hide_ability_buttons()
+		_clear_unit_info_panel()
+		unit_info_container.visible = false
+
+
+func _on_portrait_hover() -> void:
+	if _portrait_unit == null or not is_instance_valid(_portrait_unit):
+		return
+	var scene_path: String = _portrait_unit.get_script().resource_path.replace(".gd", ".tscn")
+	var props: Dictionary = UnitConstants.get_default_properties(scene_path)
+	var title: String = ""
+	if "unit_name" in _portrait_unit:
+		title = _portrait_unit.unit_name
+	elif "type" in _portrait_unit:
+		title = _portrait_unit.type
+	else:
+		title = _portrait_unit.name
+	var description: String = props.get("description", "")
+	tooltip.set_content(title, {}, description)
+	tooltip.toggle(true)
+
+
+func _on_portrait_hover_exit() -> void:
+	tooltip.toggle(false)
+
+
+func _build_unit_stats(unit) -> Dictionary:
+	var scene_path: String = unit.get_script().resource_path.replace(".gd", ".tscn")
+	var props: Dictionary = UnitConstants.get_default_properties(scene_path)
+	var stats := {}
+	if props.has("hp_max"):
+		stats["HP"] = "%d / %d" % [unit.hp, props["hp_max"]]
+	if props.has("armor"):
+		var armor_parts: Array = []
+		for atk_type in props["armor"]:
+			var type_name: String = (
+				Enums.DamageTypes.keys()[atk_type] if atk_type is int else str(atk_type)
+			)
+			armor_parts.append("%s %d%%" % [type_name, int(props["armor"][atk_type] * 100)])
+		stats["Armor"] = ", ".join(armor_parts)
+	if props.has("attack_damage"):
+		stats["ATK Damage"] = str(props["attack_damage"])
+	if props.has("attack_type"):
+		stats["ATK Type"] = str(props["attack_type"])
+	if props.has("attack_interval"):
+		stats["ATK Interval"] = "%ss" % props["attack_interval"]
+	if props.has("attack_range"):
+		stats["ATK Range"] = str(props["attack_range"])
+	if props.has("attack_domains"):
+		var domain_names: Array = []
+		for d in props["attack_domains"]:
+			domain_names.append(Enums.MovementTypes.keys()[d])
+		stats["Targets"] = ", ".join(domain_names)
+	if props.has("sight_range"):
+		stats["Sight"] = str(props["sight_range"])
+	if props.has("rotation_speed"):
+		stats["Rotation"] = str(props["rotation_speed"])
+	return stats
+
+
+func _init_ability_buttons() -> void:
+	# Hide the original placeholder ability buttons
+	for i in range(unit_ability_container.get_child_count()):
+		unit_ability_container.get_child(i).visible = false
+
+	# Create unit command buttons
+	var hs = Globals.hotkey_settings
+	for def in _COMMAND_DEFS:
+		if def.get("options_only", false):
+			continue
+		var btn = Button.new()
+		btn.custom_minimum_size = Vector2(31, 31)
+		btn.text = hs.get_key_label(def["key"])
+		btn.visible = false
+		btn.set_meta("is_movement", def.get("movement", false))
+		btn.pressed.connect(_on_command_button_pressed.bind(def["key"]))
+		btn.mouse_entered.connect(_on_command_button_hover.bind(def))
+		btn.mouse_exited.connect(_on_production_button_exit)
+		unit_ability_container.add_child(btn)
+		_command_buttons.append(btn)
+
+
+func _update_ability_buttons(unit) -> void:
+	var is_structure = unit is Structure
+	for btn in _command_buttons:
+		if is_structure:
+			btn.visible = not btn.get_meta("is_movement", false)
+		else:
+			btn.visible = true
+
+
+func _hide_ability_buttons() -> void:
+	for btn in _command_buttons:
+		btn.visible = false
+
+
+func _on_command_button_hover(def: Dictionary) -> void:
+	var hs = Globals.hotkey_settings
+	var hotkey = hs.get_key_label(def["key"])
+	(
+		tooltip
+		. set_content(
+			"%s  [%s]" % [def["name"], hotkey],
+			{"": def["desc"]},
+		)
+	)
+	tooltip.toggle(true)
+
+
+func _on_command_button_pressed(key: String) -> void:
+	match key:
+		"stop":
+			var uac = _find_unit_actions_controller()
+			if uac:
+				uac.push_stop_command()
+		"hold_position":
+			var uac = _find_unit_actions_controller()
+			if uac:
+				uac.push_hold_position_command()
+		"attack_move":
+			MatchSignals.active_command_mode = (Enums.UnitCommandMode.ATTACK_MOVE)
+			MatchSignals.command_mode_changed.emit(Enums.UnitCommandMode.ATTACK_MOVE)
+		"move":
+			MatchSignals.active_command_mode = (Enums.UnitCommandMode.MOVE)
+			MatchSignals.command_mode_changed.emit(Enums.UnitCommandMode.MOVE)
+		"patrol":
+			MatchSignals.active_command_mode = (Enums.UnitCommandMode.PATROL)
+			MatchSignals.command_mode_changed.emit(Enums.UnitCommandMode.PATROL)
+		"reverse_move":
+			MatchSignals.active_command_mode = (Enums.UnitCommandMode.REVERSE_MOVE)
+			MatchSignals.command_mode_changed.emit(Enums.UnitCommandMode.REVERSE_MOVE)
+
+
+func _disconnect_portrait_hp() -> void:
+	if _portrait_unit and is_instance_valid(_portrait_unit) and _portrait_hp_connection:
+		if (
+			_portrait_unit.has_signal("hp_changed")
+			and _portrait_unit.hp_changed.is_connected(_portrait_hp_connection)
+		):
+			_portrait_unit.hp_changed.disconnect(_portrait_hp_connection)
+		if (
+			_portrait_unit.has_signal("resource_changed")
+			and _portrait_unit.resource_changed.is_connected(_update_unit_info_panel)
+		):
+			_portrait_unit.resource_changed.disconnect(_update_unit_info_panel)
+	_portrait_hp_connection = Callable()
+
+
+func _update_unit_info_panel() -> void:
+	if _portrait_unit == null or not is_instance_valid(_portrait_unit):
+		return
+	var scene_path: String = _portrait_unit.get_script().resource_path.replace(".gd", ".tscn")
+	var props: Dictionary = UnitConstants.get_default_properties(scene_path)
+
+	# Hitpoints
+	var hp_cur: int = (
+		_portrait_unit.hp if "hp" in _portrait_unit and _portrait_unit.hp != null else 0
+	)
+	var hp_max_val: int = (
+		_portrait_unit.hp_max if "hp_max" in _portrait_unit and _portrait_unit.hp_max != null else 0
+	)
+	hitpoints.bbcode_enabled = true
+	hitpoints.text = "[b]%d[/b] / %d" % [hp_cur, hp_max_val]
+	hitpoints.modulate.a = 1.0 if hp_max_val > 0 else 0.0
+
+	# Resources (for vines / resource units)
+	if "resource" in _portrait_unit and "resource_max" in _portrait_unit:
+		var res_cur: int = _portrait_unit.resource
+		var res_max: int = _portrait_unit.resource_max
+		hitpoints.text += "\nResources: [b]%d[/b] / %d" % [res_cur, res_max]
+
+	# Attack button
+	if props.has("attack_damage"):
+		attack_button.visible = true
+		var atk_tooltip: String = "Attack Damage: %s" % str(props["attack_damage"])
+		if props.has("attack_type"):
+			atk_tooltip += "\nType: %s" % str(props["attack_type"])
+		if props.has("attack_interval"):
+			atk_tooltip += "\nInterval: %ss" % str(props["attack_interval"])
+		if props.has("attack_range"):
+			atk_tooltip += "\nRange: %s" % str(props["attack_range"])
+		if props.has("attack_domains"):
+			var domain_names: Array = []
+			for d in props["attack_domains"]:
+				domain_names.append(Enums.MovementTypes.keys()[d])
+			atk_tooltip += "\nTargets: %s" % ", ".join(domain_names)
+		attack_button.tooltip_text = atk_tooltip
+		attack_button.modulate.a = 1.0
+	else:
+		attack_button.modulate.a = 0.0
+
+	# Armor button
+	if props.has("armor") and not props["armor"].is_empty():
+		var armor_tooltip_parts: Array = []
+		for atk_type in props["armor"]:
+			var reduction: int = int(props["armor"][atk_type] * 100)
+			var type_name: String = (
+				Enums.DamageTypes.keys()[atk_type] if atk_type is int else str(atk_type)
+			)
+			armor_tooltip_parts.append("%s: %d%% damage reduction" % [type_name, reduction])
+		armor_button.tooltip_text = "Armor\n" + "\n".join(armor_tooltip_parts)
+		armor_button.modulate.a = 1.0
+	else:
+		armor_button.modulate.a = 0.0
+
+	# Status effects (placeholder — empty for now)
+	for child in status_effects.get_children():
+		child.queue_free()
+
+	# Unit-specific abilities (invisible when empty)
+	var ability_wrapper: MarginContainer = unit_specific_ability_h_box_container.get_parent()
+	ability_wrapper.modulate.a = (
+		1.0 if unit_specific_ability_h_box_container.get_child_count() > 0 else 0.0
+	)
+
+
+func _clear_unit_info_panel() -> void:
+	hitpoints.text = ""
+	hitpoints.modulate.a = 0.0
+	attack_button.modulate.a = 0.0
+	armor_button.modulate.a = 0.0
+	for child in status_effects.get_children():
+		child.queue_free()
+	var ability_wrapper: MarginContainer = unit_specific_ability_h_box_container.get_parent()
+	ability_wrapper.modulate.a = 0.0
+
+
+func _update_ping_display() -> void:
+	if not ping_container.visible or not NetworkCommandSync.is_active:
+		return
+	_ping_tick_counter += 1
+	if _ping_tick_counter < _PING_UPDATE_TICKS:
+		return
+	_ping_tick_counter = 0
+	var rtts := NetworkCommandSync.get_peer_rtts()
+	for pid in rtts:
+		if not _ping_labels.has(pid):
+			var lbl := Label.new()
+			lbl.add_theme_font_size_override("font_size", 12)
+			lbl.add_theme_color_override("font_color", Color.WHITE)
+			lbl.add_theme_color_override("font_shadow_color", Color.BLACK)
+			lbl.add_theme_constant_override("shadow_offset_x", 1)
+			lbl.add_theme_constant_override("shadow_offset_y", 1)
+			ping_container.add_child(lbl)
+			_ping_labels[pid] = lbl
+		_ping_labels[pid].text = "Peer %d: %d ms" % [pid, rtts[pid]]
+	# Remove labels for disconnected peers
+	for pid in _ping_labels.keys():
+		if not rtts.has(pid):
+			_ping_labels[pid].queue_free()
+			_ping_labels.erase(pid)

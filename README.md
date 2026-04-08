@@ -1,74 +1,24 @@
-# Open RTS
+# Overgrowth RTS
 
-![Open RTS](./media/screenshots/screenshot_1400x650.png "Open RTS")
-
-Open Source real-time strategy game made with Godot 4.
-
-## Purposes of this project
-
-This game is not going to be a very advanced RTS that would compete with other games of this genre. Instead, it will focus on simplicity and clean design so that it can:
- - showcase Godot 4 capabilities in terms of developing RTS games
- - provide an open-source project template for creating RTS games
- - educate game creators on creating RTS game mechanics
-
-## Features
-
- - [x] 1 species
- - [x] 2 resources
- - [x] terrain and air units
- - [x] deathmatch mode (human vs AI or AI vs AI)
- - [x] runtime player switching
- - [x] basic fog of war
- - [x] units disappearing in fog of war
- - [x] minimap
- - [x] swarm movement to position
- - [ ] swarm movement to unit
- - [x] simple UI
- - [ ] polished UI
- - [ ] sounds
- - [ ] music
- - [ ] VFX
+<img width="1536" height="1024" alt="image" src="https://github.com/user-attachments/assets/52edc2cc-56af-4dbb-b00a-4bb692d25377" />
 
 ## Godot compatibility
 
 This project is compatible with Godot `4.6`.
-
-## Screenshots
-
-![Screenshot 1](./media/screenshots/screenshot_2_1920x1080.png "Screenshot 1")
-
-![Screenshot 2](./media/screenshots/screenshot_3_1920x1080.png "Screenshot 2")
-
-![Screenshot 3](./media/screenshots/screenshot_4_1920x1080.png "Screenshot 3")
 
 ## Contributing
 
 Everyone is free to fix bugs or perform refactoring just by opening PR. As for features, please refer to existing issue or create one before starting implementation.
 
 ## Credits
+ - goldman
 
-### Core contributors
+## Core contributors
  - Myrmod
 
-## FAQ
+## Installing Proprietary Assets
 
-### How do replays work with the commands?
-```
-┌─────────────┐
-│ Input / AI  │
-└──────┬──────┘
-       │  (create command)
-       ▼
-┌──────────────────┐
-│   CommandBus     │  ← stores commands by tick
-│ tick → [cmds]    │
-└──────┬───────────┘
-       │  (each tick)
-       ▼
-┌──────────────────┐
-│      Match       │
-│ _execute_command │
-└──────┬───────────┘
-       ▼
- Units / Buildings
-```
+This repository contains placeholder assets.
+If you want to use the real assets, then you have to ask. We needed to do that due to licencing issues.
+
+The assets need to be placed under `assets_override`. The path is defined in the requiring .tscn files.

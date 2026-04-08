@@ -9,7 +9,14 @@ extends Node
 @export var handle_match_end = true
 @export var show_minimap = true
 @export var allow_navigation_rebaking = true
+@export var use_grid_based_placement = true
+@export var grid_cell_size = 1.0
+@export var allow_placement_in_allied_build_radius = true
+@export var allow_diagonal_wall_connections = false
 
 @export_group("Match/Debug")
 @export var frame_incrementer = false
 @export var god_mode = false
+@export var debug_save_json = false
+@export var debug_disconnect = false
+@export var debug_terrain_layers = false

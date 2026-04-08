@@ -19,6 +19,7 @@ func _ready():
 	_update_circle_params()
 	if Engine.is_editor_hint():
 		return
+	_set_visual_layer(_circle, 2)
 	_unit.input_event.connect(_on_input_event)
 	_circle.hide()
 
@@ -34,21 +35,22 @@ func animate():
 	_tween = get_tree().create_tween()
 	(
 		_tween
-		.tween_property(
+		. tween_property(
 			_circle, "radius", _circle.radius * RADIUS_DEVIATION_FACTOR, ANIMATION_DURATION_S
 		)
-		.set_ease(Tween.EASE_IN)
-		.set_trans(Tween.TRANS_LINEAR)
+		. set_ease(Tween.EASE_IN)
+		. set_trans(Tween.TRANS_LINEAR)
 	)
 	_tween.tween_callback(_circle.hide).set_delay(ANIMATION_DURATION_S)
 
 
 func _update_circle_color():
-	if _unit.is_in_group("controlled_units"):
-		_circle.color = MatchConstants.OWNED_PLAYER_CIRCLE_COLOR
-	elif _unit.is_in_group("adversary_units"):
-		_circle.color = MatchConstants.ADVERSARY_PLAYER_CIRCLE_COLOR
-	elif _unit.is_in_group("resource_units"):
+	if _unit.is_in_group("controlled_units") or _unit.is_in_group("adversary_units"):
+		if "player" in _unit and _unit.player != null:
+			_circle.color = _unit.player.color
+		else:
+			_circle.color = MatchConstants.DEFAULT_CIRCLE_COLOR
+	elif _unit.is_in_group("resource_units") or _unit.is_in_group("forest_vines"):
 		_circle.color = MatchConstants.RESOURCE_CIRCLE_COLOR
 	else:
 		_circle.color = MatchConstants.DEFAULT_CIRCLE_COLOR
@@ -77,4 +79,12 @@ func _on_input_event(_camera, event, _click_position, _click_normal, _shape_idx)
 		and event.button_index == MOUSE_BUTTON_RIGHT
 		and event.pressed
 	):
+		MatchSignals.unit_targeted_this_click = true
 		MatchSignals.unit_targeted.emit(_unit)
+
+
+func _set_visual_layer(node: Node, layer: int) -> void:
+	for child in node.get_children():
+		if child is VisualInstance3D:
+			child.layers = layer
+		_set_visual_layer(child, layer)

@@ -1,7 +1,5 @@
 extends Node
 
-const MatchUtils = preload("res://source/match/MatchUtils.gd")
-
 
 class Set:
 	extends "res://source/utils/Set.gd"
@@ -80,7 +78,10 @@ class RouletteWheel:
 		assert(false, "unexpected flow")
 		return -1
 
-func _detect_potential_recursion(value, visited: Dictionary, path: String, command_context: Dictionary = {}) -> bool:
+
+func _detect_potential_recursion(
+	value, visited: Dictionary, path: String, command_context: Dictionary = {}
+) -> bool:
 	# Only track actual objects (Nodes, Resources) for circular reference detection
 	# Arrays and dictionaries are data structures, not circular references
 	if typeof(value) == TYPE_OBJECT:
@@ -97,62 +98,118 @@ func _detect_potential_recursion(value, visited: Dictionary, path: String, comma
 
 		TYPE_ARRAY:
 			for i in value.size():
-				if not _detect_potential_recursion(value[i], visited, path + "[" + str(i) + "]", command_context):
+				if not _detect_potential_recursion(
+					value[i], visited, path + "[" + str(i) + "]", command_context
+				):
 					return false
 			return true
 
 		TYPE_DICTIONARY:
 			var new_context = command_context.duplicate()
-			
+
 			# If this is a command dict, extract tick and type
 			if "tick" in value and "type" in value:
 				new_context["tick"] = value.get("tick")
 				new_context["type"] = value.get("type")
-			
+
 			for k in value.keys():
-				if not _detect_potential_recursion(value[k], visited, path + "." + str(k), new_context):
+				if not _detect_potential_recursion(
+					value[k], visited, path + "." + str(k), new_context
+				):
 					return false
 			return true
 
 		TYPE_OBJECT:
-			# ❌ Nodes are forbidden
+			# Nodes are forbidden
 			if value is Node:
 				var context_str = _format_command_context(command_context)
 				push_error("Replay contains Node at: " + path + context_str)
 				return false
 
-			# ⚠️ Resources — validate their properties
+			# Resources — validate their properties
 			if value is Resource:
 				for prop in value.get_property_list():
 					if prop.usage & PROPERTY_USAGE_STORAGE == 0:
 						continue
 					var prop_value = value.get(prop.name)
-					if not _detect_potential_recursion(prop_value, visited, path + "." + prop.name, command_context):
+					if not _detect_potential_recursion(
+						prop_value, visited, path + "." + prop.name, command_context
+					):
 						return false
 				return true
 
 			# ❌ Other objects forbidden
 			var context_str = _format_command_context(command_context)
-			push_error("Replay contains unsupported Object type at: " + path + context_str + " -> " + str(value))
+			push_error(
+				(
+					"Replay contains unsupported Object type at: "
+					+ path
+					+ context_str
+					+ " -> "
+					+ str(value)
+				)
+			)
 			return false
 
 		_:
 			var context_str = _format_command_context(command_context)
 			print("unsupported type:", value, typeof(value))
-			push_error("Replay contains unsupported type at: " + path + context_str + " -> " + value)
+			push_error(
+				"Replay contains unsupported type at: " + path + context_str + " -> " + value
+			)
 			return false
+
 
 func _format_command_context(context: Dictionary) -> String:
 	if context.is_empty():
 		return ""
-	
+
 	var parts = []
 	if "tick" in context:
 		parts.append("tick=" + str(context["tick"]))
 	if "type" in context:
 		parts.append("type=" + str(context["type"]))
-	
+
 	if parts.is_empty():
 		return ""
-	
+
 	return " (Command: " + ", ".join(parts) + ")"
+
+
+class FileIO:
+	## Save a Resource to disk, creating directories as needed.
+	## Returns OK on success, or the error code on failure.
+	static func save_resource(resource: Resource, path: String) -> Error:
+		var dir_path = path.get_base_dir()
+		if not DirAccess.dir_exists_absolute(dir_path):
+			var dir_err = DirAccess.make_dir_recursive_absolute(dir_path)
+			if dir_err != OK:
+				push_error(
+					"FileIO: failed to create directory '%s' (error %s)" % [dir_path, dir_err]
+				)
+				return dir_err
+		var err = ResourceSaver.save(resource, path)
+		if err != OK:
+			push_error("FileIO: failed to save resource to '%s' (error %s)" % [path, err])
+		return err
+
+	## Load a Resource from disk. Returns null on failure.
+	static func load_resource(path: String) -> Resource:
+		if not ResourceLoader.exists(path):
+			push_error("FileIO: resource not found at '%s'" % path)
+			return null
+		var resource = ResourceLoader.load(path)
+		if resource == null:
+			push_error("FileIO: failed to load resource from '%s'" % path)
+		return resource
+
+
+func seconds_to_time(seconds: int) -> String:
+	var hours = int(seconds / 3600)
+	var minutes = int((seconds % 3600) / 60)
+	var remaining_seconds = seconds % 60
+
+	if hours > 0:
+		return "%02d:%02d:%02d" % [hours, minutes, remaining_seconds]
+
+	return "%02d:%02d" % [minutes, remaining_seconds]

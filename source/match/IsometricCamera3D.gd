@@ -62,6 +62,28 @@ func get_ray_intersection_with_plane(mouse_pos: Vector2, plane: Plane) -> Varian
 	return plane.intersects_ray(project_ray_origin(mouse_pos), project_ray_normal(mouse_pos))
 
 
+func get_terrain_ray_intersection(mouse_pos: Vector2, map) -> Variant:
+	"""Iteratively refine a ray-plane intersection so the click position
+	accounts for terrain height. Without this, clicks on elevated ground
+	project onto y=0 and land at the wrong XZ coordinate."""
+	var point = get_ray_intersection(mouse_pos)
+	if point == null or map == null:
+		return point
+	var ray_origin: Vector3 = project_ray_origin(mouse_pos)
+	var ray_dir: Vector3 = project_ray_normal(mouse_pos)
+	for _i in range(3):
+		var h: float = map.get_height_at_world(point)
+		var height_plane := Plane(Vector3.UP, h)
+		var refined = height_plane.intersects_ray(ray_origin, ray_dir)
+		if refined == null:
+			return point
+		point = refined
+		var new_h: float = map.get_height_at_world(point)
+		if absf(new_h - h) < 0.01:
+			break
+	return point
+
+
 func _try_handling_movement(delta: float) -> bool:
 	if _is_rotating():
 		return false
@@ -92,6 +114,13 @@ func _calculate_screen_move_vector() -> Vector2:
 	var x_axis = Input.get_axis("move_map_left", "move_map_right")
 	var y_axis = Input.get_axis("move_map_up", "move_map_down")
 	var move_vector = Vector2(x_axis, y_axis)
+	if Globals.options != null and not Globals.options.edge_scroll_enabled:
+		return move_vector
+
+	# Only edge-scroll when the mouse is inside the window
+	var mouse_inside = Rect2(Vector2.ZERO, viewport_size).has_point(mouse_pos)
+	if not mouse_inside:
+		return move_vector
 
 	if mouse_pos.x <= screen_margin_for_movement:
 		move_vector.x = -1

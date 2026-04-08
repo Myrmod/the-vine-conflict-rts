@@ -1,6 +1,6 @@
-extends Node
-
 class_name PlayerData
 
+extends Node
+
 var id: int
-var credits := 1000
+var credits := 10000

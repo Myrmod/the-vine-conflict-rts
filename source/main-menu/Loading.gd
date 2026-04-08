@@ -3,6 +3,7 @@ extends Control
 var match_settings = null
 var map_path = null
 var replay_resource = null
+var save_resource = null  ## SaveGameResource for loading from save
 
 @onready var _label = find_child("Label")
 @onready var _progress_bar = find_child("ProgressBar")
@@ -18,7 +19,7 @@ func _ready():
 
 	_label.text = tr("LOADING_STEP_LOADING_MAP")
 	await get_tree().physics_frame
-	var map = load(map_path).instantiate()
+	var map = _load_map(map_path)
 	_progress_bar.value = 0.4
 
 	_label.text = tr("LOADING_STEP_LOADING_MATCH")
@@ -34,19 +35,75 @@ func _ready():
 		match_settings.players = ReplayRecorder._restore_players(replay_resource.players_data)
 	a_match.settings = match_settings
 	a_match.map = map
+	a_match.map_source_path = map_path
 	a_match.is_replay_mode = !!replay_resource
+	if save_resource != null:
+		a_match.save_resource = save_resource
+
+	# ── DETERMINISTIC SEED ──────────────────────────────────────────
+	# Generate a match seed (or restore from replay/save) so all RNG
+	# reproduces identically. This is essential for replay determinism.
+	if save_resource != null:
+		Match.rng.seed = save_resource.rng_seed
+		Match.rng.state = save_resource.rng_state
+	elif replay_resource != null and replay_resource.get("match_seed") != null:
+		Match.rng.seed = replay_resource.match_seed
+	else:
+		Match.rng.seed = randi()
+
+	# ── COMMAND BUS LIFECYCLE ───────────────────────────────────────
+	# Clear before loading: ensures no stale commands from previous match
+	CommandBus.clear()
+	EntityRegistry.reset()
+	PlayerManager.reset()
+
+	# Load replay commands BEFORE adding Match to the tree, so they're available
+	# when Match._ready() starts the tick timer
+	if replay_resource != null:
+		CommandBus.load_from_replay_array(replay_resource.commands)
+
+	# Restore pending commands from save
+	if save_resource != null:
+		for cmd in save_resource.pending_commands:
+			if not CommandBus.commands.has(cmd.get("tick", 0)):
+				CommandBus.commands[cmd.get("tick", 0)] = []
+			CommandBus.commands[cmd.get("tick", 0)].append(cmd)
+
 	_progress_bar.value = 0.9
 
 	_label.text = tr("LOADING_STEP_STARTING_MATCH")
 	await get_tree().physics_frame
+
+	# Initialize TerrainSystem (mesh, splatmaps, heights) BEFORE adding the
+	# match to the tree.  Match._ready() bakes the navmesh from the
+	# terrain_navigation_input group, so the TerrainMesh must already have
+	# its geometry at that point.
+	MapSceneBuilder.initialize_terrain_from_meta(map)
+
 	get_parent().add_child(a_match)
+
 	get_tree().current_scene = a_match
 	queue_free()
 
 
 func _preload_scenes():
-	var scene_paths = []
-	scene_paths += UnitConstants.PROJECTILES.values()
-	scene_paths += UnitConstants.CONSTRUCTION_COSTS.keys()
-	for scene_path in scene_paths:
+	for scene_id in UnitConstants.DEFAULT_PROPERTIES.keys():
+		var scene_path: String = UnitConstants.DEFAULT_PROPERTIES[scene_id].get("scene", "")
+		if scene_path.is_empty():
+			continue
 		Globals.cache[scene_path] = load(scene_path)
+
+
+func _load_map(path: String) -> Node3D:
+	"""Load a map from either a .tscn scene or a .tres MapResource."""
+	var res = load(path)
+	if res == null:
+		push_error("Loading: failed to load map at %s" % path)
+		return null
+
+	if res is MapResource:
+		# Editor-created map — build scene from resource data
+		return MapSceneBuilder.build(res)
+	else:
+		# Traditional scene-based map (BigArena, PlainAndSimple, etc.)
+		return res.instantiate()

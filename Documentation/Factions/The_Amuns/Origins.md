@@ -1,5 +1,9 @@
-# ALien design:
+# Alien design:
+
+![The Amuns](./The_Amuns_art.png)
+
 ## Origins:
+
 - The Amuns were mistaken for gods by early humanity. In truth, they were architects who were believed to be gods.
 
 - Long before recorded history, they governed Earth in silence. When their work was complete, they constructed pyramids and temples — not monuments, but anchors. These structures stabilized a hidden dimensional corridor, a gateway network only The Amuns could access.

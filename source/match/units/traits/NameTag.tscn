@@ -1,0 +1,13 @@
+[gd_scene format=3 uid="uid://dde6yvuax0g4"]
+
+[ext_resource type="Script" uid="uid://chva3x5oy7vow" path="res://source/match/units/traits/NameTag.gd" id="1_nametag"]
+
+[node name="NameTag" type="Node3D"]
+script = ExtResource("1_nametag")
+
+[node name="Label3D" type="Label3D" parent="."]
+billboard = 1
+no_depth_test = true
+render_priority = 2
+font_size = 32
+text = ""

@@ -1,0 +1,58 @@
+[gd_scene format=3 uid="uid://bxe2bwqo30j5o"]
+
+[ext_resource type="Script" uid="uid://dfswsd3q4ogqh" path="res://source/match/TerrainSystem.gd" id="1_cn2ly"]
+[ext_resource type="Shader" uid="uid://c6n2inphyhccf" path="res://source/shaders/3d/TerrainSystemTerrainMesh.gdshader" id="2_tlr23"]
+[ext_resource type="Material" uid="uid://ct4tfb0wwk3vs" path="res://source/shaders/3d/water/water_material.tres" id="3_water"]
+[ext_resource type="Script" path="res://source/match/CliffPlacer.gd" id="4_cliff"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_id0cr"]
+render_priority = 0
+shader = ExtResource("2_tlr23")
+shader_parameter/albedo_tex = null
+shader_parameter/normal_tex = null
+shader_parameter/roughness_tex = null
+shader_parameter/ao_tex = null
+shader_parameter/height_tex = null
+shader_parameter/splat_tex = null
+shader_parameter/terrain_count = 1
+shader_parameter/splat_count = 1
+shader_parameter/uv_scale = 1.0
+shader_parameter/height_strength = 0.1
+shader_parameter/height_blend_sharpness = 4.0
+shader_parameter/normal_map_depth = 2.0
+shader_parameter/shininess = 80.000003705
+shader_parameter/specular_intensity = 0.10000000475
+shader_parameter/specular_color = Color(1, 0, 1, 1)
+shader_parameter/fresnel_power = 10.0
+shader_parameter/fresnel_strength = 0.2170000103075
+shader_parameter/ambient_fill = 0.08
+shader_parameter/ambient_tint = Color(0.4, 0.45, 0.55, 1)
+shader_parameter/normal_layer_priority = 8.0
+shader_parameter/terrain_brightness = 0.20000000298
+shader_parameter/grid_height_scale = 1.0
+shader_parameter/layer_mask_enabled = false
+shader_parameter/hole_mask_enabled = false
+shader_parameter/alpha_mask_enabled = false
+shader_parameter/blend_sharpness = 8.0
+shader_parameter/height_edge_sharpness = 16.0
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_gs6k5"]
+material = ExtResource("3_water")
+size = Vector2(10, 10)
+
+[node name="TerrainSystem" type="Node3D" unique_id=1246279829]
+script = ExtResource("1_cn2ly")
+
+[node name="TerrainMesh" type="MeshInstance3D" parent="." unique_id=1188752785]
+material_override = SubResource("ShaderMaterial_id0cr")
+
+[node name="HighGroundMesh" type="MeshInstance3D" parent="."]
+
+[node name="WaterMesh" type="MeshInstance3D" parent="." unique_id=1955076504]
+cast_shadow = 0
+mesh = SubResource("PlaneMesh_gs6k5")
+
+[node name="SlopeMeshes" type="Node3D" parent="."]
+
+[node name="CliffPlacer" type="Node3D" parent="."]
+script = ExtResource("4_cliff")

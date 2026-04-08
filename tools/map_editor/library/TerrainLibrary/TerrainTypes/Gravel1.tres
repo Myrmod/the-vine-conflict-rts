@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="TerrainType" format=3 uid="uid://cu5nppktjell7"]
+
+[ext_resource type="Texture2D" uid="uid://hmexsceji7hk" path="res://source/textures/Gravel035_1K-PNG/Gravel035_1K-PNG_Color.png" id="1_qisn7"]
+[ext_resource type="Script" uid="uid://s622ule41hbv" path="res://tools/map_editor/library/TerrainLibrary/TerrainType.gd" id="1_xce2c"]
+[ext_resource type="Texture2D" uid="uid://buy2ueeeowy28" path="res://source/textures/Gravel035_1K-PNG/Gravel035_1K-PNG_AmbientOcclusion.png" id="2_2e1hk"]
+[ext_resource type="Texture2D" uid="uid://hsgcj4olkdl6" path="res://source/textures/Gravel035_1K-PNG/Gravel035_1K-PNG_Displacement.png" id="3_elrk4"]
+[ext_resource type="Texture2D" uid="uid://du6fnf46t70o7" path="res://source/textures/Gravel035_1K-PNG/Gravel035_1K-PNG_NormalDX.png" id="4_ukrvk"]
+[ext_resource type="Texture2D" uid="uid://ckmgp8us4qum8" path="res://source/textures/Gravel035_1K-PNG/Gravel035_1K-PNG_NormalGL.png" id="5_grfqu"]
+[ext_resource type="Texture2D" uid="uid://k3yj86wvriy2" path="res://source/textures/Gravel035_1K-PNG/Gravel035.png" id="6_2e1hk"]
+[ext_resource type="Texture2D" uid="uid://l5c641shalfs" path="res://source/textures/Gravel035_1K-PNG/Gravel035_1K-PNG_Roughness.png" id="6_k762e"]
+
+[resource]
+script = ExtResource("1_xce2c")
+name = "Gravel1"
+preview = ExtResource("6_2e1hk")
+ao = ExtResource("2_2e1hk")
+albedo = ExtResource("1_qisn7")
+displacement = ExtResource("3_elrk4")
+normal_dx = ExtResource("4_ukrvk")
+normal_gl = ExtResource("5_grfqu")
+roughness = ExtResource("6_k762e")
+metadata/_custom_type_script = "uid://s622ule41hbv"

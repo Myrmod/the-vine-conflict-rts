@@ -1,7 +1,49 @@
-[gd_scene load_steps=6 format=3 uid="uid://b7c1crf36x1li"]
+[gd_scene format=3 uid="uid://b7c1crf36x1li"]
 
-[ext_resource type="Script" path="res://source/match/Map.gd" id="1_1svvv"]
-[ext_resource type="Material" uid="uid://co8vfcoqqs5i8" path="res://source/match/resources/materials/terrain.material.tres" id="1_81yiw"]
+[ext_resource type="Script" uid="uid://cmfdk5aew0thj" path="res://source/match/Map.gd" id="1_1svvv"]
+[ext_resource type="PackedScene" uid="uid://bxe2bwqo30j5o" path="res://source/match/TerrainSystem.tscn" id="4_usfks"]
+
+[sub_resource type="PhysicalSkyMaterial" id="ProceduralSkyMaterial_map"]
+ground_color = Color(0, 0, 0, 1)
+
+[sub_resource type="Sky" id="Sky_map"]
+sky_material = SubResource("ProceduralSkyMaterial_map")
+radiance_size = 2
+
+[sub_resource type="Environment" id="Environment_map"]
+background_mode = 2
+background_intensity = 100000.0
+sky = SubResource("Sky_map")
+ambient_light_source = 2
+ambient_light_color = Color(1, 1, 1, 1)
+ambient_light_sky_contribution = 0.5
+ambient_light_energy = 0.5
+reflected_light_source = 2
+tonemap_mode = 3
+tonemap_white = 8.0
+ssao_enabled = true
+ssao_radius = 0.5
+ssao_intensity = 0.7
+ssao_detail = 2.0
+sdfgi_enabled = true
+sdfgi_bounce_feedback = 0.9
+glow_enabled = true
+glow_normalized = true
+glow_bloom = 0.2
+volumetric_fog_enabled = true
+volumetric_fog_density = 0.01
+volumetric_fog_gi_inject = 1.14
+volumetric_fog_anisotropy = 0.7
+volumetric_fog_sky_affect = 0.295
+adjustment_saturation = 1.17
+
+[sub_resource type="CameraAttributesPractical" id="CameraAttributesPractical_map"]
+exposure_multiplier = 3.069
+auto_exposure_scale = 0.22
+auto_exposure_speed = 0.8
+dof_blur_far_distance = 1.44
+dof_blur_near_distance = 0.01
+auto_exposure_min_sensitivity = 8.01
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ve5fg"]
 shading_mode = 0
@@ -10,29 +52,42 @@ albedo_color = Color(0, 0, 0, 1)
 [sub_resource type="PlaneMesh" id="PlaneMesh_0fj4w"]
 size = Vector2(1000, 1000)
 
-[sub_resource type="PlaneMesh" id="PlaneMesh_ypksr"]
-resource_local_to_scene = true
-material = ExtResource("1_81yiw")
-size = Vector2(54, 54)
-center_offset = Vector3(25, 0, 25)
-
-[node name="Map" type="Node3D"]
+[node name="Map" type="Node3D" unique_id=723060403]
 script = ExtResource("1_1svvv")
 
-[node name="Geometry" type="Node3D" parent="."]
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=313200187]
+transform = Transform3D(0.38590613, 0.525182, -0.75845915, 0, 0.822144, 0.5692795, 0.9225382, -0.21968842, 0.31727034, 0, 0, 0)
+light_color = Color(0.9999998, 0.91628236, 0.7541741, 1)
+light_specular = 0.5
+shadow_enabled = true
+shadow_bias = 0.05
+shadow_normal_bias = 1.0
+shadow_blur = 0.7
+directional_shadow_split_1 = 0.45
+directional_shadow_split_2 = 0.5
+directional_shadow_split_3 = 0.55
+directional_shadow_blend_splits = true
+directional_shadow_pancake_size = 100.0
 
-[node name="BlackBackgroundFixingAntiAliasingBug" type="MeshInstance3D" parent="Geometry"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.1, 0)
+[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=1790756690]
+environment = SubResource("Environment_map")
+camera_attributes = SubResource("CameraAttributesPractical_map")
+
+[node name="ReflectionProbe" type="ReflectionProbe" parent="." unique_id=1369107965]
+size = Vector3(10000, 10000, 1000)
+
+[node name="Geometry" type="Node3D" parent="." unique_id=1147796471]
+
+[node name="BlackBackgroundFixingAntiAliasingBug" type="MeshInstance3D" parent="Geometry" unique_id=51787617]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -2, 0)
 material_override = SubResource("StandardMaterial3D_ve5fg")
 cast_shadow = 0
 mesh = SubResource("PlaneMesh_0fj4w")
 
-[node name="Terrain" type="MeshInstance3D" parent="Geometry" groups=["terrain_navigation_input"]]
-cast_shadow = 0
-mesh = SubResource("PlaneMesh_ypksr")
+[node name="TerrainSystem" parent="Geometry" unique_id=1246279829 instance=ExtResource("4_usfks")]
 
-[node name="SpawnPoints" type="Node3D" parent="."]
+[node name="SpawnPoints" type="Node3D" parent="." unique_id=1918326678]
 
-[node name="Resources" type="Node3D" parent="."]
+[node name="Resources" type="Node3D" parent="." unique_id=1136795596]
 
-[node name="Decorations" type="Node3D" parent="."]
+[node name="Decorations" type="Node3D" parent="." unique_id=434785225]

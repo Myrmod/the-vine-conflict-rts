@@ -8,58 +8,23 @@
 [ext_resource type="Script" uid="uid://cdr8087xuexpg" path="res://source/match/Terrain.gd" id="7_ccpu4"]
 [ext_resource type="Script" uid="uid://bgsj8b6lrs8gr" path="res://source/match/Navigation.gd" id="10_1wfp1"]
 [ext_resource type="PackedScene" uid="uid://b6n7cwv706x5n" path="res://source/match/debug/GodModeHud.tscn" id="10_p6gno"]
-[ext_resource type="Shader" uid="uid://c3ghbxw4fymi2" path="res://source/shaders/3d/fog.gdshader" id="10_weh6c"]
 [ext_resource type="Shader" uid="uid://c4hdqt5bbe6oh" path="res://source/shaders/2d/blurr.gdshader" id="12_pow7t"]
-[ext_resource type="PackedScene" uid="uid://cwefaix6rye6k" path="res://source/match/hud/ResourcesBar.tscn" id="12_r13sk"]
-[ext_resource type="PackedScene" uid="uid://cwcedr6jj7yty" path="res://source/match/hud/UnitMenus.tscn" id="13_6cypl"]
 [ext_resource type="Shader" uid="uid://doavjq8ju7xxp" path="res://source/shaders/3d/simple_fog_of_war.gdshader" id="13_jo8b7"]
-[ext_resource type="PackedScene" uid="uid://nnsih72ih7qr" path="res://source/match/hud/ProductionQueue.tscn" id="13_qv3xn"]
 [ext_resource type="PackedScene" uid="uid://dk7sa3fkyxks5" path="res://source/generic-scenes-and-nodes/control/RectangularSelection2D.tscn" id="16_ccb0o"]
 [ext_resource type="Script" uid="uid://cbiijxuc1qhtx" path="res://source/match/AirNavigation.gd" id="16_ravsv"]
-[ext_resource type="Script" uid="uid://cdxensngpqh1y" path="res://source/match/hud/Resources.gd" id="16_vjwpn"]
-[ext_resource type="Script" uid="uid://b1hpe60t5y74n" path="res://source/match/hud/Minimap.gd" id="17_0bfte"]
 [ext_resource type="Script" uid="uid://ccujxvxsaqaoh" path="res://source/match/TerrainNavigation.gd" id="17_6fprk"]
-[ext_resource type="Shader" uid="uid://pxfhc3ku5i4l" path="res://source/shaders/2d/white_transparent.gdshader" id="19_m1b2v"]
 [ext_resource type="PackedScene" uid="uid://c0uxy26e4qs4w" path="res://source/match/handlers/MouseClickAnimationsHandler.tscn" id="22_438pb"]
 [ext_resource type="PackedScene" uid="uid://1rby73ckmk7b" path="res://source/match/Menu.tscn" id="22_ofmlu"]
 [ext_resource type="PackedScene" uid="uid://b83l4dny3gly0" path="res://source/match/debug/FrameIncrementer.tscn" id="23_exhtd"]
 [ext_resource type="PackedScene" uid="uid://c3xjdp2yrr1fu" path="res://source/match/debug/DiagnosticHud.tscn" id="23_pocq6"]
+[ext_resource type="PackedScene" uid="uid://dmeg6pegd188o" path="res://source/match/hud/HUD.tscn" id="24_3l8e4"]
 [ext_resource type="PackedScene" uid="uid://bocb7hjilvri5" path="res://source/match/handlers/ArealUnitSelectionHandler.tscn" id="24_aug7m"]
 [ext_resource type="PackedScene" uid="uid://pi813oou7xim" path="res://source/match/handlers/DoubleClickUnitSelectionHandler.tscn" id="25_ldkhw"]
 [ext_resource type="PackedScene" uid="uid://yn470qvc3eak" path="res://source/match/handlers/MatchEndHandler.tscn" id="26_4d7im"]
 [ext_resource type="PackedScene" uid="uid://ck6vrgdyg7hja" path="res://source/match/handlers/UnitGroupSelectionHandler.tscn" id="27_j2drv"]
 [ext_resource type="PackedScene" uid="uid://b8p6lcwubx1tp" path="res://source/match/handlers/UnitVisibilityHandler.tscn" id="32_fci1c"]
-
-[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_ysb0j"]
-sun_angle_max = 200.0
-
-[sub_resource type="Sky" id="Sky_kunr4"]
-sky_material = SubResource("ProceduralSkyMaterial_ysb0j")
-
-[sub_resource type="Environment" id="Environment_qxcnu"]
-background_mode = 2
-background_energy_multiplier = 1.2
-sky = SubResource("Sky_kunr4")
-ambient_light_color = Color(1, 1, 1, 1)
-tonemap_mode = 3
-tonemap_exposure = 0.9
-fog_light_color = Color(0.960784, 0.745098, 0.654902, 1)
-fog_density = 0.0016
-fog_height = 0.25
-fog_height_density = 1.2
-
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_qw0ps"]
-render_priority = 0
-shader = ExtResource("10_weh6c")
-shader_parameter/color = Color(0.85, 0.6596, 0.578, 1)
-shader_parameter/max_density_height = -0.5
-shader_parameter/min_density_height = 0.4
-shader_parameter/max_height = 9999.0
-shader_parameter/min_height = -0.05
-
-[sub_resource type="QuadMesh" id="QuadMesh_pv7fp"]
-flip_faces = true
-size = Vector2(2, 2)
+[ext_resource type="PackedScene" path="res://source/match/hud/MatchOverlay.tscn" id="33_overlay"]
+[ext_resource type="Script" path="res://source/match/GlobalBuildGrid.gd" id="33_gbg"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_c3tkw"]
 shader = ExtResource("12_pow7t")
@@ -67,15 +32,11 @@ shader_parameter/blurr_factor = 1.0
 shader_parameter/remove_alpha = false
 shader_parameter/overlay = true
 
-[sub_resource type="ViewportTexture" id="ViewportTexture_7yqgo"]
-viewport_path = NodePath("FogOfWar/CombinedViewport")
-
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_5rcuq"]
 resource_local_to_scene = true
 render_priority = 2
 shader = ExtResource("13_jo8b7")
 shader_parameter/color = Color(0, 0, 0, 1)
-shader_parameter/world_visibility_texture = SubResource("ViewportTexture_7yqgo")
 shader_parameter/texture_units_per_world_unit = 2
 shader_parameter/outer_margin_for_fade_out = 2.0
 shader_parameter/debug_texture_view = false
@@ -106,17 +67,6 @@ agent_radius = 0.9
 agent_max_climb = 0.0
 edge_max_error = 1.0
 
-[sub_resource type="ViewportTexture" id="ViewportTexture_vu2gm"]
-viewport_path = NodePath("FogOfWar/CombinedViewport")
-
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_3nec5"]
-resource_local_to_scene = true
-shader = ExtResource("19_m1b2v")
-shader_parameter/reference_texture = SubResource("ViewportTexture_vu2gm")
-
-[sub_resource type="ViewportTexture" id="ViewportTexture_8q44e"]
-viewport_path = NodePath("HUD/MarginContainer/Minimap/MarginContainer/MinimapViewport")
-
 [node name="Match" type="Node3D" unique_id=2081765841]
 script = ExtResource("1_1555u")
 
@@ -131,33 +81,17 @@ script = ExtResource("1_qb2ry")
 size_max = 60
 bounding_planes = Array[Plane]([Plane(1, 0, 0, 0), Plane(-1, 0, 0, -50), Plane(0, 0, 1, 0), Plane(0, 0, -1, -50)])
 
-[node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=1634988069]
-transform = Transform3D(0.512043, 0.673162, -0.533541, 0, 0.621148, 0.783694, 0.85896, -0.401285, 0.318054, 0, 38.7614, 0)
-shadow_enabled = true
-shadow_bias = 0.3
-shadow_blur = 0.05
-directional_shadow_split_1 = 0.45
-directional_shadow_split_2 = 0.5
-directional_shadow_split_3 = 0.55
-directional_shadow_blend_splits = true
-directional_shadow_pancake_size = 100.0
-
-[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=1356630457]
-environment = SubResource("Environment_qxcnu")
-
 [node name="RectangularSelection3D" parent="." unique_id=1823991713 instance=ExtResource("5_yi0pu")]
 
 [node name="Terrain" type="StaticBody3D" parent="." unique_id=1940924122]
+collision_layer = 2
 collision_mask = 0
 script = ExtResource("7_ccpu4")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Terrain" unique_id=647494412]
 
-[node name="Fog" type="MeshInstance3D" parent="." unique_id=1765705050]
-material_override = SubResource("ShaderMaterial_qw0ps")
-cast_shadow = 0
-extra_cull_margin = 16384.0
-mesh = SubResource("QuadMesh_pv7fp")
+[node name="GlobalBuildGrid" type="Node3D" parent="." unique_id=408804729]
+script = ExtResource("33_gbg")
 
 [node name="FogOfWar" type="Node3D" parent="." unique_id=722058329]
 script = ExtResource("5_eb52t")
@@ -267,144 +201,6 @@ navigation_mesh = SubResource("NavigationMesh_exfwj")
 
 [node name="RectangularSelection2D" parent="UI" unique_id=1446899849 instance=ExtResource("16_ccb0o")]
 
-[node name="HUD" type="CanvasLayer" parent="." unique_id=692461479]
-
-[node name="MarginContainer" type="MarginContainer" parent="HUD" unique_id=1855559512]
-anchors_preset = 2
-anchor_top = 1.0
-anchor_bottom = 1.0
-offset_top = -215.0
-offset_right = 215.0
-grow_vertical = 0
-theme_override_constants/margin_left = 5
-theme_override_constants/margin_bottom = 5
-
-[node name="Minimap" type="PanelContainer" parent="HUD/MarginContainer" unique_id=345912243]
-layout_mode = 2
-script = ExtResource("17_0bfte")
-
-[node name="MarginContainer" type="MarginContainer" parent="HUD/MarginContainer/Minimap" unique_id=600926205]
-layout_mode = 2
-theme_override_constants/margin_left = 5
-theme_override_constants/margin_top = 5
-theme_override_constants/margin_right = 5
-theme_override_constants/margin_bottom = 5
-
-[node name="MinimapViewport" type="SubViewport" parent="HUD/MarginContainer/Minimap/MarginContainer" unique_id=1339750257]
-disable_3d = true
-size = Vector2i(100, 100)
-
-[node name="Background" type="ColorRect" parent="HUD/MarginContainer/Minimap/MarginContainer/MinimapViewport" unique_id=1932084698]
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-color = Color(0.351562, 0.351562, 0.351562, 1)
-
-[node name="EditorOnlyDummyUnit" type="ColorRect" parent="HUD/MarginContainer/Minimap/MarginContainer/MinimapViewport" unique_id=2113758731]
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -1.0
-offset_top = -1.0
-offset_right = 1.0
-offset_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-color = Color(1, 0, 0, 1)
-
-[node name="EditorOnlyDummyUnit2" type="ColorRect" parent="HUD/MarginContainer/Minimap/MarginContainer/MinimapViewport" unique_id=2126059176]
-anchors_preset = -1
-anchor_left = 0.25
-anchor_right = 0.25
-offset_left = -1.0
-offset_right = 1.0
-offset_bottom = 2.0
-grow_horizontal = 2
-color = Color(1, 0, 0, 1)
-
-[node name="FogOfWarMask" type="ColorRect" parent="HUD/MarginContainer/Minimap/MarginContainer/MinimapViewport" unique_id=109213414]
-material = SubResource("ShaderMaterial_3nec5")
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-color = Color(0, 0, 0, 1)
-
-[node name="CameraIndicator" type="Line2D" parent="HUD/MarginContainer/Minimap/MarginContainer/MinimapViewport" unique_id=1100799162]
-points = PackedVector2Array(5, 5, 5, 30, 30, 30, 30, 5, 5, 5)
-width = 1.0
-begin_cap_mode = 1
-end_cap_mode = 1
-antialiased = true
-
-[node name="MinimapTextureRect" type="TextureRect" parent="HUD/MarginContainer/Minimap/MarginContainer" unique_id=50014525]
-layout_mode = 2
-texture = SubResource("ViewportTexture_8q44e")
-stretch_mode = 5
-
-[node name="MarginContainer2" type="MarginContainer" parent="HUD" unique_id=531979622]
-offset_right = 40.0
-offset_bottom = 11.0
-theme_override_constants/margin_left = 5
-theme_override_constants/margin_top = 5
-
-[node name="Resources" type="VBoxContainer" parent="HUD/MarginContainer2" unique_id=444458537]
-layout_mode = 2
-script = ExtResource("16_vjwpn")
-
-[node name="ResourcesBar" parent="HUD/MarginContainer2/Resources" unique_id=694123678 instance=ExtResource("12_r13sk")]
-layout_mode = 2
-
-[node name="ResourcesBar2" parent="HUD/MarginContainer2/Resources" unique_id=1656568976 instance=ExtResource("12_r13sk")]
-layout_mode = 2
-
-[node name="ResourcesBar3" parent="HUD/MarginContainer2/Resources" unique_id=1942896685 instance=ExtResource("12_r13sk")]
-layout_mode = 2
-
-[node name="ResourcesBar4" parent="HUD/MarginContainer2/Resources" unique_id=2114536728 instance=ExtResource("12_r13sk")]
-layout_mode = 2
-
-[node name="ResourcesBar5" parent="HUD/MarginContainer2/Resources" unique_id=734794856 instance=ExtResource("12_r13sk")]
-layout_mode = 2
-
-[node name="ResourcesBar6" parent="HUD/MarginContainer2/Resources" unique_id=1176070922 instance=ExtResource("12_r13sk")]
-layout_mode = 2
-
-[node name="ResourcesBar7" parent="HUD/MarginContainer2/Resources" unique_id=1207457146 instance=ExtResource("12_r13sk")]
-layout_mode = 2
-
-[node name="ResourcesBar8" parent="HUD/MarginContainer2/Resources" unique_id=203239257 instance=ExtResource("12_r13sk")]
-layout_mode = 2
-
-[node name="MarginContainer3" type="MarginContainer" parent="HUD" unique_id=1095839039]
-anchors_preset = 3
-anchor_left = 1.0
-anchor_top = 1.0
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_left = -40.0
-offset_top = -40.0
-grow_horizontal = 0
-grow_vertical = 0
-theme_override_constants/margin_right = 5
-theme_override_constants/margin_bottom = 5
-
-[node name="VBoxContainer" type="VBoxContainer" parent="HUD/MarginContainer3" unique_id=1154608522]
-layout_mode = 2
-theme_override_constants/separation = 5
-
-[node name="ProductionQueue" parent="HUD/MarginContainer3/VBoxContainer" unique_id=1528192687 instance=ExtResource("13_qv3xn")]
-layout_mode = 2
-
-[node name="UnitMenus" parent="HUD/MarginContainer3/VBoxContainer" unique_id=32705158 instance=ExtResource("13_6cypl")]
-layout_mode = 2
-size_flags_horizontal = 8
-
 [node name="Menu" parent="." unique_id=2015371880 instance=ExtResource("22_ofmlu")]
 visible = false
 
@@ -431,3 +227,7 @@ rectangular_selection_3d = NodePath("../../RectangularSelection3D")
 visible = false
 
 [node name="UnitVisibilityHandler" parent="Handlers" unique_id=435844044 instance=ExtResource("32_fci1c")]
+
+[node name="HUD" parent="." unique_id=128907128 instance=ExtResource("24_3l8e4")]
+
+[node name="MatchOverlay" parent="." instance=ExtResource("33_overlay")]

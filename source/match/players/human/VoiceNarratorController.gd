@@ -51,7 +51,7 @@ func _handle_event(event):
 
 
 func _on_unit_damaged(unit):
-	if unit.player != _player:
+	if not "player" in unit or unit.player != _player:
 		return
 	var current_timestamp = Time.get_ticks_msec()
 	if (

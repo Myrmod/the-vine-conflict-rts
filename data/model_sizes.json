@@ -1,0 +1,282 @@
+{
+	"Amuns/Defenses/Amuns_Wall_Pillar.glb": [
+		11.184,
+		11.563,
+		11.184
+	],
+	"Resources/Leafs.glb": [
+		6.873,
+		0.808,
+		5.733
+	],
+	"Resources/VineHole.glb": [
+		14.771,
+		5.545,
+		14.899
+	],
+	"Resources/VineTile.glb": [
+		127.752,
+		8.902,
+		110.838
+	],
+	"Resources/vine_forest_1.glb": [
+		3.215,
+		3.221,
+		8.6
+	],
+	"RockPack1/CliffPartials/CliffCorner_1.res": [
+		14.083,
+		9.693,
+		13.565
+	],
+	"RockPack1/CliffPartials/CliffCorner_2.res": [
+		7.572,
+		10.056,
+		13.381
+	],
+	"RockPack1/CliffPartials/CliffStraight_1.res": [
+		16.844,
+		21.82,
+		6.205
+	],
+	"RockPack1/CliffPartials/CliffStraight_2.res": [
+		4.715,
+		8.784,
+		10.796
+	],
+	"RockPack1/CliffPartials/CliffStraight_3.res": [
+		12.408,
+		8.649,
+		4.981
+	],
+	"RockPack1/CliffPartials/CliffStraight_4.res": [
+		13.537,
+		7.656,
+		4.164
+	],
+	"RockPack1/CliffPartials/CliffStraigth_1.res": [
+		16.844,
+		21.82,
+		6.205
+	],
+	"RockPack1/Models/meshes/Cliff_models_boulder1_mesh.res": [
+		5.671,
+		2.027,
+		3.49
+	],
+	"RockPack1/Models/meshes/Cliff_models_boulder2_mesh.res": [
+		4.199,
+		2.033,
+		2.263
+	],
+	"RockPack1/Models/meshes/Cliff_models_boulder3_mesh.res": [
+		3.367,
+		2.131,
+		2.155
+	],
+	"RockPack1/Models/meshes/Cliff_models_boulder4_mesh.res": [
+		4.343,
+		2.023,
+		2.519
+	],
+	"RockPack1/Models/meshes/Cliff_models_boulder5_mesh.res": [
+		3.375,
+		1.959,
+		2.363
+	],
+	"RockPack1/Models/meshes/Cliff_models_boulder6_mesh.res": [
+		3.197,
+		1.766,
+		2.414
+	],
+	"RockPack1/Models/meshes/Cliff_models_cliff1_mesh.res": [
+		8.19,
+		9.413,
+		3.572
+	],
+	"RockPack1/Models/meshes/Cliff_models_cliff2_mesh.res": [
+		7.637,
+		10.123,
+		5.291
+	],
+	"RockPack1/Models/meshes/Cliff_models_cliff3_mesh.res": [
+		6.845,
+		9.157,
+		3.794
+	],
+	"RockPack1/Models/meshes/Cliff_models_cliff4_mesh.res": [
+		4.111,
+		9.007,
+		3.439
+	],
+	"RockPack1/Models/meshes/Cliff_models_cliff5_mesh.res": [
+		9.097,
+		4.344,
+		7.032
+	],
+	"RockPack1/Models/meshes/Cliff_models_cliff6_mesh.res": [
+		9.285,
+		9.369,
+		5.639
+	],
+	"RockPack1/Models/meshes/Cliff_models_cliff7_mesh.res": [
+		12.627,
+		9.538,
+		5.444
+	],
+	"RockPack1/Models/meshes/Cliff_models_cliff8_mesh.res": [
+		10.808,
+		9.048,
+		5.7
+	],
+	"RockPack1/Models/meshes/Cliff_models_pile1_mesh.res": [
+		3.005,
+		0.491,
+		3.61
+	],
+	"RockPack1/Models/meshes/Cliff_models_pile2_mesh.res": [
+		3.236,
+		0.382,
+		3.215
+	],
+	"RockPack1/Models/meshes/Cliff_models_rock1_mesh.res": [
+		0.729,
+		0.473,
+		0.67
+	],
+	"RockPack1/Models/meshes/Cliff_models_rock2_mesh.res": [
+		0.459,
+		0.409,
+		0.55
+	],
+	"RockPack1/Models/meshes/Cliff_models_rock3_mesh.res": [
+		0.772,
+		0.427,
+		0.664
+	],
+	"RockPack1/Models/meshes/Cliff_models_rock4_mesh.res": [
+		0.645,
+		0.422,
+		0.637
+	],
+	"models/FallbackInfantry/soldier_final_animations_fbx.glb": [
+		0.243,
+		0.349,
+		0.213
+	],
+	"models/kenney-spacekit/barrels.glb": [
+		0.55,
+		0.35,
+		0.496
+	],
+	"models/kenney-spacekit/corridor.glb": [
+		1.0,
+		1.0,
+		1.0
+	],
+	"models/kenney-spacekit/corridor_corner.glb": [
+		1.0,
+		1.0,
+		1.0
+	],
+	"models/kenney-spacekit/corridor_cornerRoundWindow.glb": [
+		1.0,
+		1.0,
+		1.0
+	],
+	"models/kenney-spacekit/corridor_cross.glb": [
+		1.0,
+		1.0,
+		1.0
+	],
+	"models/kenney-spacekit/corridor_detailed.glb": [
+		1.2,
+		1.1,
+		1.0
+	],
+	"models/kenney-spacekit/corridor_end.glb": [
+		1.0,
+		1.0,
+		0.5
+	],
+	"models/kenney-spacekit/corridor_open.glb": [
+		1.0,
+		1.0,
+		1.0
+	],
+	"models/kenney-spacekit/corridor_windowClosed.glb": [
+		1.0,
+		1.0,
+		1.0
+	],
+	"models/kenney-spacekit/craft_cargoB.glb": [
+		1.5,
+		0.9,
+		2.5
+	],
+	"models/kenney-spacekit/craft_miner.glb": [
+		1.8,
+		0.7,
+		2.6
+	],
+	"models/kenney-spacekit/craft_racer.glb": [
+		1.2,
+		0.75,
+		2.026
+	],
+	"models/kenney-spacekit/craft_speederA.glb": [
+		2.0,
+		0.8,
+		2.1
+	],
+	"models/kenney-spacekit/hangar_roundA.glb": [
+		3.271,
+		1.5,
+		2.833
+	],
+	"models/kenney-spacekit/hangar_smallA.glb": [
+		2.0,
+		1.0,
+		2.0
+	],
+	"models/kenney-spacekit/machine_generator.glb": [
+		0.7,
+		0.4,
+		0.525
+	],
+	"models/kenney-spacekit/machine_wireless.glb": [
+		0.75,
+		0.6,
+		0.5
+	],
+	"models/kenney-spacekit/platform_large.glb": [
+		2.0,
+		0.1,
+		2.0
+	],
+	"models/kenney-spacekit/platform_small.glb": [
+		1.0,
+		0.1,
+		1.0
+	],
+	"models/kenney-spacekit/rover.glb": [
+		0.3,
+		0.385,
+		0.35
+	],
+	"models/kenney-spacekit/supports_low.glb": [
+		0.825,
+		0.5,
+		0.825
+	],
+	"models/kenney-spacekit/turret_double.glb": [
+		0.9,
+		0.7,
+		0.6
+	],
+	"models/kenney-spacekit/turret_single.glb": [
+		0.6,
+		0.9,
+		0.722
+	]
+}

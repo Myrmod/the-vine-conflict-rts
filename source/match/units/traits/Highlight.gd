@@ -17,6 +17,7 @@ func _ready():
 	_update_circle_params()
 	if Engine.is_editor_hint():
 		return
+	_set_visual_layer(_circle, 2)
 	_unit.mouse_entered.connect(_activate)
 	_unit.mouse_exited.connect(_deactivate)
 	_circle.hide()
@@ -44,11 +45,12 @@ func _update_circle_params():
 
 
 func _update_circle_color():
-	if _unit.is_in_group("controlled_units"):
-		_circle.color = MatchConstants.OWNED_PLAYER_CIRCLE_COLOR
-	elif _unit.is_in_group("adversary_units"):
-		_circle.color = MatchConstants.ADVERSARY_PLAYER_CIRCLE_COLOR
-	elif _unit.is_in_group("resource_units"):
+	if _unit.is_in_group("controlled_units") or _unit.is_in_group("adversary_units"):
+		if "player" in _unit and _unit.player != null:
+			_circle.color = _unit.player.color
+		else:
+			_circle.color = MatchConstants.DEFAULT_CIRCLE_COLOR
+	elif _unit.is_in_group("resource_units") or _unit.is_in_group("forest_vines"):
 		_circle.color = MatchConstants.RESOURCE_CIRCLE_COLOR
 	else:
 		_circle.color = MatchConstants.DEFAULT_CIRCLE_COLOR
@@ -77,3 +79,10 @@ func _deactivate():
 func _update():
 	_update_circle_color()
 	_circle.visible = _forced or _activated
+
+
+func _set_visual_layer(node: Node, layer: int) -> void:
+	for child in node.get_children():
+		if child is VisualInstance3D:
+			child.layers = layer
+		_set_visual_layer(child, layer)

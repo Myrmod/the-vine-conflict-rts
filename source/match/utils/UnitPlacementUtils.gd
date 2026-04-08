@@ -1,6 +1,6 @@
 class_name UnitPlacementUtils
 
-enum {VALID, COLLIDES_WITH_AGENT, NOT_NAVIGABLE}
+enum { VALID, COLLIDES_WITH_AGENT, NOT_NAVIGABLE }
 
 
 static func find_valid_position_radially(
@@ -23,7 +23,9 @@ static func find_valid_position_radially_yet_skip_starting_radius(
 ):
 	var starting_position_yless = starting_position * Vector3(1, 0, 1)
 	var units = (
-		scene_tree.get_nodes_in_group("units") + scene_tree.get_nodes_in_group("resource_units")
+		scene_tree.get_nodes_in_group("units")
+		+ scene_tree.get_nodes_in_group("resource_units")
+		+ scene_tree.get_nodes_in_group("forest_vines")
 	)
 	var starting_distance = (
 		0 if is_zero_approx(starting_radius) else starting_radius + radius + spacing
@@ -55,7 +57,7 @@ static func find_valid_position_radially_yet_skip_starting_radius(
 			)
 			next_rotation_angle_rad += rotation_angle_rad
 		if shuffle:
-			radial_positions.shuffle()
+			MatchUtils.rng_shuffle(radial_positions)
 		for radial_position in radial_positions:
 			if _is_agent_placement_position_valid(
 				radial_position, radius, units, navigation_map_rid
@@ -65,15 +67,19 @@ static func find_valid_position_radially_yet_skip_starting_radius(
 	return Vector3.INF
 
 
-static func validate_agent_placement_position(position, radius, existing_units, navigation_map_rid):
+static func validate_agent_placement_position(
+	position, radius, existing_units, navigation_map_rid, skip_nav_check := false
+):
 	for existing_unit in existing_units:
 		if (
 			(existing_unit.global_position * Vector3(1, 0, 1)).distance_to(
 				position * Vector3(1, 0, 1)
 			)
-			<= existing_unit.radius + radius
+			< existing_unit.radius + radius
 		):
 			return COLLIDES_WITH_AGENT
+	if skip_nav_check:
+		return VALID
 	var points_expected_to_be_navigable = []
 	for x in [-1, 0, 1]:
 		for z in [-1, 0, 1]:

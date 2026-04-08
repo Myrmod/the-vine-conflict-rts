@@ -18,6 +18,9 @@ const MAPS = {
 		"size": Vector2i(100, 100),
 	},
 }
+const TICK_RATE: int = 10  # RTS logic ticks per second
+const TICK_DELTA: float = 1.0 / float(TICK_RATE)  # seconds per tick (0.1)
+
 
 class VoiceNarrator:
 	enum Events {

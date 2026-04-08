@@ -6,7 +6,8 @@ var target_unit = null:
 			a_target_unit.tree_exited.connect(_on_target_unit_tree_exited)
 			hide()
 		elif target_unit != null and a_target_unit == null and _on_target_unit_tree_exited != null:
-			target_unit.tree_exited.disconnect(_on_target_unit_tree_exited)
+			if target_unit.tree_exited.is_connected(_on_target_unit_tree_exited):
+				target_unit.tree_exited.disconnect(_on_target_unit_tree_exited)
 			_reset_position_to_parent()
 			if _unit.is_in_group("selected_units"):
 				show()
@@ -17,6 +18,8 @@ var target_unit = null:
 
 
 func _ready():
+	if not _unit.has_signal("selected"):
+		return
 	_animation_player.play("idle")
 	visible = _unit.is_in_group("selected_units")
 	_unit.selected.connect(_show)

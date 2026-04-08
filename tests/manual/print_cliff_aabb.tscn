@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://cs7jkcmunxq6u"]
+
+[ext_resource type="Script" uid="uid://ds517ejdkv874" path="res://tests/manual/print_cliff_aabb.gd" id="1_3ysfx"]
+
+[node name="PrintCliffAABB" type="Node" unique_id=811094419]
+script = ExtResource("1_3ysfx")

@@ -1,10 +1,10 @@
 extends "res://source/match/units/actions/Action.gd"
 
-const REFRESH_INTERVAL = 1.0 / 60.0 * 10.0
+const REFRESH_TICKS = 1
 
 var _target_unit = null
 var _distance_to_reach = null
-var _timer = null
+var _refresh_counter: int = 0
 var _last_known_target_unit_position = null
 
 @onready var _unit = Utils.NodeEx.find_parent_with_group(self, "units")
@@ -17,16 +17,22 @@ func _init(target_unit, distance_to_reach):
 
 
 func _ready():
-	_timer = Timer.new()
-	_timer.timeout.connect(_refresh)
-	add_child(_timer)
-	_timer.start(REFRESH_INTERVAL)
+	MatchSignals.tick_advanced.connect(_on_tick_advanced)
 	_movement_trait.movement_finished.connect(_on_movement_finished)
 	_refresh()
 
 
 func _exit_tree():
 	_movement_trait.stop()
+
+
+func _on_tick_advanced():
+	if not is_inside_tree():
+		return
+	_refresh_counter += 1
+	if _refresh_counter >= REFRESH_TICKS:
+		_refresh_counter = 0
+		_refresh()
 
 
 func _refresh():

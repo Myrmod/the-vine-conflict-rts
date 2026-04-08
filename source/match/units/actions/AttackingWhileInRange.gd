@@ -1,52 +1,46 @@
 extends "res://source/match/units/actions/Action.gd"
 
-const RANGE_CHECK_INTERVAL = 1.0 / 60.0 * 10.0
+var _target_unit: Node3D = null
 
-var _target_unit = null
-var _one_shot_timer = null
-var _range_check_timer = null
-
-@onready var _unit = Utils.NodeEx.find_parent_with_group(self , "units")
-@onready var _unit_movement_trait = _unit.find_child("Movement")
+@onready var _unit: Node3D = Utils.NodeEx.find_parent_with_group(self, "units")
+@onready var _unit_movement_trait: Node = _unit.find_child("Movement")
 
 
-func _init(target_unit):
+func _init(target_unit: Node3D) -> void:
 	_target_unit = target_unit
 
 
-func _ready():
+func _ready() -> void:
 	if _teardown_if_out_of_range():
 		return
 	_target_unit.tree_exited.connect(_on_target_unit_removed)
 	if _unit_movement_trait != null:
-		# non-stationary units must hold shooting as long as passive movement is active
 		_unit_movement_trait.passive_movement_started.connect(_on_passive_movement_started)
 		_unit_movement_trait.passive_movement_finished.connect(_on_passive_movement_finished)
-	_setup_one_shot_timer()
-	_setup_range_check_timer()
-	_schedule_hit()
+	MatchSignals.tick_advanced.connect(_on_tick_advanced)
+	# Try to fire immediately if cooldown has elapsed
+	_try_hit()
 
 
-func _physics_process(_delta):
+func _physics_process(_delta: float) -> void:
 	if _unit_movement_trait == null:
-		_rotate_unit_towards_target() # stationary units can rotate every frame
+		_rotate_unit_towards_target()  # stationary units can rotate every frame
 
 
-func _setup_one_shot_timer():
-	_one_shot_timer = Timer.new()
-	_one_shot_timer.one_shot = true
-	_one_shot_timer.timeout.connect(_hit_target)
-	add_child(_one_shot_timer)
+func _on_tick_advanced() -> void:
+	_try_hit()
 
 
-func _setup_range_check_timer():
-	_range_check_timer = Timer.new()
-	_range_check_timer.timeout.connect(_teardown_if_out_of_range)
-	add_child(_range_check_timer)
-	_range_check_timer.start(RANGE_CHECK_INTERVAL)
+func _try_hit() -> void:
+	var next_attack_tick: int = _unit.get_meta("next_attack_tick", 0)
+	if Match.tick < next_attack_tick:
+		return
+	if _teardown_if_out_of_range():
+		return
+	_hit_target()
 
 
-func _rotate_unit_towards_target():
+func _rotate_unit_towards_target() -> void:
 	_unit.global_transform = _unit.global_transform.looking_at(
 		Vector3(
 			_target_unit.global_position.x, _unit.global_position.y, _target_unit.global_position.z
@@ -55,36 +49,22 @@ func _rotate_unit_towards_target():
 	)
 
 
-func _schedule_hit():
-	var now = Time.get_ticks_msec()
-	var next_attack_availability_time = _unit.get_meta("next_attack_availability_time", now)
-	if next_attack_availability_time > now:
-		var delay_millis = next_attack_availability_time - now
-		_one_shot_timer.start(delay_millis / 1000.0)
-	else:
-		_hit_target()
+func _hit_target() -> void:
+	_rotate_unit_towards_target()
+	# Schedule next attack in ticks (attack_interval is in seconds)
+	var cooldown_ticks: int = maxi(1, int(_unit.attack_interval / MatchConstants.TICK_DELTA))
+	_unit.set_meta("next_attack_tick", Match.tick + cooldown_ticks)
+	var from: Vector3 = _unit.global_position + _unit.projectile_origin
+	var to: Vector3 = _target_unit.global_position
+	var config: Dictionary = _unit.projectile_config.duplicate()
+	config["damage"] = _unit.attack_damage
+	config["target_unit"] = _target_unit
+	config["source_player"] = _unit.player
+	config["attack_type"] = _unit.attack_type
+	Projectile.fire(_unit.projectile_type, from, to, config)
 
 
-func _hit_target():
-	if _teardown_if_out_of_range():
-		return
-	_unit.set_meta(
-		"next_attack_availability_time", Time.get_ticks_msec() + int(_unit.attack_interval * 1000.0)
-	)
-	var projectile = (
-		load(
-			UnitConstants.PROJECTILES[_unit.get_script().resource_path.replace(
-				".gd", ".tscn"
-			)]
-		)
-		.instantiate()
-	)
-	projectile.target_unit = _target_unit
-	_unit.add_child(projectile)
-	_schedule_hit()
-
-
-func _teardown_if_out_of_range():
+func _teardown_if_out_of_range() -> bool:
 	if (
 		_unit.global_position_yless.distance_to(_target_unit.global_position_yless)
 		> _unit.attack_range
@@ -94,14 +74,13 @@ func _teardown_if_out_of_range():
 	return false
 
 
-func _on_target_unit_removed():
+func _on_target_unit_removed() -> void:
 	queue_free()
 
 
-func _on_passive_movement_started():
-	_one_shot_timer.stop()
+func _on_passive_movement_started() -> void:
+	pass  # no-op: tick-based attack will simply not fire while out of range
 
 
-func _on_passive_movement_finished():
+func _on_passive_movement_finished() -> void:
 	_rotate_unit_towards_target()
-	_schedule_hit()

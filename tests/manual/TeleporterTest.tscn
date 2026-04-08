@@ -1,0 +1,23 @@
+[gd_scene format=3 uid="uid://b3cojgeojow5e"]
+
+[ext_resource type="PackedScene" uid="uid://bs2jm62cmkbrk" path="res://addons/instant-realistic-light/light_scene.tscn" id="2_light"]
+[ext_resource type="PackedScene" uid="uid://bb1s0onjiplg6" path="res://assets_overide/Amuns/Other/Teleporter.glb" id="3_7lr6x"]
+[ext_resource type="PackedScene" uid="uid://bv6utwoiwp24f" path="res://assets_overide/Amuns/Defenses/Amuns_Wall_Pillar.glb" id="3_model"]
+[ext_resource type="Script" uid="uid://3qs51jdbb3gk" path="res://tests/manual/TeleporterTest.gd" id="4_script"]
+
+[node name="TeleporterTest" type="Node3D" unique_id=1647585107]
+script = ExtResource("4_script")
+
+[node name="WorldEnvironment" parent="." unique_id=211402598 instance=ExtResource("2_light")]
+
+[node name="Amuns_Wall_Pillar" parent="." unique_id=2075395269 instance=ExtResource("3_model")]
+transform = Transform3D(0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, 0, 0, 0)
+
+[node name="Teleporter" parent="Amuns_Wall_Pillar" unique_id=1786778795 instance=ExtResource("3_7lr6x")]
+transform = Transform3D(0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, 0.07737923, 0, -0.565773)
+
+[node name="Camera3D" type="Camera3D" parent="." unique_id=1505095294]
+transform = Transform3D(1, 0, 0, 0, 0.866025, 0.5, 0, -0.5, 0.866025, 0, 23, 40)
+projection = 1
+current = true
+size = 15.0

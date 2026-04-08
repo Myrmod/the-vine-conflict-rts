@@ -1,6 +1,15 @@
 [gd_resource type="StandardMaterial3D" format=3 uid="uid://co8vfcoqqs5i8"]
 
+[ext_resource type="Texture2D" uid="uid://c5j7bpskcqh88" path="res://source/textures/Grass001_1K-PNG/Grass001_1K-PNG_Color.png" id="1_b6aa4"]
+[ext_resource type="Texture2D" uid="uid://cq0mp401hhx85" path="res://source/textures/Grass001_1K-PNG/Grass001_1K-PNG_Displacement.png" id="2_jatln"]
+[ext_resource type="Texture2D" uid="uid://cdu0knr8kpi4v" path="res://source/textures/Grass001_1K-PNG/Grass001_1K-PNG_NormalGL.png" id="3_eevvw"]
+[ext_resource type="Texture2D" uid="uid://c8esrgs1a1s04" path="res://source/textures/Grass001_1K-PNG/Grass001_1K-PNG_Roughness.png" id="4_rvqvb"]
+
 [resource]
 vertex_color_use_as_albedo = true
-albedo_color = Color(0.960784, 0.745098, 0.654902, 1)
-metallic = 1.0
+albedo_texture = ExtResource("1_b6aa4")
+roughness_texture = ExtResource("4_rvqvb")
+normal_enabled = true
+normal_texture = ExtResource("3_eevvw")
+heightmap_enabled = true
+heightmap_texture = ExtResource("2_jatln")

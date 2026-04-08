@@ -1,10 +1,10 @@
-[gd_scene load_steps=4 format=3 uid="uid://ds57esabi07np"]
+[gd_scene format=3 uid="uid://ds57esabi07np"]
 
 [ext_resource type="Theme" uid="uid://c2kgsk4ffhbwo" path="res://source/resources/main_menu.theme" id="1_7ubwb"]
-[ext_resource type="Script" path="res://source/main-menu/Credits.gd" id="1_33n17"]
+[ext_resource type="Script" uid="uid://21eouap7f4w0" path="res://source/main-menu/Credits.gd" id="1_33n17"]
 [ext_resource type="PackedScene" uid="uid://dij5xr8swlfdx" path="res://source/main-menu/Background.tscn" id="2_txygx"]
 
-[node name="Credits" type="Control"]
+[node name="Credits" type="Control" unique_id=1553588170]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -14,64 +14,120 @@ grow_vertical = 2
 theme = ExtResource("1_7ubwb")
 script = ExtResource("1_33n17")
 
-[node name="Background" parent="." instance=ExtResource("2_txygx")]
+[node name="Background" parent="." unique_id=1777919358 instance=ExtResource("2_txygx")]
 layout_mode = 1
 
-[node name="PanelContainer" type="PanelContainer" parent="."]
+[node name="PanelContainer" type="PanelContainer" parent="." unique_id=1295080335]
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -220.0
-offset_top = -129.0
-offset_right = 220.0
-offset_bottom = 129.0
+offset_left = -855.0
+offset_top = -417.0
+offset_right = 919.0
+offset_bottom = 491.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="MarginContainer" type="MarginContainer" parent="PanelContainer"]
+[node name="MarginContainer" type="MarginContainer" parent="PanelContainer" unique_id=1880308837]
 layout_mode = 2
 theme_override_constants/margin_left = 20
 theme_override_constants/margin_top = 20
 theme_override_constants/margin_right = 20
 theme_override_constants/margin_bottom = 20
 
-[node name="VBoxContainer" type="VBoxContainer" parent="PanelContainer/MarginContainer"]
+[node name="VBoxContainer" type="VBoxContainer" parent="PanelContainer/MarginContainer" unique_id=1859796233]
 custom_minimum_size = Vector2(400, 0)
 layout_mode = 2
 theme_override_constants/separation = 10
 alignment = 1
 
-[node name="Padding" type="Control" parent="PanelContainer/MarginContainer/VBoxContainer"]
+[node name="PanelContainer" type="PanelContainer" parent="PanelContainer/MarginContainer/VBoxContainer" unique_id=831879981]
 layout_mode = 2
 size_flags_vertical = 3
 
-[node name="PanelContainer" type="PanelContainer" parent="PanelContainer/MarginContainer/VBoxContainer"]
+[node name="MarginContainer" type="MarginContainer" parent="PanelContainer/MarginContainer/VBoxContainer/PanelContainer" unique_id=1146436523]
 layout_mode = 2
-
-[node name="MarginContainer" type="MarginContainer" parent="PanelContainer/MarginContainer/VBoxContainer/PanelContainer"]
-layout_mode = 2
+theme_override_constants/margin_left = 15
 theme_override_constants/margin_top = 15
+theme_override_constants/margin_right = 15
 theme_override_constants/margin_bottom = 15
 
-[node name="RichTextLabel" type="RichTextLabel" parent="PanelContainer/MarginContainer/VBoxContainer/PanelContainer/MarginContainer"]
+[node name="VBoxContainer" type="VBoxContainer" parent="PanelContainer/MarginContainer/VBoxContainer/PanelContainer/MarginContainer" unique_id=1231413504]
+layout_mode = 2
+
+[node name="Development" type="Label" parent="PanelContainer/MarginContainer/VBoxContainer/PanelContainer/MarginContainer/VBoxContainer" unique_id=932123900]
+layout_mode = 2
+text = "DEVELOPMENT"
+
+[node name="DevelopmentText" type="RichTextLabel" parent="PanelContainer/MarginContainer/VBoxContainer/PanelContainer/MarginContainer/VBoxContainer" unique_id=703520250]
 layout_mode = 2
 theme_override_font_sizes/normal_font_size = 20
 bbcode_enabled = true
-text = "[center][u]CORE_CONTRIBUTORS:[/u]
-- Pascal Galle | Myrmod
-
-[u]ASSETS:[/u]
-- 3D Space Kit by Kenney.nl"
+text = "- Pascal Galle | Myrmod
+- Muonic"
 fit_content = true
 
-[node name="Padding2" type="Control" parent="PanelContainer/MarginContainer/VBoxContainer"]
+[node name="ConceptDesign" type="Label" parent="PanelContainer/MarginContainer/VBoxContainer/PanelContainer/MarginContainer/VBoxContainer" unique_id=355223120]
 layout_mode = 2
-size_flags_vertical = 3
+text = "CONCEPT"
 
-[node name="Button" type="Button" parent="PanelContainer/MarginContainer/VBoxContainer"]
+[node name="ConceptDesignText" type="RichTextLabel" parent="PanelContainer/MarginContainer/VBoxContainer/PanelContainer/MarginContainer/VBoxContainer" unique_id=707578111]
+layout_mode = 2
+theme_override_font_sizes/normal_font_size = 20
+bbcode_enabled = true
+text = "- Pascal Galle | Myrmod
+- Goldman"
+fit_content = true
+
+[node name="Sound" type="Label" parent="PanelContainer/MarginContainer/VBoxContainer/PanelContainer/MarginContainer/VBoxContainer" unique_id=1525682260]
+layout_mode = 2
+text = "SOUND"
+
+[node name="SoundText" type="RichTextLabel" parent="PanelContainer/MarginContainer/VBoxContainer/PanelContainer/MarginContainer/VBoxContainer" unique_id=2132464760]
+layout_mode = 2
+theme_override_font_sizes/normal_font_size = 20
+bbcode_enabled = true
+text = "• [url=https://pixabay.com/users/lordsonny-38439655/]LordSonny[/url]  
+• [url=https://pixabay.com/users/freesound_community-46691455/]freesound_community[/url]  
+• [url=https://pixabay.com/users/jigokukarano_sisya-39731529/]jigokukarano_sisya[/url]  
+• [url=https://pixabay.com/users/kalsstockmedia-13377274/]Kalpesh Ajugia[/url]  
+• [url=https://pixabay.com/users/dennish18-26151496/]Dennis[/url]  
+• [url=https://pixabay.com/users/daviddumaisaudio-41768500/]David Dumais[/url]  
+• [url=https://pixabay.com/users/floraphonic-38928062/]floraphonic[/url]  
+• [url=https://pixabay.com/users/universfield-28281460/]Universfield[/url]  
+• [url=https://pixabay.com/users/pwlpl-16464651/]Paul (PWLPL)[/url]  
+• [url=https://pixabay.com/users/sovetsky_rastov-46121007/]Sovetsky Rastov[/url]"
+fit_content = true
+
+[node name="Models" type="Label" parent="PanelContainer/MarginContainer/VBoxContainer/PanelContainer/MarginContainer/VBoxContainer" unique_id=1946531122]
+layout_mode = 2
+text = "MODELS"
+
+[node name="ModelsText" type="RichTextLabel" parent="PanelContainer/MarginContainer/VBoxContainer/PanelContainer/MarginContainer/VBoxContainer" unique_id=395609790]
+layout_mode = 2
+theme_override_font_sizes/normal_font_size = 20
+bbcode_enabled = true
+text = "- 3D Space Kit by Kenney.nl
+- \"Modular Vines\" (https://skfb.ly/ortCn) by Somersby is licensed under Creative Commons Attribution (http://creativecommons.org/licenses/by/4.0/).
+- \"Ancient Tree\" (https://skfb.ly/6TDXp) by DJMaesen is licensed under Creative Commons Attribution (http://creativecommons.org/licenses/by/4.0/).
+- https://fontawesome.com/"
+fit_content = true
+
+[node name="Shaders" type="Label" parent="PanelContainer/MarginContainer/VBoxContainer/PanelContainer/MarginContainer/VBoxContainer" unique_id=299282200]
+layout_mode = 2
+text = "SHADERS"
+
+[node name="ShaderText" type="RichTextLabel" parent="PanelContainer/MarginContainer/VBoxContainer/PanelContainer/MarginContainer/VBoxContainer" unique_id=552529911]
+layout_mode = 2
+theme_override_font_sizes/normal_font_size = 20
+bbcode_enabled = true
+text = "- Julian Rogawski (energy shield base)"
+fit_content = true
+
+[node name="Button" type="Button" parent="PanelContainer/MarginContainer/VBoxContainer" unique_id=620460703]
 layout_mode = 2
 text = "BACK"
 

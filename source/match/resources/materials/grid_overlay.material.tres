@@ -1,0 +1,11 @@
+[gd_resource type="ShaderMaterial" format=3 uid="uid://do2mao874r7lk"]
+
+[ext_resource type="Shader" uid="uid://bgjowh1ktjwaf" path="res://source/shaders/3d/grid_shader.gdshader" id="1_shader"]
+
+[resource]
+render_priority = -1
+shader = ExtResource("1_shader")
+shader_parameter/cell_size = 1.0
+shader_parameter/line_width = 0.05
+shader_parameter/fill_color = Color(1, 1, 1, 1)
+shader_parameter/line_color = Color(1, 1, 1, 0.2)
