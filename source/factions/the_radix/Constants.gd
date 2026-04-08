@@ -4,10 +4,10 @@ const SOUND_ROCKET_START = preload("res://assets/sound_effects/rocket1_start.mp3
 const SOUND_ROCKET_END = preload("res://assets/sound_effects/rocket1_end.mp3")
 
 const STRUCTURES = {
-	Enums.SceneId.RADIX_COMMAND_CENTER:
+	Enums.SceneId.RADIX_HEART:
 	{
-		"scene": "res://source/factions/the_radix/structures/CommandCenter.tscn",
-		"unit_name": "radix_CommandCenter",
+		"scene": "res://source/factions/the_radix/structures/Heart.tscn",
+		"unit_name": "Heart",
 		"description": "Central command hub. Builds structures and defences",
 		"faction": Enums.Faction.RADIX,
 		"production_tab_type": Enums.ProductionTabType.STRUCTURE,
@@ -32,6 +32,7 @@ const STRUCTURES = {
 			Enums.DamageTypes.ROCKET: 0.25,
 			Enums.DamageTypes.TESLA: 0.25,
 		},
+		"spreads_vines": true,
 		"costs": {"credits": 8},
 		"build_time": 10.0,
 	},

@@ -1,6 +1,6 @@
 class_name RadixFaction extends Factions
 
-@export var spawn_unit = preload("res://source/factions/the_radix/structures/CommandCenter.tscn")
+@export var spawn_unit = preload("res://source/factions/the_radix/structures/Heart.tscn")
 
 
 static func init() -> void:

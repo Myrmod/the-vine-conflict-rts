@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://cbf06dljqmdyn"
-path="res://.godot/imported/CORTA HUMANS.drawio.svg-7504d2704bec3104bd4425fa945b0a68.ctex"
+path="res://.godot/imported/Remnants.drawio.svg-292ae3046f91090493996abad6d85881.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://Documentation/Tech tree/CORTA HUMANS.drawio.svg"
-dest_files=["res://.godot/imported/CORTA HUMANS.drawio.svg-7504d2704bec3104bd4425fa945b0a68.ctex"]
+source_file="res://Documentation/Tech_tree/Remnants.drawio.svg"
+dest_files=["res://.godot/imported/Remnants.drawio.svg-292ae3046f91090493996abad6d85881.ctex"]
 
 [params]
 

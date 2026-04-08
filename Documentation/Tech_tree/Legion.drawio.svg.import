@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dn7isqo16rr44"
-path="res://.godot/imported/VINE HUMANS.drawio.svg-347b0d58bc969b4c370c6343adbc24bd.ctex"
+path="res://.godot/imported/Legion.drawio.svg-ae13ca5982cd334e0a73c86c1f92052a.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://Documentation/Tech tree/VINE HUMANS.drawio.svg"
-dest_files=["res://.godot/imported/VINE HUMANS.drawio.svg-347b0d58bc969b4c370c6343adbc24bd.ctex"]
+source_file="res://Documentation/Tech_tree/Legion.drawio.svg"
+dest_files=["res://.godot/imported/Legion.drawio.svg-ae13ca5982cd334e0a73c86c1f92052a.ctex"]
 
 [params]
 

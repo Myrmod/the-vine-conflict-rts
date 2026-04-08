@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://ct5wei5ubon1j"
-path="res://.godot/imported/The Amuns tech.drawio.svg-18f7ef2d0a3403fe944d5ec91b005dbb.ctex"
+path="res://.godot/imported/Amuns tech.drawio.svg-c46b32422ff25bfe683aadbf1f796943.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://Documentation/Tech tree/The Amuns tech.drawio.svg"
-dest_files=["res://.godot/imported/The Amuns tech.drawio.svg-18f7ef2d0a3403fe944d5ec91b005dbb.ctex"]
+source_file="res://Documentation/Tech_tree/Amuns tech.drawio.svg"
+dest_files=["res://.godot/imported/Amuns tech.drawio.svg-c46b32422ff25bfe683aadbf1f796943.ctex"]
 
 [params]
 
