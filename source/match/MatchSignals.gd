@@ -36,6 +36,7 @@ signal structure_placement_started
 signal structure_placement_ended
 
 signal player_resource_changed(player, value: int, type: Enums.ResourceType)
+signal creep_map_changed
 
 ## Structure action mode (repair / sell / disable)
 signal structure_action_started(action_type: Enums.CommandType)

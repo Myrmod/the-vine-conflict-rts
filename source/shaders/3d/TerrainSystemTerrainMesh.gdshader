@@ -3,7 +3,9 @@ shader_type spatial;
 // Custom light() replaces built-in diffuse/specular models
 render_mode
     cull_back,
-    depth_draw_opaque;
+    depth_draw_opaque,
+    diffuse_lambert,
+    specular_disabled;
 
 const int MAX_TERRAINS = 16;
 const int MAX_SPLATS = 4;
@@ -82,6 +84,15 @@ uniform bool alpha_mask_enabled = false;
 // Debug: flat colour override for visualising terrain layers.
 uniform bool debug_layer_color_enabled = false;
 uniform vec3 debug_layer_color : source_color = vec3(1.0);
+
+// --- Creep overlay (Radix faction ground coverage) ---
+// R8 texture, same size as the map grid: > 0 = creep present.
+uniform sampler2D creep_tex : hint_default_black, filter_nearest, repeat_disable;
+// Horizontal Wang 2-corner atlas (16 columns).
+// 6-column × 3-row orthogonal + inner-corner atlas (960×960 px per tile).
+uniform sampler2D creep_atlas_tex : hint_default_black, filter_linear, repeat_disable;
+uniform bool creep_enabled = false;
+uniform vec2 creep_map_size = vec2(50.0, 50.0);
 
 void vertex() {
     // Map each PlaneMesh vertex to the centre of its corresponding texel.
@@ -274,6 +285,55 @@ void fragment() {
     }
 
     ALBEDO           = final_albedo;
+
+    // === Creep overlay (Radix ground coverage) ===
+    // Atlas: creep_terrain6x3.png — 6 cols × 3 rows (see CreepAtlas.gd).
+    // Left half (col 0–2): outer boundary tiles, selected by orthogonal mask.
+    // Right half (col 3–5): inner corner tiles, selected by diagonal absence.
+    if (creep_enabled) {
+        float creep_val = texture(creep_tex, UV).r;
+        if (creep_val > 0.01) {
+            // Cell coordinate from UV (UV 0..1 maps to 0..map_size cells).
+            vec2 cell_coord = UV * creep_map_size;
+            vec2 cell_floor = floor(cell_coord);
+            vec2 cell_frac  = cell_coord - cell_floor;
+
+            // Sample the four orthogonal neighbours (centre of each adjacent cell).
+            vec2 inv_cs = 1.0 / creep_map_size;
+            float c_n = step(0.01, texture(creep_tex, (cell_floor + vec2( 0.5, -0.5)) * inv_cs).r);
+            float c_e = step(0.01, texture(creep_tex, (cell_floor + vec2( 1.5,  0.5)) * inv_cs).r);
+            float c_s = step(0.01, texture(creep_tex, (cell_floor + vec2( 0.5,  1.5)) * inv_cs).r);
+            float c_w = step(0.01, texture(creep_tex, (cell_floor + vec2(-0.5,  0.5)) * inv_cs).r);
+
+            // 4-bit orthogonal mask: N=1, E=2, S=4, W=8.
+            int ortho_mask = int(c_n) * 1 + int(c_e) * 2 + int(c_s) * 4 + int(c_w) * 8;
+
+            float atlas_col;
+            float atlas_row;
+            if (ortho_mask == 15) {
+                // All orthogonal neighbours present — fully covered interior cell.
+                atlas_col = 4.0; atlas_row = 1.0; // ALL
+            } else if (ortho_mask == 6)  { atlas_col = 0.0; atlas_row = 0.0; } // NW outer
+            else if (ortho_mask == 14) { atlas_col = 1.0; atlas_row = 0.0; } // N  outer edge
+            else if (ortho_mask == 12) { atlas_col = 2.0; atlas_row = 0.0; } // NE outer
+            else if (ortho_mask == 7)  { atlas_col = 0.0; atlas_row = 1.0; } // W  outer edge
+            else if (ortho_mask == 13) { atlas_col = 2.0; atlas_row = 1.0; } // E  outer edge
+            else if (ortho_mask == 3)  { atlas_col = 0.0; atlas_row = 2.0; } // SW outer
+            else if (ortho_mask == 11) { atlas_col = 1.0; atlas_row = 2.0; } // S  outer edge
+            else if (ortho_mask == 9)  { atlas_col = 2.0; atlas_row = 2.0; } // SE outer
+            else                       { atlas_col = 4.0; atlas_row = 1.0; } // fallback ALL
+
+            float atlas_u = (atlas_col + cell_frac.x) / 6.0;
+            float atlas_v = (atlas_row + cell_frac.y) / 3.0;
+            vec4 creep_color = texture(creep_atlas_tex, vec2(atlas_u, atlas_v));
+
+            // Creep is the topmost layer — fully replace terrain output.
+            ALBEDO           = mix(ALBEDO, creep_color.rgb, creep_color.a);
+            final_normal_map = mix(final_normal_map, vec3(0.5, 0.5, 1.0), creep_color.a);
+            final_roughness  = mix(final_roughness, 0.8, creep_color.a);
+            final_ao         = mix(final_ao, 1.0, creep_color.a);
+        }
+    }
 
     // Debug layer colour override
     if (debug_layer_color_enabled) {

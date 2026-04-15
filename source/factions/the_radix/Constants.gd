@@ -47,3 +47,16 @@ const VEHICLES = {}
 const AIR = {}
 
 const NAVY = {}
+
+const CREEP_SPREAD_INTERVAL_TICKS: int = 10
+const CREEP_SPREAD_TILES_PER_INTERVAL: int = 1
+## Maximum vitality health a creep cell can hold.
+## A cell's health is reset to this value by its owning source each spread tick.
+const CREEP_CELL_MAX_HEALTH: int = 20
+## How many game ticks between each global decay pass.
+const CREEP_DECAY_INTERVAL_TICKS: int = 10
+## Health lost per cell per decay pass when not vitalized by any source.
+## A dead source's cells will disappear after MAX_HEALTH/DECAY_AMOUNT decay passes.
+const CREEP_DECAY_AMOUNT: int = 1
+const CREEP_REGEN_INTERVAL_TICKS: int = 10
+const CREEP_REGEN_HP_PER_INTERVAL: int = 1
