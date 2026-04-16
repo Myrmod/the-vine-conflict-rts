@@ -60,3 +60,7 @@ const CREEP_DECAY_INTERVAL_TICKS: int = 10
 const CREEP_DECAY_AMOUNT: int = 1
 const CREEP_REGEN_INTERVAL_TICKS: int = 10
 const CREEP_REGEN_HP_PER_INTERVAL: int = 1
+## How many ticks between off-creep damage checks for Radix structures.
+const CREEP_OFF_CREEP_DAMAGE_INTERVAL_TICKS: int = 10
+## Fraction of hp_max lost per interval when a structure is not on creep.
+const CREEP_OFF_CREEP_DAMAGE_PERCENT: float = 0.005

@@ -9,6 +9,14 @@ var _owned_cells: Array[Vector2i] = []
 var _frontier: Array[Vector2i] = []
 var _frontier_set: Dictionary = {}
 var _tick_counter: int = 0
+## Pre-computed set of local cell offsets that are valid for spreading.
+## Matches the build radius shape (circular with cardinal protrusions pruned).
+var _allowed_offsets: Dictionary = {}
+
+
+func _init() -> void:
+	# CreepSource produces its own creep — no off-creep damage.
+	requires_creep = false
 
 
 func _ready() -> void:
@@ -16,7 +24,60 @@ func _ready() -> void:
 	_ensure_creep_map_initialized()
 	_ensure_creep_system()
 	_player_bit = _compute_player_bit()
+	_compute_allowed_offsets()
 	MatchSignals.tick_advanced.connect(_on_creep_tick)
+
+
+## Build the set of local offsets that creep can spread to.
+## Uses the BuildRadius node's radius_in_cells if present, otherwise spread_radius.
+## Applies the same circular + cardinal-protrusion-pruning as BuildRadius.
+func _compute_allowed_offsets() -> void:
+	var radius: int = spread_radius
+	var build_radius_node: Node = find_child("BuildRadius")
+	if build_radius_node != null and build_radius_node.get("radius_in_cells") != null:
+		var r: int = build_radius_node.radius_in_cells
+		if r > 0:
+			radius = r
+	spread_radius = radius
+	# First pass: collect all cells within radius.
+	var candidates: Dictionary = {}
+	for x: int in range(-radius, radius + 1):
+		for y: int in range(-radius, radius + 1):
+			if Vector2(x, y).length() <= float(radius):
+				candidates[Vector2i(x, y)] = true
+	# Second pass: prune cells with fewer than 2 cardinal neighbours.
+	for offset: Vector2i in candidates.keys():
+		var neighbor_count: int = 0
+		for dir: Vector2i in _ORTHO_DIRS:
+			if candidates.has(offset + dir):
+				neighbor_count += 1
+		if neighbor_count >= 2:
+			_allowed_offsets[offset] = true
+
+
+## Fill the entire spread radius with creep immediately.
+func spread_creep_instantly() -> void:
+	var creep_map: CreepMap = MatchGlobal.creep_map
+	if creep_map == null:
+		return
+	var map = MatchGlobal.map
+	if map == null:
+		return
+	var center: Vector2i = map.world_to_cell(global_position)
+	for offset: Vector2i in _allowed_offsets:
+		var cell: Vector2i = center + offset
+		if not _cell_in_bounds(cell, map):
+			continue
+		if creep_map.is_any_creep(cell):
+			continue
+		creep_map.set_player_bit(cell, _player_bit, true)
+		creep_map.set_cell_health(cell, RadixConstants.CREEP_CELL_MAX_HEALTH)
+		_owned_cells.append(cell)
+	_frontier.clear()
+	_frontier_set.clear()
+	for cell: Vector2i in _owned_cells:
+		_add_to_frontier(cell, creep_map, center, map)
+	MatchSignals.creep_map_changed.emit()
 
 
 func _exit_tree() -> void:
@@ -27,6 +88,8 @@ func _exit_tree() -> void:
 
 
 func _on_creep_tick() -> void:
+	if not is_constructed():
+		return
 	_tick_counter += 1
 	if _tick_counter < RadixConstants.CREEP_SPREAD_INTERVAL_TICKS:
 		return
@@ -42,16 +105,25 @@ func _spread_creep() -> void:
 	var map = MatchGlobal.map
 	var center: Vector2i = map.world_to_cell(global_position)
 
-	# Bootstrap: seed the center cell if nothing owned yet.
+	# Bootstrap: seed owned cells if nothing owned yet.
 	if _owned_cells.is_empty():
 		if not _cell_in_bounds(center, map):
 			return
-		if creep_map.is_any_creep(center):
-			return
-		creep_map.set_player_bit(center, _player_bit, true)
-		creep_map.set_cell_health(center, RadixConstants.CREEP_CELL_MAX_HEALTH)
-		_owned_cells.append(center)
-		_add_to_frontier(center, creep_map, center, map)
+		# Adopt all existing creep cells within radius so the frontier
+		# is built at the true edge, not just the center.
+		for offset: Vector2i in _allowed_offsets:
+			var cell: Vector2i = center + offset
+			if not _cell_in_bounds(cell, map):
+				continue
+			if creep_map.is_any_creep(cell):
+				_owned_cells.append(cell)
+		# If no existing creep found, seed the center cell.
+		if _owned_cells.is_empty():
+			creep_map.set_player_bit(center, _player_bit, true)
+			creep_map.set_cell_health(center, RadixConstants.CREEP_CELL_MAX_HEALTH)
+			_owned_cells.append(center)
+		for cell: Vector2i in _owned_cells:
+			_add_to_frontier(cell, creep_map, center, map)
 		MatchSignals.creep_map_changed.emit()
 		return
 
@@ -94,7 +166,7 @@ func _gather_candidates(creep_map: CreepMap, center: Vector2i, map) -> Array[Vec
 				continue
 			if creep_map.is_any_creep(candidate):
 				continue
-			if Vector2(candidate - center).length() > float(spread_radius):
+			if not _allowed_offsets.has(candidate - center):
 				continue
 			result.append(candidate)
 	# Sort closest-first so spread always expands outward from the source center.
@@ -115,7 +187,7 @@ func _add_to_frontier(cell: Vector2i, creep_map: CreepMap, center: Vector2i, map
 			continue
 		if creep_map.is_any_creep(n):
 			continue
-		if Vector2(n - center).length() > float(spread_radius):
+		if not _allowed_offsets.has(n - center):
 			continue
 		_frontier.append(cell)
 		_frontier_set[cell] = true
@@ -141,7 +213,7 @@ func _has_expandable_neighbour(cell: Vector2i, creep_map: CreepMap, center: Vect
 			continue
 		if creep_map.is_any_creep(n):
 			continue
-		if Vector2(n - center).length() > float(spread_radius):
+		if not _allowed_offsets.has(n - center):
 			continue
 		return true
 	return false

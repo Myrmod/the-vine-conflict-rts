@@ -8,6 +8,7 @@ enum BlueprintPositionValidity {
 	OUT_OF_MAP,
 	OUTSIDE_BUILD_RADIUS,
 	WRONG_TERRAIN,
+	NOT_ON_CREEP,
 }
 
 const ROTATION_BY_KEY_STEP_GRID = 90.0
@@ -29,6 +30,7 @@ var _free_placement_mode = false
 var _off_field_deploy = false
 var _is_trickle = false
 var _off_field_producer_id: int = -1
+var _pending_requires_creep: bool = false
 
 @onready var _player = get_parent()
 @onready var _match = find_parent("Match")
@@ -125,6 +127,11 @@ func _calculate_blueprint_position_validity():
 		return BlueprintPositionValidity.OUTSIDE_BUILD_RADIUS
 	if not _placement_domains_match_terrain():
 		return BlueprintPositionValidity.WRONG_TERRAIN
+	if (
+		_pending_requires_creep
+		and not RadixStructure.is_creep_at_position(_active_blueprint_node.global_position)
+	):
+		return BlueprintPositionValidity.NOT_ON_CREEP
 	var placement_validity = MatchUtils.Placement.validate_agent_placement_position(
 		_active_blueprint_node.global_position,
 		_pending_structure_radius,
@@ -208,6 +215,8 @@ func _update_feedback_label(blueprint_position_validity):
 			_feedback_label.text = tr("BLUEPRINT_OUTSIDE_BUILD_RADIUS")
 		BlueprintPositionValidity.WRONG_TERRAIN:
 			_feedback_label.text = tr("BLUEPRINT_WRONG_TERRAIN")
+		BlueprintPositionValidity.NOT_ON_CREEP:
+			_feedback_label.text = tr("BLUEPRINT_NOT_ON_CREEP")
 
 
 func _start_structure_placement(structure_prototype):
@@ -221,6 +230,7 @@ func _start_structure_placement(structure_prototype):
 		if temporary_structure_instance.get("placement_domains") != null
 		else []
 	)
+	_pending_requires_creep = (temporary_structure_instance.get("requires_creep") == true)
 	_pending_structure_navmap_rid = (
 		find_parent("Match")
 		. navigation

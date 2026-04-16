@@ -97,6 +97,7 @@ func _ready():
 		_restore_from_save(save_resource)
 	else:
 		_setup_player_units()
+		_spread_initial_creep()
 	visible_player = _local_player
 	_move_camera_to_initial_position()
 
@@ -1033,6 +1034,12 @@ func _spawn_player_units(player, spawn_transform):
 	var spawn_unit = faction.new().spawn_unit
 	var spawn_unit_instant = faction.new().spawn_unit.instantiate()
 	_setup_and_spawn_unit(faction.new().spawn_unit.instantiate(), spawn_transform, player, false)
+
+
+func _spread_initial_creep() -> void:
+	for node: Node in get_tree().get_nodes_in_group("units"):
+		if node is CreepSource:
+			node.spread_creep_instantly()
 
 
 func _setup_and_spawn_unit(unit, a_transform, player, self_constructing = false):
