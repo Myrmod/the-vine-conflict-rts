@@ -4,8 +4,10 @@ extends Node3D
 
 ## Uploads creep data to the TerrainSystem shader as an overlay.
 ## No separate mesh — creep is rendered inside the terrain fragment().
+## Uses bilinear-filtered cell texture + noise for organic procedural edges.
 
-const _ATLAS_PATH: String = "res://assets_overide/Radix/Creep/creep_terrain6x3.png"
+const _GROUND_PATH: String = "res://assets_overide/Radix/Creep/creep_terrain.png"
+const _NORMAL_PATH: String = "res://assets_overide/Radix/Creep/creep_terrain_normal.png"
 
 var _cell_texture: ImageTexture = null
 var _terrain_materials: Array[ShaderMaterial] = []
@@ -35,7 +37,8 @@ func _setup_terrain_materials() -> void:
 	if creep_map == null:
 		return
 
-	var atlas: Texture2D = load(_ATLAS_PATH) as Texture2D
+	var ground_tex: Texture2D = load(_GROUND_PATH) as Texture2D
+	var normal_tex: Texture2D = load(_NORMAL_PATH) as Texture2D
 	var map_size: Vector2 = Vector2(float(creep_map.width), float(creep_map.height))
 
 	_build_cell_texture(creep_map)
@@ -49,7 +52,8 @@ func _setup_terrain_materials() -> void:
 		if mat == null:
 			continue
 		mat.set_shader_parameter("creep_tex", _cell_texture)
-		mat.set_shader_parameter("creep_atlas_tex", atlas)
+		mat.set_shader_parameter("creep_ground_tex", ground_tex)
+		mat.set_shader_parameter("creep_normal_tex", normal_tex)
 		mat.set_shader_parameter("creep_map_size", map_size)
 		mat.set_shader_parameter("creep_enabled", true)
 		_terrain_materials.append(mat)

@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://6mpbf2idk4dk"
-path="res://.godot/imported/creep_terrain6x3.png-a45d8f82c13b67b5680df2eba40c57e8.ctex"
+uid="uid://ddrp7wovverxu"
+path="res://.godot/imported/creep_terrain.png-d437485ea983dff6cddaf6da03ab355f.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets_overide/Radix/Creep/creep_terrain6x3.png"
-dest_files=["res://.godot/imported/creep_terrain6x3.png-a45d8f82c13b67b5680df2eba40c57e8.ctex"]
+source_file="res://assets_overide/Radix/Creep/creep_terrain.png"
+dest_files=["res://.godot/imported/creep_terrain.png-d437485ea983dff6cddaf6da03ab355f.ctex"]
 
 [params]
 

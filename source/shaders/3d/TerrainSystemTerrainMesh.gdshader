@@ -1,11 +1,9 @@
 shader_type spatial;
 
-// Custom light() replaces built-in diffuse/specular models
+// Use Godot's built-in PBR lighting (same as 3D models)
 render_mode
     cull_back,
-    depth_draw_opaque,
-    diffuse_lambert,
-    specular_disabled;
+    depth_draw_opaque;
 
 const int MAX_TERRAINS = 16;
 const int MAX_SPLATS = 4;
@@ -29,13 +27,6 @@ uniform float height_blend_sharpness = 1.0;
 
 // Normal map depth (replaces old normal_strength; fed to NORMAL_MAP_DEPTH)
 uniform float normal_map_depth : hint_range(0.0, 2.0) = 1.0;
-
-// --- Blinn-Phong lighting ---
-uniform float shininess : hint_range(2.0, 512.0) = 20.0;
-uniform float specular_intensity : hint_range(0.0, 2.0) = 0.1;
-uniform vec3  specular_color : source_color = vec3(1.0);
-uniform float fresnel_power : hint_range(1.0, 10.0) = 5.0;
-uniform float fresnel_strength : hint_range(0.0, 1.0) = 0.25;
 
 // Subtle ambient fill so textures remain visible even in full shadow
 // (Only needed if Environment ambient is disabled; keep at 0.0 otherwise)
@@ -87,12 +78,47 @@ uniform vec3 debug_layer_color : source_color = vec3(1.0);
 
 // --- Creep overlay (Radix faction ground coverage) ---
 // R8 texture, same size as the map grid: > 0 = creep present.
-uniform sampler2D creep_tex : hint_default_black, filter_nearest, repeat_disable;
-// Horizontal Wang 2-corner atlas (16 columns).
-// 6-column × 3-row orthogonal + inner-corner atlas (960×960 px per tile).
-uniform sampler2D creep_atlas_tex : hint_default_black, filter_linear, repeat_disable;
+// Sampled with filter_linear so the GPU interpolates cell boundaries into
+// a smooth 0→1 gradient that acts as an implicit SDF.
+uniform sampler2D creep_tex : hint_default_black, filter_linear, repeat_disable;
+// Tileable creep ground texture (single image, no atlas).
+uniform sampler2D creep_ground_tex : source_color, hint_default_black, filter_linear, repeat_enable;
+// Normal map for the creep ground texture.
+uniform sampler2D creep_normal_tex : hint_default_white, filter_linear, repeat_enable;
 uniform bool creep_enabled = false;
+// Strength of the creep normal map (0 = flat, 1 = full).
+uniform float creep_normal_strength : hint_range(0.0, 1.0) = 0.3;
 uniform vec2 creep_map_size = vec2(50.0, 50.0);
+// How many map cells the creep ground texture spans before repeating.
+uniform float creep_uv_scale : hint_range(1.0, 16.0) = 4.0;
+// Controls the width of the soft edge transition.
+uniform float creep_edge_width : hint_range(0.01, 0.3) = 0.06;
+// How much the procedural noise distorts the edge (0 = smooth circle, 0.3 = very organic).
+uniform float creep_edge_distortion : hint_range(0.0, 0.5) = 0.18;
+// Scale of the edge distortion pattern (higher = finer wobble).
+uniform float creep_edge_noise_scale : hint_range(1.0, 20.0) = 5.0;
+
+// Procedural hash-based value noise (no texture needed).
+float _creep_hash(vec2 p) {
+    vec3 p3 = fract(vec3(p.xyx) * 0.1031);
+    p3 += dot(p3, p3.yzx + 33.33);
+    return fract((p3.x + p3.y) * p3.z);
+}
+
+float _creep_noise(vec2 p) {
+    vec2 i = floor(p);
+    vec2 f = fract(p);
+    f = f * f * (3.0 - 2.0 * f); // smoothstep interpolation
+    float a = _creep_hash(i);
+    float b = _creep_hash(i + vec2(1.0, 0.0));
+    float c = _creep_hash(i + vec2(0.0, 1.0));
+    float d = _creep_hash(i + vec2(1.0, 1.0));
+    return mix(mix(a, b, f.x), mix(c, d, f.x), f.y);
+}
+
+float _creep_fbm(vec2 p) {
+    return _creep_noise(p) * 0.65 + _creep_noise(p * 2.13 + vec2(5.3, 1.7)) * 0.35;
+}
 
 void vertex() {
     // Map each PlaneMesh vertex to the centre of its corresponding texel.
@@ -287,53 +313,30 @@ void fragment() {
     ALBEDO           = final_albedo;
 
     // === Creep overlay (Radix ground coverage) ===
-    // Atlas: creep_terrain6x3.png — 6 cols × 3 rows (see CreepAtlas.gd).
-    // Left half (col 0–2): outer boundary tiles, selected by orthogonal mask.
-    // Right half (col 3–5): inner corner tiles, selected by diagonal absence.
+    // Bilinear-filtered creep_tex gives a smooth 0→1 gradient at cell edges.
+    // Procedural noise distorts the threshold for organic, irregular borders.
     if (creep_enabled) {
-        float creep_val = texture(creep_tex, UV).r;
-        if (creep_val > 0.01) {
-            // Cell coordinate from UV (UV 0..1 maps to 0..map_size cells).
-            vec2 cell_coord = UV * creep_map_size;
-            vec2 cell_floor = floor(cell_coord);
-            vec2 cell_frac  = cell_coord - cell_floor;
+        float creep_sdf = texture(creep_tex, UV).r;
+        if (creep_sdf > 0.01) {
+            float noise = _creep_fbm(UV * creep_map_size * creep_edge_noise_scale);
+            float threshold = mix(0.25 - creep_edge_distortion, 0.25 + creep_edge_distortion, noise);
+            float creep_alpha = smoothstep(threshold, threshold + creep_edge_width, creep_sdf);
 
-            // Sample the four orthogonal neighbours (centre of each adjacent cell).
-            vec2 inv_cs = 1.0 / creep_map_size;
-            float c_n = step(0.01, texture(creep_tex, (cell_floor + vec2( 0.5, -0.5)) * inv_cs).r);
-            float c_e = step(0.01, texture(creep_tex, (cell_floor + vec2( 1.5,  0.5)) * inv_cs).r);
-            float c_s = step(0.01, texture(creep_tex, (cell_floor + vec2( 0.5,  1.5)) * inv_cs).r);
-            float c_w = step(0.01, texture(creep_tex, (cell_floor + vec2(-0.5,  0.5)) * inv_cs).r);
+            if (creep_alpha > 0.001) {
+                vec2 creep_uv = UV * creep_map_size / creep_uv_scale;
+                vec3 creep_rgb = texture(creep_ground_tex, creep_uv).rgb;
+                vec3 creep_nrm = mix(vec3(0.5, 0.5, 1.0), texture(creep_normal_tex, creep_uv).rgb, creep_normal_strength);
 
-            // 4-bit orthogonal mask: N=1, E=2, S=4, W=8.
-            int ortho_mask = int(c_n) * 1 + int(c_e) * 2 + int(c_s) * 4 + int(c_w) * 8;
-
-            float atlas_col;
-            float atlas_row;
-            if (ortho_mask == 15) {
-                // All orthogonal neighbours present — fully covered interior cell.
-                atlas_col = 4.0; atlas_row = 1.0; // ALL
-            } else if (ortho_mask == 6)  { atlas_col = 0.0; atlas_row = 0.0; } // NW outer
-            else if (ortho_mask == 14) { atlas_col = 1.0; atlas_row = 0.0; } // N  outer edge
-            else if (ortho_mask == 12) { atlas_col = 2.0; atlas_row = 0.0; } // NE outer
-            else if (ortho_mask == 7)  { atlas_col = 0.0; atlas_row = 1.0; } // W  outer edge
-            else if (ortho_mask == 13) { atlas_col = 2.0; atlas_row = 1.0; } // E  outer edge
-            else if (ortho_mask == 3)  { atlas_col = 0.0; atlas_row = 2.0; } // SW outer
-            else if (ortho_mask == 11) { atlas_col = 1.0; atlas_row = 2.0; } // S  outer edge
-            else if (ortho_mask == 9)  { atlas_col = 2.0; atlas_row = 2.0; } // SE outer
-            else                       { atlas_col = 4.0; atlas_row = 1.0; } // fallback ALL
-
-            float atlas_u = (atlas_col + cell_frac.x) / 6.0;
-            float atlas_v = (atlas_row + cell_frac.y) / 3.0;
-            vec4 creep_color = texture(creep_atlas_tex, vec2(atlas_u, atlas_v));
-
-            // Creep is the topmost layer — fully replace terrain output.
-            ALBEDO           = mix(ALBEDO, creep_color.rgb, creep_color.a);
-            final_normal_map = mix(final_normal_map, vec3(0.5, 0.5, 1.0), creep_color.a);
-            final_roughness  = mix(final_roughness, 0.8, creep_color.a);
-            final_ao         = mix(final_ao, 1.0, creep_color.a);
+                ALBEDO           = mix(ALBEDO, creep_rgb, creep_alpha);
+                final_normal_map = mix(final_normal_map, creep_nrm, creep_alpha);
+                final_roughness  = mix(final_roughness, 0.8, creep_alpha);
+                final_ao         = mix(final_ao, 1.0, creep_alpha);
+            }
         }
     }
+
+    // Apply terrain brightness to final albedo (affects both terrain and creep)
+    ALBEDO *= terrain_brightness;
 
     // Debug layer colour override
     if (debug_layer_color_enabled) {
@@ -350,47 +353,4 @@ void fragment() {
     if (ambient_fill > 0.001) {
         EMISSION = ALBEDO * ambient_tint * ambient_fill * final_ao;
     }
-}
-
-// ============================================================
-//  Blinn-Phong per-light function
-// ============================================================
-void light() {
-    // Half-vector between view and light
-    vec3 H = normalize(VIEW + LIGHT);
-
-    // --- Diffuse (Lambert with soft wrap) ---
-    float NdotL = dot(NORMAL, LIGHT);
-    // Slight wrap so shadow transition is softer / more natural
-    float wrap           = 0.03;
-    float wrapped_NdotL  = max((NdotL + wrap) / (1.0 + wrap), 0.0);
-
-    vec3 diffuse = ALBEDO * wrapped_NdotL;
-
-    // --- Specular (Blinn-Phong) ---
-    float NdotH = max(dot(NORMAL, H), 0.0);
-
-    // Roughness narrows / broadens the highlight
-    float r2 = ROUGHNESS * ROUGHNESS;
-    float eff_shininess = shininess * max(1.0 - r2, 0.04);
-    eff_shininess = max(eff_shininess, 2.0);
-
-    float spec = pow(NdotH, eff_shininess);
-
-    // Energy-conserving normalization (Blinn-Phong)
-    float norm_factor = (eff_shininess + 8.0) / (8.0 * 3.14159265);
-
-    // Fresnel (Schlick approximation) – brighter highlights at glancing angles
-    float NdotV      = max(dot(NORMAL, VIEW), 0.0);
-    float fresnel    = pow(1.0 - NdotV, fresnel_power);
-    float spec_scale = specular_intensity + fresnel * fresnel_strength;
-
-    // Attenuate specular on rough surfaces
-    spec_scale *= (1.0 - ROUGHNESS * 0.7);
-
-    vec3 specular = specular_color * spec * spec_scale * norm_factor;
-
-    // Accumulate (+=, not =, so multiple lights and shadows stack correctly)
-    DIFFUSE_LIGHT  += diffuse  * ATTENUATION * LIGHT_COLOR * terrain_brightness;
-    SPECULAR_LIGHT += specular * ATTENUATION * LIGHT_COLOR * terrain_brightness;
 }
