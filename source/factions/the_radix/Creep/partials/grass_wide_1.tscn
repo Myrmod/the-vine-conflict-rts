@@ -1,0 +1,8 @@
+[gd_scene format=3 uid="uid://b6l8n3txlinpu"]
+
+[ext_resource type="Script" uid="uid://bkbnng0p7gi3b" path="res://source/factions/the_radix/Creep/partials/CreepPartialScene.gd" id="1"]
+
+[node name="grass_wide_1" type="Node3D" unique_id=1371994452]
+script = ExtResource("1")
+mesh_node_name = "grass_wide_1"
+count_per_cell = 12
