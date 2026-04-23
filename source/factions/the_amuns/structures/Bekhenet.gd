@@ -1,1 +1,1 @@
-extends "res://source/factions/the_amuns/AmunResourceDropOffStructure.gd"
+extends "res://source/factions/the_amuns/AmunStructure.gd"

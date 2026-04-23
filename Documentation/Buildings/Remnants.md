@@ -6,9 +6,17 @@
 - Costs 600 , 6 secs build time 
 - Provides 150 power
 
-## refinery:
-- costs 1800, 18 seconds build time , costs 50 power
-- Provides a harvester
+## Burn Harvest System:
+- Remnants do not use a refinery return loop.
+- They gain resources by burning and destroying ResourceVines.
+- If a tile is being burned, it is considered actively harvested.
+- Gather rate is measured in destroyed resources per tick.
+
+## Gather Units:
+- Incinerator (infantry)
+	- Produced in Barracks
+- Flame Tank (vehicle)
+	- Produced in Vehicle Bay
 
 ## Barracks:
 - costs 600 , 6 sec build time, costs 25 power

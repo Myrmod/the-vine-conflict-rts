@@ -8,7 +8,7 @@ valid=false
 
 [deps]
 
-source_file="res://asset_overide/RockPack1/Models/Cliff_models.gltf"
+source_file="res://assets_overide/RockPack1/Models/Cliff_models.gltf"
 
 [params]
 

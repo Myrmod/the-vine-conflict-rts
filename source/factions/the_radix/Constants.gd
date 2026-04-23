@@ -12,8 +12,13 @@ const STRUCTURES = {
 		"faction": Enums.Faction.RADIX,
 		"production_tab_type": Enums.ProductionTabType.STRUCTURE,
 		"production_tab_grid_slot": Enums.ProductionTabGridSlots.F1,
-		"produces": [Enums.ProductionTabType.STRUCTURE, Enums.ProductionTabType.DEFENCES],
-		"max_concurrent_structures": 1,
+		"produces":
+		[
+			Enums.ProductionTabType.STRUCTURE,
+			Enums.ProductionTabType.DEFENCES,
+			Enums.ProductionTabType.INFANTRY,
+		],
+		"max_concurrent_structures": 99,
 		"sight_range": 10.0,
 		"hp": 20,
 		"hp_max": 20,
@@ -36,11 +41,135 @@ const STRUCTURES = {
 		"costs": {"credits": 8},
 		"build_time": 10.0,
 	},
+	Enums.SceneId.RADIX_BROOD_NEST:
+	{
+		"scene": "res://source/factions/the_radix/structures/BroodNest.tscn",
+		"unit_name": "Brood Nest",
+		"description": "Tier 1 infantry nursery seeded into place by a Seedling.",
+		"faction": Enums.Faction.RADIX,
+		"production_tab_type": Enums.ProductionTabType.STRUCTURE,
+		"production_tab_grid_slot": Enums.ProductionTabGridSlots.F2,
+		"produces": [Enums.ProductionTabType.INFANTRY],
+		"requires_seedling_to_start": true,
+		"sight_range": 8.0,
+		"hp": 12,
+		"hp_max": 12,
+		"armor":
+		{
+			Enums.DamageTypes.CANNON: 0.0,
+			Enums.DamageTypes.CORROSIVE: 0.0,
+			Enums.DamageTypes.CRUSH: 0.25,
+			Enums.DamageTypes.EXPLOSIVE: 0.0,
+			Enums.DamageTypes.FIRE: 0.0,
+			Enums.DamageTypes.LASER: 0.0,
+			Enums.DamageTypes.MELEE: 0.25,
+			Enums.DamageTypes.PLASMA: 0.0,
+			Enums.DamageTypes.PRISM: 0.0,
+			Enums.DamageTypes.RIFLE: 0.25,
+			Enums.DamageTypes.ROCKET: 0.0,
+			Enums.DamageTypes.TESLA: 0.0,
+		},
+		"costs": {"credits": 600},
+		"build_time": 6.0,
+	},
+	Enums.SceneId.RADIX_THORN_FORGE:
+	{
+		"scene": "res://source/factions/the_radix/structures/ThornForge.tscn",
+		"unit_name": "Thorn Forge",
+		"description": "Tier 1 vehicle foundry seeded into place by a Seedling.",
+		"faction": Enums.Faction.RADIX,
+		"production_tab_type": Enums.ProductionTabType.STRUCTURE,
+		"production_tab_grid_slot": Enums.ProductionTabGridSlots.F3,
+		"produces": [Enums.ProductionTabType.VEHICLE],
+		"requires_seedling_to_start": true,
+		"sight_range": 8.0,
+		"hp": 18,
+		"hp_max": 18,
+		"armor":
+		{
+			Enums.DamageTypes.CANNON: 0.25,
+			Enums.DamageTypes.CORROSIVE: 0.0,
+			Enums.DamageTypes.CRUSH: 0.35,
+			Enums.DamageTypes.EXPLOSIVE: 0.0,
+			Enums.DamageTypes.FIRE: 0.0,
+			Enums.DamageTypes.LASER: 0.15,
+			Enums.DamageTypes.MELEE: 0.25,
+			Enums.DamageTypes.PLASMA: 0.15,
+			Enums.DamageTypes.PRISM: 0.15,
+			Enums.DamageTypes.RIFLE: 0.35,
+			Enums.DamageTypes.ROCKET: 0.15,
+			Enums.DamageTypes.TESLA: 0.15,
+		},
+		"costs": {"credits": 2000},
+		"build_time": 20.0,
+	},
+	Enums.SceneId.RADIX_SKY_BLOOM:
+	{
+		"scene": "res://source/factions/the_radix/structures/SkyBloom.tscn",
+		"unit_name": "Sky Bloom",
+		"description": "Tier 1 aerial cradle seeded into place by a Seedling.",
+		"faction": Enums.Faction.RADIX,
+		"production_tab_type": Enums.ProductionTabType.STRUCTURE,
+		"production_tab_grid_slot": Enums.ProductionTabGridSlots.F4,
+		"produces": [Enums.ProductionTabType.AIR],
+		"requires_seedling_to_start": true,
+		"sight_range": 8.0,
+		"hp": 16,
+		"hp_max": 16,
+		"armor":
+		{
+			Enums.DamageTypes.CANNON: 0.15,
+			Enums.DamageTypes.CORROSIVE: 0.0,
+			Enums.DamageTypes.CRUSH: 0.25,
+			Enums.DamageTypes.EXPLOSIVE: 0.0,
+			Enums.DamageTypes.FIRE: 0.0,
+			Enums.DamageTypes.LASER: 0.15,
+			Enums.DamageTypes.MELEE: 0.25,
+			Enums.DamageTypes.PLASMA: 0.15,
+			Enums.DamageTypes.PRISM: 0.15,
+			Enums.DamageTypes.RIFLE: 0.25,
+			Enums.DamageTypes.ROCKET: 0.15,
+			Enums.DamageTypes.TESLA: 0.15,
+		},
+		"costs": {"credits": 2000},
+		"build_time": 20.0,
+	},
 }
 
 const DEFENCES = {}
 
-const INFANTRY = {}
+const INFANTRY = {
+	Enums.SceneId.RADIX_SEEDLING:
+	{
+		"scene": "res://source/factions/the_radix/units/Seedling.tscn",
+		"unit_name": "Seedling",
+		"description": "A fragile sprout creature. Unarmed and best used for scouting.",
+		"faction": Enums.Faction.RADIX,
+		"production_tab_type": Enums.ProductionTabType.INFANTRY,
+		"production_tab_grid_slot": Enums.ProductionTabGridSlots.F1,
+		"sight_range": 6.0,
+		"hp": 80,
+		"hp_max": 80,
+		"can_move_through_vines": true,
+		"armor":
+		{
+			Enums.DamageTypes.CANNON: 0.0,
+			Enums.DamageTypes.CORROSIVE: 0.0,
+			Enums.DamageTypes.CRUSH: 0.0,
+			Enums.DamageTypes.EXPLOSIVE: 0.0,
+			Enums.DamageTypes.FIRE: 0.0,
+			Enums.DamageTypes.LASER: 0.0,
+			Enums.DamageTypes.MELEE: 0.0,
+			Enums.DamageTypes.PLASMA: 0.0,
+			Enums.DamageTypes.PRISM: 0.0,
+			Enums.DamageTypes.RIFLE: 0.0,
+			Enums.DamageTypes.ROCKET: 0.0,
+			Enums.DamageTypes.TESLA: 0.0,
+		},
+		"costs": {"credits": 1},
+		"build_time": 2.5,
+	},
+}
 
 const VEHICLES = {}
 

@@ -1,3 +1,4 @@
+@tool
 class_name ModelHolder extends Node3D
 
 ## Usage
@@ -24,10 +25,20 @@ static var _size_cache: Dictionary = {}
 static var _cache_loaded: bool = false
 
 ## Relative path to the model inside assets/ (e.g. "models/kenney-spacekit/rock_largeA.glb")
-@export var model_path: String = ""
+@export var model_path: String = "":
+	set(value):
+		if model_path == value:
+			return
+		model_path = value
+		if is_node_ready():
+			_do_load(model_path)
 
 ## Optional relative path to a material inside assets/ to apply as material_override
 @export var material_path: String = ""
+
+## Optional material slot name to target inside imported meshes (e.g. "ProcedualBark")
+## When empty, material_path is applied as a full material_override as before.
+@export var material_target_name: String = ""
 
 ## Size of the fallback cube when no model is found
 @export var fallback_cube_size: Vector3 = Vector3(1, 1, 1)
@@ -57,11 +68,14 @@ var _loaded_source: String = ""
 
 func _ready() -> void:
 	if not model_path.is_empty():
-		load_model(model_path)
+		_do_load(model_path)
 
 
 func load_model(path: String) -> void:
 	model_path = path
+
+
+func _do_load(path: String) -> void:
 	_clear_children()
 
 	var mat: Material = _resolve_material()
@@ -119,7 +133,10 @@ func _try_instantiate(resource_path: String, mat: Material = null) -> bool:
 		var instance: Node = res.instantiate()
 		add_child(instance)
 		if mat:
-			_apply_material_override(instance, mat)
+			if material_target_name.is_empty():
+				_apply_material_override(instance, mat)
+			else:
+				_apply_named_surface_material(instance, mat, material_target_name)
 		return true
 
 	if res is Mesh:
@@ -139,6 +156,29 @@ func _apply_material_override(node: Node, mat: Material) -> void:
 		node.material_override = mat
 	for child in node.get_children():
 		_apply_material_override(child, mat)
+
+
+func _apply_named_surface_material(node: Node, mat: Material, target_name: String) -> void:
+	if node is MeshInstance3D and node.mesh:
+		_apply_named_surface_material_on_mesh_instance(node, mat, target_name)
+	for child in node.get_children():
+		_apply_named_surface_material(child, mat, target_name)
+
+
+func _apply_named_surface_material_on_mesh_instance(mesh_instance: MeshInstance3D, mat: Material, target_name: String) -> void:
+	var mesh := mesh_instance.mesh
+	if mesh == null:
+		return
+	var target := target_name.to_lower()
+	for surface_idx in mesh.get_surface_count():
+		var source_material: Material = mesh.surface_get_material(surface_idx)
+		if source_material == null:
+			source_material = mesh_instance.get_surface_override_material(surface_idx)
+		if source_material == null:
+			continue
+		var source_name := source_material.resource_name.to_lower()
+		if source_name == target or source_name.contains(target):
+			mesh_instance.set_surface_override_material(surface_idx, mat)
 
 
 func _create_fallback_cube(size: Vector3) -> void:

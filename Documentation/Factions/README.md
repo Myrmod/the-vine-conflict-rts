@@ -24,6 +24,7 @@ Each faction folder contains a single overview file with:
 - [The Vines — Origins](../The_vines/Origins.md) — what the Vines are and why they exist
 - [The Human Conflict — Origins](Human_conflict/Origins.md) — the Ash War and the awakening that split humanity
 - [Economy — General](../Economy/General.md) — resource field sizes and harvester mechanics
+- [Economy — Radix Seedling Workflow](../Economy/Radix_Seedling_Workflow.md) — Heart-produced Seedlings, consumption on success, cancel survival rule
 - [Tech Tree diagrams](../Tech_tree/) — visual .svg / .drawio files per faction
 
 ### Scattered source files (superseded by consolidated files above)

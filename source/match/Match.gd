@@ -511,37 +511,81 @@ func _execute_command(cmd: Dictionary):
 			if player == null:
 				return
 			var structure_scene_id: int = cmd.data.structure_prototype
+			if _is_duplicate_structure_placement(player, structure_scene_id, cmd.data.transform):
+				push_warning(
+					(
+						"STRUCTURE_PLACED: ignored duplicate placement for scene id %s at %s"
+						% [structure_scene_id, str(cmd.data.transform.origin)]
+					)
+				)
+				return
 			var structure_scene_path: String = UnitConstants.get_scene_path(structure_scene_id)
 			if structure_scene_path == "":
 				push_error("STRUCTURE_PLACED: unknown scene id %s" % structure_scene_id)
 				return
-			var structure_prototype = load(structure_scene_path)
+			var structure_prototype: PackedScene = load(structure_scene_path) as PackedScene
 			if structure_prototype == null:
 				push_error("STRUCTURE_PLACED: cannot load %s" % structure_scene_path)
 				return
-			var self_constructing = cmd.data.get("self_constructing", false)
-			var off_field_deploy = cmd.data.get("off_field_deploy", false)
-			var is_trickle = cmd.data.get("trickle", false)
-			var construction_cost = UnitConstants.get_default_properties(structure_scene_id).get(
-				"costs", null
+			var self_constructing: bool = cmd.data.get("self_constructing", false)
+			var off_field_deploy: bool = cmd.data.get("off_field_deploy", false)
+			var is_trickle: bool = cmd.data.get("trickle", false)
+			var preview_structure: Node = structure_prototype.instantiate()
+			var requires_seedling_to_start: bool = (
+				preview_structure.get("requires_seedling_to_start") == true
+			)
+			preview_structure.queue_free()
+			var seedling_constructor: Unit = null
+			if requires_seedling_to_start:
+				seedling_constructor = _find_available_radix_seedling(
+					player,
+					cmd.data.transform.origin,
+				)
+				if seedling_constructor == null:
+					push_warning(
+						(
+							"STRUCTURE_PLACED: player %s has no available Seedling for %s"
+							% [player.id, structure_scene_path]
+						)
+					)
+					return
+				self_constructing = false
+			var construction_cost: Variant = (
+				UnitConstants.get_default_properties(structure_scene_id).get("costs", null)
 			)
 			if off_field_deploy:
 				# Cost already handled during queue production. Deploy with quick build.
 				var producer_id: int = cmd.data.get("producer_id", -1)
 				if producer_id >= 0:
-					var producer = _resolve_unit(producer_id, "STRUCTURE_PLACED")
+					var producer: Unit = _resolve_unit(producer_id, "STRUCTURE_PLACED")
 					if producer != null and producer.has_node("ProductionQueue"):
 						producer.production_queue.deploy_completed(structure_scene_id)
-				var unit = structure_prototype.instantiate()
+				var unit: Node = structure_prototype.instantiate()
 				MatchSignals.setup_and_spawn_unit.emit(unit, cmd.data.transform, player, true)
 				if unit is Structure:
 					unit._self_construction_speed = 2.0  # 0.5 s build
+				if seedling_constructor != null:
+					seedling_constructor.action = Actions.Constructing.new(unit)
 			elif is_trickle:
 				# ON_FIELD + TRICKLE: no upfront cost — structure trickles during construction
-				var unit = structure_prototype.instantiate()
+				var unit: Node = structure_prototype.instantiate()
 				if unit is Structure and construction_cost != null:
 					unit._trickle_cost = construction_cost.duplicate()
-				MatchSignals.setup_and_spawn_unit.emit(unit, cmd.data.transform, player, true)
+				MatchSignals.setup_and_spawn_unit.emit(
+					unit, cmd.data.transform, player, self_constructing
+				)
+				if requires_seedling_to_start and unit is Structure:
+					unit.mark_as_under_construction(false)
+					# Add to producer's queue for HUD tracking
+					var producer_id: int = cmd.data.get("producer_id", -1)
+					if producer_id >= 0:
+						var producer: Unit = _resolve_unit(
+							producer_id, "STRUCTURE_PLACED/seedling-queue"
+						)
+						if producer != null and producer.has_node("ProductionQueue"):
+							_add_seedling_structure_to_queue(producer, unit, structure_scene_id)
+				if seedling_constructor != null:
+					seedling_constructor.action = Actions.Constructing.new(unit)
 			else:
 				# DONT_TRICKLE: deduct full cost upfront (also used by AI)
 				if construction_cost != null:
@@ -554,16 +598,29 @@ func _execute_command(cmd: Dictionary):
 						)
 						return
 					player.subtract_resources(construction_cost)
+				var unit: Node = structure_prototype.instantiate()
 				(
 					MatchSignals
 					. setup_and_spawn_unit
 					. emit(
-						structure_prototype.instantiate(),
+						unit,
 						cmd.data.transform,
 						player,
 						self_constructing,
 					)
 				)
+				if requires_seedling_to_start and unit is Structure:
+					unit.mark_as_under_construction(false)
+					# Add to producer's queue for HUD tracking
+					var producer_id: int = cmd.data.get("producer_id", -1)
+					if producer_id >= 0:
+						var producer: Unit = _resolve_unit(
+							producer_id, "STRUCTURE_PLACED/seedling-queue"
+						)
+						if producer != null and producer.has_node("ProductionQueue"):
+							_add_seedling_structure_to_queue(producer, unit, structure_scene_id)
+				if seedling_constructor != null:
+					seedling_constructor.action = Actions.Constructing.new(unit)
 
 		# ── PRODUCTION ────────────────────────────────────────────────
 		# Queues a unit for production. Resources are checked and deducted by the
@@ -1031,15 +1088,140 @@ func _setup_player_units():
 func _spawn_player_units(player, spawn_transform):
 	var faction = Factions.get_faction_by_enum(player.faction)
 	var new_faction = faction.new()
-	var spawn_unit = faction.new().spawn_unit
-	var spawn_unit_instant = faction.new().spawn_unit.instantiate()
-	_setup_and_spawn_unit(faction.new().spawn_unit.instantiate(), spawn_transform, player, false)
+	var spawn_structure = new_faction.spawn_unit.instantiate()
+	_setup_and_spawn_unit(spawn_structure, spawn_transform, player, false)
+
+	if player.faction != Enums.Faction.RADIX:
+		return
+
+	var seedling_scene_path := UnitConstants.get_scene_path(Enums.SceneId.RADIX_SEEDLING)
+	if seedling_scene_path.is_empty():
+		return
+	var seedling_scene: PackedScene = load(seedling_scene_path)
+	if seedling_scene == null:
+		return
+
+	var spawn_positions: Array[Vector3] = []
+	for child: Node in spawn_structure.get_children():
+		if not (child is Node3D) or not child.name.begins_with("SpawningFlowerBulb"):
+			continue
+		var bulb := child as Node3D
+		var spawn_position := bulb.global_position
+		if bulb.has_method("get_spawn_world_position"):
+			spawn_position = bulb.get_spawn_world_position()
+		var outward: Vector3 = (spawn_position - spawn_structure.global_position) * Vector3(1, 0, 1)
+		if outward.length_squared() > 0.0:
+			spawn_position += outward.normalized() * 0.45
+		spawn_positions.append(spawn_position)
+
+	if spawn_positions.is_empty():
+		for seedling_index in range(3):
+			var angle := TAU * (float(seedling_index) / 3.0)
+			spawn_positions.append(
+				spawn_structure.global_position + Vector3.FORWARD.rotated(Vector3.UP, angle) * 1.75
+			)
+
+	for seedling_index in range(min(3, spawn_positions.size())):
+		var seedling = seedling_scene.instantiate()
+		_setup_and_spawn_unit(
+			seedling, Transform3D(Basis(), spawn_positions[seedling_index]), player, false
+		)
 
 
 func _spread_initial_creep() -> void:
 	for node: Node in get_tree().get_nodes_in_group("units"):
 		if node is CreepSource:
 			node.spread_creep_instantly()
+
+
+func _find_available_radix_seedling(player: Player, target_position: Vector3) -> Unit:
+	var best_seedling: Unit = null
+	var best_distance_sq: float = INF
+	for child: Node in player.get_children():
+		if not (child is Unit):
+			continue
+		var seedling: Unit = child
+		if UnitConstants.get_scene_id(seedling.scene_file_path) != Enums.SceneId.RADIX_SEEDLING:
+			continue
+		if seedling.action != null and seedling.action is Actions.Constructing:
+			continue
+		var distance_sq: float = seedling.global_position.distance_squared_to(target_position)
+		if distance_sq < best_distance_sq:
+			best_distance_sq = distance_sq
+			best_seedling = seedling
+	return best_seedling
+
+
+func _is_duplicate_structure_placement(
+	player: Player,
+	structure_scene_id: int,
+	target_transform: Transform3D,
+) -> bool:
+	for child: Node in player.get_children():
+		if not (child is Structure):
+			continue
+		var existing_structure: Structure = child
+		if not is_instance_valid(existing_structure) or existing_structure.is_queued_for_deletion():
+			continue
+		var existing_scene_path: String = existing_structure.scene_file_path
+		if existing_scene_path.is_empty():
+			existing_scene_path = existing_structure.get_script().resource_path.replace(
+				".gd", ".tscn"
+			)
+		if UnitConstants.get_scene_id(existing_scene_path) != structure_scene_id:
+			continue
+		# Duplicate placement commands generated in the same spot should only spawn one structure.
+		if existing_structure.global_position.distance_squared_to(target_transform.origin) < 0.0001:
+			return true
+	return false
+
+
+func _add_seedling_structure_to_queue(producer: Unit, structure: Structure, scene_id: int) -> void:
+	# Create a queue element to track the seedling-started structure's construction
+	var scene_path: String = UnitConstants.get_scene_path(scene_id)
+	var build_time: float = UnitConstants.get_default_properties(scene_id).get("build_time", 5.0)
+	var queue_element = producer.production_queue.ProductionQueueElement.new()
+	queue_element.unit_prototype = load(scene_path)
+	queue_element.time_total = build_time
+	queue_element.time_left = build_time
+	queue_element.is_tracking_only = true
+	queue_element.tracking_entity_id = structure.id
+	queue_element.paused = structure.is_construction_paused
+	# Listen for construction completion
+	if not structure.constructed.is_connected(
+		_on_seedling_structure_constructed.bind(producer, queue_element, structure)
+	):
+		structure.constructed.connect(
+			_on_seedling_structure_constructed.bind(producer, queue_element, structure)
+		)
+	var tick_callable := _on_seedling_structure_queue_tick.bind(structure, queue_element)
+	if not MatchSignals.tick_advanced.is_connected(tick_callable):
+		MatchSignals.tick_advanced.connect(tick_callable)
+	producer.production_queue._enqueue_element(queue_element)
+
+
+func _on_seedling_structure_constructed(
+	producer: Unit, queue_element, structure: Structure
+) -> void:
+	# Remove from queue when construction finishes
+	var tick_callable := _on_seedling_structure_queue_tick.bind(structure, queue_element)
+	if MatchSignals.tick_advanced.is_connected(tick_callable):
+		MatchSignals.tick_advanced.disconnect(tick_callable)
+	if producer != null and producer.has_node("ProductionQueue"):
+		producer.production_queue._remove_element(queue_element)
+
+
+func _on_seedling_structure_queue_tick(structure: Structure, queue_element) -> void:
+	if structure == null or not is_instance_valid(structure):
+		return
+	if queue_element == null:
+		return
+	var total: float = 5.0
+	if queue_element.time_total != null:
+		total = maxf(float(queue_element.time_total), 0.001)
+	var progress: float = clampf(structure.construction_progress, 0.0, 1.0)
+	queue_element.time_left = maxf(0.0, total * (1.0 - progress))
+	queue_element.paused = structure.is_construction_paused
 
 
 func _setup_and_spawn_unit(unit, a_transform, player, self_constructing = false):
@@ -1376,6 +1558,8 @@ func _restore_from_save(save: SaveGameResource) -> void:
 		if is_structure:
 			if ed.has("construction_progress") and ed["construction_progress"] != null:
 				entity._construction_progress = ed["construction_progress"]
+			if entity.has_method("refresh_construction_visuals"):
+				entity.refresh_construction_visuals()
 			if ed.get("is_disabled", false):
 				entity.is_disabled = true
 			if ed.get("is_selling", false):

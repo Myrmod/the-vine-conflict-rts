@@ -49,6 +49,10 @@ The Legion represents the organized, power-centric military that emerged from wh
 
 The Legion uses **conventional refineries** with harvesters that cut Vines.
 
+- Harvester gathers, carries, and returns resources to the Refinery.
+- Legion harvesting depletes and destroys ResourceVines.
+- If a Harvester is destroyed while carrying resources, the carried load is lost.
+
 | Stat | Value |
 |---|---|
 | Capacity | 250 |
@@ -78,7 +82,7 @@ HQ
 |---|---|---|---|---|
 | HQ | — | — | — | Starting structure |
 | Power Plant | 800 | 8 s | — | Provides 200 power |
-| Refinery | 2000 | 20 s | 50 | Provides a harvester |
+| Refinery | 2000 | 20 s | 50 | Provides a Harvester that must return cargo to deliver |
 | Barracks | 600 | 6 s | 25 | Produces infantry |
 | Airfield | 2000 | 20 s | 50 | Produces air units |
 | Factory | 2000 | 20 s | 50 | Produces tanks |

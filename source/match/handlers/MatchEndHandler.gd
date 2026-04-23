@@ -119,6 +119,9 @@ func _on_new_unit(unit, _transform, _player, _self_constructing = false):
 func _on_unit_tree_exited():
 	if visible or not is_inside_tree():
 		return
+	# Never trigger win/loss in a single-player sandbox (only one player, no opponents).
+	if get_tree().get_nodes_in_group("players").size() < 2:
+		return
 	var units_by_team = {}
 	for unit in get_tree().get_nodes_in_group("units"):
 		var team = unit.player.team

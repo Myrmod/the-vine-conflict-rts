@@ -47,6 +47,8 @@ var is_construction_paused: bool = false
 var _construction_progress: float = 1.0
 var _self_constructing = false
 var _self_construction_speed = 0.0
+var _construction_visual_root: Node3D = null
+var _construction_full_visual_scale: Vector3 = Vector3.ONE
 
 ## Trickle cost state — set by Match.gd for ON_FIELD+TRICKLE structures.
 ## When non-empty, resources are deducted proportionally during construction.
@@ -71,6 +73,8 @@ var _repair_hp_remainder: float = 0.0
 
 func _ready():
 	super()
+	_cache_construction_visual_root()
+	refresh_construction_visuals()
 	var map = MatchGlobal.map
 	if map == null:
 		return
@@ -124,6 +128,9 @@ func mark_as_under_construction(self_constructing = false):
 	if hp == null:
 		await ready
 	hp = 1
+	# Ensure scale cache is fresh before scaling down
+	_cache_construction_visual_root()
+	refresh_construction_visuals()
 
 
 ## Deduct the trickle share of construction cost for the given progress fraction.
@@ -156,7 +163,9 @@ func construct(progress):
 	assert(is_under_construction(), "structure must be under construction")
 
 	_construction_progress = minf(_construction_progress + progress, 1.0)
-	hp = 1 + int(_construction_progress * float(hp_max - 1))
+	refresh_construction_visuals()
+	if hp_max != null and hp_max > 0:
+		hp = 1 + int(_construction_progress * float(hp_max - 1))
 	if _construction_progress >= 1.0:
 		_finish_construction()
 
@@ -167,12 +176,24 @@ func pause_construction() -> void:
 
 
 func cancel_construction():
-	# Only refund for non-trickle (upfront cost) builds.
-	# Trickle builds only deducted what was spent — nothing to refund.
+	# Refund canceled construction.
+	# - Upfront-cost builds: full refund.
+	# - Trickle builds: refund what has been deducted so far.
 	if _trickle_cost.is_empty():
-		var scene_path = get_script().resource_path.replace(".gd", ".tscn")
+		var scene_path: String = scene_file_path
+		if scene_path.is_empty():
+			scene_path = get_script().resource_path.replace(".gd", ".tscn")
 		var construction_cost = UnitConstants.get_default_properties(scene_path)["costs"]
 		player.add_resources(construction_cost, Enums.ResourceType.CREDITS)
+	else:
+		var spent_cost: Dictionary = {}
+		for key in _trickle_cost:
+			var total_for_key: int = _trickle_cost[key]
+			var spent_for_key: int = int(_trickle_cost_deducted * total_for_key)
+			if spent_for_key > 0:
+				spent_cost[key] = spent_for_key
+		if not spent_cost.is_empty():
+			player.add_resources(spent_cost, Enums.ResourceType.CREDITS)
 	EntityRegistry.unregister(self)
 	queue_free()
 
@@ -262,6 +283,7 @@ func _cancel_orphaned_constructions() -> void:
 
 func _finish_construction():
 	_self_constructing = false
+	refresh_construction_visuals()
 	_change_geometry_material(null)
 	_apply_energy_to_player()
 	if is_inside_tree():
@@ -278,6 +300,39 @@ func _change_geometry_material(material):
 	for child in geo.find_children("*"):
 		if "material_override" in child:
 			child.material_override = material
+
+
+func refresh_construction_visuals() -> void:
+	if _construction_visual_root == null or not is_instance_valid(_construction_visual_root):
+		_cache_construction_visual_root()
+	if _construction_visual_root == null:
+		return
+	var progress: float = clampf(_construction_progress, 0.0, 1.0)
+	if is_constructed():
+		_construction_visual_root.scale = _construction_full_visual_scale
+		_construction_visual_root.visible = true
+		return
+	# Scale from 10% to 100% so structure is always somewhat visible during construction
+	var visible_progress: float = 0.1 + (progress * 0.9)
+	_construction_visual_root.scale = _construction_full_visual_scale * visible_progress
+	_construction_visual_root.visible = true
+
+
+func _cache_construction_visual_root() -> void:
+	if _construction_visual_root != null and is_instance_valid(_construction_visual_root):
+		if _construction_full_visual_scale != Vector3.ZERO:
+			return
+	var visual_root: Node = find_child("Geometry")
+	if visual_root == null:
+		visual_root = find_child("ModelHolder")
+	if visual_root == null:
+		return
+	if not (visual_root is Node3D):
+		return
+	_construction_visual_root = visual_root
+	_construction_full_visual_scale = _construction_visual_root.scale
+	if _construction_full_visual_scale == Vector3.ZERO:
+		_construction_full_visual_scale = Vector3.ONE
 
 
 ## Apply this structure's energy contribution/consumption to its player.
@@ -414,14 +469,18 @@ func toggle_disable() -> void:
 		if production_queue != null:
 			for el in production_queue.get_elements():
 				if not el.paused:
-					production_queue.toggle_pause(UnitConstants.get_scene_id(el.unit_prototype.resource_path))
+					production_queue.toggle_pause(
+						UnitConstants.get_scene_id(el.unit_prototype.resource_path)
+					)
 	else:
 		_remove_disabled_visual()
 		# Unpause all production
 		if production_queue != null:
 			for el in production_queue.get_elements():
 				if el.paused:
-					production_queue.toggle_pause(UnitConstants.get_scene_id(el.unit_prototype.resource_path))
+					production_queue.toggle_pause(
+						UnitConstants.get_scene_id(el.unit_prototype.resource_path)
+					)
 	MatchSignals.structure_disabled_changed.emit(self)
 
 

@@ -4,6 +4,21 @@
 		11.563,
 		11.184
 	],
+	"Radix/Partials/SpawningFlowerBulb.glb": [
+		5.495,
+		6.121,
+		5.495
+	],
+	"Radix/Structures/Heart.glb": [
+		27.029,
+		13.17,
+		22.522
+	],
+	"Radix/Structures/HeartTest.glb": [
+		27.029,
+		13.17,
+		22.522
+	],
 	"Resources/Leafs.glb": [
 		6.873,
 		0.808,
@@ -15,9 +30,9 @@
 		14.899
 	],
 	"Resources/VineTile.glb": [
-		127.752,
-		8.902,
-		110.838
+		177.631,
+		11.398,
+		161.406
 	],
 	"Resources/vine_forest_1.glb": [
 		3.215,

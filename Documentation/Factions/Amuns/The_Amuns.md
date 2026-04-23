@@ -37,16 +37,16 @@ Their options: reassert control, recalibrate the Vines, or purge the planet.
 
 The Amuns **terraform Vines into Amun matter** rather than harvesting them like conventional factions.
 
-- Build **harvesting obelisks** on Vine fields → these unlock **altars**
-- Altars harvest from a 5-tile radius around them
-- Harvesting nodes also **buff nearby units**
-- Each node has a built-in turret (air + ground)
+- Build a **Prism** directly on a ResourceSpawner (max one Prism per spawner)
+- Prism increases affected tile max resources from **500 to 750** and accelerates local growth
+- Build a **Siphon** near the field to deploy flying **Harvester Drones**
+- Drones return to the Siphon to deliver gathered resources
 
 | Stat | Value |
 |---|---|
-| Capacity | Infinite |
-| Harvest rate | 100 res/s (+50 bonus) |
-| Delivery rate | Same as harvest |
+| Harvest model | Drone gather + return |
+| Field modifier | Prism converts affected tiles to 750 max |
+| Depletion | Depletes and destroys ResourceVines |
 
 ---
 
@@ -55,7 +55,7 @@ The Amuns **terraform Vines into Amun matter** rather than harvesting them like 
 ```
 HQ
 └── Obelisk (power)
-    ├── Harvesting obelisk  →  Altars
+    ├── Prism + Siphon economy line
     ├── Barracks            →  Factory  →  T2 tech structure / MCV upgrade
     └── Airfield            →  Factory  →  Naval yard
 ```
@@ -68,8 +68,8 @@ HQ
 |---|---|---|---|
 | HQ | — | — | Starting structure |
 | Obelisk | 1000 | 10 s | Produces 1 power/s; buffs buildings in 5-tile radius by 10% |
-| Harvesting Obelisk | 1000 | 10 s | Required to build Altars; must be placed on Vines; terraforms the field |
-| Altar | 1500 | 15 s | Harvests Vines in 5-tile radius; has a weak anti-air/ground turret |
+| Prism | 1000 | 10 s | Must be placed on a ResourceSpawner; max one per spawner; boosts tile max resources to 750 and increases growth |
+| Siphon | 1500 | 15 s | Deploys flying Harvester Drones that gather and return resources |
 | Barracks | 600 | 6 s | Produces infantry |
 | Airfield | 2000 | 20 s | Produces air units |
 | Factory | 2000 | 20 s | Produces tanks |

@@ -1,0 +1,61 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://source/factions/the_radix/structures/RadixSeedlingStartedStructure.gd" id="1_script"]
+[ext_resource type="Script" path="res://source/generic-scenes-and-nodes/3d/ModelHolder.gd" id="2_model_holder"]
+[ext_resource type="PackedScene" path="res://source/match/units/traits/Highlight.tscn" id="3_highlight"]
+[ext_resource type="PackedScene" path="res://source/match/units/traits/Selection.tscn" id="4_selection"]
+[ext_resource type="PackedScene" path="res://source/match/units/traits/MovementObstacle.tscn" id="5_obstacle"]
+[ext_resource type="PackedScene" path="res://source/match/units/traits/HealthBar.tscn" id="6_healthbar"]
+[ext_resource type="PackedScene" path="res://source/match/units/traits/Targetability.tscn" id="7_targetability"]
+[ext_resource type="PackedScene" path="res://source/match/units/traits/RallyPoint.tscn" id="8_rally"]
+[ext_resource type="PackedScene" path="res://source/match/units/traits/ProductionQueue.tscn" id="9_queue"]
+[ext_resource type="PackedScene" path="res://source/match/units/traits/NameTag.tscn" id="10_nametag"]
+
+[sub_resource type="CylinderShape3D" id="1_shape"]
+height = 1.0
+radius = 1.35
+
+[node name="BroodNest" type="Area3D"]
+collision_layer = 2
+collision_mask = 0
+script = ExtResource("1_script")
+
+[node name="Geometry" type="Node3D" parent="."]
+
+[node name="Model" type="Node3D" parent="Geometry"]
+script = ExtResource("2_model_holder")
+model_path = "TODO"
+fallback_cube_size = Vector3(1.9, 1.0, 1.9)
+fallback_cube_color = Color(0.282353, 0.560784, 0.239216, 1)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
+shape = SubResource("1_shape")
+
+[node name="Highlight" parent="." instance=ExtResource("3_highlight")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, 0)
+radius = 1.35
+
+[node name="Selection" parent="." instance=ExtResource("4_selection")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, 0)
+radius = 1.35
+
+[node name="MovementObstacle" parent="." instance=ExtResource("5_obstacle")]
+radius = 1.35
+vertices = PackedVector3Array(0, 0, -1.0, 0.7, 0, -0.7, 1.0, 0, 0, 0.7, 0, 0.7, 0, 0, 1.0, -0.7, 0, 0.7, -1.0, 0, 0, -0.7, 0, -0.7)
+affect_navigation_mesh = true
+path_height_offset = 0.6
+
+[node name="HealthBar" parent="." instance=ExtResource("6_healthbar")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.55, 0)
+size = Vector2(220, 10)
+
+[node name="Targetability" parent="." instance=ExtResource("7_targetability")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, 0)
+radius = 1.35
+
+[node name="RallyPoint" parent="." instance=ExtResource("8_rally")]
+
+[node name="ProductionQueue" parent="." instance=ExtResource("9_queue")]
+
+[node name="NameTag" parent="." instance=ExtResource("10_nametag")]

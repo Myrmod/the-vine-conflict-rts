@@ -8,7 +8,7 @@
 
 ## refinery:
 - costs 2000, 20 seconds build time ,costs 50 power
-- Provides a harvester
+- Provides a Harvester vehicle that gathers resources and returns to the Refinery to deliver them
 
 ## Barracks:
 - costs 600 , 6 sec build time, cost 25 power

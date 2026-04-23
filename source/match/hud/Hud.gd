@@ -557,10 +557,7 @@ func _try_produce_structure(scene_path: String) -> void:
 		return
 	if _is_off_field(prod_type):
 		# OFF_FIELD: deploy a completed structure, unpause a paused one, or queue new
-		if (
-			producer.production_queue != null
-			and producer.production_queue.has_completed(scene_id)
-		):
+		if producer.production_queue != null and producer.production_queue.has_completed(scene_id):
 			MatchSignals.pending_off_field_deploy = true
 			MatchSignals.pending_trickle = false
 			MatchSignals.pending_off_field_producer_id = producer.id
@@ -582,19 +579,21 @@ func _try_produce_structure(scene_path: String) -> void:
 	else:
 		# ON_FIELD: enforce concurrent limit per tab, then place
 		var under_construction_count := 0
+		var requires_seedling_to_start: bool = UnitConstants.get_default_properties(scene_path).get(
+			"requires_seedling_to_start", false
+		)
 		for unit in get_tree().get_nodes_in_group("controlled_units"):
 			if not (unit is Structure and unit.is_under_construction()):
 				continue
 			var upath: String = unit.scene_file_path
-			var utab = UnitConstants.get_default_properties(upath).get(
-				"production_tab_type", -1
-			)
+			var utab = UnitConstants.get_default_properties(upath).get("production_tab_type", -1)
 			if utab == target_tab:
 				under_construction_count += 1
-		if under_construction_count < max_conc:
+		if requires_seedling_to_start or under_construction_count < max_conc:
 			var is_trickle := _is_trickle(prod_type)
 			MatchSignals.pending_trickle = is_trickle
 			MatchSignals.pending_off_field_deploy = false
+			MatchSignals.pending_off_field_producer_id = producer.id
 			var prototype = load(scene_path)
 			if prototype:
 				MatchSignals.place_structure.emit(prototype)
@@ -780,6 +779,16 @@ static func _disconnect_all(sig: Signal) -> void:
 		sig.disconnect(conn["callable"])
 
 
+static func _resolve_unit_scene_path(unit: Node) -> String:
+	if unit == null:
+		return ""
+	if "scene_file_path" in unit and not unit.scene_file_path.is_empty():
+		return unit.scene_file_path
+	if unit.get_script() != null:
+		return unit.get_script().resource_path.replace(".gd", ".tscn")
+	return ""
+
+
 static func _build_entry_stats(entry: Dictionary) -> Dictionary:
 	var stats := {}
 	if entry.has("hp_max"):
@@ -914,7 +923,7 @@ func _update_structure_slot_display(
 	for unit in get_tree().get_nodes_in_group("controlled_units"):
 		if not unit is Structure:
 			continue
-		var unit_scene: String = unit.get_script().resource_path.replace(".gd", ".tscn")
+		var unit_scene: String = _resolve_unit_scene_path(unit)
 		if unit_scene != scene_path:
 			continue
 		if unit.is_under_construction():
@@ -971,9 +980,12 @@ func _update_grid_button_queue_display(button: Button, scene_path: String) -> vo
 		return
 
 	# Show timer for the producing element of this type
+	var parallel_slots := 1
+	if _grid_observed_queue.has_method("get_parallel_production_count"):
+		parallel_slots = _grid_observed_queue.get_parallel_production_count()
 	var producing_element = null
 	for el in type_elements:
-		if el.is_producing(all_elements):
+		if el.is_producing(all_elements, parallel_slots):
 			producing_element = el
 			break
 	if producing_element != null:
@@ -1014,7 +1026,7 @@ func _resume_paused_structure(scene_path: String) -> bool:
 			continue
 		if not unit.is_construction_paused:
 			continue
-		var unit_scene: String = unit.get_script().resource_path.replace(".gd", ".tscn")
+		var unit_scene: String = _resolve_unit_scene_path(unit)
 		if unit_scene != scene_path:
 			continue
 		if unit.construction_progress > best_progress:
@@ -1134,7 +1146,7 @@ func _cancel_building_structure(scene_path: String) -> void:
 			continue
 		if not unit.is_under_construction():
 			continue
-		var unit_scene: String = unit.get_script().resource_path.replace(".gd", ".tscn")
+		var unit_scene: String = _resolve_unit_scene_path(unit)
 		if unit_scene != scene_path:
 			continue
 		if unit.is_construction_paused:
@@ -1220,9 +1232,15 @@ func _grid_right_click(producer, scene_path: String) -> void:
 	if _grid_observed_queue == null:
 		return
 	var all_elements = _grid_observed_queue.get_elements()
+	var parallel_slots := 1
+	if _grid_observed_queue.has_method("get_parallel_production_count"):
+		parallel_slots = _grid_observed_queue.get_parallel_production_count()
 	var is_producing := false
 	for el in all_elements:
-		if el.unit_prototype.resource_path == scene_path and el.is_producing(all_elements):
+		if (
+			el.unit_prototype.resource_path == scene_path
+			and el.is_producing(all_elements, parallel_slots)
+		):
 			is_producing = true
 			break
 	if is_producing:
@@ -1347,9 +1365,7 @@ func _check_structure_requirements(entry: Dictionary) -> bool:
 				continue
 			if unit.is_under_construction():
 				continue
-			var unit_scene_id: int = UnitConstants.get_scene_id(
-				unit.get_script().resource_path.replace(".gd", ".tscn")
-			)
+			var unit_scene_id: int = UnitConstants.get_scene_id(_resolve_unit_scene_path(unit))
 			if unit_scene_id == req_id:
 				found = true
 				break
@@ -1491,7 +1507,7 @@ func _on_unit_died_portrait(unit) -> void:
 func _on_portrait_hover() -> void:
 	if _portrait_unit == null or not is_instance_valid(_portrait_unit):
 		return
-	var scene_path: String = _portrait_unit.get_script().resource_path.replace(".gd", ".tscn")
+	var scene_path: String = _resolve_unit_scene_path(_portrait_unit)
 	var props: Dictionary = UnitConstants.get_default_properties(scene_path)
 	var title: String = ""
 	if "unit_name" in _portrait_unit:
@@ -1510,7 +1526,7 @@ func _on_portrait_hover_exit() -> void:
 
 
 func _build_unit_stats(unit) -> Dictionary:
-	var scene_path: String = unit.get_script().resource_path.replace(".gd", ".tscn")
+	var scene_path: String = _resolve_unit_scene_path(unit)
 	var props: Dictionary = UnitConstants.get_default_properties(scene_path)
 	var stats := {}
 	if props.has("hp_max"):
@@ -1634,7 +1650,7 @@ func _disconnect_portrait_hp() -> void:
 func _update_unit_info_panel() -> void:
 	if _portrait_unit == null or not is_instance_valid(_portrait_unit):
 		return
-	var scene_path: String = _portrait_unit.get_script().resource_path.replace(".gd", ".tscn")
+	var scene_path: String = _resolve_unit_scene_path(_portrait_unit)
 	var props: Dictionary = UnitConstants.get_default_properties(scene_path)
 
 	# Hitpoints

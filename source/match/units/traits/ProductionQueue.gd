@@ -21,6 +21,14 @@ class ProductionQueueElement:
 		set(value):
 			completed = value
 			emit_changed()
+	## True for HUD-only entries that mirror external construction progress.
+	## These must never be finalized by this queue.
+	var is_tracking_only := false:
+		set(value):
+			is_tracking_only = value
+			emit_changed()
+	## Entity ID of the tracked under-construction structure (for HUD interactions).
+	var tracking_entity_id: int = -1
 	## When non-empty, cost trickles over build_time instead of being deducted upfront.
 	var trickle_cost: Dictionary = {}
 	var trickle_deducted: float = 0.0
@@ -29,13 +37,20 @@ class ProductionQueueElement:
 		return (time_total - time_left) / time_total
 
 	## Returns true when this element is actively counting down
-	## (i.e. first non-paused, non-completed element in the queue).
-	func is_producing(queue_array: Array) -> bool:
-		if paused or completed:
+	## (i.e. within the first non-paused, non-completed elements in the queue).
+	func is_producing(queue_array: Array, parallel_slots: int = 1) -> bool:
+		if paused or completed or is_tracking_only:
 			return false
+		parallel_slots = max(1, parallel_slots)
+		var seen_active := 0
 		for el in queue_array:
-			if not el.paused and not el.completed:
-				return el == self
+			if el.paused or el.completed or el.is_tracking_only:
+				continue
+			if seen_active >= parallel_slots:
+				return false
+			if el == self:
+				return true
+			seen_active += 1
 		return false
 
 
@@ -54,35 +69,46 @@ func _on_tick_advanced():
 	# Don't tick production while the parent structure is disabled or selling.
 	if _unit != null and (_unit.get("is_disabled") or _unit.get("is_selling")):
 		return
-	# Find the first non-paused, non-completed element and tick it.
-	var current_queue_element = null
+	# Tick the first N non-paused, non-completed elements in parallel.
+	var active_elements: Array = []
+	var parallel_slots: int = get_parallel_production_count()
 	for el in _queue:
-		if not el.paused and not el.completed:
-			current_queue_element = el
-			break
-	if current_queue_element == null:
+		if not el.paused and not el.completed and not el.is_tracking_only:
+			active_elements.append(el)
+			if active_elements.size() >= parallel_slots:
+				break
+	if active_elements.is_empty():
 		return
 	# Slow production by 25% when player energy is negative
 	var effective_delta: float = MatchConstants.TICK_DELTA
 	if _unit != null and _unit.player != null and _unit.player.energy < 0:
 		effective_delta *= 0.75
-	# Trickle cost: deduct proportional resources before progressing
-	if not current_queue_element.trickle_cost.is_empty():
-		var new_time = max(0.0, current_queue_element.time_left - effective_delta)
-		var target_progress = (
-			(current_queue_element.time_total - new_time) / current_queue_element.time_total
+	var finished_elements: Array = []
+	for current_queue_element in active_elements:
+		# Trickle cost: deduct proportional resources before progressing.
+		if not current_queue_element.trickle_cost.is_empty():
+			var new_time = max(0.0, current_queue_element.time_left - effective_delta)
+			var target_progress = (
+				(current_queue_element.time_total - new_time) / current_queue_element.time_total
+			)
+			if not _try_deduct_queue_trickle(current_queue_element, target_progress):
+				continue  # can't afford this element right now
+		current_queue_element.time_left = max(
+			0.0, current_queue_element.time_left - effective_delta
 		)
-		if not _try_deduct_queue_trickle(current_queue_element, target_progress):
-			return  # can't afford, pause production
-	current_queue_element.time_left = max(0.0, current_queue_element.time_left - effective_delta)
-	if current_queue_element.time_left == 0.0:
-		var scene_path = current_queue_element.unit_prototype.resource_path
+		if current_queue_element.time_left == 0.0:
+			finished_elements.append(current_queue_element)
+
+	for finished_element in finished_elements:
+		if not finished_element in _queue:
+			continue
+		var scene_path = finished_element.unit_prototype.resource_path
 		if _is_off_field_structure(scene_path):
-			current_queue_element.completed = true
+			finished_element.completed = true
 			MatchSignals.unit_production_finished.emit(null, _unit)
 		else:
-			_remove_element(current_queue_element)
-			_finalize_production(current_queue_element)
+			_remove_element(finished_element)
+			_finalize_production(finished_element)
 
 
 func size():
@@ -91,6 +117,17 @@ func size():
 
 func get_elements():
 	return _queue
+
+
+func get_parallel_production_count() -> int:
+	var slots := 1
+	if _unit != null and _unit.has_method("get_parallel_production_count"):
+		var custom_slots = _unit.get_parallel_production_count()
+		if custom_slots is int:
+			slots = custom_slots
+		elif custom_slots is float:
+			slots = int(custom_slots)
+	return max(1, slots)
 
 
 func produce(unit_prototype, _ignore_limit = false):
@@ -145,9 +182,19 @@ func cancel(element):
 		return
 	var type_path = element.unit_prototype.resource_path
 	var type_is_paused = element.paused
-	# No refund for completed off-field structures (already fully paid)
-	# No refund for trickle elements (only deducted what was spent)
-	if not element.completed and element.trickle_cost.is_empty():
+	# Refund canceled production.
+	# - Upfront-cost elements: refund full cost.
+	# - Trickle elements: refund what has been deducted so far.
+	if not element.trickle_cost.is_empty():
+		var spent_cost: Dictionary = {}
+		for key in element.trickle_cost:
+			var total_for_key: int = element.trickle_cost[key]
+			var spent_for_key: int = int(element.trickle_deducted * total_for_key)
+			if spent_for_key > 0:
+				spent_cost[key] = spent_for_key
+		if not spent_cost.is_empty():
+			_unit.player.add_resources(spent_cost, Enums.ResourceType.CREDITS)
+	else:
 		var production_cost = UnitConstants.get_default_properties(type_path)["costs"]
 		_unit.player.add_resources(production_cost, Enums.ResourceType.CREDITS)
 	_remove_element(element)
@@ -161,7 +208,10 @@ func toggle_pause(unit_type_id: int):
 	# Check whether any element of this type is currently paused.
 	var any_paused := false
 	for element in _queue:
-		if UnitConstants.get_scene_id(element.unit_prototype.resource_path) == unit_type_id and element.paused:
+		if (
+			UnitConstants.get_scene_id(element.unit_prototype.resource_path) == unit_type_id
+			and element.paused
+		):
 			any_paused = true
 			break
 	# Toggle: if any are paused, unpause all of that type; otherwise pause all.
@@ -204,17 +254,27 @@ func _finalize_production(former_queue_element):
 			get_tree()
 		)
 	)
+	var spawn_transform := Transform3D(Basis(), placement_position)
+	# Allow producers to override unit spawn transform (e.g. spawn from specific sockets).
+	if _unit != null and _unit.has_method("get_custom_spawn_transform_for_unit"):
+		var custom_transform = _unit.get_custom_spawn_transform_for_unit(produced_unit)
+		if custom_transform is Transform3D:
+			spawn_transform = custom_transform
 	(
 		MatchSignals
 		. setup_and_spawn_unit
 		. emit(
 			produced_unit,
-			Transform3D(Basis(), placement_position),
+			spawn_transform,
 			_unit.player,
 			false,
 		)
 	)
 	MatchSignals.unit_production_finished.emit(produced_unit, _unit)
+	# Allow producers to handle custom spawn sequences (e.g. delayed rally navigation).
+	if _unit != null and _unit.has_method("handle_produced_unit_spawn"):
+		if _unit.handle_produced_unit_spawn(produced_unit):
+			return
 
 	var rally_point = _unit.find_child("RallyPoint")
 	if rally_point != null:

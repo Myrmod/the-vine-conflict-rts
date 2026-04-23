@@ -51,15 +51,21 @@ The vines were tools. Tools don't disobey. When the emergent species begins bloc
 
 The Radix harvest energy through **stationary buildings** placed on the Vine network.
 
+- The **Heart** produces **Seedlings**.
+- Seedlings are used to spread creep and to construct Radix structures.
+- A Seedling is consumed only when the assigned action completes successfully.
+- If the controlling player interrupts the action before completion, the Seedling survives.
+- Radix Tier 1 production structures are placed as ghosts and begin building only after a Seedling reaches them and merges into the site.
+- Detailed behavior spec: [Radix Seedling Workflow](../../Economy/Radix_Seedling_Workflow.md).
 - Build **Vine Spreaders** to expand territory
-- Build **Harvesting Bios** on Vine fields to collect resources
+- Build **Root Conduits** near Vine fields for passive income
 
 | Stat | Value |
 |---|---|
-| Capacity | Infinite |
-| Harvest rate | 75 res/s |
-| Delivery rate | 75 res/s |
-| Field bonus | +5% Vine regrowth per harvesting building |
+| Harvest model | Passive generation |
+| Depletion | Non-depleting |
+| Scaling | Income scales with nearby ResourceTile count |
+| Delivery loop | None required |
 
 ---
 
@@ -68,10 +74,10 @@ The Radix harvest energy through **stationary buildings** placed on the Vine net
 ```
 HQ
 └── Vine Spreader  (no power required)
-    ├── Barracks    →  Factory  →  Airfield
+    ├── Brood Nest  →  Thorn Forge  →  Sky Bloom
     │                           →  Naval Yard
     │                           →  T2 tech structure / upgrade building
-    └── Harvesting Bio
+    └── Root Conduit
 ```
 
 > Note: all production buildings must be built on Vine-covered ground.
@@ -83,11 +89,12 @@ HQ
 | Building | Cost | Build time | Notes |
 |---|---|---|---|
 | HQ | — | — | Starting structure |
+| Heart | — | — | Main structure; produces Seedlings used for creep spread and construction |
 | Vine Spreader | 500 | 5 s | Spreads Vines 5 tiles; required for all other buildings |
-| Harvesting Bio | 1500 | 15 s | Harvests from 5 tiles around it; boosts Vine regrowth |
-| Barracks | 600 | 6 s | Produces infantry |
-| Airfield | 2000 | 20 s | Produces air units |
-| Factory | 2000 | 20 s | Produces tanks |
+| Root Conduit | 1500 | 15 s | Passive income node; does not deplete ResourceVines; scales with nearby tile count |
+| Brood Nest | 600 | 6 s | Tier 1 infantry structure; starts once a Seedling merges into the ghost |
+| Thorn Forge | 2000 | 20 s | Tier 1 vehicle structure; starts once a Seedling merges into the ghost |
+| Sky Bloom | 2000 | 20 s | Tier 1 air structure; starts once a Seedling merges into the ghost |
 | Naval Yard | 1500 | 15 s | Produces ships |
 
 ---
@@ -118,4 +125,6 @@ HQ
 | Attack speed | 0.5 |
 
 **Abilities**
-- None
+- Can spread creep and construct structures.
+- Consumed on successful completion of spread/construct action.
+- Survives if the controlling player interrupts/cancels the action before completion.

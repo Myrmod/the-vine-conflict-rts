@@ -20,6 +20,9 @@
 - attack_speed: 0.5
 
 #### Abilities:
-- no abilities
+- can spread creep
+- can construct radix structures
+- consumed when a spread or construct action successfully completes
+- not consumed if the controlling player interrupts/cancels the action before completion
 
 #### Trait

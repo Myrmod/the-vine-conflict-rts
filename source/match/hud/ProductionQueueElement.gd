@@ -67,16 +67,30 @@ func _update_display():
 	# Show remaining time for the element with the least time left
 	# that is actually producing in its own queue.
 	var best_element = null
+	var best_tracking_element = null
 	for el in queue_elements:
+		if el.is_tracking_only:
+			if best_tracking_element == null or el.time_left < best_tracking_element.time_left:
+				best_tracking_element = el
+			continue
 		var src_queue = element_to_source.get(el)
 		if src_queue == null:
 			continue
 		var q_elements = src_queue.get_elements()
-		if el.is_producing(q_elements):
+		var parallel_slots := 1
+		if src_queue.has_method("get_parallel_production_count"):
+			parallel_slots = src_queue.get_parallel_production_count()
+		if el.is_producing(q_elements, parallel_slots):
 			if best_element == null or el.time_left < best_element.time_left:
 				best_element = el
+	if best_element == null and best_tracking_element != null:
+		best_element = best_tracking_element
 	if best_element != null:
-		time_label.text = "%.1fs" % best_element.time_left
+		time_label.text = (
+			"%.1fs ||" % best_element.time_left
+			if best_element.paused
+			else "%.1fs" % best_element.time_left
+		)
 		time_label.visible = true
 	else:
 		time_label.visible = false
@@ -108,12 +122,18 @@ func _on_gui_input(event: InputEvent):
 func _on_right_click():
 	if queue_elements.is_empty():
 		return
+	if _has_tracking_only_elements():
+		_on_right_click_tracking()
+		return
 	var is_producing := false
 	for el in queue_elements:
 		var src_queue = element_to_source.get(el)
 		if src_queue == null:
 			continue
-		if el.is_producing(src_queue.get_elements()):
+		var parallel_slots := 1
+		if src_queue.has_method("get_parallel_production_count"):
+			parallel_slots = src_queue.get_parallel_production_count()
+		if el.is_producing(src_queue.get_elements(), parallel_slots):
 			is_producing = true
 			break
 	if is_producing:
@@ -125,6 +145,9 @@ func _on_right_click():
 ## Left-click: if a completed off-field structure, deploy it.
 ## If this type has a paused element, resume it. Otherwise focus camera.
 func _on_left_click():
+	if _has_tracking_only_elements():
+		_on_left_click_tracking()
+		return
 	# Deploy completed off-field structure
 	var completed_el = null
 	for el in queue_elements:
@@ -152,6 +175,31 @@ func _on_left_click():
 		_on_pause_production()  # toggle_pause will unpause
 	else:
 		_on_focus_structure()
+
+
+func _on_left_click_tracking() -> void:
+	# For tracked on-field constructions, left-click resumes a paused one, else focuses producer.
+	for el in queue_elements:
+		if not el.is_tracking_only or not el.paused:
+			continue
+		if el.tracking_entity_id < 0:
+			continue
+		var structure = EntityRegistry.get_unit(el.tracking_entity_id)
+		if structure == null or not is_instance_valid(structure):
+			continue
+		(
+			CommandBus
+			. push_command(
+				{
+					"tick": Match.tick + 1,
+					"type": Enums.CommandType.PAUSE_CONSTRUCTION,
+					"player_id": structure.player.id,
+					"data": {"entity_id": structure.id},
+				}
+			)
+		)
+		return
+	_on_focus_structure()
 
 
 func _on_focus_structure():
@@ -200,8 +248,85 @@ func _on_pause_production():
 		)
 
 
+func _on_right_click_tracking() -> void:
+	# 1st right-click pauses an active tracked construction, 2nd cancels a paused one.
+	var unpaused_candidates: Array = []
+	var paused_candidates: Array = []
+	for el in queue_elements:
+		if not el.is_tracking_only:
+			continue
+		if el.tracking_entity_id < 0:
+			continue
+		var structure = EntityRegistry.get_unit(el.tracking_entity_id)
+		if structure == null or not is_instance_valid(structure):
+			continue
+		if structure.is_under_construction():
+			if structure.is_construction_paused:
+				paused_candidates.append(structure)
+			else:
+				unpaused_candidates.append(structure)
+	if not unpaused_candidates.is_empty():
+		var best = unpaused_candidates[0]
+		for s in unpaused_candidates:
+			if s.construction_progress < best.construction_progress:
+				best = s
+		(
+			CommandBus
+			. push_command(
+				{
+					"tick": Match.tick + 1,
+					"type": Enums.CommandType.PAUSE_CONSTRUCTION,
+					"player_id": best.player.id,
+					"data": {"entity_id": best.id},
+				}
+			)
+		)
+		return
+	if not paused_candidates.is_empty():
+		var best_paused = paused_candidates[0]
+		for s in paused_candidates:
+			if s.construction_progress < best_paused.construction_progress:
+				best_paused = s
+		(
+			CommandBus
+			. push_command(
+				{
+					"tick": Match.tick + 1,
+					"type": Enums.CommandType.CANCEL_CONSTRUCTION,
+					"player_id": best_paused.player.id,
+					"data": {"entity_id": best_paused.id},
+				}
+			)
+		)
+
+
 func _on_cancel_all_of_type():
 	if queue_elements.is_empty():
+		return
+	if _has_tracking_only_elements():
+		var sent_ids: Dictionary = {}
+		for el in queue_elements:
+			if not el.is_tracking_only:
+				continue
+			if el.tracking_entity_id < 0 or sent_ids.has(el.tracking_entity_id):
+				continue
+			var structure = EntityRegistry.get_unit(el.tracking_entity_id)
+			if structure == null or not is_instance_valid(structure):
+				continue
+			if not structure.is_under_construction():
+				continue
+			sent_ids[el.tracking_entity_id] = true
+			(
+				CommandBus
+				. push_command(
+					{
+						"tick": Match.tick + 1,
+						"type": Enums.CommandType.CANCEL_CONSTRUCTION,
+						"player_id": structure.player.id,
+						"data": {"entity_id": structure.id},
+					}
+				)
+			)
 		return
 	for element in queue_elements.duplicate():
 		var src_queue = element_to_source.get(element)
@@ -231,6 +356,9 @@ func _on_cancel_all_of_type():
 func _on_cancel_production():
 	if queue_elements.is_empty():
 		return
+	if _has_tracking_only_elements():
+		_on_right_click_tracking()
+		return
 	# Cancel the last-enqueued element of this type
 	var element = queue_elements.back()
 	var src_queue = element_to_source.get(element)
@@ -255,3 +383,10 @@ func _on_cancel_production():
 			}
 		)
 	)
+
+
+func _has_tracking_only_elements() -> bool:
+	for el in queue_elements:
+		if el.is_tracking_only:
+			return true
+	return false

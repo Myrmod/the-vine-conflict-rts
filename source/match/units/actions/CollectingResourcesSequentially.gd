@@ -135,6 +135,7 @@ static func _find_cc_closest_to_unit(unit):
 	)
 	if ccs_of_the_same_player.is_empty():
 		return null
+
 	var ccs_sorted_by_distance = ccs_of_the_same_player.map(
 		func(a_unit):
 			return {

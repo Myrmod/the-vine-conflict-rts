@@ -77,3 +77,12 @@ The system can be configured via FeatureFlags autoload:
 - Rotation snapping rounds to nearest 90° increment
 - Free placement mode resets to grid mode after each building is placed or canceled
 - Collision detection and resource checking remain the same in both modes
+
+## Radix Seedling-Started Structures
+
+- Certain Radix structures are placed as ghosts first and do not begin construction immediately.
+- These structures require an available Seedling before placement is considered valid.
+- On placement, the nearest available Seedling is auto-assigned to the ghost.
+- The ghost remains in place while the Seedling travels to it.
+- When the Seedling reaches the structure, the Seedling is consumed and the structure begins self-construction.
+- If the Seedling is redirected before reaching the ghost, the Seedling survives and the structure remains waiting for a new Seedling assignment.

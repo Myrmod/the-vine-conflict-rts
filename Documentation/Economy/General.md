@@ -1,6 +1,19 @@
-# General resource
-## Starting resource/field:
-- Starting resources are 10k
-- vines start with a tree or a root in the middle that grows outwards has vines with energy inside that can be harvested, vines shrink when harvested by a harvester
-- every tile will contain 1 glow from either a small branch or a big one, small ones contain 500 worth of resources, big branches contain 1000 worth of resources, some fields will be small only or big only
-- A 10x10 small field contains around 100 vines total resources 50000 to be determined
+# General Resource Rules (Rework Draft)
+
+## Shared Economy Rules
+- Starting resources are 10k.
+- Resource fields spawn as ResourceTiles around a ResourceSpawner (ResourceVine field).
+- Base max resource per tile is 500.
+- If an Amuns Prism is built directly above a ResourceSpawner, affected tiles use 750 max resource and should look more golden.
+- Multiple players can contest the same field.
+
+## Depletion Rules
+- Radix harvesting is non-depleting.
+- Amuns, Legion, and Remnants deplete ResourceTiles and destroy ResourceVines after gathering.
+
+## Risk and Loss Rules
+- If a harvester dies while carrying resources, those carried resources are lost.
+
+## Tile Access Rules
+- One tile can be affected by one unit at a time.
+- This lock applies to normal gathering and to Remnants burn-harvesting.

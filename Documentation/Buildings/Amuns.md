@@ -6,14 +6,16 @@
 - Costs 1000 , 10 secs build time, produces 1 power per second 
 - Buff production speed/armor/dmg for buildings near it by 10% , 5 tile radius
 
-## Harvesting obelisk:
-- costs 1000, 10 seconds build time, allows the production of altars
-- can only be built on vines, terraforms the vines making the field unique to the Amuns
+## Prism:
+- Can only be built directly above a ResourceSpawner.
+- Only one Prism per ResourceSpawner.
+- Increases max resources per tile from 500 to 750 and increases ResourceTile growth speed.
+- Visual intent: affected resources become more golden.
 
-## Altars:
--  Costs 1500 , 15 sec build time
-- harvests vine around it in a radius of 5
-- has a weak turret that can shoot both air and ground
+## Siphon:
+- Built next to a resource field.
+- Sends out flying, destructible Harvester Drones.
+- Harvester Drones gather and return to the Siphon to deliver resources.
 
 ## Barracks:
 - costs 600 , 6 sec build time

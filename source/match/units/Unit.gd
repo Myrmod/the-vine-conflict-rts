@@ -233,7 +233,9 @@ func _handle_unit_death():
 
 
 func _setup_model_fallback():
-	var props = UnitConstants.get_default_properties(get_script().resource_path.replace(".gd", ".tscn"))
+	var props = UnitConstants.get_default_properties(
+		get_script().resource_path.replace(".gd", ".tscn")
+	)
 	var tab_type = props.get("production_tab_type", -1)
 	if not PRODUCTION_TYPE_FALLBACK_MODELS.has(tab_type):
 		return
@@ -246,9 +248,11 @@ func _setup_model_fallback():
 
 
 func _setup_default_properties_from_constants():
-	var default_properties = UnitConstants.get_default_properties(
-		get_script().resource_path.replace(".gd", ".tscn")
-	)
+	# Use scene file path (BroodNest.tscn) if available, otherwise fall back to script path
+	var lookup_path: String = scene_file_path
+	if lookup_path.is_empty():
+		lookup_path = get_script().resource_path.replace(".gd", ".tscn")
+	var default_properties = UnitConstants.get_default_properties(lookup_path)
 	## UnitConstants is the highest authority for all default properties.
 	## If hp was pre-set to less than hp_max (e.g. in the map editor),
 	## the unit/structure spawns damaged with that lower hp value.

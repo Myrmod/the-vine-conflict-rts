@@ -21,7 +21,7 @@ Where the Legion represents organized state power, the Remnants represent those 
 ## Strengths & Identity
 
 - **Cheaper and faster** than the Legion — lower build costs and faster infantry
-- Pro-vine sympathies — harvest rates and capacities favor working *with* the Vine network
+- Destructive harvest doctrine — converts resources by burning ResourceVines
 - Factory-forward tech tree — production unlocks early
 - Less raw power: lower HP infantry, smaller power plant output
 
@@ -29,14 +29,20 @@ Where the Legion represents organized state power, the Remnants represent those 
 
 ## Economy
 
-The Remnants use **refineries with harvesters** like the Legion, but their harvesters carry more and move slower — suited to a deliberate, sustainable harvest approach.
+The Remnants do not use a refinery return loop. They harvest by **burning** resources in place.
+
+- Gather units are the **Incinerator** (infantry) and **Flame Tank** (vehicle).
+- Burn animation is the harvest action.
+- Gather rate is measured by destroyed resources per tick.
+- Units do not carry cargo and do not return to a refinery.
+- Remnants harvesting depletes and destroys ResourceVines.
 
 | Stat | Value |
 |---|---|
-| Capacity | 500 |
-| Harvester speed | 1.0 |
-| Harvest rate | 100 res/s |
-| Delivery rate | 100 res/s |
+| Harvest model | Burn in place |
+| Carry capacity | None |
+| Delivery loop | None |
+| Depletion | Depletes and destroys ResourceVines |
 
 ---
 
@@ -46,9 +52,9 @@ The Remnants use **refineries with harvesters** like the Legion, but their harve
 HQ
 └── Power Plant
     ├── Barracks   ─┐
-    ├── Refinery    ├→  Factory  →  T2 structure
-    └── Factory  ──┘           →  Airfield
+    └── Factory  ──┘           →  T2 structure
                                →  Naval Yard
+                               →  Airfield
 ```
 
 > Factory is accessible earlier than in other factions — unlocked directly from Power Plant.
@@ -61,11 +67,12 @@ HQ
 |---|---|---|---|---|
 | HQ | — | — | — | Starting structure |
 | Power Plant | 600 | 6 s | — | Provides 150 power |
-| Refinery | 1800 | 18 s | 50 | Provides a harvester |
 | Barracks | 600 | 6 s | 25 | Produces infantry |
 | Airfield | 2000 | 20 s | 50 | Produces air units |
 | Factory | 2000 | 20 s | 50 | Produces tanks |
 | Naval Yard | 1500 | 15 s | 50 | Produces ships |
+
+> Economy unit production: Barracks produces Incinerator squads, Factory produces Flame Tanks.
 
 ---
 

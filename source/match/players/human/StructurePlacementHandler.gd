@@ -9,6 +9,7 @@ enum BlueprintPositionValidity {
 	OUTSIDE_BUILD_RADIUS,
 	WRONG_TERRAIN,
 	NOT_ON_CREEP,
+	NO_AVAILABLE_SEEDLING,
 }
 
 const ROTATION_BY_KEY_STEP_GRID = 90.0
@@ -31,6 +32,7 @@ var _off_field_deploy = false
 var _is_trickle = false
 var _off_field_producer_id: int = -1
 var _pending_requires_creep: bool = false
+var _pending_requires_seedling: bool = false
 
 @onready var _player = get_parent()
 @onready var _match = find_parent("Match")
@@ -132,6 +134,8 @@ func _calculate_blueprint_position_validity():
 		and not RadixStructure.is_creep_at_position(_active_blueprint_node.global_position)
 	):
 		return BlueprintPositionValidity.NOT_ON_CREEP
+	if _pending_requires_seedling and not _player_has_available_seedling():
+		return BlueprintPositionValidity.NO_AVAILABLE_SEEDLING
 	var placement_validity = MatchUtils.Placement.validate_agent_placement_position(
 		_active_blueprint_node.global_position,
 		_pending_structure_radius,
@@ -217,6 +221,8 @@ func _update_feedback_label(blueprint_position_validity):
 			_feedback_label.text = tr("BLUEPRINT_WRONG_TERRAIN")
 		BlueprintPositionValidity.NOT_ON_CREEP:
 			_feedback_label.text = tr("BLUEPRINT_NOT_ON_CREEP")
+		BlueprintPositionValidity.NO_AVAILABLE_SEEDLING:
+			_feedback_label.text = "A Seedling is required"
 
 
 func _start_structure_placement(structure_prototype):
@@ -231,6 +237,9 @@ func _start_structure_placement(structure_prototype):
 		else []
 	)
 	_pending_requires_creep = (temporary_structure_instance.get("requires_creep") == true)
+	_pending_requires_seedling = (
+		temporary_structure_instance.get("requires_seedling_to_start") == true
+	)
 	_pending_structure_navmap_rid = (
 		find_parent("Match")
 		. navigation
@@ -322,7 +331,18 @@ func _cancel_structure_placement():
 		_off_field_deploy = false
 		_is_trickle = false
 		_off_field_producer_id = -1
+		_pending_requires_seedling = false
 		MatchSignals.structure_placement_ended.emit()
+
+
+func _player_has_available_seedling() -> bool:
+	for child in _player.get_children():
+		if UnitConstants.get_scene_id(child.scene_file_path) != Enums.SceneId.RADIX_SEEDLING:
+			continue
+		if child.action != null and child.action is Actions.Constructing:
+			continue
+		return true
+	return false
 
 
 func _finish_structure_placement():

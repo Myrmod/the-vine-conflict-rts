@@ -68,14 +68,42 @@ func _ready() -> void:
 	_deferred_init.call_deferred()
 
 
+func get_spawn_world_position() -> Vector3:
+	var glb_root: Node = _find_glb_root()
+	if glb_root == null:
+		return global_position
+	var placeholder: Node3D = glb_root.get_node_or_null("UnitPlaceholder")
+	if placeholder != null:
+		return placeholder.global_position
+	return global_position
+
+
+func set_unit_placeholder_visible(is_visible: bool) -> void:
+	var glb_root: Node = _find_glb_root()
+	if glb_root == null:
+		return
+	var placeholder: MeshInstance3D = glb_root.get_node_or_null("UnitPlaceholder")
+	if placeholder != null:
+		placeholder.visible = is_visible
+
+
+func _find_glb_root() -> Node:
+	# Try direct child first (legacy instanced GLB)
+	var direct: Node = get_node_or_null("SpawningFlowerBulb")
+	if direct != null:
+		return direct
+	# Try via ModelHolder (first child of the ModelHolder node)
+	var holder: Node = get_node_or_null("ModelHolder")
+	if holder != null and holder.get_child_count() > 0:
+		return holder.get_child(0)
+	return null
+
+
 func _deferred_init() -> void:
-	var glb_root: Node = get_node_or_null("SpawningFlowerBulb")
+	var glb_root: Node = _find_glb_root()
 	if glb_root == null:
 		push_warning(
-			(
-				"SpawningFlowerBulb: glb_root 'SpawningFlowerBulb' not found. Children: %s"
-				% str(_get_child_names())
-			)
+			"SpawningFlowerBulb: glb_root not found. Children: %s" % str(_get_child_names())
 		)
 		return
 	push_warning("SpawningFlowerBulb: glb_root found with %d children" % glb_root.get_child_count())
@@ -104,7 +132,7 @@ func _setup_animation_tree() -> void:
 	if _anim_tree != null:
 		return
 
-	var glb_root: Node = get_node_or_null("SpawningFlowerBulb")
+	var glb_root: Node = _find_glb_root()
 	if glb_root == null:
 		return
 	var anim_player: AnimationPlayer = glb_root.get_node_or_null("AnimationPlayer")
@@ -197,7 +225,7 @@ func _apply_progress() -> void:
 
 
 func _apply_player_color() -> void:
-	var glb_root: Node = get_node_or_null("SpawningFlowerBulb")
+	var glb_root: Node = _find_glb_root()
 	if glb_root == null:
 		return
 

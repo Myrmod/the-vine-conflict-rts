@@ -83,13 +83,14 @@ func _unit_is_mapped(unit):
 
 
 func _map_unit_to_new_circles(unit):
+	var sight_range: float = _get_unit_sight_range(unit)
 	var shroud_circle = DynamicCircle2D.instantiate()
 	shroud_circle.color = fog_circle_color
-	shroud_circle.radius = unit.sight_range * texture_units_per_world_unit
+	shroud_circle.radius = sight_range * texture_units_per_world_unit
 	_fog_viewport.add_child(shroud_circle)
 	var fow_circle = DynamicCircle2D.instantiate()
 	fow_circle.color = shroud_circle_color
-	fow_circle.radius = unit.sight_range * texture_units_per_world_unit
+	fow_circle.radius = sight_range * texture_units_per_world_unit
 	_fog_viewport_container.add_sibling(fow_circle)
 	_unit_to_circles_mapping[unit] = [shroud_circle, fow_circle]
 
@@ -97,14 +98,29 @@ func _map_unit_to_new_circles(unit):
 func _sync_circles_to_unit(unit):
 	var unit_pos_3d = unit.global_transform.origin
 	var unit_pos_2d = Vector2(unit_pos_3d.x, unit_pos_3d.z) * texture_units_per_world_unit
-	var effective_sight = unit.sight_range
+	var effective_sight: float = _get_unit_sight_range(unit)
 	if "forest_zones_inside" in unit and unit.forest_zones_inside > 0:
-		effective_sight *= unit.forest_sight_multiplier
+		var forest_sight_multiplier: float = _get_unit_forest_sight_multiplier(unit)
+		effective_sight *= forest_sight_multiplier
 	var radius = effective_sight * texture_units_per_world_unit
 	_unit_to_circles_mapping[unit][0].radius = radius
 	_unit_to_circles_mapping[unit][1].radius = radius
 	_unit_to_circles_mapping[unit][0].position = unit_pos_2d
 	_unit_to_circles_mapping[unit][1].position = unit_pos_2d
+
+
+func _get_unit_sight_range(unit) -> float:
+	var raw_sight_range: Variant = unit.get("sight_range")
+	if raw_sight_range == null:
+		return 0.0
+	return float(raw_sight_range)
+
+
+func _get_unit_forest_sight_multiplier(unit) -> float:
+	var raw_multiplier: Variant = unit.get("forest_sight_multiplier")
+	if raw_multiplier == null:
+		return 1.0
+	return float(raw_multiplier)
 
 
 func _cleanup_mapping(unit):

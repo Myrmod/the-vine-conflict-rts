@@ -112,7 +112,8 @@ theme_override_font_sizes/normal_font_size = 20
 bbcode_enabled = true
 text = "- 3D Space Kit by Kenney.nl
 - [url=https://www.cgtrader.com/designers/merazhossain020?utm_source=credit&utm_source=credit_item_page]Radix grass by merazhossain020[/url]
-- https://fontawesome.com/"
+- https://fontawesome.com/
+- [url=https://www.vecteezy.com/free-png/tree-leaves]leaves image on Radix main building by Vecteezy[/url]"
 fit_content = true
 
 [node name="Shaders" type="Label" parent="PanelContainer/MarginContainer/VBoxContainer/PanelContainer/MarginContainer/VBoxContainer" unique_id=299282200]
