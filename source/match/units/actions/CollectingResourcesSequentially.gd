@@ -124,6 +124,49 @@ func _find_closest_resource_unit_in_nearby_area():
 	)
 
 
+func _find_closest_resource_unit_anywhere():
+	return ResourceUtils.find_resource_unit_closest_to_unit_yet_no_further_than(_unit, INF)
+
+
+func _find_next_resource_for_continuous_harvest():
+	var nearby = _find_closest_resource_unit_in_nearby_area()
+	if nearby != null:
+		return nearby
+	return _find_closest_resource_unit_anywhere()
+
+
+func _queue_collect_command_via_command_bus(target_resource_unit) -> bool:
+	if target_resource_unit == null:
+		return false
+	if _unit == null or _unit.player == null:
+		return false
+	if _unit.id == null or target_resource_unit.id == null:
+		return false
+	(
+		CommandBus
+		. push_command(
+			{
+				"tick": Match.tick + 1,
+				"type": Enums.CommandType.COLLECTING_RESOURCES_SEQUENTIALLY,
+				"player_id": _unit.player.id,
+				"data":
+				{
+					"targets":
+					[
+						{
+							"unit": _unit.id,
+							"pos": _unit.global_position,
+							"rot": _unit.global_rotation
+						}
+					],
+					"target_unit": target_resource_unit.id,
+				}
+			}
+		)
+	)
+	return true
+
+
 static func _find_cc_closest_to_unit(unit):
 	var ccs_of_the_same_player = unit.get_tree().get_nodes_in_group("units").filter(
 		func(a_unit):
@@ -164,13 +207,30 @@ func _handle_sub_action_finished_while_moving_to_resource():
 
 
 func _handle_sub_action_finished_while_collecting():
+	var gather_without_dropoff: bool = _unit.get("harvest_without_dropoff") == true
+	# react to resource removal before completion callback (node freed/exited)
+	if _resource_unit == null:
+		if gather_without_dropoff:
+			var next_removed_resource = _find_next_resource_for_continuous_harvest()
+			if _queue_collect_command_via_command_bus(next_removed_resource):
+				queue_free()
+				return
+		if _set_resource_unit(_find_next_resource_for_continuous_harvest()):
+			_change_state_to(State.MOVING_TO_RESOURCE)
+		return
 	# react to resource being depleted (vine still exists but empty)
 	if _resource_unit != null and "resource" in _resource_unit and _resource_unit.resource <= 0:
-		_resource_unit.tree_exited.disconnect(_on_resource_unit_removed)
+		if _resource_unit.tree_exited.is_connected(_on_resource_unit_removed):
+			_resource_unit.tree_exited.disconnect(_on_resource_unit_removed)
 		_resource_unit = null
+		if gather_without_dropoff:
+			var next_resource = _find_next_resource_for_continuous_harvest()
+			if _queue_collect_command_via_command_bus(next_resource):
+				queue_free()
+				return
 		if _unit.resource > 0:
 			_change_state_to(State.MOVING_TO_CC)
-		elif _set_resource_unit(_find_closest_resource_unit_in_nearby_area()):
+		elif _set_resource_unit(_find_next_resource_for_continuous_harvest()):
 			_change_state_to(State.MOVING_TO_RESOURCE)
 		return
 	# react to resource not being in range anymore
@@ -182,10 +242,20 @@ func _handle_sub_action_finished_while_collecting():
 		_change_state_to(State.MOVING_TO_RESOURCE)
 		return
 	# finished collecting
+	if gather_without_dropoff:
+		var next_collected_resource = _find_next_resource_for_continuous_harvest()
+		if _queue_collect_command_via_command_bus(next_collected_resource):
+			queue_free()
+			return
 	_change_state_to(State.MOVING_TO_CC)
 
 
 func _handle_sub_action_finished_while_moving_to_cc():
+	var gather_without_dropoff: bool = _unit.get("harvest_without_dropoff") == true
+	if gather_without_dropoff:
+		if _set_resource_unit(_find_next_resource_for_continuous_harvest()):
+			_change_state_to(State.MOVING_TO_RESOURCE)
+		return
 	# react to cc removal
 	if _cc_unit == null or not _cc_unit.is_constructed():
 		if _set_cc_unit(_find_cc_closest_to_unit(_unit)):

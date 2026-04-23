@@ -1,37 +1,39 @@
-# Radix Seedling Workflow (Design Spec Draft)
+# Radix Seedling Workflow
 
 ## Purpose
-Define a single source of truth for how Radix Seedlings are produced, used, consumed, and preserved when actions are canceled.
+Single source of truth for the implemented Radix Seedling construction and creep workflow.
 
 ## Core Roles
 - Heart:
-  - Main Radix structure.
-  - Produces Seedlings.
+  - produces Seedlings
+  - owns the relevant Radix production queue entries for Seedling-started structures
 - Seedling:
-  - Builder/spreader unit.
-  - Executes creep spread actions.
-  - Executes structure construction actions.
+  - unarmed builder and spreader unit
+  - executes creep spread actions
+  - starts Radix structure construction actions
 
 ## Lifecycle Rules
-- A Seedling starts alive after being produced by Heart.
-- A Seedling can be assigned to either:
-  - Creep spread action.
-  - Structure construction action.
-- A Seedling is consumed and destroyed only when the assigned action successfully completes.
-- If the controlling player interrupts or cancels the action before completion, the Seedling is not consumed and remains alive.
+- a Seedling begins as a normal controllable unit after Heart production
+- a Seedling may be assigned to:
+  - creep spread
+  - Seedling-started structure construction
+- a Seedling is consumed only when the assigned action completes successfully
 
-## Success and Cancel Outcomes
-- Success outcome:
-  - Action result is applied (creep spread completed or structure completed).
-  - Seedling is destroyed.
-- Player-interrupt/cancel outcome:
-  - Partial progress handling follows system-specific rules.
-  - Seedling survives and can receive new orders.
+## Structure Start Flow
+- the player places the target Radix structure first
+- the placed site is tracked in the HUD queue as a construction target
+- a Seedling travels to the site and begins the start action
+- once the start action completes, the Seedling is consumed and the structure continues from its started state
 
-## Ownership and Control
-- Seedlings follow owner-issued commands only.
-- Consumption check is tied to the completion event of the owned action.
+## Cancel and Refund Behavior
+- if the player cancels before the Seedling is consumed, the original Seedling remains alive
+- if the player cancels a started Seedling-built structure after the Seedling has already been consumed, the game restores an equivalent Seedling
+- canceling construction also follows the current structure refund rules for spent resources
+
+## Success Outcome
+- creep spread or structure start completes
+- the Seedling is removed as part of the successful action resolution
 
 ## Design Notes
-- This behavior is intentional faction identity for Radix and should not be mirrored to other factions by default.
-- If future balancing requires exceptions (for example partial-cost penalties), add those as explicit extensions to this spec rather than changing the core consumption rule.
+- this is an intentional Radix faction identity mechanic
+- Seedlings are not standard combat infantry and should be documented as support/build units first

@@ -189,6 +189,14 @@ static func is_applicable(source_unit, target_unit):
 
 This pattern isolates validation from execution.
 
+### Harvest Command Resilience
+
+`COLLECTING_RESOURCES_SEQUENTIALLY` remains command-driven even when resource nodes are removed between queue time and execute time.
+
+- Command execution now resolves a fallback resource target when the original `target_unit` is invalid.
+- Remnants no-dropoff gatherers re-issue next-resource harvesting through CommandBus when a vine is depleted.
+- This preserves deterministic behavior for replay and multiplayer while avoiding gatherer stalls.
+
 ---
 
 ## 5. EntityRegistry: Stable Unit IDs

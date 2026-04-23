@@ -1,57 +1,50 @@
-# Harvesting Mechanics (Resource Rework Draft)
+# Harvesting Mechanics
 
 ## Shared Rules
-- Base max resource per tile: 500.
-- Amuns Prism modifier: tile max becomes 750 while Prism effect is active.
-- Only Radix is non-depleting.
-- Amuns, Legion, and Remnants destroy ResourceVines as resources are gathered.
-- If a harvester dies while carrying resources, carried resources are lost.
-- One tile can be affected by one unit at a time.
+- base resource per vine tile starts at 500
+- Amuns and Legion use gather, carry, and return loops
+- Radix Seedlings are part of the construction economy, not a direct harvester unit
+- if a cargo-based gatherer dies while carrying resources, the carried load is lost
 
 ## Amuns
-- Economy identity: field enhancement plus flying gather logistics.
-- Prism:
-  - Can only be built directly on top of a ResourceSpawner.
-  - Only one Prism can exist per ResourceSpawner.
-  - Increases resource amount (500 to 750 per tile) and ResourceTile growth speed.
-  - Visual intent: field becomes more golden.
-- Siphon:
-  - Built next to the resource field.
-  - Sends out flying, destructible Harvester Drones.
-  - Drones return to the Siphon to deliver gathered resources.
+- economy identity: flying gather logistics plus spawner-linked field enhancement
+- Syphon:
+  - acts as the Amuns resource drop-off structure
+  - auto-spawns a Syphon Drone on completion
+  - drone gathers resources and returns to the Syphon
+- Purifier:
+  - can only be placed above a ResourceSpawner
+  - links to that spawner and increases capacity for vines associated with it
+  - newly spawned vines from the linked spawner inherit the added capacity bonus
 
 ## Legion
-- Economy identity: classic refinery loop.
-- Refinery provides a Harvester vehicle.
-- Harvester gathers resources, then returns to the Refinery to deliver.
+- economy identity: classic refinery loop
+- Refinery:
+  - deploys a Harvester vehicle
+  - serves as a valid drop-off structure
+- Harvester:
+  - gathers from the nearest field
+  - delivers to the nearest valid drop-off structure
+  - Legion command centers are not drop-off structures
 
 ## Remnants
-- Economy identity: destructive front-line conversion.
-- Gather units:
-  - Infantry: Incinerator.
-  - Vehicle: Flame Tank.
-- Production:
-  - Incinerator is produced in the Barracks.
-  - Flame Tank is produced in the Vehicle Bay.
-- Mechanic:
-  - Units burn spawned resources and gain value while destroying them.
-  - Gather rate is destroyed resources per tick.
-  - They do not return to a refinery and do not carry cargo.
-  - Burn animation is the harvest action.
+- economy identity: destructive front-line conversion
+- gather units:
+  - infantry: Incinerator
+  - vehicle: Flame Tank
+- mechanic:
+  - units destroy vines as part of gathering
+  - no refinery return loop
+  - when a vine is depleted, gatherers continue to the next available resource tile automatically
+  - retargeting is issued through the deterministic command path (CommandBus -> Match command execution)
+  - if a target vine is removed before execution, command execution selects the next valid resource target
 
 ## Radix
-- Economy identity: passive territorial scaling.
-- Heart:
-  - Produces Seedlings.
-  - Seedlings are the required workforce for creep spread and structure construction.
-- Seedling consumption rules:
-  - A Seedling is consumed and destroyed when creep spread or structure construction successfully completes.
-  - If the controlling player interrupts/cancels the action before completion, the Seedling is not destroyed.
-- Detailed behavior spec: [Radix Seedling Workflow](Radix_Seedling_Workflow.md).
-- Root Conduit:
-  - Built next to a vine field.
-  - Passively generates income without depleting resources.
-  - Income scales with the number of ResourceTiles in radius.
+- economy identity: Seedling-driven territorial growth and construction
+- Heart produces Seedlings
+- Seedlings are consumed only when creep spread or Seedling-started construction completes successfully
+- canceling before completion preserves the Seedling, and canceling an already started Seedling-built structure restores one
+- detailed behavior spec: [Radix Seedling Workflow](Radix_Seedling_Workflow.md)
 
 
 

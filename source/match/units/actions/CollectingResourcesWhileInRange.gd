@@ -54,14 +54,19 @@ func _transfer_single_resource_unit_from_resource_to_worker():
 	if not MatchUtils.Movement.units_adhere(_unit, _resource_unit):
 		queue_free()
 		return
+	var gather_without_dropoff: bool = _unit.get("harvest_without_dropoff") == true
 	if "resource" in _resource_unit:
 		var remaining_capacity = _unit.resources_max - _unit.resource
 		var amount = mini(
 			_unit.resources_gather_rate, mini(_resource_unit.resource, remaining_capacity)
 		)
 		_resource_unit.resource -= amount
-		_unit.resource += amount
-	if _unit.is_full() or _resource_unit.resource <= 0:
+		if gather_without_dropoff:
+			if _unit.player != null:
+				_unit.player.credits += amount
+		else:
+			_unit.resource += amount
+	if (not gather_without_dropoff and _unit.is_full()) or _resource_unit.resource <= 0:
 		queue_free()
 
 

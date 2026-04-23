@@ -138,7 +138,7 @@ const STRUCTURES = {
 	Enums.SceneId.LEGION_FACTORY:
 	{
 		"scene": "res://source/factions/the_legion/structures/Factory.tscn",
-		"unit_name": "Factory",
+		"unit_name": "Assembly",
 		"description": "Produces Legion vehicles.",
 		"faction": Enums.Faction.LEGION,
 		"production_tab_type": Enums.ProductionTabType.STRUCTURE,

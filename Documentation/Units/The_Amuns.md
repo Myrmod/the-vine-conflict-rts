@@ -1,29 +1,36 @@
-# Categories:
-## Infantry:
-### The phase caster:
+# The Amuns Units
+
+## Infantry
+
+### Soldier
+
 #### General
-- movement_speed: 0.5
-- turn_rate:
-- hp: 250
-- max_hp: 250
-- cost: 500
-- armor:
-  - 25% rifle
-  - 25% Explosive
-  - 50% melee
+- role: light infantry
+- hp: 500
+- max_hp: 500
+- sight_range: 8.0
+- cost: 2 credits
+- build_time: 3.0 s
 
-#### Weapon: plasma gun
-- damage_type: Explosive
-- dmg: 25
-- aoe: 1
-- range: 3.5
-- attack_speed: 2.5
+#### Weapon
+- type: laser rifle
+- damage: 10
+- interval: 0.55 s
+- range: 4.0
 
-#### Abilities:
-- can teleport short distances(t1)
-- can activate stealth (ability purchase needed t2)
+## Support Units
 
-#### Trait
+### Syphon Drone
+
+#### General
+- role: flying resource gatherer
+- spawned automatically by a completed Syphon
+- uses the standard gather, carry, and return loop
+- returns cargo to the Syphon that supports the field
+
+#### Notes
+- not trained directly from the standard production grid
+- part of the Amuns economy line rather than the main combat roster
 
 
 

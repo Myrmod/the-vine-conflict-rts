@@ -41,10 +41,7 @@ func _find_spawner_below() -> ResourceSpawner:
 	var best: ResourceSpawner = null
 	var best_dist_sq: float = INF
 	for node: Node in get_tree().get_nodes_in_group("resource_spawners"):
-		if (
-			UnitConstants.get_scene_id(node.scene_file_path)
-			!= Enums.SceneId.NEUTRAL_RESOURCE_SPAWNER
-		):
+		if UnitConstants.get_scene_id(node.scene_file_path) != Enums.SceneId.NEUTRAL_RESOURCE_SPAWNER:
 			continue
 		if not (node is ResourceSpawner):
 			continue
@@ -71,9 +68,7 @@ func _apply_bonus_to_existing_vines() -> void:
 		)
 		if dist_sq > (ResourceSpawner.SPAWN_RADIUS * ResourceSpawner.SPAWN_RADIUS):
 			continue
-		var boosted_max: int = (
-			(vine.tile_count * vine.resources_per_tile) + resource_vine_capacity_bonus
-		)
+		var boosted_max: int = (vine.tile_count * vine.resources_per_tile) + resource_vine_capacity_bonus
 		if boosted_max <= vine.resource_max:
 			continue
 		var delta: int = boosted_max - vine.resource_max

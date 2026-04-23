@@ -35,17 +35,17 @@ Their options: reassert control, recalibrate the Vines, or purge the planet.
 
 ## Economy
 
-The Amuns **terraform Vines into Amun matter** rather than harvesting them like conventional factions.
+The Amuns use a **spawner-linked enhancement plus flying gatherer** economy.
 
-- Build a **Prism** directly on a ResourceSpawner (max one Prism per spawner)
-- Prism increases affected tile max resources from **500 to 750** and accelerates local growth
-- Build a **Siphon** near the field to deploy flying **Harvester Drones**
-- Drones return to the Siphon to deliver gathered resources
+- Build a **Purifier** directly above a ResourceSpawner
+- Purifier increases vine capacity for the linked spawner field
+- Build a **Syphon** as the local resource drop-off
+- Syphon auto-deploys a flying **Syphon Drone** to gather and return cargo
 
 | Stat | Value |
 |---|---|
 | Harvest model | Drone gather + return |
-| Field modifier | Prism converts affected tiles to 750 max |
+| Field modifier | Purifier increases linked vine capacity |
 | Depletion | Depletes and destroys ResourceVines |
 
 ---
@@ -54,10 +54,10 @@ The Amuns **terraform Vines into Amun matter** rather than harvesting them like 
 
 ```
 HQ
-└── Obelisk (power)
-    ├── Prism + Siphon economy line
-    ├── Barracks            →  Factory  →  T2 tech structure / MCV upgrade
-    └── Airfield            →  Factory  →  Naval yard
+└── Syphon
+    ├── Purifier + Syphon economy line
+    ├── Barracks             →  Naucratis
+    └── Nemet               →  Mni
 ```
 
 ---
@@ -67,13 +67,13 @@ HQ
 | Building | Cost | Build time | Notes |
 |---|---|---|---|
 | HQ | — | — | Starting structure |
-| Obelisk | 1000 | 10 s | Produces 1 power/s; buffs buildings in 5-tile radius by 10% |
-| Prism | 1000 | 10 s | Must be placed on a ResourceSpawner; max one per spawner; boosts tile max resources to 750 and increases growth |
-| Siphon | 1500 | 15 s | Deploys flying Harvester Drones that gather and return resources |
-| Barracks | 600 | 6 s | Produces infantry |
-| Airfield | 2000 | 20 s | Produces air units |
-| Factory | 2000 | 20 s | Produces tanks |
-| Naval Yard | 1500 | 15 s | Produces ships |
+| Bekhenet | 2500 | 25 s | Starting structure; on-field trickle construction producer |
+| Syphon | 1200 | 10 s | Resource drop-off that auto-spawns a Syphon Drone |
+| Purifier | 1500 | 15 s | Must be placed above a ResourceSpawner; boosts linked vine capacity |
+| Kislagh | 4 | 6 s | Produces infantry |
+| Nemet | 2000 | 20 s | Produces air units |
+| Naucratis | 2000 | 20 s | Produces vehicles |
+| Mni | 1500 | 15 s | Produces ships |
 
 ---
 
@@ -81,27 +81,27 @@ HQ
 
 ### Infantry
 
-#### Phase Caster
+#### Soldier
 
 | Stat | Value |
 |---|---|
-| HP | 250 |
-| Movement speed | 0.5 |
-| Cost | 500 |
-| Armor vs Rifle | 25% |
-| Armor vs Explosive | 25% |
-| Armor vs Melee | 50% |
+| HP | 500 |
+| Cost | 2 |
+| Build time | 3 s |
 
-**Weapon — Plasma Gun**
+**Weapon — Laser Rifle**
 
 | Stat | Value |
 |---|---|
-| Damage type | Explosive |
-| Damage | 25 |
-| AoE | 1 |
-| Range | 3.5 |
-| Attack speed | 2.5 |
+| Damage type | Laser |
+| Damage | 10 |
+| Range | 4.0 |
+| Attack speed | 0.55 |
 
-**Abilities**
-- Teleport short distances *(Tier 1)*
-- Activate stealth *(ability purchase required, Tier 2)*
+### Support Units
+
+#### Syphon Drone
+
+- spawned automatically by Syphon
+- gathers resources and returns them to the Syphon
+- not a normal production-grid unit

@@ -1,27 +1,37 @@
-# Buildings:
-## HQ:
-- 
+# Legion Buildings
 
-## Power plant: 
-- Costs 800 , 8 secs build time 
-- Provides 200 power
+## Command Center
+- main Legion structure
+- produces structures and defences
+- uses off-field plus trickle structure production
+- uses the shared global ProductionQueue HUD feature (available to all factions)
 
-## refinery:
-- costs 2000, 20 seconds build time ,costs 50 power
-- Provides a Harvester vehicle that gathers resources and returns to the Refinery to deliver them
+## Power Plant
+- cost: 4 credits
+- build_time: 5 s
+- energy_provided: 5
 
-## Barracks:
-- costs 600 , 6 sec build time, cost 25 power
-- Produces inf
+## Barracks
+- cost: 4 credits
+- build_time: 6 s
+- energy_required: 5
+- produces infantry
 
-## Airfield:
-- costs 2000, 20 sec build time, cost 50 power
-- Produces air units
+## Refinery
+- cost: 2000 credits
+- build_time: 20 s
+- energy_required: 50
+- deploys a Harvester for the Legion economy loop
+- Harvester cargo is delivered to the nearest valid drop-off structure
 
-## Factory:
-- costs 2000, 20 sec build time, cost 50 power
-- Produces tanks
+## Assembly
+- cost: 2000 credits
+- build_time: 20 s
+- energy_required: 50
+- produces vehicles
 
-## Naval yard:
-- costs 1500, 15 sec build time, cost 50 power
-- Produces ships
+## Airfield
+- cost: 2000 credits
+- build_time: 20 s
+- energy_required: 50
+- produces aircraft

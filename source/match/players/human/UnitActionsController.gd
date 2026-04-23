@@ -133,11 +133,12 @@ func _try_ordering_selected_workers_to_construct_structure(potential_structure):
 			{
 				"selected_constructors":
 				selected_constructors.map(
-					func(unit): return {
-						"unit": unit.id,
-						"pos": unit.global_position,
-						"rot": unit.global_rotation,
-					}
+					func(unit):
+						return {
+							"unit": unit.id,
+							"pos": unit.global_position,
+							"rot": unit.global_rotation,
+						}
 				),
 				"structure": structure.id,
 				"rotation": structure.global_rotation,
@@ -168,11 +169,12 @@ func _force_attack_selected_units_on(target_unit):
 			{
 				"targets":
 				attackers.map(
-					func(unit): return {
-						"unit": unit.id,
-						"pos": unit.global_position,
-						"rot": unit.global_rotation
-					}
+					func(unit):
+						return {
+							"unit": unit.id,
+							"pos": unit.global_position,
+							"rot": unit.global_rotation
+						}
 				),
 				"target_unit": target_unit.id,
 				"force": true,
@@ -575,6 +577,14 @@ func push_hold_position_command():
 
 func _on_unit_targeted(unit):
 	var mode = MatchSignals.active_command_mode
+	if mode == Enums.UnitCommandMode.HARVEST:
+		_try_ordering_selected_gatherers_to_harvest(unit)
+		MatchSignals.active_command_mode = Enums.UnitCommandMode.NORMAL
+		MatchSignals.command_mode_changed.emit(Enums.UnitCommandMode.NORMAL)
+		var harvest_targetability = unit.find_child("Targetability")
+		if harvest_targetability != null:
+			harvest_targetability.animate()
+		return
 	if mode == Enums.UnitCommandMode.ATTACK_MOVE:
 		# Force-attack the clicked unit (even allies)
 		_force_attack_selected_units_on(unit)
@@ -588,6 +598,15 @@ func _on_unit_targeted(unit):
 		var targetability = unit.find_child("Targetability")
 		if targetability != null:
 			targetability.animate()
+
+
+func _try_ordering_selected_gatherers_to_harvest(target_unit) -> void:
+	for unit in get_tree().get_nodes_in_group("selected_units"):
+		if not unit.is_in_group("controlled_units"):
+			continue
+		if not Actions.CollectingResourcesSequentially.is_applicable(unit, target_unit):
+			continue
+		_navigate_unit_towards_unit(unit, target_unit)
 
 
 func _on_unit_spawned(unit):

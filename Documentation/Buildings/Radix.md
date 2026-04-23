@@ -1,50 +1,32 @@
-# Buildings:
-## HQ:
-- 
+# Radix Buildings
 
-## Heart:
-- Main structure.
-- Produces Seedlings.
-- Seedlings are consumed when they successfully finish creep spread or structure construction.
-- If the controlling player interrupts the action before completion, the Seedling is not destroyed.
+## Heart
+- main Radix structure
+- produces Seedlings
+- produces structures and defences from the structure tab
+- uses the shared global ProductionQueue HUD feature (available to all factions)
+- current implemented stats: 8 credits, 10 s build time
 
-## Brood Nest:
-- Tier 1 infantry structure.
-- Directly placeable if a Seedling is available.
-- Placed as a ghost first; construction starts only after a Seedling reaches it and is consumed.
+## Brood Nest
+- Tier 1 infantry structure
+- cost: 600 credits
+- build_time: 6 s
+- placed as a ghost first
+- construction begins only after a Seedling reaches the site and is consumed
 
-## Thorn Forge:
-- Tier 1 vehicle structure.
-- Directly placeable if a Seedling is available.
-- Placed as a ghost first; construction starts only after a Seedling reaches it and is consumed.
+## Thorn Forge
+- Tier 1 vehicle structure
+- cost: 2000 credits
+- build_time: 20 s
+- uses the same Seedling-started construction flow as other Radix Tier 1 structures
 
-## Sky Bloom:
-- Tier 1 air structure.
-- Directly placeable if a Seedling is available.
-- Placed as a ghost first; construction starts only after a Seedling reaches it and is consumed.
+## Sky Bloom
+- Tier 1 air structure
+- cost: 2000 credits
+- build_time: 20 s
+- uses the same Seedling-started construction flow as other Radix Tier 1 structures
 
-## Vine spreader: 
-- Costs 500 , 5 secs build time 
-- spreads vines in 5 tiles around it
-
-## Root Conduit:
-- Built next to a vine field.
-- Passively harvests from nearby ResourceTiles.
-- Does not deplete or destroy the ResourceVines.
-- Income scales with nearby tile count.
-
-## Brood Nest:
-- costs 600 , 6 sec build time
-- Terraforms inf
-
-## Sky Bloom:
-- costs 2000, 20 sec build time
-- Terraforms air units
-
-## Thorn Forge:
-- costs 2000, 20 sec build time
-- Terraforms tanks
-
-## Naval yard:
-- costs 1500, 15 sec build time
-- Terraforms ships
+## Construction rules
+- current implemented Radix production buildings require a Seedling to start
+- placement creates the site first, then a Seedling finishes the start action
+- canceling before completion preserves or restores the Seedling instead of deleting it permanently

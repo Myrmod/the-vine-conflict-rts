@@ -76,6 +76,15 @@ func _set_width(a_width):
 func _on_input_event(_camera, event, _click_position, _click_normal, _shape_idx):
 	if (
 		event is InputEventMouseButton
+		and event.button_index == MOUSE_BUTTON_LEFT
+		and event.pressed
+		and MatchSignals.active_command_mode != Enums.UnitCommandMode.NORMAL
+	):
+		MatchSignals.unit_targeted_this_click = true
+		MatchSignals.unit_targeted.emit(_unit)
+		return
+	if (
+		event is InputEventMouseButton
 		and event.button_index == MOUSE_BUTTON_RIGHT
 		and event.pressed
 	):

@@ -36,6 +36,7 @@ The Remnants do not use a refinery return loop. They harvest by **burning** reso
 - Gather rate is measured by destroyed resources per tick.
 - Units do not carry cargo and do not return to a refinery.
 - Remnants harvesting depletes and destroys ResourceVines.
+- On depletion, Remnants gatherers automatically continue to the next available resource tile.
 
 | Stat | Value |
 |---|---|
@@ -51,10 +52,10 @@ The Remnants do not use a refinery return loop. They harvest by **burning** reso
 ```
 HQ
 └── Power Plant
-    ├── Barracks   ─┐
+    ├── Casern     ─┐
     └── Factory  ──┘           →  T2 structure
                                →  Naval Yard
-                               →  Airfield
+                               →  Drone Tower
 ```
 
 > Factory is accessible earlier than in other factions — unlocked directly from Power Plant.
@@ -65,14 +66,14 @@ HQ
 
 | Building | Cost | Build time | Power | Notes |
 |---|---|---|---|---|
-| HQ | — | — | — | Starting structure |
+| HQ | — | — | — | Starting structure, off-field + trickle structure production, shared global ProductionQueue |
 | Power Plant | 600 | 6 s | — | Provides 150 power |
-| Barracks | 600 | 6 s | 25 | Produces infantry |
-| Airfield | 2000 | 20 s | 50 | Produces air units |
+| Casern | 600 | 6 s | 25 | Produces infantry |
+| Drone Tower | 2000 | 20 s | 50 | Produces air units |
 | Factory | 2000 | 20 s | 50 | Produces tanks |
 | Naval Yard | 1500 | 15 s | 50 | Produces ships |
 
-> Economy unit production: Barracks produces Incinerator squads, Factory produces Flame Tanks.
+> Economy unit production: Casern produces Incinerator squads, Factory produces Flame Tanks.
 
 ---
 

@@ -431,8 +431,6 @@ func _execute_command(cmd: Dictionary):
 		# ── ECONOMY ───────────────────────────────────────────────────
 		Enums.CommandType.COLLECTING_RESOURCES_SEQUENTIALLY:
 			var target_unit = _resolve_unit(cmd.data.target_unit, "COLLECTING.target")
-			if target_unit == null:
-				return
 			for entry in cmd.data.targets:
 				var parsed = _parse_target_entry(entry, "COLLECTING")
 				if parsed.is_empty():
@@ -442,7 +440,17 @@ func _execute_command(cmd: Dictionary):
 					continue
 				if not _verify_unit_ownership(unit, cmd.player_id, "COLLECTING"):
 					continue
-				unit.action = Actions.CollectingResourcesSequentially.new(target_unit)
+				var resolved_target = target_unit
+				if not Actions.CollectingResourcesSequentially.is_applicable(unit, resolved_target):
+					resolved_target = (
+						ResourceUtils
+						. find_resource_unit_closest_to_unit_yet_no_further_than(unit, INF)
+					)
+				if resolved_target == null:
+					continue
+				if not Actions.CollectingResourcesSequentially.is_applicable(unit, resolved_target):
+					continue
+				unit.action = Actions.CollectingResourcesSequentially.new(resolved_target)
 
 		# ── COMBAT ────────────────────────────────────────────────────
 		Enums.CommandType.AUTO_ATTACKING:

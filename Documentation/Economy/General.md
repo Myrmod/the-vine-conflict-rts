@@ -4,7 +4,8 @@
 - Starting resources are 10k.
 - Resource fields spawn as ResourceTiles around a ResourceSpawner (ResourceVine field).
 - Base max resource per tile is 500.
-- If an Amuns Prism is built directly above a ResourceSpawner, affected tiles use 750 max resource and should look more golden.
+- The global ProductionQueue is a shared HUD feature for all factions.
+- If an Amuns Purifier is built directly above a ResourceSpawner, that linked field receives a capacity bonus.
 - Multiple players can contest the same field.
 
 ## Depletion Rules

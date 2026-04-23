@@ -1,34 +1,44 @@
-# Buildings:
-## HQ:
-- 
+# Amuns Buildings
 
-## Obelisk: 
-- Costs 1000 , 10 secs build time, produces 1 power per second 
-- Buff production speed/armor/dmg for buildings near it by 10% , 5 tile radius
+## Bekhenet
+- main Amuns structure
+- produces structures and defences
+- uses on-field plus trickle structure construction
+- uses the shared global ProductionQueue HUD feature (available to all factions)
+- cost: 2500 credits
+- build_time: 25 s
 
-## Prism:
-- Can only be built directly above a ResourceSpawner.
-- Only one Prism per ResourceSpawner.
-- Increases max resources per tile from 500 to 750 and increases ResourceTile growth speed.
-- Visual intent: affected resources become more golden.
+## Kislagh
+- infantry production structure
+- cost: 4 credits
+- build_time: 6 s
+- energy_required: 5
 
-## Siphon:
-- Built next to a resource field.
-- Sends out flying, destructible Harvester Drones.
-- Harvester Drones gather and return to the Siphon to deliver resources.
+## Nemet
+- air production structure
+- cost: 2000 credits
+- build_time: 20 s
 
-## Barracks:
-- costs 600 , 6 sec build time
-- Summons inf
+## Naucratis
+- vehicle production structure
+- cost: 2000 credits
+- build_time: 20 s
 
-## Airfield:
-- costs 2000, 20 sec build time
-- summons air units
+## Mni
+- naval production structure
+- cost: 1500 credits
+- build_time: 15 s
 
-## Factory:
-- costs 2000, 20 sec build time
-- summons tanks
+## Syphon
+- cost: 1200 credits
+- build_time: 10 s
+- resource drop-off structure
+- auto-deploys a flying Syphon Drone when construction completes
+- drones harvest and return resources to the Syphon
 
-## Naval yard:
-- costs 1500, 15 sec build time
-- summon ships
+## Purifier
+- cost: 1500 credits
+- build_time: 15 s
+- must be placed directly above a ResourceSpawner
+- floats above the spawner instead of occupying normal ground cells
+- increases nearby vine capacity for the linked spawner field

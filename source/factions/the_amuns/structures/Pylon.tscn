@@ -7,7 +7,7 @@
 [ext_resource type="PackedScene" uid="uid://d4cwip5hpxlmo" path="res://source/match/units/traits/MovementObstacle.tscn" id="5_ll6ih"]
 [ext_resource type="PackedScene" uid="uid://c3ssj2p6voauk" path="res://source/match/units/traits/HealthBar.tscn" id="6_a30pm"]
 [ext_resource type="PackedScene" uid="uid://d4cm4yhtf11ur" path="res://source/match/units/traits/Targetability.tscn" id="7_ixhc8"]
-[ext_resource type="PackedScene" uid="uid://cd3v6508vjcu3" path="res://source/match/units/traits/ProductionQueue.tscn" id="8_j656o"]
+[ext_resource type="PackedScene" uid="uid://cd3v6508vjcu3" path="res://source/match/units/traits/ProductionQueue.tscn" id="8_jf41v"]
 [ext_resource type="PackedScene" uid="uid://dde6yvuax0g4" path="res://source/match/units/traits/NameTag.tscn" id="9_ucqek"]
 [ext_resource type="PackedScene" uid="uid://b1gne72rgc7un" path="res://source/match/units/BuildRadius.tscn" id="10_jim85"]
 
@@ -21,10 +21,11 @@ script = ExtResource("1_rf8yf")
 [node name="Geometry" type="Node3D" parent="." unique_id=955003802]
 
 [node name="ModelHolder" type="Node3D" parent="Geometry" unique_id=666683147]
-transform = Transform3D(0.015, 0, 0, 0, 0.015, 0, 0, 0, 0.015, 0, 0.02, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
 rotation_order = 0
 script = ExtResource("2_jim85")
-model_path = "Resources/VineTile.glb"
+model_path = "TODO"
+fallback_cube_size = Vector3(1.2, 1.0, 1.2)
 fallback_cube_color = Color(0.6, 0.6, 0.6, 1)
 metadata/_custom_type_script = "uid://bysf721q4x37n"
 
@@ -54,7 +55,7 @@ size = Vector2(162, 10)
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, 0)
 radius = 0.5
 
-[node name="ProductionQueue" parent="." unique_id=626563319 instance=ExtResource("8_j656o")]
+[node name="ProductionQueue" parent="." unique_id=1050608123 instance=ExtResource("8_jf41v")]
 
 [node name="NameTag" parent="." unique_id=877929437 instance=ExtResource("9_ucqek")]
 

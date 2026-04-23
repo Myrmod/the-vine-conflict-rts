@@ -49,16 +49,17 @@ The Legion represents the organized, power-centric military that emerged from wh
 
 The Legion uses **conventional refineries** with harvesters that cut Vines.
 
-- Harvester gathers, carries, and returns resources to the Refinery.
+- Refinery deploys a Harvester.
+- Harvester gathers, carries, and returns resources to the nearest valid drop-off structure.
+- Legion command centers are not resource drop-off structures.
 - Legion harvesting depletes and destroys ResourceVines.
 - If a Harvester is destroyed while carrying resources, the carried load is lost.
 
 | Stat | Value |
 |---|---|
-| Capacity | 250 |
-| Harvester speed | 2.0 |
-| Harvest rate | 100 res/s |
-| Delivery rate | 100 res/s |
+| Capacity | 500 |
+| Harvest rate | 250 |
+| Delivery loop | Nearest valid drop-off |
 
 ---
 
@@ -67,12 +68,11 @@ The Legion uses **conventional refineries** with harvesters that cut Vines.
 ```
 HQ
 └── Power Plant
-    ├── Barracks   →  Factory  →  T2 structure
-    └── Refinery   →  Factory  →  Airfield
-                              →  Naval Yard
+    ├── Barracks
+    ├── Refinery
+    ├── Assembly
+    └── Airfield
 ```
-
-> Airfield requires Factory; Factory requires either Barracks or Refinery.
 
 ---
 
@@ -80,13 +80,12 @@ HQ
 
 | Building | Cost | Build time | Power | Notes |
 |---|---|---|---|---|
-| HQ | — | — | — | Starting structure |
-| Power Plant | 800 | 8 s | — | Provides 200 power |
+| Command Center | 8 | 10 s | 0 | Starting structure; off-field trickle structure producer |
+| Power Plant | 4 | 5 s | +5 | Provides Legion energy |
 | Refinery | 2000 | 20 s | 50 | Provides a Harvester that must return cargo to deliver |
-| Barracks | 600 | 6 s | 25 | Produces infantry |
+| Barracks | 4 | 6 s | 5 | Produces infantry |
 | Airfield | 2000 | 20 s | 50 | Produces air units |
-| Factory | 2000 | 20 s | 50 | Produces tanks |
-| Naval Yard | 1500 | 15 s | 50 | Produces ships |
+| Assembly | 2000 | 20 s | 50 | Produces tanks |
 
 ---
 
@@ -98,22 +97,30 @@ HQ
 
 | Stat | Value |
 |---|---|
-| HP | 100 |
-| Movement speed | 1.0 |
-| Cost | 200 |
+| HP | 5 |
+| Cost | 2 |
+| Build time | 3 s |
 | Armor vs Rifle | 0% |
 | Armor vs Explosive | 0% |
 | Armor vs Melee | 0% |
 
-**Weapon — Rifle**
+**Weapon — Laser Rifle**
 
 | Stat | Value |
 |---|---|
-| Damage type | Rifle |
-| Damage | 10 |
-| AoE | 0 |
-| Range | 3.0 |
-| Attack speed | 1.0 |
+| Damage type | Laser |
+| Damage | 1 |
+| Range | 4.0 |
+| Attack speed | 0.55 |
 
-**Abilities**
-- Can deploy (prevents crushing by vehicles)
+### Vehicles
+
+#### Harvester
+
+| Stat | Value |
+|---|---|
+| HP | 600 |
+| Capacity | 500 |
+| Gather rate | 250 |
+| Cost | 2 |
+| Build time | 3 s |

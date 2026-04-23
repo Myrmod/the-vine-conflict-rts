@@ -13,7 +13,7 @@ size = Vector3(1, 0.6, 1)
 script = ExtResource("1_script")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=299428550]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.7, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.25, 0)
 shape = SubResource("BoxShape3D_rv")
 
 [node name="Geometry" type="Node3D" parent="." unique_id=242527098]
@@ -25,12 +25,12 @@ center_xz = true
 align_y_to_ground = true
 
 [node name="Highlight" parent="." unique_id=1919007947 instance=ExtResource("3_highlight")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, 0)
 visible = false
 radius = 0.6
 
 [node name="Selection" parent="." unique_id=1037968896 instance=ExtResource("4_selection")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, 0)
 radius = 0.6
 
 [node name="MovementObstacle" parent="." unique_id=1882433324 instance=ExtResource("5_obstacle")]
@@ -38,5 +38,5 @@ radius = 0.6
 affect_navigation_mesh = true
 
 [node name="Targetability" parent="." unique_id=1180995557 instance=ExtResource("6_target")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, 0)
 radius = 0.6

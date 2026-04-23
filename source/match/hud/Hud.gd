@@ -62,6 +62,7 @@ var _active_producer_index: int = 0
 var _portrait_unit: Node = null
 var _portrait_hp_connection: Callable
 var _command_buttons: Array[Button] = []
+var _unit_specific_buttons: Array[Button] = []
 
 ## Currently observed production queue for grid button display
 var _grid_observed_queue = null
@@ -1563,6 +1564,32 @@ func _init_ability_buttons() -> void:
 	# Hide the original placeholder ability buttons
 	for i in range(unit_ability_container.get_child_count()):
 		unit_ability_container.get_child(i).visible = false
+	for i in range(unit_specific_ability_h_box_container.get_child_count()):
+		unit_specific_ability_h_box_container.get_child(i).visible = false
+
+	var harvest_btn := Button.new()
+	harvest_btn.custom_minimum_size = Vector2(31, 31)
+	harvest_btn.text = "H"
+	harvest_btn.visible = false
+	harvest_btn.pressed.connect(_on_unit_specific_button_pressed.bind("harvest"))
+	(
+		harvest_btn
+		. mouse_entered
+		. connect(
+			(
+				_on_unit_specific_button_hover
+				. bind(
+					{
+						"name": "Harvest",
+						"desc": "Select a resource field to begin harvesting",
+					}
+				)
+			)
+		)
+	)
+	harvest_btn.mouse_exited.connect(_on_production_button_exit)
+	unit_specific_ability_h_box_container.add_child(harvest_btn)
+	_unit_specific_buttons.append(harvest_btn)
 
 	# Create unit command buttons
 	var hs = Globals.hotkey_settings
@@ -1588,11 +1615,17 @@ func _update_ability_buttons(unit) -> void:
 			btn.visible = not btn.get_meta("is_movement", false)
 		else:
 			btn.visible = true
+	for btn in _unit_specific_buttons:
+		btn.visible = (unit is ResourceGatherer)
+	_update_unit_specific_ability_wrapper()
 
 
 func _hide_ability_buttons() -> void:
 	for btn in _command_buttons:
 		btn.visible = false
+	for btn in _unit_specific_buttons:
+		btn.visible = false
+	_update_unit_specific_ability_wrapper()
 
 
 func _on_command_button_hover(def: Dictionary) -> void:
@@ -1605,6 +1638,11 @@ func _on_command_button_hover(def: Dictionary) -> void:
 			{"": def["desc"]},
 		)
 	)
+	tooltip.toggle(true)
+
+
+func _on_unit_specific_button_hover(def: Dictionary) -> void:
+	tooltip.set_content(def["name"], {"": def["desc"]})
 	tooltip.toggle(true)
 
 
@@ -1630,6 +1668,23 @@ func _on_command_button_pressed(key: String) -> void:
 		"reverse_move":
 			MatchSignals.active_command_mode = (Enums.UnitCommandMode.REVERSE_MOVE)
 			MatchSignals.command_mode_changed.emit(Enums.UnitCommandMode.REVERSE_MOVE)
+
+
+func _on_unit_specific_button_pressed(key: String) -> void:
+	match key:
+		"harvest":
+			MatchSignals.active_command_mode = Enums.UnitCommandMode.HARVEST
+			MatchSignals.command_mode_changed.emit(Enums.UnitCommandMode.HARVEST)
+
+
+func _update_unit_specific_ability_wrapper() -> void:
+	var ability_wrapper: MarginContainer = unit_specific_ability_h_box_container.get_parent()
+	var has_visible_button := false
+	for child in unit_specific_ability_h_box_container.get_children():
+		if child.visible:
+			has_visible_button = true
+			break
+	ability_wrapper.modulate.a = 1.0 if has_visible_button else 0.0
 
 
 func _disconnect_portrait_hp() -> void:
@@ -1709,10 +1764,7 @@ func _update_unit_info_panel() -> void:
 		child.queue_free()
 
 	# Unit-specific abilities (invisible when empty)
-	var ability_wrapper: MarginContainer = unit_specific_ability_h_box_container.get_parent()
-	ability_wrapper.modulate.a = (
-		1.0 if unit_specific_ability_h_box_container.get_child_count() > 0 else 0.0
-	)
+	_update_unit_specific_ability_wrapper()
 
 
 func _clear_unit_info_panel() -> void:
@@ -1722,8 +1774,7 @@ func _clear_unit_info_panel() -> void:
 	armor_button.modulate.a = 0.0
 	for child in status_effects.get_children():
 		child.queue_free()
-	var ability_wrapper: MarginContainer = unit_specific_ability_h_box_container.get_parent()
-	ability_wrapper.modulate.a = 0.0
+	_update_unit_specific_ability_wrapper()
 
 
 func _update_ping_display() -> void:

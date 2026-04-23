@@ -1,28 +1,34 @@
-# Categories:
-## Infantry:
-### The phase seedling:
+# The Radix Units
+
+## Infantry
+
+### Seedling
+
 #### General
-- movement_speed: 2
-- turn_rate:
-- hp: 50
-- max_hp: 50
-- cost: 100
+- role: unarmed builder and scout
+- movement_speed: 2.0
+- hp: 80
+- max_hp: 80
+- sight_range: 6.0
+- cost: 1 credit
+- build_time: 2.5 s
 - armor:
   - 0% rifle
-  - 0% Explosive
+  - 0% explosive
   - 0% melee
 
-#### Weapon: melee
-- damage_type: melee
-- dmg: 10
-- aoe: 0
-- range: 0
-- attack_speed: 0.5
+#### Combat
+- no weapon
+- cannot attack
 
-#### Abilities:
+#### Abilities
 - can spread creep
-- can construct radix structures
-- consumed when a spread or construct action successfully completes
-- not consumed if the controlling player interrupts/cancels the action before completion
+- can start Radix structure construction
+- can move through vines
+- consumed only when creep spread or structure start completes successfully
+- if the action is canceled before completion, the Seedling remains available
+- if a started Seedling-based structure is canceled, an equivalent Seedling is restored
 
-#### Trait
+#### Notes
+- Seedlings are produced by the Heart
+- Radix Tier 1 structures depend on Seedlings instead of standard worker construction

@@ -10,6 +10,7 @@ enum BlueprintPositionValidity {
 	WRONG_TERRAIN,
 	NOT_ON_CREEP,
 	NO_AVAILABLE_SEEDLING,
+	NOT_ON_RESOURCE_SPAWNER,
 }
 
 const ROTATION_BY_KEY_STEP_GRID = 90.0
@@ -33,6 +34,10 @@ var _is_trickle = false
 var _off_field_producer_id: int = -1
 var _pending_requires_creep: bool = false
 var _pending_requires_seedling: bool = false
+var _pending_requires_resource_spawner: bool = false
+var _pending_resource_spawner_height_offset: float = 0.0
+
+const _RESOURCE_SPAWNER_SNAP_RADIUS: float = 2.0
 
 @onready var _player = get_parent()
 @onready var _match = find_parent("Match")
@@ -136,6 +141,10 @@ func _calculate_blueprint_position_validity():
 		return BlueprintPositionValidity.NOT_ON_CREEP
 	if _pending_requires_seedling and not _player_has_available_seedling():
 		return BlueprintPositionValidity.NO_AVAILABLE_SEEDLING
+	if _pending_requires_resource_spawner:
+		if _get_resource_spawner_at_blueprint() == null:
+			return BlueprintPositionValidity.NOT_ON_RESOURCE_SPAWNER
+		return BlueprintPositionValidity.VALID
 	var placement_validity = MatchUtils.Placement.validate_agent_placement_position(
 		_active_blueprint_node.global_position,
 		_pending_structure_radius,
@@ -223,6 +232,8 @@ func _update_feedback_label(blueprint_position_validity):
 			_feedback_label.text = tr("BLUEPRINT_NOT_ON_CREEP")
 		BlueprintPositionValidity.NO_AVAILABLE_SEEDLING:
 			_feedback_label.text = "A Seedling is required"
+		BlueprintPositionValidity.NOT_ON_RESOURCE_SPAWNER:
+			_feedback_label.text = "Must be placed above a Resource Spawner"
 
 
 func _start_structure_placement(structure_prototype):
@@ -230,9 +241,9 @@ func _start_structure_placement(structure_prototype):
 		return
 	_pending_structure_prototype = structure_prototype
 	var temporary_structure_instance = _pending_structure_prototype.instantiate()
-	_pending_structure_radius = temporary_structure_instance.radius
+	_pending_structure_radius = _get_structure_radius(temporary_structure_instance)
 	_pending_structure_placement_domains = (
-		Array(temporary_structure_instance.placement_domains)
+		Array(temporary_structure_instance.get("placement_domains"))
 		if temporary_structure_instance.get("placement_domains") != null
 		else []
 	)
@@ -240,10 +251,20 @@ func _start_structure_placement(structure_prototype):
 	_pending_requires_seedling = (
 		temporary_structure_instance.get("requires_seedling_to_start") == true
 	)
+	_pending_requires_resource_spawner = (
+		temporary_structure_instance.get("requires_resource_spawner") == true
+	)
+	_pending_resource_spawner_height_offset = float(
+		(
+			temporary_structure_instance.get("resource_spawner_height_offset")
+			if temporary_structure_instance.get("resource_spawner_height_offset") != null
+			else 0.0
+		)
+	)
 	_pending_structure_navmap_rid = (
 		find_parent("Match")
 		. navigation
-		. get_navigation_map_rid_by_domain(temporary_structure_instance.get_nav_domain())
+		. get_navigation_map_rid_by_domain(_get_structure_nav_domain(temporary_structure_instance))
 	)
 	var geometry = temporary_structure_instance.find_child("Geometry")
 	if geometry != null:
@@ -251,13 +272,13 @@ func _start_structure_placement(structure_prototype):
 		_active_blueprint_node = geometry
 	else:
 		_active_blueprint_node = Node3D.new()
-	var structure_radius = temporary_structure_instance.radius
+	var structure_radius = _get_structure_radius(temporary_structure_instance)
 	var structure_placement_domains = (
-		Array(temporary_structure_instance.placement_domains)
+		Array(temporary_structure_instance.get("placement_domains"))
 		if temporary_structure_instance.get("placement_domains") != null
 		else []
 	)
-	var structure_nav_domain = temporary_structure_instance.get_nav_domain()
+	var structure_nav_domain = _get_structure_nav_domain(temporary_structure_instance)
 	var movement_obstacle = temporary_structure_instance.find_child("MovementObstacle")
 	var skip_nav = movement_obstacle != null and movement_obstacle.affect_navigation_mesh
 	temporary_structure_instance.free()
@@ -287,6 +308,29 @@ func _start_structure_placement(structure_prototype):
 	_set_blueprint_position_based_on_mouse_pos()
 
 
+func _get_structure_radius(structure_node: Node) -> float:
+	if structure_node == null:
+		return 0.0
+	var radius_value = structure_node.get("radius")
+	if radius_value != null:
+		return float(radius_value)
+	var movement_obstacle = structure_node.find_child("MovementObstacle")
+	if movement_obstacle != null and movement_obstacle.get("radius") != null:
+		return float(movement_obstacle.get("radius"))
+	return 0.0
+
+
+func _get_structure_nav_domain(structure_node: Node) -> NavigationConstants.Domain:
+	if structure_node != null and structure_node.has_method("get_nav_domain"):
+		return structure_node.get_nav_domain()
+	var movement_obstacle = (
+		structure_node.find_child("MovementObstacle") if structure_node != null else null
+	)
+	if movement_obstacle != null and movement_obstacle.get("domain") != null:
+		return movement_obstacle.get("domain")
+	return NavigationConstants.Domain.TERRAIN
+
+
 func _set_blueprint_position_based_on_mouse_pos():
 	var mouse_pos_2d = get_viewport().get_mouse_position()
 	var camera = get_viewport().get_camera_3d()
@@ -306,8 +350,45 @@ func _set_blueprint_position_based_on_mouse_pos():
 	# avoid z-fighting that hides the blueprint and construction outlines.
 	if _is_water_building() and map != null:
 		target_position.y = 0.0
+	if _pending_requires_resource_spawner:
+		var spawner := _find_nearest_resource_spawner(
+			target_position, _RESOURCE_SPAWNER_SNAP_RADIUS
+		)
+		if spawner != null:
+			target_position = spawner.global_position
+			target_position.y += _pending_resource_spawner_height_offset
 	_active_blueprint_node.global_transform.origin = target_position
 	_feedback_label.global_transform.origin = target_position
+
+
+func _get_resource_spawner_at_blueprint() -> ResourceSpawner:
+	if not _structure_placement_started():
+		return null
+	return _find_nearest_resource_spawner(
+		_active_blueprint_node.global_position, _RESOURCE_SPAWNER_SNAP_RADIUS
+	)
+
+
+func _find_nearest_resource_spawner(world_pos: Vector3, radius: float) -> ResourceSpawner:
+	var best: ResourceSpawner = null
+	var best_dist_sq: float = INF
+	var world_pos_yless: Vector3 = world_pos * Vector3(1, 0, 1)
+	var radius_sq: float = radius * radius
+	for node: Node in get_tree().get_nodes_in_group("resource_spawners"):
+		if (
+			UnitConstants.get_scene_id(node.scene_file_path)
+			!= Enums.SceneId.NEUTRAL_RESOURCE_SPAWNER
+		):
+			continue
+		if not (node is ResourceSpawner):
+			continue
+		var dist_sq: float = node.global_position_yless.distance_squared_to(world_pos_yless)
+		if dist_sq > radius_sq:
+			continue
+		if dist_sq < best_dist_sq:
+			best_dist_sq = dist_sq
+			best = node
+	return best
 
 
 func _update_blueprint_color(blueprint_position_is_valid):
@@ -332,6 +413,8 @@ func _cancel_structure_placement():
 		_is_trickle = false
 		_off_field_producer_id = -1
 		_pending_requires_seedling = false
+		_pending_requires_resource_spawner = false
+		_pending_resource_spawner_height_offset = 0.0
 		MatchSignals.structure_placement_ended.emit()
 
 

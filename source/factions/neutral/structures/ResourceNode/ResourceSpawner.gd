@@ -32,6 +32,7 @@ var _saved_id: int = -1
 var _occupied_cell: Vector2i
 var _footprint: Vector2i = Vector2i(3, 3)
 var _spawn_counter: int = 0
+var resource_capacity_bonus: int = 0
 
 var _energy_material: ShaderMaterial = null
 
@@ -115,6 +116,9 @@ func _try_spawn_vine():
 	spawn_pos.y = map.get_height_at_cell(best_cell)
 	vine.position = spawn_pos
 	get_parent().add_child(vine)
+	if resource_capacity_bonus > 0:
+		vine.resource_max += resource_capacity_bonus
+		vine.resource += resource_capacity_bonus
 
 
 func _setup_energy_shader() -> void:
