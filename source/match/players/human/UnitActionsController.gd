@@ -133,12 +133,11 @@ func _try_ordering_selected_workers_to_construct_structure(potential_structure):
 			{
 				"selected_constructors":
 				selected_constructors.map(
-					func(unit):
-						return {
-							"unit": unit.id,
-							"pos": unit.global_position,
-							"rot": unit.global_rotation,
-						}
+					func(unit): return {
+						"unit": unit.id,
+						"pos": unit.global_position,
+						"rot": unit.global_rotation,
+					}
 				),
 				"structure": structure.id,
 				"rotation": structure.global_rotation,
@@ -169,12 +168,11 @@ func _force_attack_selected_units_on(target_unit):
 			{
 				"targets":
 				attackers.map(
-					func(unit):
-						return {
-							"unit": unit.id,
-							"pos": unit.global_position,
-							"rot": unit.global_rotation
-						}
+					func(unit): return {
+						"unit": unit.id,
+						"pos": unit.global_position,
+						"rot": unit.global_rotation
+					}
 				),
 				"target_unit": target_unit.id,
 				"force": true,

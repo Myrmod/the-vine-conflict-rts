@@ -197,6 +197,15 @@ This pattern isolates validation from execution.
 - Remnants no-dropoff gatherers re-issue next-resource harvesting through CommandBus when a vine is depleted.
 - This preserves deterministic behavior for replay and multiplayer while avoiding gatherer stalls.
 
+### Radix Passive Harvesting
+
+Radix passive income is structure-driven rather than unit-driven.
+
+- `Linker` is a Radix structure that reads nearby `ResourceTile` fullness and grants credits without mutating tile resource.
+- Each `ResourceTile` can be linked to exactly one `Linker` at a time.
+- Link assignment is deterministic: Linkers are resolved in stable entity-ID order, then claim the best eligible unlinked tiles in range.
+- Income is recalculated from linked tile `resource / resource_max`, so richer tiles yield more income while enemy depletion naturally lowers later payout.
+
 ---
 
 ## 5. EntityRegistry: Stable Unit IDs

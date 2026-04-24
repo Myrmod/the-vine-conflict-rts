@@ -1,1 +1,1 @@
-extends ResourceGatherer
+extends Unit

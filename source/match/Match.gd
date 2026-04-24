@@ -1202,7 +1202,13 @@ func _add_seedling_structure_to_queue(producer: Unit, structure: Structure, scen
 		structure.constructed.connect(
 			_on_seedling_structure_constructed.bind(producer, queue_element, structure)
 		)
-	var tick_callable := _on_seedling_structure_queue_tick.bind(structure, queue_element)
+	if not structure.tree_exited.is_connected(
+		_on_seedling_structure_removed.bind(producer, queue_element, structure)
+	):
+		structure.tree_exited.connect(
+			_on_seedling_structure_removed.bind(producer, queue_element, structure)
+		)
+	var tick_callable := _on_seedling_structure_queue_tick.bind(producer, structure, queue_element)
 	if not MatchSignals.tick_advanced.is_connected(tick_callable):
 		MatchSignals.tick_advanced.connect(tick_callable)
 	producer.production_queue._enqueue_element(queue_element)
@@ -1211,18 +1217,29 @@ func _add_seedling_structure_to_queue(producer: Unit, structure: Structure, scen
 func _on_seedling_structure_constructed(
 	producer: Unit, queue_element, structure: Structure
 ) -> void:
-	# Remove from queue when construction finishes
-	var tick_callable := _on_seedling_structure_queue_tick.bind(structure, queue_element)
+	_cleanup_seedling_structure_queue_tracking(producer, queue_element, structure)
+
+
+func _on_seedling_structure_removed(producer: Unit, queue_element, structure: Structure) -> void:
+	_cleanup_seedling_structure_queue_tracking(producer, queue_element, structure)
+
+
+func _cleanup_seedling_structure_queue_tracking(
+	producer: Unit, queue_element, structure: Structure
+) -> void:
+	var tick_callable := _on_seedling_structure_queue_tick.bind(producer, structure, queue_element)
 	if MatchSignals.tick_advanced.is_connected(tick_callable):
 		MatchSignals.tick_advanced.disconnect(tick_callable)
 	if producer != null and producer.has_node("ProductionQueue"):
 		producer.production_queue._remove_element(queue_element)
 
 
-func _on_seedling_structure_queue_tick(structure: Structure, queue_element) -> void:
+func _on_seedling_structure_queue_tick(producer: Unit, structure, queue_element) -> void:
 	if structure == null or not is_instance_valid(structure):
+		_cleanup_seedling_structure_queue_tracking(producer, queue_element, structure)
 		return
 	if queue_element == null:
+		_cleanup_seedling_structure_queue_tracking(producer, queue_element, structure)
 		return
 	var total: float = 5.0
 	if queue_element.time_total != null:

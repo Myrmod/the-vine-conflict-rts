@@ -1,0 +1,55 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://source/factions/the_radix/structures/Linker.gd" id="1_linker_script"]
+[ext_resource type="Script" path="res://source/generic-scenes-and-nodes/3d/ModelHolder.gd" id="2_model_holder"]
+[ext_resource type="PackedScene" path="res://source/match/units/traits/Highlight.tscn" id="3_highlight"]
+[ext_resource type="PackedScene" path="res://source/match/units/traits/Selection.tscn" id="4_selection"]
+[ext_resource type="PackedScene" path="res://source/match/units/traits/MovementObstacle.tscn" id="5_obstacle"]
+[ext_resource type="PackedScene" path="res://source/match/units/traits/HealthBar.tscn" id="6_healthbar"]
+[ext_resource type="PackedScene" path="res://source/match/units/traits/Targetability.tscn" id="7_targetability"]
+[ext_resource type="PackedScene" path="res://source/match/units/traits/NameTag.tscn" id="8_nametag"]
+
+[sub_resource type="CylinderShape3D" id="1_shape"]
+height = 1.2
+radius = 1.45
+
+[node name="Linker" type="Area3D"]
+collision_layer = 2
+collision_mask = 0
+script = ExtResource("1_linker_script")
+
+[node name="Geometry" type="Node3D" parent="."]
+
+[node name="Model" type="Node3D" parent="Geometry"]
+script = ExtResource("2_model_holder")
+model_path = "TODO"
+fallback_cube_size = Vector3(2.0, 1.2, 2.0)
+fallback_cube_color = Color(0.227451, 0.662745, 0.313726, 1)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.6, 0)
+shape = SubResource("1_shape")
+
+[node name="Highlight" parent="." instance=ExtResource("3_highlight")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, 0)
+radius = 1.45
+
+[node name="Selection" parent="." instance=ExtResource("4_selection")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, 0)
+radius = 1.45
+
+[node name="MovementObstacle" parent="." instance=ExtResource("5_obstacle")]
+radius = 1.45
+vertices = PackedVector3Array(0, 0, -1.0, 0.8, 0, -0.8, 1.0, 0, 0, 0.8, 0, 0.8, 0, 0, 1.0, -0.8, 0, 0.8, -1.0, 0, 0, -0.8, 0, -0.8)
+affect_navigation_mesh = true
+path_height_offset = 0.6
+
+[node name="HealthBar" parent="." instance=ExtResource("6_healthbar")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.75, 0)
+size = Vector2(220, 10)
+
+[node name="Targetability" parent="." instance=ExtResource("7_targetability")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, 0)
+radius = 1.45
+
+[node name="NameTag" parent="." instance=ExtResource("8_nametag")]

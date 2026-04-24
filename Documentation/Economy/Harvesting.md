@@ -42,6 +42,11 @@
 ## Radix
 - economy identity: Seedling-driven territorial growth and construction
 - Heart produces Seedlings
+- Linker structures generate passive credits from linked nearby ResourceTiles
+- each ResourceTile can be linked to only one Linker at a time
+- Radix passive harvesting does not reduce vine resource or destroy the tile
+- fuller linked tiles pay more than partially depleted linked tiles
+- current implementation uses a dummy-model Linker while final art is pending
 - Seedlings are consumed only when creep spread or Seedling-started construction completes successfully
 - canceling before completion preserves the Seedling, and canceling an already started Seedling-built structure restores one
 - detailed behavior spec: [Radix Seedling Workflow](Radix_Seedling_Workflow.md)

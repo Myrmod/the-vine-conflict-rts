@@ -134,6 +134,37 @@ const STRUCTURES = {
 		"costs": {"credits": 2000},
 		"build_time": 20.0,
 	},
+	Enums.SceneId.RADIX_LINKER:
+	{
+		"scene": "res://source/factions/the_radix/structures/Linker.tscn",
+		"unit_name": "Linker",
+		"description":
+		"Passive bio-link structure that siphons income from nearby resource tiles without consuming them.",
+		"faction": Enums.Faction.RADIX,
+		"production_tab_type": Enums.ProductionTabType.STRUCTURE,
+		"production_tab_grid_slot": Enums.ProductionTabGridSlots.F5,
+		"requires_seedling_to_start": true,
+		"sight_range": 8.0,
+		"hp": 14,
+		"hp_max": 14,
+		"armor":
+		{
+			Enums.DamageTypes.CANNON: 0.1,
+			Enums.DamageTypes.CORROSIVE: 0.0,
+			Enums.DamageTypes.CRUSH: 0.25,
+			Enums.DamageTypes.EXPLOSIVE: 0.0,
+			Enums.DamageTypes.FIRE: 0.0,
+			Enums.DamageTypes.LASER: 0.1,
+			Enums.DamageTypes.MELEE: 0.25,
+			Enums.DamageTypes.PLASMA: 0.1,
+			Enums.DamageTypes.PRISM: 0.1,
+			Enums.DamageTypes.RIFLE: 0.25,
+			Enums.DamageTypes.ROCKET: 0.1,
+			Enums.DamageTypes.TESLA: 0.1,
+		},
+		"costs": {"credits": 900},
+		"build_time": 10.0,
+	},
 }
 
 const DEFENCES = {}
@@ -143,7 +174,8 @@ const INFANTRY = {
 	{
 		"scene": "res://source/factions/the_radix/units/Seedling.tscn",
 		"unit_name": "Seedling",
-		"description": "A fragile sprout creature. Unarmed and best used for scouting.",
+		"description":
+		"A fragile sprout creature. Unarmed support unit for scouting, creep spread, and construction.",
 		"faction": Enums.Faction.RADIX,
 		"production_tab_type": Enums.ProductionTabType.INFANTRY,
 		"production_tab_grid_slot": Enums.ProductionTabGridSlots.F1,

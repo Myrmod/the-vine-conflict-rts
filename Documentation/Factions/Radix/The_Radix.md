@@ -49,10 +49,13 @@ The vines were tools. Tools don't disobey. When the emergent species begins bloc
 
 ## Economy
 
-The Radix economy is currently centered on the **Heart + Seedling** construction loop.
+The Radix economy is centered on the **Heart + Seedling + Linker** structure loop.
 
 - The **Heart** produces **Seedlings**.
 - Seedlings are used to spread creep and to start Radix structures.
+- The **Linker** passively generates income from nearby linked ResourceTiles without consuming them.
+- Each ResourceTile can be linked to only one Linker at a time.
+- Linker income scales with the current resource remaining on each linked tile.
 - A Seedling is consumed only when the assigned action completes successfully.
 - If the controlling player interrupts before completion, the Seedling survives.
 - If a started Seedling-based structure is canceled after consumption, an equivalent Seedling is restored.
@@ -62,7 +65,8 @@ The Radix economy is currently centered on the **Heart + Seedling** construction
 | Stat | Value |
 |---|---|
 | Construction model | Seedling-started on-field structures |
-| Depletion | Seedlings are only consumed on successful completion |
+| Harvest model | Linker-exclusive tile links |
+| Depletion | ResourceTiles are not consumed by Radix harvest |
 | Delivery loop | None required |
 
 ---
