@@ -38,6 +38,7 @@ enum CommandType {
 	MOVE_NO_ATTACK,  # Move to position, ignore enemies entirely
 	PATROL,  # Move between two points repeatedly, engaging enemies
 	REVERSE_MOVE,  # Move to position backwards (no rotation)
+	SPREAD,  # Radix Seedling: walk to position, build+grow into a Sapling creep source
 }
 
 ## starts at 1 to avoid falsy 0 value
@@ -57,6 +58,7 @@ enum UnitCommandMode {
 	PATROL,
 	REVERSE_MOVE,
 	HARVEST,
+	SPREAD,
 }
 
 enum MovementTypes {
@@ -171,6 +173,7 @@ enum SceneId {
 	RADIX_SKY_BLOOM,
 	RADIX_LINKER,
 	RADIX_SEEDLING,
+	RADIX_SAPLING,
 	REMNANTS_COMMAND_CENTER,
 	REMNANTS_CASERN,
 	REMNANTS_FACTORY,

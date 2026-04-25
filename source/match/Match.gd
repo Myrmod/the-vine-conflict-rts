@@ -917,6 +917,19 @@ func _execute_command(cmd: Dictionary):
 				else:
 					unit.action = Actions.ReverseMoving.new(parsed["pos"])
 
+		Enums.CommandType.SPREAD:
+			# Radix Seedling spread ability.
+			var unit = _resolve_unit(cmd.data.unit, "SPREAD")
+			if unit == null:
+				return
+			if not _verify_unit_ownership(unit, cmd.player_id, "SPREAD"):
+				return
+			if not Actions.Spreading.is_applicable(unit):
+				push_warning("SPREAD: unit %s cannot spread" % cmd.data.unit)
+				return
+			unit._stopped = false
+			unit.action = Actions.Spreading.new(cmd.data.position)
+
 		_:
 			push_error("Match: unknown command type %s — %s" % [cmd.type, cmd])
 

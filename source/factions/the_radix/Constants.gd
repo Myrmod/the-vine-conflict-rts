@@ -165,6 +165,35 @@ const STRUCTURES = {
 		"costs": {"credits": 900},
 		"build_time": 10.0,
 	},
+	Enums.SceneId.RADIX_SAPLING:
+	{
+		"scene": "res://source/factions/the_radix/structures/Sapling.tscn",
+		"unit_name": "Sapling",
+		"description":
+		"Rooted Seedling. Spreads creep in a small radius. Created by the Seedling 'spread' ability.",
+		"faction": Enums.Faction.RADIX,
+		# Sapling is not produced via a production tab; it is spawned by the spread ability.
+		"sight_range": 5.0,
+		"hp": 40,
+		"hp_max": 40,
+		"armor":
+		{
+			Enums.DamageTypes.CANNON: 0.0,
+			Enums.DamageTypes.CORROSIVE: 0.0,
+			Enums.DamageTypes.CRUSH: 0.1,
+			Enums.DamageTypes.EXPLOSIVE: 0.0,
+			Enums.DamageTypes.FIRE: 0.0,
+			Enums.DamageTypes.LASER: 0.0,
+			Enums.DamageTypes.MELEE: 0.1,
+			Enums.DamageTypes.PLASMA: 0.0,
+			Enums.DamageTypes.PRISM: 0.0,
+			Enums.DamageTypes.RIFLE: 0.1,
+			Enums.DamageTypes.ROCKET: 0.0,
+			Enums.DamageTypes.TESLA: 0.0,
+		},
+		"costs": {"credits": 0},
+		"build_time": 0.5,
+	},
 }
 
 const DEFENCES = {}
@@ -225,3 +254,10 @@ const CREEP_REGEN_HP_PER_INTERVAL: int = 1
 const CREEP_OFF_CREEP_DAMAGE_INTERVAL_TICKS: int = 10
 ## Fraction of hp_max lost per interval when a structure is not on creep.
 const CREEP_OFF_CREEP_DAMAGE_PERCENT: float = 0.005
+
+## Ticks the Seedling spends playing the `build` animation before consuming
+## itself into a structure or before transitioning to the `grow` phase.
+const SEEDLING_BUILD_ANIM_TICKS: int = 10
+## Ticks the Seedling spends playing the `grow` animation before transforming
+## into a Sapling (only used by the spread ability).
+const SEEDLING_GROW_ANIM_TICKS: int = 15

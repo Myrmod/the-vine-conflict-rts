@@ -109,19 +109,11 @@ func _spread_creep() -> void:
 	if _owned_cells.is_empty():
 		if not _cell_in_bounds(center, map):
 			return
-		# Adopt all existing creep cells within radius so the frontier
-		# is built at the true edge, not just the center.
-		for offset: Vector2i in _allowed_offsets:
-			var cell: Vector2i = center + offset
-			if not _cell_in_bounds(cell, map):
-				continue
-			if creep_map.is_any_creep(cell):
-				_owned_cells.append(cell)
-		# If no existing creep found, seed the center cell.
-		if _owned_cells.is_empty():
-			creep_map.set_player_bit(center, _player_bit, true)
-			creep_map.set_cell_health(center, RadixConstants.CREEP_CELL_MAX_HEALTH)
-			_owned_cells.append(center)
+		# Always start from the source center, so expansion radiates out from this
+		# source and does not "jump" to nearby creep already inside the radius.
+		creep_map.set_player_bit(center, _player_bit, true)
+		creep_map.set_cell_health(center, RadixConstants.CREEP_CELL_MAX_HEALTH)
+		_owned_cells.append(center)
 		for cell: Vector2i in _owned_cells:
 			_add_to_frontier(cell, creep_map, center, map)
 		MatchSignals.creep_map_changed.emit()

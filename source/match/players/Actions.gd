@@ -15,6 +15,7 @@ const HoldPosition = preload("res://source/match/units/actions/HoldPosition.gd")
 const Patrolling = preload("res://source/match/units/actions/Patrolling.gd")
 const ReverseMoving = preload("res://source/match/units/actions/ReverseMoving.gd")
 const WaitingForTargets = preload("res://source/match/units/actions/WaitingForTargets.gd")
+const Spreading = preload("res://source/match/units/actions/Spreading.gd")
 
 # player actions
 const CastSupportPowerAction = preload(

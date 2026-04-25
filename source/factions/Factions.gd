@@ -46,7 +46,13 @@ static func _init_production_grid_values_by_identifier(identifier) -> void:
 			for req in entry["structure_requirements"]:
 				req_ids.append(UnitConstants.get_scene_id(req))
 			entry["structure_requirements"] = req_ids
-		production_grid[entry.production_tab_type].append(entry)
+		# Some units/structures exist only for runtime spawning (no production tab).
+		if not entry.has("production_tab_type"):
+			continue
+		var tab_type: int = entry["production_tab_type"]
+		if not production_grid.has(tab_type):
+			continue
+		production_grid[tab_type].append(entry)
 
 
 static func get_production_grid():

@@ -19,6 +19,9 @@ var _variants: Array[Dictionary] = []
 var _variant_mmis: Array[MultiMeshInstance3D] = []
 var _grass_material: ShaderMaterial = null
 var _rng: RandomNumberGenerator = RandomNumberGenerator.new()
+## Cached occupancy mask (1 byte per cell: 255 = creep, 0 = none) used to avoid
+## rebuilding grass when only creep health updates.
+var _last_occupancy_mask: PackedByteArray = PackedByteArray()
 
 
 func _ready() -> void:
@@ -77,7 +80,6 @@ func _load_grass_variants() -> void:
 		)
 
 
-## Loads every MeshInstance3D from the GLB and returns a dictionary keyed by node name.
 func _load_glb_meshes() -> Dictionary:
 	var packed: PackedScene = load(_GRASS_PARTIAL_PATH) as PackedScene
 	if packed == null:
@@ -105,7 +107,6 @@ func _load_glb_meshes() -> Dictionary:
 	return result
 
 
-## Returns how far to shift up so the mesh bottom is at y=0.
 func _aabb_min_y_after_basis(aabb: AABB, basis: Basis) -> float:
 	var min_y: float = INF
 	for xi: int in [0, 1]:
@@ -165,9 +166,21 @@ func _on_creep_map_changed() -> void:
 		return
 	if _terrain_materials.is_empty():
 		_setup_terrain_materials()
-		return
+	if _did_occupancy_change(creep_map):
+		_rebuild_grass_multimesh(creep_map)
 	_upload_cell_texture(creep_map)
-	_rebuild_grass_multimesh(creep_map)
+
+
+func _did_occupancy_change(creep_map: CreepMap) -> bool:
+	var current: PackedByteArray = _cells_to_mask(creep_map)
+	if current.size() != _last_occupancy_mask.size():
+		_last_occupancy_mask = current
+		return true
+	for i: int in range(current.size()):
+		if current[i] != _last_occupancy_mask[i]:
+			_last_occupancy_mask = current
+			return true
+	return false
 
 
 func _rebuild_grass_multimesh(creep_map: CreepMap) -> void:
@@ -188,27 +201,36 @@ func _rebuild_grass_multimesh(creep_map: CreepMap) -> void:
 		var base_basis: Basis = variant["base_basis"]
 		var y_offset: float = variant["y_offset"]
 		var sf: float = variant["scale_factor"]
-		var positions: Array[Vector3] = []
+		var entries: Array[Dictionary] = []
 		var cell_idx: int = 0
 		for cy: int in range(creep_map.height):
 			for cx: int in range(creep_map.width):
 				if creep_map.cells[cell_idx] != 0:
 					for k: int in range(count_per_cell):
-						_rng.seed = (cell_idx * num_variants + vi) * count_per_cell + k
+						var tile_seed: int = (cell_idx * num_variants + vi) * count_per_cell + k
+						_rng.seed = tile_seed
 						var ox: float = _rng.randf()
 						var oz: float = _rng.randf()
 						var h: float = map.get_height_at_cell(Vector2i(cx, cy))
-						positions.append(Vector3(float(cx) + ox, h, float(cy) + oz))
+						(
+							entries
+							. append(
+								{
+									"pos": Vector3(float(cx) + ox, h, float(cy) + oz),
+									"seed": tile_seed,
+								}
+							)
+						)
 				cell_idx += 1
 		var mm: MultiMesh = MultiMesh.new()
 		mm.mesh = variant["mesh"]
 		mm.transform_format = MultiMesh.TRANSFORM_3D
-		mm.instance_count = positions.size()
-		for i: int in range(positions.size()):
-			_rng.seed = vi * 999983 + i
+		mm.instance_count = entries.size()
+		for i: int in range(entries.size()):
+			_rng.seed = int(entries[i]["seed"])
 			var angle: float = _rng.randf() * TAU
 			var basis: Basis = (Basis(Vector3.UP, angle) * base_basis).scaled(Vector3(sf, sf, sf))
-			var pos: Vector3 = positions[i] + Vector3(0.0, y_offset * sf, 0.0)
+			var pos: Vector3 = entries[i]["pos"] + Vector3(0.0, y_offset * sf, 0.0)
 			mm.set_instance_transform(i, Transform3D(basis, pos))
 		_variant_mmis[vi].multimesh = mm
 		_variant_mmis[vi].material_override = _grass_material
@@ -228,11 +250,16 @@ func _upload_cell_texture(creep_map: CreepMap) -> void:
 
 
 func _cells_to_image(creep_map: CreepMap) -> Image:
-	var data: PackedByteArray = PackedByteArray()
-	data.resize(creep_map.width * creep_map.height)
-	for i: int in range(data.size()):
-		data[i] = 255 if creep_map.cells[i] != 0 else 0
+	var data: PackedByteArray = _cells_to_mask(creep_map)
 	var img: Image = Image.create_from_data(
 		creep_map.width, creep_map.height, false, Image.FORMAT_R8, data
 	)
 	return img
+
+
+func _cells_to_mask(creep_map: CreepMap) -> PackedByteArray:
+	var data: PackedByteArray = PackedByteArray()
+	data.resize(creep_map.width * creep_map.height)
+	for i: int in range(data.size()):
+		data[i] = 255 if creep_map.cells[i] != 0 else 0
+	return data

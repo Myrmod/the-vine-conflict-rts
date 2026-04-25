@@ -62,3 +62,5 @@ radius = 0.2
 idle_animation = ""
 move_animation = "move"
 attack_move_animation = "move"
+build_animation = "build"
+grow_animation = "grow"

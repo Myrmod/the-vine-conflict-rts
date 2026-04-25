@@ -466,6 +466,8 @@ func _handle_command_mode_click(position: Vector3, mode: int):
 				_push_positional_command(
 					Enums.CommandType.REVERSE_MOVE, reverse_units, position, is_queued
 				)
+		Enums.UnitCommandMode.SPREAD:
+			_push_spread_command(position)
 
 
 func _get_movable_selected_units() -> Array:
@@ -531,6 +533,37 @@ func _push_patrol_command(units: Array, target_point: Vector3, queued: bool):
 	)
 	if not targets.is_empty():
 		MatchSignals.movement_targets_assigned.emit(targets)
+
+
+func _push_spread_command(target_point: Vector3) -> void:
+	# Pick the first selected, controlled Seedling (Seedling-only ability).
+	var seedling: Unit = null
+	for u in get_tree().get_nodes_in_group("selected_units"):
+		if not u.is_in_group("controlled_units"):
+			continue
+		var scene_path: String = u.scene_file_path
+		if scene_path.is_empty() and u.get_script() != null:
+			scene_path = u.get_script().resource_path.replace(".gd", ".tscn")
+		if UnitConstants.get_scene_id(scene_path) == Enums.SceneId.RADIX_SEEDLING:
+			seedling = u
+			break
+	if seedling == null:
+		return
+	(
+		CommandBus
+		. push_command(
+			{
+				"tick": Match.tick + 1,
+				"type": Enums.CommandType.SPREAD,
+				"player_id": _player.id,
+				"data":
+				{
+					"unit": seedling.id,
+					"position": target_point,
+				}
+			}
+		)
+	)
 
 
 func push_stop_command():

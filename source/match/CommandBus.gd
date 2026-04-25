@@ -264,6 +264,17 @@ func _validate_command_schema(cmd: Dictionary) -> bool:
 				push_error("CommandBus: PATROL requires Vector3 data.patrol_origin")
 				return false
 
+		Enums.CommandType.SPREAD:
+			# Radix Seedling spread ability.
+			# data.unit: int (seedling EntityRegistry id)
+			# data.position: Vector3 (target world position)
+			if not cmd.data.has("unit") or typeof(cmd.data.unit) != TYPE_INT:
+				push_error("CommandBus: SPREAD requires int data.unit")
+				return false
+			if not cmd.data.has("position") or typeof(cmd.data.position) != TYPE_VECTOR3:
+				push_error("CommandBus: SPREAD requires Vector3 data.position")
+				return false
+
 		_:
 			push_error("CommandBus: unknown command type %s" % cmd.type)
 			return false

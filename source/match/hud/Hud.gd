@@ -1590,6 +1590,33 @@ func _init_ability_buttons() -> void:
 	harvest_btn.mouse_exited.connect(_on_production_button_exit)
 	unit_specific_ability_h_box_container.add_child(harvest_btn)
 	_unit_specific_buttons.append(harvest_btn)
+	harvest_btn.set_meta("ability_key", "harvest")
+
+	var spread_btn := Button.new()
+	spread_btn.custom_minimum_size = Vector2(31, 31)
+	spread_btn.text = "P"
+	spread_btn.visible = false
+	spread_btn.pressed.connect(_on_unit_specific_button_pressed.bind("spread"))
+	(
+		spread_btn
+		. mouse_entered
+		. connect(
+			(
+				_on_unit_specific_button_hover
+				. bind(
+					{
+						"name": "Spread",
+						"desc":
+						"Click a ground tile: Seedling walks there, builds and grows into a Sapling that spreads creep.",
+					}
+				)
+			)
+		)
+	)
+	spread_btn.mouse_exited.connect(_on_production_button_exit)
+	unit_specific_ability_h_box_container.add_child(spread_btn)
+	_unit_specific_buttons.append(spread_btn)
+	spread_btn.set_meta("ability_key", "spread")
 
 	# Create unit command buttons
 	var hs = Globals.hotkey_settings
@@ -1616,8 +1643,24 @@ func _update_ability_buttons(unit) -> void:
 		else:
 			btn.visible = true
 	for btn in _unit_specific_buttons:
-		btn.visible = (unit is ResourceGatherer)
+		var key: String = btn.get_meta("ability_key", "")
+		match key:
+			"harvest":
+				btn.visible = (unit is ResourceGatherer)
+			"spread":
+				btn.visible = _unit_is_radix_seedling(unit)
+			_:
+				btn.visible = false
 	_update_unit_specific_ability_wrapper()
+
+
+func _unit_is_radix_seedling(unit) -> bool:
+	if unit == null:
+		return false
+	var scene_path: String = unit.scene_file_path if unit.scene_file_path != null else ""
+	if scene_path.is_empty() and unit.get_script() != null:
+		scene_path = unit.get_script().resource_path.replace(".gd", ".tscn")
+	return UnitConstants.get_scene_id(scene_path) == Enums.SceneId.RADIX_SEEDLING
 
 
 func _hide_ability_buttons() -> void:
@@ -1675,6 +1718,9 @@ func _on_unit_specific_button_pressed(key: String) -> void:
 		"harvest":
 			MatchSignals.active_command_mode = Enums.UnitCommandMode.HARVEST
 			MatchSignals.command_mode_changed.emit(Enums.UnitCommandMode.HARVEST)
+		"spread":
+			MatchSignals.active_command_mode = Enums.UnitCommandMode.SPREAD
+			MatchSignals.command_mode_changed.emit(Enums.UnitCommandMode.SPREAD)
 
 
 func _update_unit_specific_ability_wrapper() -> void:
