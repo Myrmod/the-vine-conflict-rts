@@ -165,20 +165,77 @@ func _apply_named_surface_material(node: Node, mat: Material, target_name: Strin
 		_apply_named_surface_material(child, mat, target_name)
 
 
-func _apply_named_surface_material_on_mesh_instance(mesh_instance: MeshInstance3D, mat: Material, target_name: String) -> void:
+func _apply_named_surface_material_on_mesh_instance(
+	mesh_instance: MeshInstance3D, mat: Material, target_name: String
+) -> void:
 	var mesh := mesh_instance.mesh
 	if mesh == null:
 		return
-	var target := target_name.to_lower()
+	var target_tokens := _parse_target_tokens(target_name)
+	if target_tokens.is_empty():
+		return
 	for surface_idx in mesh.get_surface_count():
+		var surface_name: String = mesh.surface_get_name(surface_idx).to_lower()
 		var source_material: Material = mesh.surface_get_material(surface_idx)
 		if source_material == null:
 			source_material = mesh_instance.get_surface_override_material(surface_idx)
-		if source_material == null:
+		var source_name := ""
+		var source_path := ""
+		if source_material != null:
+			source_name = source_material.resource_name.to_lower()
+			source_path = source_material.resource_path.to_lower()
+
+		if _is_protected_color_surface(surface_name, source_name, source_path):
 			continue
-		var source_name := source_material.resource_name.to_lower()
-		if source_name == target or source_name.contains(target):
+
+		if _matches_any_target(surface_name, source_name, source_path, target_tokens):
 			mesh_instance.set_surface_override_material(surface_idx, mat)
+
+
+func _parse_target_tokens(target_name: String) -> Array[String]:
+	var normalized := target_name.strip_edges().to_lower()
+	if normalized.is_empty():
+		return []
+	for sep in ["|", ",", ";"]:
+		normalized = normalized.replace(sep, " ")
+	var tokens: Array[String] = []
+	for token in normalized.split(" ", false):
+		var trimmed := token.strip_edges()
+		if not trimmed.is_empty() and not tokens.has(trimmed):
+			tokens.append(trimmed)
+	return tokens
+
+
+func _matches_any_target(
+	surface_name: String, source_name: String, source_path: String, targets: Array[String]
+) -> bool:
+	for target in targets:
+		if (
+			target == surface_name
+			or surface_name.contains(target)
+			or target == source_name
+			or source_name.contains(target)
+			or target == source_path
+			or source_path.contains(target)
+		):
+			return true
+	return false
+
+
+func _is_protected_color_surface(
+	surface_name: String, source_name: String, source_path: String
+) -> bool:
+	var protected_tokens: Array[String] = [
+		"leaf", "leave", "player", "team", "color", "colour", "f1"
+	]
+	for token in protected_tokens:
+		if (
+			surface_name.contains(token)
+			or source_name.contains(token)
+			or source_path.contains(token)
+		):
+			return true
+	return false
 
 
 func _create_fallback_cube(size: Vector3) -> void:

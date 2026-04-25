@@ -2,6 +2,16 @@
 
 ## [main]
 
+### Radix update (2026-04-25)
+ - Added the new Radix Seedling unit model integration (override asset path, bark material slot targeting, and movement animation binding).
+ - Improved unit animation resilience for imported models: name resolution now supports exact/contains matching and movement fallback clips; movement clips are forced to loop and idle can reset to bind pose.
+ - Added Radix-specific shared player-color pipeline in `RadixPlayerColor.gd` for flat, readable faction color with controlled glow.
+ - Updated Radix visuals to preserve player-color readability: Seedling and SpawningFlowerBulb now use flat unshaded player-color surfaces with soft emissive halo instead of over-bright bloom.
+ - Added configurable dual glow intensity on Heart: strong energy sphere glow and lower bulb glow (`bulb_player_color_emission_energy`).
+ - Added custom Heart sphere energy shader (`heart_energy_sphere.gdshader`) with slow flow/noise motion, pulse, rim light, and player-color tint.
+ - Improved `ModelHolder` selective surface material replacement: multi-token target matching and protected color-surface skipping to avoid overriding leaf/team-color slots.
+ - Updated Radix unit/structure scene setup for the new Seedling workflow and model paths, including UnitAnimator wiring in Seedling.
+
 ### New features
  - Added structure rally points
 

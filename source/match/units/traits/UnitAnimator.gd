@@ -58,11 +58,65 @@ func _on_action_changed(new_action):
 func _play(anim_name: String) -> void:
 	if _anim_player == null:
 		return
-	if not _anim_player.has_animation(anim_name):
+	var resolved := _resolve_animation_name(anim_name)
+	if resolved.is_empty() and (anim_name == move_animation or anim_name == attack_move_animation):
+		resolved = _fallback_movement_animation()
+	if resolved.is_empty():
+		if anim_name == idle_animation:
+			_reset_to_bind_pose()
 		return
-	if _anim_player.current_animation == anim_name:
+	if anim_name == move_animation or anim_name == attack_move_animation:
+		var anim_resource := _anim_player.get_animation(resolved)
+		if anim_resource != null:
+			anim_resource.loop_mode = Animation.LOOP_LINEAR
+	if _anim_player.current_animation == resolved and _anim_player.is_playing():
 		return
-	_anim_player.play(anim_name)
+	_anim_player.play(resolved)
+
+
+func _reset_to_bind_pose() -> void:
+	if _anim_player != null:
+		_anim_player.stop()
+		_anim_player.seek(0.0, true)
+	for skeleton in _unit.find_children("*", "Skeleton3D", true, false):
+		skeleton.reset_bone_poses()
+
+
+func _resolve_animation_name(requested: String) -> String:
+	if requested.is_empty() or _anim_player == null:
+		return ""
+	if _anim_player.has_animation(requested):
+		return requested
+
+	var requested_lower := requested.to_lower()
+	var all: PackedStringArray = _anim_player.get_animation_list()
+
+	for name in all:
+		if name.to_lower() == requested_lower:
+			return name
+
+	for name in all:
+		if name.to_lower().contains(requested_lower):
+			return name
+
+	if requested_lower == "move":
+		for token in ["run", "walk", "move", "locomotion"]:
+			for name in all:
+				if name.to_lower().contains(token):
+					return name
+
+	return ""
+
+
+func _fallback_movement_animation() -> String:
+	if _anim_player == null:
+		return ""
+	var idle_resolved := _resolve_animation_name(idle_animation)
+	for name in _anim_player.get_animation_list():
+		if name == idle_resolved or name.to_lower() == "reset":
+			continue
+		return name
+	return ""
 
 
 func _find_animation_player() -> AnimationPlayer:
@@ -71,4 +125,11 @@ func _find_animation_player() -> AnimationPlayer:
 			var player = sibling.find_child("AnimationPlayer", true, false)
 			if player != null:
 				return player
+
+	# Some unit scenes nest ModelHolder under container nodes (e.g. Geometry).
+	var nested_holders = _unit.find_children("*", "ModelHolder", true, false)
+	for holder in nested_holders:
+		var nested_player = holder.find_child("AnimationPlayer", true, false)
+		if nested_player != null:
+			return nested_player
 	return null

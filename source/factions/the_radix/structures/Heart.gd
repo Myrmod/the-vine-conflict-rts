@@ -3,16 +3,30 @@ extends CreepSource
 const BULB_OPEN_DURATION := 0.22
 const BULB_HOLD_OPEN_DURATION := 0.16
 const BULB_CLOSE_DURATION := 0.22
+const HEART_ENERGY_SPHERE_SHADER := preload("res://source/shaders/3d/heart_energy_sphere.gdshader")
+
+@export_range(0.0, 20.0, 0.1) var player_color_emission_energy: float = 10.0
+## Lower-intensity glow used for the spawn bulbs so their flat player color
+## stays recognizable; the energy sphere keeps the higher value above.
+@export_range(0.0, 20.0, 0.1)
+var bulb_player_color_emission_energy: float = RadixPlayerColor.DEFAULT_EMISSION_ENERGY
+@export_range(0.0, 0.5, 0.01) var sphere_flow_speed: float = 0.06
+@export_range(0.1, 8.0, 0.1) var sphere_flow_scale: float = 2.2
+@export_range(0.0, 3.0, 0.05) var sphere_rim_strength: float = 0.9
+const MAX_PLAYER_COLOR_RETRIES := 60
 
 var _spawn_bulbs: Array[Node3D] = []
 var _next_spawn_bulb_idx: int = 0
 var _bulb_tweens_by_id: Dictionary = {}
 var _reserved_bulb_by_unit_id: Dictionary = {}
+var _player_color_retry_count: int = 0
 
 
 func _ready() -> void:
 	super()
 	_cache_spawn_bulbs()
+	_apply_spawn_bulb_player_color()
+	call_deferred("_apply_sphere_player_color_glow")
 
 
 func get_parallel_production_count() -> int:
@@ -54,6 +68,22 @@ func _cache_spawn_bulbs() -> void:
 	for child: Node in get_children():
 		if child is Node3D and child.name.begins_with("SpawningFlowerBulb"):
 			_spawn_bulbs.append(child)
+
+
+func _apply_spawn_bulb_player_color() -> void:
+	if player == null:
+		if _player_color_retry_count < MAX_PLAYER_COLOR_RETRIES:
+			_player_color_retry_count += 1
+			call_deferred("_apply_spawn_bulb_player_color")
+		return
+	_player_color_retry_count = 0
+	for bulb in _spawn_bulbs:
+		if bulb == null:
+			continue
+		if "player_color" in bulb:
+			bulb.set("player_color", player.color)
+		if "emission_energy" in bulb:
+			bulb.set("emission_energy", bulb_player_color_emission_energy)
 
 
 func _pick_spawn_bulb() -> Node3D:
@@ -115,3 +145,79 @@ func _play_seedling_spawn_sequence(produced_unit: Node, bulb: Node3D) -> void:
 	await tween.finished
 	if _bulb_tweens_by_id.get(bulb_id) == tween:
 		_bulb_tweens_by_id.erase(bulb_id)
+
+
+func _apply_sphere_player_color_glow() -> void:
+	if player == null:
+		if _player_color_retry_count < MAX_PLAYER_COLOR_RETRIES:
+			_player_color_retry_count += 1
+			call_deferred("_apply_sphere_player_color_glow")
+		return
+	_player_color_retry_count = 0
+	_apply_spawn_bulb_player_color()
+	if not player.changed.is_connected(_on_player_changed):
+		player.changed.connect(_on_player_changed)
+	var geometry: Node = find_child("Geometry")
+	if geometry == null:
+		return
+	var energy_material := _build_energy_sphere_material(player.color)
+	if energy_material == null:
+		return
+	for mesh in _collect_mesh_instances(geometry):
+		if not mesh.name.to_lower().contains("sphere"):
+			continue
+		_apply_glow_to_player_color_surfaces(mesh, energy_material)
+
+
+func _on_player_changed() -> void:
+	_apply_spawn_bulb_player_color()
+	_apply_sphere_player_color_glow()
+
+
+func _collect_mesh_instances(root: Node) -> Array[MeshInstance3D]:
+	var results: Array[MeshInstance3D] = []
+	if root is MeshInstance3D:
+		results.append(root)
+	for child: Node in root.get_children():
+		results.append_array(_collect_mesh_instances(child))
+	return results
+
+
+func _apply_glow_to_player_color_surfaces(mesh: MeshInstance3D, glow_material: Material) -> void:
+	if mesh.mesh == null:
+		return
+	var matched_any := false
+	for surface_idx: int in range(mesh.mesh.get_surface_count()):
+		if not _is_player_color_surface(mesh, surface_idx):
+			continue
+		mesh.set_surface_override_material(surface_idx, glow_material)
+		matched_any = true
+	if matched_any:
+		return
+	# Fallback: some imports lose PlayerColor resource names after import.
+	# In that case tint the full sphere mesh so team color stays visible.
+	for surface_idx: int in range(mesh.mesh.get_surface_count()):
+		mesh.set_surface_override_material(surface_idx, glow_material)
+
+
+func _build_energy_sphere_material(player_color: Color) -> ShaderMaterial:
+	if HEART_ENERGY_SPHERE_SHADER == null:
+		return null
+	var mat := ShaderMaterial.new()
+	mat.shader = HEART_ENERGY_SPHERE_SHADER
+	mat.set_shader_parameter("player_color", player_color)
+	mat.set_shader_parameter("emission_strength", player_color_emission_energy)
+	mat.set_shader_parameter("flow_speed", sphere_flow_speed)
+	mat.set_shader_parameter("flow_scale", sphere_flow_scale)
+	mat.set_shader_parameter("rim_strength", sphere_rim_strength)
+	return mat
+
+
+func _is_player_color_surface(mesh: MeshInstance3D, surface_idx: int) -> bool:
+	if mesh == null or mesh.mesh == null:
+		return false
+	var original_material: Material = mesh.mesh.surface_get_material(surface_idx)
+	if original_material != null and original_material.resource_name == "PlayerColor":
+		return true
+	var active_material: Material = mesh.get_active_material(surface_idx)
+	return active_material != null and active_material.resource_name == "PlayerColor"

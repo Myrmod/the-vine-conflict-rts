@@ -206,6 +206,57 @@ Radix passive income is structure-driven rather than unit-driven.
 - Link assignment is deterministic: Linkers are resolved in stable entity-ID order, then claim the best eligible unlinked tiles in range.
 - Income is recalculated from linked tile `resource / resource_max`, so richer tiles yield more income while enemy depletion naturally lowers later payout.
 
+### Radix Visual Identity Pipeline (2026-04-25)
+
+Radix visuals received a focused pass to make faction ownership readable while preserving animated bio-energy style.
+
+#### 1) Shared player-color material system
+
+- File: `source/factions/the_radix/RadixPlayerColor.gd`
+- Purpose: centralize detection and override of Radix `PlayerColor` surfaces across units/structures.
+- Behavior:
+    - Walks mesh subtree and matches surfaces by name/path (`playercolor`) with albedo fallback.
+    - Replaces matched surfaces with flat unshaded `StandardMaterial3D` plus controlled emission.
+    - Exposes reusable methods:
+        - `apply(root, color, emission_energy)`
+        - `refresh_materials(materials, color, emission_energy)`
+        - `build_material(color, emission_energy)`
+
+This avoids per-entity divergence and keeps team-color rendering deterministic and consistent.
+
+#### 2) Seedling integration and animation robustness
+
+- Files:
+    - `source/factions/the_radix/units/Seedling.tscn`
+    - `source/factions/the_radix/units/Seedling.gd`
+    - `source/match/units/traits/UnitAnimator.gd`
+- Key changes:
+    - Seedling model path and bark material targeting wired through `ModelHolder`.
+    - UnitAnimator attached and configured to use `move` clip for locomotion.
+    - Animator now resolves animation names more robustly (case/contains/fallback token matching), forces movement loops, and can reset to bind pose on idle fallback.
+
+#### 3) Heart core and spawn bulb synchronization
+
+- Files:
+    - `source/factions/the_radix/structures/Heart.gd`
+    - `source/factions/the_radix/structures/partials/SpawningFlowerBulb.gd`
+    - `source/shaders/3d/heart_energy_sphere.gdshader`
+- Heart now drives two linked visual channels:
+    - **Sphere channel**: strong animated shader-based core glow (`player_color_emission_energy`).
+    - **Bulb channel**: lower-intensity flat glow (`bulb_player_color_emission_energy`) propagated to all spawn bulbs.
+- Bulbs consume shared `RadixPlayerColor` logic, so their player-color behavior matches Seedlings and future Radix entities.
+
+#### 4) Safe material override in ModelHolder
+
+- File: `source/generic-scenes-and-nodes/3d/ModelHolder.gd`
+- Named-surface replacement now supports tokenized matching and protected color-surface skipping.
+- Protected tokens (leaf/team/color markers) prevent bark/material replacement from clobbering team-color slots.
+
+#### 5) Tuning rule adopted
+
+- Team-color surfaces should stay flat and readable first.
+- Emission is secondary and intentionally lower for spawned entities, with stronger energy reserved for designated cores (e.g., Heart sphere).
+
 ---
 
 ## 5. EntityRegistry: Stable Unit IDs

@@ -45,15 +45,14 @@ script = ExtResource("1_40fbu")
 [node name="Geometry" type="Node3D" parent="." unique_id=659219184]
 
 [node name="Model" type="Node3D" parent="Geometry" unique_id=298183607]
-transform = Transform3D(-0.09476377, 0, 0.11627472, 0, 0.14999996, 0, -0.11627472, 0, -0.09476377, 13.261671, 0.035828114, 19.516134)
+transform = Transform3D(-0.10113758, 0, 0.11077529, 0, 0.14999996, 0, -0.11077529, 0, -0.10113758, 0.28608513, 0.035828114, -0.4752682)
 script = ExtResource("2_eob0h")
 model_path = "Radix/Structures/Heart.glb"
 material_path = "Radix/Structures/ProcedualBark.material.tres"
 material_target_name = "ProcedualBark"
 
 [node name="Leaves" type="MultiMeshInstance3D" parent="Geometry" unique_id=178029168]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.5942359, 0, -0.24858773)
-visible = false
+transform = Transform3D(0.7451253, 0, 0.72509295, 0, 1.1251076, 0, -0.8871563, 0, 0.60900766, 0.5942359, 0.57602215, -0.35398996)
 multimesh = SubResource("MultiMesh_vcytw")
 script = ExtResource("18_leaf")
 leaf_texture = ExtResource("19_ltex")
@@ -75,9 +74,9 @@ transform = Transform3D(1.1, 0, 0, 0, 1.1, 0, 0, 0, 1.1, 0, 0.05, 0)
 radius = 2.0
 
 [node name="MovementObstacle" parent="." unique_id=123313926 instance=ExtResource("4_f5u8t")]
-transform = Transform3D(0.36263326, 0, -0.9319319, 0, 1, 0, 0.9319319, 0, 0.36263326, 0.29074347, 0, 0.033266425)
+transform = Transform3D(0.14803387, 0, -0.9889823, 0, 1, 0, 0.9889823, 0, 0.14803387, 0.29074347, 0, -0.22088408)
 radius = 2.2
-vertices = PackedVector3Array(0.23040432, 0, -1.9135137, 0.99, 0, -0.99, 1.4, 0, 0, 1.7286949, 0, 1.3230834, 0.71317184, 0, 1.9773326, -0.99, 0, 0.99, -1.5284905, 0, 0.23426121, -1.4222155, 0, -1.600904)
+vertices = PackedVector3Array(0.23040432, 0, -1.9135137, 1.4263276, 0, -1.2171965, 1.5355682, 0, -0.13458806, 1.7286949, 0, 1.3230834, 0.71317184, 0, 1.9773326, -0.99, 0, 0.99, -1.5284905, 0, 0.23426121, -1.4222155, 0, -1.600904)
 affect_navigation_mesh = true
 path_height_offset = 0.6
 

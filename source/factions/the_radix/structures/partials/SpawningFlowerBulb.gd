@@ -13,7 +13,7 @@ extends Node3D
 	set(value):
 		player_color = value
 		_apply_player_color()
-@export_range(0.0, 20.0, 0.1) var emission_energy: float = 10.0:
+@export_range(0.0, 20.0, 0.1) var emission_energy: float = RadixPlayerColor.DEFAULT_EMISSION_ENERGY:
 	set(value):
 		emission_energy = value
 		_apply_player_color()
@@ -229,46 +229,25 @@ func _apply_player_color() -> void:
 	if glb_root == null:
 		return
 
-	# Apply placeholder material
+	# Apply the flat unshaded glow to the unit placeholder so it reads as a
+	# solid recognizable team-color preview, just like every other Radix
+	# PlayerColor surface.
 	var placeholder: MeshInstance3D = glb_root.get_node_or_null("UnitPlaceholder")
 	if placeholder != null:
 		if _placeholder_material == null:
-			_placeholder_material = StandardMaterial3D.new()
+			_placeholder_material = RadixPlayerColor.build_material(player_color, emission_energy)
 			placeholder.material_override = _placeholder_material
+		else:
+			RadixPlayerColor.refresh_materials(
+				[_placeholder_material], player_color, emission_energy
+			)
 
-		_placeholder_material.albedo_color = player_color
-		_placeholder_material.emission_enabled = true
-		_placeholder_material.emission = player_color
-		_placeholder_material.emission_energy_multiplier = emission_energy
-
-	# Apply player color to "PlayerColor" material surfaces on leaf meshes
+	# Apply player color to PlayerColor material slots throughout the GLB.
 	_apply_leaf_player_color(glb_root)
 
 
 func _apply_leaf_player_color(glb_root: Node) -> void:
-	# Find PlayerColor surfaces on first call
 	if _player_color_materials.is_empty():
-		var leaves: Array[MeshInstance3D] = []
-		_find_leaf_meshes(glb_root, leaves)
-		for leaf: MeshInstance3D in leaves:
-			var surface_count: int = leaf.mesh.get_surface_count() if leaf.mesh != null else 0
-			for surface_idx: int in range(surface_count):
-				var mat: Material = leaf.get_active_material(surface_idx)
-				if mat is StandardMaterial3D and mat.resource_name == "PlayerColor":
-					var new_mat: StandardMaterial3D = mat.duplicate()
-					leaf.set_surface_override_material(surface_idx, new_mat)
-					_player_color_materials.append(new_mat)
-
-	# Update all PlayerColor materials with current values
-	for mat: StandardMaterial3D in _player_color_materials:
-		mat.albedo_color = player_color
-		mat.emission_enabled = true
-		mat.emission = player_color
-		mat.emission_energy_multiplier = emission_energy
-
-
-func _find_leaf_meshes(node: Node, result: Array[MeshInstance3D]) -> void:
-	if node is MeshInstance3D and node.name.begins_with("Leaf_"):
-		result.append(node)
-	for child: Node in node.get_children():
-		_find_leaf_meshes(child, result)
+		_player_color_materials = RadixPlayerColor.apply(glb_root, player_color, emission_energy)
+	else:
+		RadixPlayerColor.refresh_materials(_player_color_materials, player_color, emission_energy)
