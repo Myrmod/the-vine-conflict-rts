@@ -172,7 +172,8 @@ static func _apply_lighting(map_resource: MapResource, map_node: Node3D):
 			sun.light_energy = map_resource.sun_energy
 			sun.light_specular = map_resource.sun_specular
 			sun.shadow_enabled = map_resource.sun_shadow_enabled
-			sun.shadow_bias = map_resource.sun_shadow_bias
+			# shadow_bias is intentionally NOT applied from the map resource;
+			# Map.tscn's DirectionalLight3D.shadow_bias is authoritative.
 			sun.shadow_blur = map_resource.sun_shadow_blur
 
 	# --- Environment ---

@@ -1512,7 +1512,7 @@ func _capture_lighting_to_map_resource():
 		current_map.sun_energy = sun.light_energy
 		current_map.sun_specular = sun.light_specular
 		current_map.sun_shadow_enabled = sun.shadow_enabled
-		current_map.sun_shadow_bias = sun.shadow_bias
+		# shadow_bias is authoritative on Map.tscn, not stored per-map.
 		current_map.sun_shadow_blur = sun.shadow_blur
 
 	var env: Environment = (
