@@ -2,8 +2,8 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://b7cuenhvdwy8p"
-path.s3tc="res://.godot/imported/Seedling_Bark_Roughness.png-504835543883712661c1b586602472d0.s3tc.ctex"
+uid="uid://c57iu7u0cwn3j"
+path.s3tc="res://.godot/imported/Bark_albedo.png-3bbb05c5346680e38202f6f342c05a35.s3tc.ctex"
 metadata={
 "imported_formats": ["s3tc_bptc"],
 "vram_texture": true
@@ -11,8 +11,8 @@ metadata={
 
 [deps]
 
-source_file="res://assets_overide/Radix/Infantry/Seedling/Seedling_Bark_Roughness.png"
-dest_files=["res://.godot/imported/Seedling_Bark_Roughness.png-504835543883712661c1b586602472d0.s3tc.ctex"]
+source_file="res://assets_overide/Radix/Materials/Bark_albedo.png"
+dest_files=["res://.godot/imported/Bark_albedo.png-3bbb05c5346680e38202f6f342c05a35.s3tc.ctex"]
 
 [params]
 
