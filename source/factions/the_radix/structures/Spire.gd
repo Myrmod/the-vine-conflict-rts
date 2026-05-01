@@ -12,18 +12,109 @@ const BRANCH_ANIM_PAIRS: Array[Array] = [
 	["MoveBranch3", "Spawner3Open"],
 ]
 
+const MAX_PLAYER_COLOR_RETRIES := 60
+
+@export_range(0.0, 20.0, 0.1) var petals_inner_emission_energy: float = 4.0
+## How much the petal colour is mixed toward white (0 = full player colour, 1 = white).
+@export_range(0.0, 1.0, 0.01) var petals_tint_mix: float = 0.5
+
 var _spawner_markers: Array[Node3D] = []
 var _next_branch_idx: int = 0
 var _reserved_branch_by_unit_id: Dictionary = {}
 var _branch_tweens_by_idx: Dictionary = {}
 var _anim_tree: AnimationTree = null
 var _anim_length: float = 1.0
+var _petals_materials: Array[StandardMaterial3D] = []
+var _petals_inner_materials: Array[StandardMaterial3D] = []
+var _player_color_retry_count: int = 0
+var _prod_time: float = 0.0
+var _prod_length: float = 0.0
+var _prod_playing: bool = false
+var _prod_stopping: bool = false
 
 
 func _ready() -> void:
 	super()
 	_cache_spawner_markers()
 	call_deferred("_setup_animation_tree")
+	call_deferred("_connect_production_queue")
+
+
+func _setup_color() -> void:
+	_apply_spire_player_color()
+
+
+func _apply_spire_player_color() -> void:
+	if player == null:
+		if _player_color_retry_count < MAX_PLAYER_COLOR_RETRIES:
+			_player_color_retry_count += 1
+			call_deferred("_apply_spire_player_color")
+		return
+	_player_color_retry_count = 0
+	if not player.changed.is_connected(_on_player_changed):
+		player.changed.connect(_on_player_changed)
+	var geometry: Node = find_child("Geometry")
+	if geometry == null:
+		push_warning("Spire: no 'Geometry' child found for player color")
+		return
+	_petals_materials = _apply_color_to_named_surface(
+		geometry, "petals", _petals_color(), 0.0, false, false
+	)
+	_petals_inner_materials = _apply_color_to_named_surface(
+		geometry, "petals inner", player.color, petals_inner_emission_energy, false
+	)
+
+
+func _on_player_changed() -> void:
+	if player == null:
+		return
+	for mat: StandardMaterial3D in _petals_materials:
+		if mat == null:
+			continue
+		mat.albedo_color = _petals_color()
+	RadixPlayerColor.refresh_materials(
+		_petals_inner_materials, player.color, petals_inner_emission_energy
+	)
+
+
+func _petals_color() -> Color:
+	return player.color.lerp(Color.WHITE, petals_tint_mix)
+
+
+func _apply_color_to_named_surface(
+	root: Node,
+	surface_name_lower: String,
+	color: Color,
+	emission_energy: float,
+	unshaded: bool = true,
+	emit: bool = true
+) -> Array[StandardMaterial3D]:
+	var results: Array[StandardMaterial3D] = []
+	for mesh: MeshInstance3D in _collect_mesh_instances(root):
+		if mesh.mesh == null:
+			continue
+		for i: int in range(mesh.mesh.get_surface_count()):
+			if mesh.mesh.surface_get_name(i).to_lower() == surface_name_lower:
+				var mat := StandardMaterial3D.new()
+				if unshaded:
+					mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+				mat.albedo_color = color
+				if emit:
+					mat.emission_enabled = true
+					mat.emission = color
+					mat.emission_energy_multiplier = emission_energy
+				mesh.set_surface_override_material(i, mat)
+				results.append(mat)
+	return results
+
+
+func _collect_mesh_instances(node: Node) -> Array[MeshInstance3D]:
+	var results: Array[MeshInstance3D] = []
+	if node is MeshInstance3D:
+		results.append(node as MeshInstance3D)
+	for child: Node in node.get_children():
+		results.append_array(_collect_mesh_instances(child))
+	return results
 
 
 func get_parallel_production_count() -> int:
@@ -146,6 +237,25 @@ func _setup_animation_tree() -> void:
 			blend_tree.connect_node(add_name, 1, "seek_%d" % i)
 			prev_output = add_name
 
+	# Add Production as a seek-driven additive layer. add_amount stays 0.0 until
+	# production is active; _process manually scrubs _prod_time each frame.
+	var prod_full: StringName = _find_full_anim_name(anim_player, "Production")
+	if anim_player.has_animation(prod_full):
+		_prod_length = anim_player.get_animation(prod_full).length
+		var prod_anim_node := AnimationNodeAnimation.new()
+		prod_anim_node.animation = prod_full
+		blend_tree.add_node("anim_prod", prod_anim_node)
+		var prod_seek := AnimationNodeTimeSeek.new()
+		blend_tree.add_node("seek_prod", prod_seek)
+		blend_tree.connect_node("seek_prod", 0, "anim_prod")
+		var prod_add := AnimationNodeAdd2.new()
+		blend_tree.add_node("add_prod", prod_add)
+		blend_tree.connect_node("add_prod", 0, prev_output)
+		blend_tree.connect_node("add_prod", 1, "seek_prod")
+		prev_output = "add_prod"
+	else:
+		push_warning("Spire: 'Production' animation not found in GLB")
+
 	blend_tree.connect_node("output", 0, prev_output)
 
 	_anim_tree = AnimationTree.new()
@@ -160,6 +270,58 @@ func _setup_animation_tree() -> void:
 		_anim_tree.set("parameters/add_%d/add_amount" % i, 1.0)
 
 	_anim_tree.active = true
+
+
+func _connect_production_queue() -> void:
+	if production_queue == null:
+		return
+	if not production_queue.element_enqueued.is_connected(_on_production_queue_changed):
+		production_queue.element_enqueued.connect(_on_production_queue_changed)
+	if not production_queue.element_removed.is_connected(_on_production_queue_changed):
+		production_queue.element_removed.connect(_on_production_queue_changed)
+
+
+func _on_production_queue_changed(_element = null) -> void:
+	_update_production_animation()
+
+
+func _process(delta: float) -> void:
+	if _anim_tree == null or _prod_length <= 0.0:
+		return
+	if not _prod_playing and not _prod_stopping:
+		return
+	_prod_time += delta
+	if _prod_time >= _prod_length:
+		if _prod_stopping:
+			_prod_time = 0.0
+			_prod_stopping = false
+			_anim_tree.set("parameters/add_prod/add_amount", 0.0)
+			return
+		_prod_time = fmod(_prod_time, _prod_length)
+	_anim_tree.set("parameters/seek_prod/seek_request", _prod_time)
+	_anim_tree.advance(0.0)
+
+
+func _has_active_production() -> bool:
+	if production_queue == null:
+		return false
+	for el in production_queue.get_elements():
+		if not el.paused and not el.completed and not el.is_tracking_only:
+			return true
+	return false
+
+
+func _update_production_animation() -> void:
+	if _prod_length <= 0.0:
+		return
+	if _has_active_production():
+		_prod_stopping = false
+		if not _prod_playing:
+			_prod_playing = true
+			_anim_tree.set("parameters/add_prod/add_amount", 1.0)
+	elif _prod_playing:
+		_prod_playing = false
+		_prod_stopping = true
 
 
 func _find_full_anim_name(anim_player: AnimationPlayer, short_name: String) -> StringName:
