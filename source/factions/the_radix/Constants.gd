@@ -41,10 +41,10 @@ const STRUCTURES = {
 		"costs": {"credits": 8},
 		"build_time": 10.0,
 	},
-	Enums.SceneId.RADIX_BROOD_NEST:
+	Enums.SceneId.RADIX_SPIRE:
 	{
-		"scene": "res://source/factions/the_radix/structures/BroodNest.tscn",
-		"unit_name": "Brood Nest",
+		"scene": "res://source/factions/the_radix/structures/Spire.tscn",
+		"unit_name": "Spire",
 		"description": "Tier 1 infantry nursery seeded into place by a Seedling.",
 		"faction": Enums.Faction.RADIX,
 		"production_tab_type": Enums.ProductionTabType.STRUCTURE,

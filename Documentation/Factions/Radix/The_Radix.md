@@ -77,7 +77,7 @@ The Radix economy is centered on the **Heart + Seedling + Linker** structure loo
 HQ
 └── Heart
     ├── Seedling production
-    ├── Brood Nest
+    ├── Spire
     ├── Thorn Forge
     └── Sky Bloom
 ```
@@ -91,7 +91,7 @@ HQ
 | Building | Cost | Build time | Notes |
 |---|---|---|---|
 | Heart | 8 | 10 s | Main structure; produces Seedlings and Radix structure entries |
-| Brood Nest | 600 | 6 s | Tier 1 infantry structure; starts once a Seedling merges into the ghost |
+| Spire | 600 | 6 s | Tier 1 infantry structure; starts once a Seedling merges into the ghost |
 | Thorn Forge | 2000 | 20 s | Tier 1 vehicle structure; starts once a Seedling merges into the ghost |
 | Sky Bloom | 2000 | 20 s | Tier 1 air structure; starts once a Seedling merges into the ghost |
 

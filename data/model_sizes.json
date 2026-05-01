@@ -1,13 +1,23 @@
 {
+	"/Radix/Structures/Barracks/Barracks.glb": [
+		4.224,
+		5.316,
+		4.224
+	],
+	"/Radix/Structures/Spire/Spire.glb": [
+		5.637,
+		5.723,
+		5.645
+	],
 	"Amuns/Defenses/Amuns_Wall_Pillar.glb": [
 		11.184,
 		11.563,
 		11.184
 	],
 	"Radix/Infantry/Seedling/Seedling.glb": [
-		2.122,
+		9.449,
 		3.631,
-		1.663
+		6.881
 	],
 	"Radix/Partials/SpawningFlowerBulb.glb": [
 		5.495,

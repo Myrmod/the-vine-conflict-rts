@@ -1,3 +1,4 @@
+class_name RadixSeedlingStartedStructure
 extends RadixStructure
 
 var requires_seedling_to_start: bool = true

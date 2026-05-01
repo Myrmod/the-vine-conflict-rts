@@ -73,6 +73,8 @@ var _stopped: bool = false
 ## Script to instantiate as the default idle action (e.g., WaitingForTargets).
 ## Set by subclass _ready() or by UnitConstants default_idle_action_scene property.
 var default_idle_action_scene: Script = null
+## True while a spawn-in animation is playing. Action assignment is blocked until cleared.
+var is_spawn_animating: bool = false
 
 @onready var _match = find_parent("Match")
 
@@ -98,6 +100,7 @@ func _ready():
 	var queue = UnitCommandQueue.new()
 	queue.name = "UnitCommandQueue"
 	add_child(queue)
+	await _run_spawn_animation()
 
 
 func is_revealing():
@@ -175,7 +178,7 @@ func _setup_color():
 
 
 func _set_action(action_node):
-	if not is_inside_tree() or _action_locked:
+	if not is_inside_tree() or _action_locked or is_spawn_animating:
 		if action_node != null:
 			action_node.queue_free()
 		return
@@ -296,6 +299,31 @@ func _assign_default_action():
 		return
 	if default_idle_action_scene != null and action == null:
 		action = default_idle_action_scene.new()
+
+
+## Override to return the AnimationPlayer used for the spawn-in animation.
+## Return null (default) to skip the spawn animation entirely.
+func _get_spawn_animation_player() -> AnimationPlayer:
+	return null
+
+
+## Override to return the name of the animation to play on spawn.
+## Only called when _get_spawn_animation_player() returns a non-null player.
+func _get_spawn_animation_name() -> StringName:
+	return &""
+
+
+func _run_spawn_animation() -> void:
+	var anim_player: AnimationPlayer = _get_spawn_animation_player()
+	if anim_player == null:
+		return
+	var anim_name: StringName = _get_spawn_animation_name()
+	if anim_name.is_empty() or not anim_player.has_animation(anim_name):
+		return
+	is_spawn_animating = true
+	anim_player.play(anim_name)
+	await anim_player.animation_finished
+	is_spawn_animating = false
 
 
 ## Enqueue a command for later execution (shift-queue).

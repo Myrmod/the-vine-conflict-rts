@@ -7,7 +7,7 @@
 - uses the shared global ProductionQueue HUD feature (available to all factions)
 - current implemented stats: 8 credits, 10 s build time
 
-## Brood Nest
+## Spire
 - Tier 1 infantry structure
 - cost: 600 credits
 - build_time: 6 s

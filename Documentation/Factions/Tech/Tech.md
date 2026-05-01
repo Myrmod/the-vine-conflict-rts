@@ -12,7 +12,7 @@
 - heart produces seedlings used for creep spread and structure construction
 - seedling is consumed on successful completion of spread/build action
 - if controlling player interrupts before completion, seedling is not consumed
-- heart unlocks -> Brood Nest, Thorn Forge, Sky Bloom
+- heart unlocks -> Spire, Thorn Forge, Sky Bloom
 - these structures are placed first and properly started by a Seedling reaching the site
 
 ## The Legion:
