@@ -230,10 +230,10 @@ const INFANTRY = {
 		"costs": {"credits": 1},
 		"build_time": 2.5,
 	},
-	Enums.SceneId.RADIX_BITER:
+	Enums.SceneId.RADIX_SNAPLING:
 	{
-		"scene": "res://source/factions/the_radix/units/Biter.tscn",
-		"unit_name": "Biter",
+		"scene": "res://source/factions/the_radix/units/Snapling.tscn",
+		"unit_name": "Snapling",
 		"description": "Fast, low-cost melee unit. Rushes enemies and bites.",
 		"faction": Enums.Faction.RADIX,
 		"production_tab_type": Enums.ProductionTabType.INFANTRY,
